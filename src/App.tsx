@@ -1,38 +1,24 @@
-import React, { useEffect, useState } from 'react';
-
+import { useEffect, useState } from 'react';
 import ProspectCard from '@/components/ProspectCard';
-import AdvancedFilters from '@/components/AdvancedFilters';
-import { ExportProspects } from '@/lib/exportUtils';
+import { loadProspects } from '@/lib/csvLoader';
 
-import { loadProspects } from '@/lib/mockData';  // ✅ REAL CSV ONLY
-
-function App() {
+export default function App() {
   const [prospects, setProspects] = useState([]);
-  const [filtered, setFiltered] = useState([]);
 
   useEffect(() => {
-    async function fetchCSV() {
+    async function load() {
       const rows = await loadProspects();
       setProspects(rows);
-      setFiltered(rows);
     }
-    fetchCSV();
+    load();
   }, []);
 
   return (
-    <div className="app-container">
-      <AdvancedFilters prospects={prospects} setFiltered={setFiltered} />
-
-      <ExportProspects prospects={filtered} />
-
-      <div className="prospect-grid">
-        {filtered.map((p, i) => (
-          <ProspectCard key={p.id ?? i} data={p} />
-        ))}
-      </div>
+    <div className="prospect-list">
+      {prospects.map((p, index) => (
+        <ProspectCard key={index} data={p} />
+      ))}
     </div>
   );
 }
-
-export default App;
 

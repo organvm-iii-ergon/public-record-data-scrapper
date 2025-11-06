@@ -1,28 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { loadProspects } from '@/lib/mockData';  // ✅ REAL CSV ONLY
+import ProspectCard from '@/components/ProspectCard';
+import { loadProspects } from '@/lib/csvLoader';
 
-function AgenticDashboard() {
+export default function AgenticDashboard() {
   const [prospects, setProspects] = useState([]);
 
   useEffect(() => {
-    async function fetchCSV() {
+    async function fetch() {
       const rows = await loadProspects();
       setProspects(rows);
     }
-    fetchCSV();
+    fetch();
   }, []);
 
-  if (prospects.length === 0) {
-    return <div style={{ color: 'white', padding: 20 }}>Loading real UCC filings…</div>;
-  }
-
   return (
-    <div style={{ color: 'white', padding: 20 }}>
-      <h2>Real UCC Leads Loaded</h2>
-      <p>{prospects.length} total filings</p>
+    <div className="dashboard">
+      {prospects.map((row, i) => (
+        <ProspectCard key={i} data={row} />
+      ))}
     </div>
   );
 }
-
-export default AgenticDashboard;
 
