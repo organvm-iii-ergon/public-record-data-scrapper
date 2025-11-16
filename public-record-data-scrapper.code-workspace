@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"specstory.cloudSync.enabled": "always",
+		"gemini-cli.debug.logging.enabled": true,
+		"geminicodeassist.agentDebugMode": true,
+		"geminicodeassist.agentYoloMode": true,
+		"geminicodeassist.codeGenerationPaneViewEnabled": true,
+		"geminicodeassist.inlineSuggestions.nextEditPredictions": true,
+		"geminicodeassist.inlineSuggestions.suggestionSpeed": "Fast",
+		"workbench.colorCustomizations": {
+			"editorCursor.foreground": "#e9dbb7",
+			"activityBarBadge.background": "#e9dbb7",
+			"activityBarBadge.foreground": "#262626",
+			"statusBar.background": "#262626",
+			"statusBar.foreground": "#e9dbb7"
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"vscjava.migrate-java-to-azure"
+		]
+	}
+}
