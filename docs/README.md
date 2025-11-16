@@ -2,87 +2,37 @@
 
 This directory contains comprehensive documentation for the UCC-MCA Intelligence Platform.
 
-## Available Documents
+## Core Documentation
 
-### [ARCHITECTURE.md](./ARCHITECTURE.md)
-**Comprehensive Architecture Alignment Document**
+### [PRD.md](./PRD.md)
+Product Requirements Document outlining the features, specifications, and goals of the platform.
 
-The primary architectural reference for the UCC-MCA Intelligence Platform. This document provides:
+### [AGENTIC_FORCES.md](./AGENTIC_FORCES.md)
+Documentation for the autonomous improvement system that enables self-analysis and continuous enhancement.
 
-- **System Overview**: High-level architecture and core capabilities
-- **Technology Stack**: Complete stack with version tracking
-- **Component Architecture**: Detailed component breakdown and relationships
-- **Data Architecture**: Data models, schemas, and storage patterns
-- **Security Architecture**: Security measures and future enhancements
-- **Performance Architecture**: Optimization strategies and metrics
-- **Integration Architecture**: API contracts and external service integration
-- **Deployment Architecture**: Current and planned deployment strategies
-- **Scalability Considerations**: Scaling strategies and limits
-- **Design System**: Color, typography, spacing, and animation systems
-- **Testing Strategy**: Recommended testing approaches (future)
-- **Monitoring & Observability**: Planned monitoring and alerting
-- **Migration & Evolution**: Phased roadmap through 2026
-- **Technical Debt**: Known issues and refactoring opportunities
-- **Alignment Verification**: Cross-reference with PRD and Logic Analysis
+### [COMPETITIVE_ANALYSIS.md](./COMPETITIVE_ANALYSIS.md)
+Research and analysis of similar B2B SaaS platforms with improvement recommendations.
 
-**Target Audience**: Developers, architects, technical stakeholders
+### [LOGIC_ANALYSIS.md](./LOGIC_ANALYSIS.md)
+Detailed analysis of the business logic and implementation patterns used throughout the platform.
 
-**Last Updated**: 2025-11-09
+### [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)
+Summary of major features implemented and development milestones.
 
----
+### [TESTING.md](./TESTING.md)
+Testing strategies, guidelines, and documentation for the platform.
 
-## Document Organization
+## Archive
 
-```
-docs/
-├── README.md           # This file - documentation index
-└── ARCHITECTURE.md     # Comprehensive architecture documentation
-```
+The `archive/` subdirectory contains historical documentation that may be useful for reference but is no longer actively maintained:
 
-## Future Documentation
+- **BRANCH_CONSOLIDATION.md**: Documentation of past branch merge activities
+- **BRANCH_RESOLUTION.md**: Historical branch resolution strategies
 
-Planned additions to this directory:
+## Other Documentation
 
-- **API_REFERENCE.md**: REST API endpoint documentation
-- **DEPLOYMENT_GUIDE.md**: Step-by-step deployment instructions
-- **DEVELOPER_GUIDE.md**: Local development setup and best practices
-- **USER_GUIDE.md**: End-user documentation and tutorials
-- **TESTING_GUIDE.md**: Testing strategy and test writing guidelines
-- **SECURITY_GUIDE.md**: Detailed security practices and audit procedures
-- **COMPONENT_LIBRARY.md**: UI component documentation (Storybook alternative)
-- **DATA_DICTIONARY.md**: Complete data model reference
-- **TROUBLESHOOTING.md**: Common issues and solutions
-- **CHANGELOG.md**: Version history and release notes
+Additional documentation can be found in the root directory:
 
-## Contributing to Documentation
-
-When adding or updating documentation:
-
-1. **Follow Markdown best practices**: Use proper heading hierarchy, code blocks, and formatting
-2. **Keep it current**: Update the "Last Updated" date when making changes
-3. **Cross-reference**: Link to related documents and external resources
-4. **Include examples**: Provide code examples and diagrams where helpful
-5. **Version control**: Document which version of the software the docs apply to
-6. **Review cycle**: Review documentation quarterly or on major architectural changes
-
-## Quick Links
-
-- [Main README](../README.md) - Project overview
-- [PRD.md](../PRD.md) - Product Requirements Document
-- [LOGIC_ANALYSIS.md](../LOGIC_ANALYSIS.md) - Logic review and enhancements
-- [SECURITY.md](../SECURITY.md) - Security policies and vulnerability reporting
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines (if exists)
-
-## Questions or Feedback?
-
-For questions about the documentation or to suggest improvements:
-
-1. Open an issue in the repository
-2. Contact the engineering team
-3. Submit a pull request with proposed changes
-
----
-
-**Maintained By**: Engineering Team  
-**Review Cycle**: Quarterly or on major changes  
-**Last Updated**: 2025-11-09
+- [README.md](../README.md): Main project overview and getting started guide
+- [CONTRIBUTING.md](../CONTRIBUTING.md): Guidelines for contributing to the project
+- [SECURITY.md](../SECURITY.md): Security policies and vulnerability reporting

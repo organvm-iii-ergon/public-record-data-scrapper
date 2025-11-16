@@ -1,0 +1,166 @@
+# Prometheus Alert Rules for UCC-MCA Intelligence Platform
+
+groups:
+  - name: data_pipeline_alerts
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: HighIngestionErrorRate
+        expr: |
+          (
+            sum(rate(ingestion_errors_total[5m])) by (source)
+            /
+            sum(rate(ingestion_requests_total[5m])) by (source)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: data-pipeline
+        annotations:
+          summary: "High ingestion error rate for {{ $labels.source }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Circuit breaker open
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{state="open"} == 1
+        for: 2m
+        labels:
+          severity: critical
+          component: data-pipeline
+        annotations:
+          summary: "Circuit breaker open for {{ $labels.source }}"
+          description: "Circuit breaker has been open for 2+ minutes"
+
+      # Stale data
+      - alert: StaleDataDetected
+        expr: |
+          (time() - max(data_last_updated_timestamp)) > 86400
+        for: 1h
+        labels:
+          severity: warning
+          component: data-pipeline
+        annotations:
+          summary: "Data has not been updated in 24+ hours"
+          description: "Last update: {{ $value | humanizeDuration }} ago"
+
+      # Low enrichment confidence
+      - alert: LowEnrichmentConfidence
+        expr: |
+          avg(enrichment_confidence) < 0.7
+        for: 15m
+        labels:
+          severity: warning
+          component: enrichment
+        annotations:
+          summary: "Average enrichment confidence is low"
+          description: "Confidence: {{ $value | humanizePercentage }} (threshold: 70%)"
+
+      # Scheduler not running
+      - alert: SchedulerNotRunning
+        expr: scheduler_running == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: scheduler
+        annotations:
+          summary: "Data refresh scheduler is not running"
+          description: "Scheduler has been stopped for 5+ minutes"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            process_resident_memory_bytes
+            /
+            node_memory_MemTotal_bytes
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage: {{ $value | humanizePercentage }}"
+
+      # Database connection issues
+      - alert: DatabaseConnectionFailures
+        expr: |
+          sum(rate(database_connection_errors_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection failures detected"
+          description: "{{ $value }} connection errors per second"
+
+      # Slow queries
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database queries are slow"
+          description: "P95 query time: {{ $value }}s (threshold: 5s)"
+
+      # API rate limit approaching
+      - alert: APIRateLimitApproaching
+        expr: |
+          (
+            sum(rate(api_requests_total[1m])) by (source)
+            /
+            api_rate_limit_per_minute
+          ) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "API rate limit approaching for {{ $labels.source }}"
+          description: "Usage: {{ $value | humanizePercentage }} of limit"
+
+  - name: business_metrics_alerts
+    interval: 60s
+    rules:
+      # Low prospect quality
+      - alert: LowProspectQuality
+        expr: |
+          avg(prospect_priority_score) < 50
+        for: 30m
+        labels:
+          severity: info
+          component: business
+        annotations:
+          summary: "Average prospect quality is low"
+          description: "Average priority score: {{ $value }} (threshold: 50)"
+
+      # No new prospects
+      - alert: NoNewProspects
+        expr: |
+          increase(prospects_created_total[6h]) == 0
+        for: 6h
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "No new prospects created in 6 hours"
+          description: "Last prospect creation: {{ $value | humanizeDuration }} ago"
+
+      # High default rate in portfolio
+      - alert: HighPortfolioDefaultRate
+        expr: |
+          (
+            sum(portfolio_companies{status="default"})
+            /
+            sum(portfolio_companies)
+          ) > 0.1
+        for: 1h
+        labels:
+          severity: critical
+          component: portfolio
+        annotations:
+          summary: "Portfolio default rate is high"
+          description: "Default rate: {{ $value | humanizePercentage }} (threshold: 10%)"
