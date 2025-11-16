@@ -1,127 +1,211 @@
 # UCC-MCA Intelligence Platform
 
-A modern web application for identifying and analyzing merchant cash advance opportunities through UCC filing data.
+A comprehensive merchant cash advance intelligence platform that transforms UCC filing data into actionable business opportunities through automated scraping, real-time health monitoring, growth signal detection, and ML-powered lead qualification.
 
-## 📋 Table of Contents
+## Features
 
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-- [Contributing](#contributing)
-- [PR Comment Management](#pr-comment-management)
-- [Documentation](#documentation)
-- [License](#license)
+### Core Capabilities
+- **Prospect Dashboard**: Displays prioritized list of UCC default prospects with scores, growth signals, and health grades
+- **Data Ingestion & Enrichment Pipeline**: Automated data fetching, enrichment, and refresh from multiple sources
+- **Health Scoring**: Real-time business health monitoring with sentiment analysis and violation tracking
+- **Growth Signal Detection**: Automated detection of hiring, permits, contracts, expansion, and equipment signals
+- **Competitor Intelligence**: Market analysis of UCC filing activity by secured parties
+- **Portfolio Monitoring**: Track funded companies with health alerts and risk indicators
+- **Lead Re-qualification Engine**: Resurrect "dead" leads by detecting new growth/risk signals
+- **Agentic Forces**: Autonomous system improvement with AI agents for continuous optimization
 
----
+### Data Export
 
-## Overview
+The platform supports flexible data export in multiple formats:
 
-This platform provides real-time intelligence on UCC filings to help identify potential merchant cash advance opportunities. Built with React, TypeScript, and a modern tech stack.
+#### Export Formats
+- **JSON**: Structured data format ideal for API integration and programmatic processing
+- **CSV**: Spreadsheet-compatible format perfect for Excel, Google Sheets, and CRM imports
 
-### Key Features
+#### Export Features
+- **Single Prospect Export**: Export individual prospect details from the detail dialog
+- **Bulk Export**: Select multiple prospects using checkboxes and export in batch
+- **Smart Filtering**: Export includes filter information in the filename when filters are active
+- **Comprehensive Data**: Exports include all prospect fields:
+  - Company information (name, industry, state, revenue)
+  - Scoring data (priority score, health grade, health score)
+  - Growth signals (count, types, descriptions)
+  - Default history (date, days since default)
+  - Health metrics (sentiment trend, violations, reviews)
+  - Status information (claimed by, claimed date)
+  - AI-generated narrative
 
-- 📊 Real-time prospect dashboard
-- 🔍 Advanced filtering and sorting
-- 📈 Health scoring and analytics
-- ⚡ Batch operations
-- 🎨 Modern glassmorphic UI
-- 📱 Mobile-responsive design
+#### How to Export
+1. Select your preferred export format from the "Export Format" dropdown (JSON or CSV)
+2. For single prospects: Click "View Details" on a prospect card, then click "Export"
+3. For bulk export: Select prospects using checkboxes, then use the batch export option
+4. Files are automatically downloaded with timestamped filenames
 
----
+### Advanced Filtering
+- Filter by industry, state, minimum score
+- Advanced filters for health grades, status, signal types, sentiment trends
+- Filter by signal count, default age, revenue range, and violation presence
+- Save and reuse filter combinations
+
+### User Interface
+- **Modern Design**: Glassmorphic UI with translucent effects inspired by Windows 11 Mica and macOS
+- **Mobile-First**: Fully responsive design optimized for all device sizes
+- **Real-time Updates**: Live data refresh with stale data warnings
+- **Batch Operations**: Select and act on multiple prospects simultaneously
+
+## Technology Stack
+
+- **Frontend**: React 19 with TypeScript
+- **Build Tool**: Vite
+- **UI Components**: Radix UI with custom styling
+- **State Management**: GitHub Spark KV store
+- **Styling**: Tailwind CSS with custom theme
+- **Icons**: Phosphor Icons
+- **Charts**: Recharts for data visualization
 
 ## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- Git
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/ivi374forivi/public-record-data-scrapper.git
-cd public-record-data-scrapper
-
-# Install dependencies
 npm install
+```
 
-# Start development server
+### Configuration
+
+1. Copy the environment template:
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and configure your data sources:
+```bash
+# Use mock data for development (default)
+VITE_USE_MOCK_DATA=true
+
+# For production with real data, set to false and configure API keys
+VITE_USE_MOCK_DATA=false
+VITE_UCC_API_ENDPOINT=https://api.ucc-filings.com/v1
+VITE_UCC_API_KEY=your_api_key_here
+```
+
+See [DATA_PIPELINE.md](./DATA_PIPELINE.md) for detailed configuration options.
+
+### Development
+
+```bash
 npm run dev
+```
 
-# Build for production
+The application will be available at `http://localhost:5000` (or next available port).
+
+### Demo
+
+Run the data pipeline demo:
+```bash
+npx tsx demo-data-pipeline.ts
+```
+
+### Build
+
+```bash
 npm run build
 ```
 
----
+### Preview Production Build
 
-## Contributing
+```bash
+npm run preview
+```
 
-We welcome contributions! Please read our [Contributing Guide](./CONTRIBUTING.md) for details on:
+## Project Structure
 
-- Code of conduct
-- Development process
-- Pull request process
-- Coding standards
-- Commit message guidelines
+```
+/src                 # Source code
+  /components        # React components
+    /ui             # Reusable UI components (Radix-based)
+  /lib              # Utilities and types
+    /agentic        # Autonomous improvement system
+    types.ts        # TypeScript type definitions
+    mockData.ts     # Mock data generators
+    utils.ts        # Utility functions
+    exportUtils.ts  # Export functionality (JSON/CSV)
+  /hooks            # Custom React hooks
+  /styles           # CSS and theme files
+  App.tsx           # Main application component
 
----
+/docs               # Documentation
+  PRD.md           # Product Requirements Document
+  COMPETITIVE_ANALYSIS.md
+  LOGIC_ANALYSIS.md
+  IMPLEMENTATION_SUMMARY.md
+  TESTING.md
+  AGENTIC_FORCES.md
+  /archive          # Historical documentation
 
-## PR Comment Management
+/examples           # Example code and demos
+  demo-agentic.ts  # Agentic system demonstration
+```
 
-We maintain a structured process for managing pull request comments to ensure clarity and timely resolution.
+## Competitive Analysis
 
-### Key Documents
+See [COMPETITIVE_ANALYSIS.md](./docs/COMPETITIVE_ANALYSIS.md) for detailed research on similar applications and implemented improvements based on industry best practices.
 
-- **[PR_COMMENTS_TRACKING.md](./PR_COMMENTS_TRACKING.md)**: Active tracking of open-ended comments
-- **[PR_COMMENT_WORKFLOW.md](./PR_COMMENT_WORKFLOW.md)**: Step-by-step workflow for managing comments
-- **[CONTRIBUTING.md](./CONTRIBUTING.md#pr-comment-management)**: Guidelines for contributors
+## Recent Improvements
 
-### Quick Links
+Based on competitive analysis of similar B2B SaaS platforms (D&B, ZoomInfo, UCC search platforms, and MCA CRMs), we have implemented:
 
-- 🔍 [View Open PR Comments](./PR_COMMENTS_TRACKING.md#open-pull-requests-review)
-- 📝 [Report Open-Ended Comment](https://github.com/ivi374forivi/public-record-data-scrapper/issues/new?template=open-ended-pr-comment.md)
-- 📖 [Comment Resolution Workflow](./PR_COMMENT_WORKFLOW.md)
+1. **Enhanced Export Capabilities** (✅ Completed)
+   - Added CSV export format alongside existing JSON export
+   - Proper CSV escaping for special characters (commas, quotes, newlines)
+   - Export format selector in UI for easy switching
+   - Timestamped filenames with filter context
+   - Comprehensive field coverage in exports
 
-### Process Overview
+See [COMPETITIVE_ANALYSIS.md](./docs/COMPETITIVE_ANALYSIS.md) for the full analysis and roadmap of planned improvements.
 
-1. **Leave clear comments** using appropriate labels ([Question], [Security], etc.)
-2. **Track complex discussions** in PR_COMMENTS_TRACKING.md
-3. **Create issues** for items needing extended discussion
-4. **Assign owners** and set timelines
-5. **Document decisions** and mark resolved
+## Data Pipeline
 
-See [PR_COMMENT_WORKFLOW.md](./PR_COMMENT_WORKFLOW.md) for complete details.
+The platform includes a comprehensive automated data ingestion and enrichment pipeline:
 
----
+### Features
+- **Multi-Source Ingestion**: Fetch UCC filings from state portals, APIs, and databases
+- **Intelligent Enrichment**: Automatically detect growth signals, calculate health scores, and estimate revenue
+- **Scheduled Refresh**: Periodic updates with configurable intervals
+- **Error Handling**: Circuit breakers, retry logic, and comprehensive error handling
+- **Real-time Monitoring**: Event-based status updates and metrics
+
+### Quick Start
+
+**Development Mode** (Mock Data):
+```bash
+# Uses generated mock data
+npm run dev
+```
+
+**Production Mode** (Real Data):
+```bash
+# Configure .env with real API keys
+VITE_USE_MOCK_DATA=false
+VITE_ENABLE_REALTIME_INGESTION=true
+
+# Start the app
+npm run dev
+```
+
+See [DATA_PIPELINE.md](./DATA_PIPELINE.md) for comprehensive documentation.
 
 ## Documentation
 
-### Project Documentation
-
-- [PRD.md](./PRD.md) - Product Requirements Document
-- [LOGIC_ANALYSIS.md](./LOGIC_ANALYSIS.md) - Code logic analysis
-- [SECURITY.md](./SECURITY.md) - Security policies
-
-### Contribution Guidelines
-
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - How to contribute
-- [PR_COMMENTS_TRACKING.md](./PR_COMMENTS_TRACKING.md) - PR comment tracking
-- [PR_COMMENT_WORKFLOW.md](./PR_COMMENT_WORKFLOW.md) - Comment resolution workflow
-
----
-
-## Technology Stack
-
-- **Frontend**: React 19, TypeScript, Tailwind CSS 4
-- **Build**: Vite 6
-- **UI Components**: Radix UI, shadcn/ui
-- **Animations**: Framer Motion
-- **Icons**: Phosphor Icons
-
----
+- **Data Pipeline**: See [DATA_PIPELINE.md](./DATA_PIPELINE.md) for ingestion and enrichment details
+- **Agentic Forces**: See [AGENTIC_FORCES.md](./AGENTIC_FORCES.md) for autonomous improvement system
+- **Product Requirements**: See [PRD.md](./PRD.md) for detailed feature specifications
+- **Logic Analysis**: See [LOGIC_ANALYSIS.md](./LOGIC_ANALYSIS.md) for implementation details
+- **Testing**: See [TESTING.md](./TESTING.md) for testing guidelines
+- **Security**: See [SECURITY.md](./SECURITY.md) for security policies
+- **Competitive Analysis**: See [COMPETITIVE_ANALYSIS.md](./docs/COMPETITIVE_ANALYSIS.md) for market research and improvement roadmap
+- **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.

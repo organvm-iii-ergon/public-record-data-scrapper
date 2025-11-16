@@ -1,19 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UCC-MCA Intelligence Platform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald&family=Roboto+Slab&family=Space+Mono&display=swap">
-    <link href="/src/main.css" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MCA Lead Finder — Free, No Signup</title>
+  <style>
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#0f1724;color:#e6eef8}
+    header{background:#071127;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.04)}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 18px}
+    h1{margin:0;font-weight:700;font-size:22px}
+    .controls{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+    input[type="text"]{flex:1;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:#071127;color:#e6eef8;min-width:220px}
+    select,button{padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:#122030;color:#fff}
+    button.primary{background:linear-gradient(90deg,#e6a800,#ffcc33);color:#000;font-weight:700}
+    .status{margin-top:12px;color:#9fb3d1}
+    table{width:100%;border-collapse:collapse;margin-top:18px;background:linear-gradient(180deg,rgba(255,255,255,.01),rgba(255,255,255,.00));border-radius:8px;overflow:hidden}
+    th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:left;font-size:14px}
+    th{background:rgba(255,255,255,.02);font-weight:600}
+    tr:hover td{background:rgba(255,255,255,.01)}
+    .small{font-size:12px;color:#9fb3d1}
+    .chip{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.04);margin-right:6px}
+    footer{padding:16px 24px;color:#90a9c7;font-size:13px}
+  </style>
 </head>
-
 <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
+  <header>
+    <div class="wrap">
+      <h1>MCA Lead Finder — Free · No Signup</h1>
+      <div class="small">Search public signals for Merchant Cash Advance & funding requests. Use responsibly.</div>
+    </div>
+  </header>
 
+  <main class="wrap">
+    <div style="margin-top:18px">
+      <div class="controls">
+        <input id="q" placeholder="Example: 'seeking MCA', 'need funding', 'UCC financing statement' ..." />
+        <select id="source">
+          <option value="bing">Web (Bing snippets)</option>
+          <option value="ucc">Public UCC filings (mock demo)</option>
+          <option value="both">Both</option>
+        </select>
+        <button id="start" class="primary">Start Search</button>
+        <button id="clear">Clear</button>
+      </div>
+      <div class="status" id="status">Idle</div>
+    </div>
+
+    <div id="resultsArea">
+      <table id="results" style="display:none">
+        <thead><tr><th>Source</th><th>Snippet / Title</th><th>Link</th><th>Found</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="wrap">
+    <div>
+      <span class="chip">Free • No Signup</span>
+      <span class="chip">Rate-limited</span>
+      <span class="chip">Respect robots.txt</span>
+    </div>
+    <div style="margin-top:8px">Deploy notes: run the included Node server locally or host on a VPS. The demo uses simple HTML-parsing scrapers and stores results server-side.</div>
+  </footer>
+
+<script>
+const startBtn = document.getElementById('start');
+const clearBtn = document.getElementById('clear');
+const status = document.getElementById('status');
+const resultsTbl = document.getElementById('results');
+const resultsBody = document.getElementById('resultsBody');
+
+startBtn.onclick = async () => {
+  const q = document.getElementById('q').value.trim();
+  const source = document.getElementById('source').value;
+  if(!q){ alert('Type a search phrase first'); return; }
+  status.innerText = 'Searching...';
+  resultsBody.innerHTML = '';
+  resultsTbl.style.display = 'none';
+  try {
+    const url = new URL('/api/search', window.location.origin);
+    url.searchParams.set('q', q);
+    url.searchParams.set('source', source);
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Server error');
+    const data = await res.json();
+    status.innerText = `Found ${data.results.length} items (duplicates filtered)`;
+    if(data.results.length) {
+      resultsTbl.style.display = '';
+      for(const r of data.results){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="small">${escapeHtml(r.source)}</td>
+                        <td><strong>${escapeHtml(r.title||r.snippet||'n/a')}</strong><div class="small">${escapeHtml(r.snippet||'')}</div></td>
+                        <td><a href="${r.url||'#'}" target="_blank" rel="noopener noreferrer">Open</a></td>
+                        <td class="small">${new Date(r.found).toLocaleString()}</td>`;
+        resultsBody.appendChild(tr);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    status.innerText = 'Error: ' + e.message;
+  }
+};
+
+clearBtn.onclick = () => {
+  document.getElementById('q').value = '';
+  resultsBody.innerHTML = '';
+  resultsTbl.style.display = 'none';
+  status.innerText = 'Idle';
+};
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+</script>
+</body>
 </html>

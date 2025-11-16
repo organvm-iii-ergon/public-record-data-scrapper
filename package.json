@@ -9,7 +9,10 @@
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest --coverage"
     },
     "dependencies": {
         "@github/spark": "^0.39.0",
@@ -20,7 +23,7 @@
         "@radix-ui/colors": "^3.0.0",
         "@radix-ui/react-accordion": "^1.2.3",
         "@radix-ui/react-alert-dialog": "^1.1.6",
-        "@radix-ui/react-aspect-ratio": "^1.1.2",
+        "@radix-ui/react-aspect-ratio": "^1.1.8",
         "@radix-ui/react-avatar": "^1.1.3",
         "@radix-ui/react-checkbox": "^1.1.4",
         "@radix-ui/react-collapsible": "^1.1.3",
@@ -38,7 +41,7 @@
         "@radix-ui/react-select": "^2.1.6",
         "@radix-ui/react-separator": "^1.1.2",
         "@radix-ui/react-slider": "^1.2.3",
-        "@radix-ui/react-slot": "^1.1.2",
+        "@radix-ui/react-slot": "^1.2.4",
         "@radix-ui/react-switch": "^1.1.3",
         "@radix-ui/react-tabs": "^1.1.3",
         "@radix-ui/react-toggle": "^1.1.2",
@@ -77,18 +80,25 @@
     "devDependencies": {
         "@eslint/js": "^9.21.0",
         "@tailwindcss/postcss": "^4.1.8",
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.1",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
-        "@vitejs/plugin-react": "^4.3.4",
-        "@vitejs/plugin-react-swc": "^3.10.1",
+        "@vitejs/plugin-react": "^5.1.0",
+        "@vitejs/plugin-react-swc": "^4.2.1",
+        "@vitest/coverage-v8": "^4.0.8",
+        "@vitest/ui": "^4.0.8",
         "eslint": "^9.28.0",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-react-refresh": "^0.4.19",
         "globals": "^16.0.0",
+        "jsdom": "^27.2.0",
         "tailwindcss": "^4.1.11",
         "typescript": "~5.7.2",
-        "typescript-eslint": "^8.38.0",
-        "vite": "^6.3.5"
+        "typescript-eslint": "^8.46.4",
+        "vite": "^6.3.5",
+        "vitest": "^4.0.8"
     },
     "workspaces": {
         "packages": [
