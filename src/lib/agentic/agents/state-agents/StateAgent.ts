@@ -17,6 +17,8 @@ import type {
   ImprovementSuggestion,
   Finding
 } from '../../types'
+import { getCollectorForState, hasCollectorForState } from '../../../collectors/StateCollectorFactory'
+import type { StateCollector, UCCFiling } from '../../../collectors/types'
 
 export interface StateConfig {
   stateCode: string
@@ -53,6 +55,7 @@ export class StateAgent extends BaseAgent implements Agent {
   private stateConfig: StateConfig
   private metrics: StateMetrics
   private customId: string
+  private collector?: StateCollector
 
   constructor(config: StateConfig) {
     const customId = `state-agent-${config.stateCode.toLowerCase()}`
@@ -70,6 +73,8 @@ export class StateAgent extends BaseAgent implements Agent {
     this.customId = customId
 
     this.stateConfig = config
+    this.collector = getCollectorForState(config.stateCode)
+
     this.metrics = {
       totalFilings: 0,
       recentFilings: 0,
@@ -240,9 +245,45 @@ export class StateAgent extends BaseAgent implements Agent {
     since?: Date,
     limit?: number,
     filingTypes?: string[]
-  }): Promise<any[]> {
-    // Implementation would connect to state portal/API
+  }): Promise<UCCFiling[]> {
     console.log(`[${this.customId}] Collecting filings from ${this.stateConfig.stateName}`, options)
+
+    // Use real collector if available
+    if (this.collector) {
+      try {
+        const startTime = Date.now()
+        const filings = await this.collector.collectNewFilings({
+          since: options?.since,
+          limit: options?.limit,
+          filingTypes: options?.filingTypes
+        })
+
+        const processingTime = Date.now() - startTime
+
+        // Update metrics
+        this.updateMetrics({
+          totalFilings: this.metrics.totalFilings + filings.length,
+          recentFilings: filings.length,
+          averageProcessingTime: processingTime,
+          lastUpdate: new Date().toISOString(),
+          successRate: 100 // Success
+        })
+
+        return filings
+      } catch (error) {
+        // Update error metrics
+        this.updateMetrics({
+          errors: this.metrics.errors + 1,
+          successRate: Math.max(0, this.metrics.successRate - 5)
+        })
+
+        console.error(`[${this.customId}] Collection error:`, error)
+        return []
+      }
+    }
+
+    // Fallback for states without collectors
+    console.warn(`[${this.customId}] No collector implemented for ${this.stateConfig.stateName}`)
     return []
   }
 
@@ -261,6 +302,23 @@ export class StateAgent extends BaseAgent implements Agent {
 
   updateMetrics(updates: Partial<StateMetrics>): void {
     this.metrics = { ...this.metrics, ...updates }
+  }
+
+  /**
+   * Check if this state has a collector implementation
+   */
+  hasCollector(): boolean {
+    return hasCollectorForState(this.stateConfig.stateCode)
+  }
+
+  /**
+   * Get collector status if available
+   */
+  getCollectorStatus() {
+    if (this.collector) {
+      return this.collector.getStatus()
+    }
+    return undefined
   }
 }
 
