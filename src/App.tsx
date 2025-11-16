@@ -629,7 +629,10 @@ function App() {
             </TabsContent>
 
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
-              <AgenticDashboard agentic={agentic} />
+              <AgenticDashboard
+                agentic={agentic}
+                competitors={competitors || []}
+              />
             </TabsContent>
           </Tabs>
         </div>

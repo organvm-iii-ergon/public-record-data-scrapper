@@ -25,6 +25,8 @@ export type ImprovementCategory =
   | 'threat-analysis'
   | 'opportunity-analysis'
   | 'strategic-recommendation'
+  | 'strategic'
+  | 'competitor-intelligence'
 
 export type ImprovementPriority = 'critical' | 'high' | 'medium' | 'low'
 
