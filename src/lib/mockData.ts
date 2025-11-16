@@ -10,12 +10,39 @@ import {
   SignalType
 } from './types'
 
+// MCA-focused industries: high credit card volume businesses
 const INDUSTRIES: IndustryType[] = ['restaurant', 'retail', 'construction', 'healthcare', 'manufacturing', 'services', 'technology']
+// Weight industries towards those best suited for MCA (restaurants, retail, services have high card processing)
+const MCA_INDUSTRY_WEIGHTS: Record<IndustryType, number> = {
+  'restaurant': 0.25,  // High card volume, perfect for MCA
+  'retail': 0.25,      // High card volume, perfect for MCA
+  'services': 0.20,    // Good card volume
+  'construction': 0.15, // Moderate fit
+  'healthcare': 0.10,  // Lower priority
+  'manufacturing': 0.03, // Lower priority
+  'technology': 0.02   // Lowest priority for MCA
+}
+
 const STATES = ['NY', 'CA', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI']
 const SIGNAL_TYPES: SignalType[] = ['hiring', 'permit', 'contract', 'expansion', 'equipment']
 
 function randomElement<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
+}
+
+// Weighted random selection for MCA-suitable industries
+function weightedIndustrySelection(): IndustryType {
+  const rand = Math.random()
+  let cumulative = 0
+  
+  for (const [industry, weight] of Object.entries(MCA_INDUSTRY_WEIGHTS)) {
+    cumulative += weight
+    if (rand <= cumulative) {
+      return industry as IndustryType
+    }
+  }
+  
+  return 'restaurant' // Fallback to restaurant (best for MCA)
 }
 
 function randomInt(min: number, max: number): number {
@@ -124,17 +151,72 @@ export function generateGrowthSignals(count: number): GrowthSignal[] {
 
 export function generateProspects(count: number): Prospect[] {
   const prospects: Prospect[] = []
-  const companyPrefixes = ['Apex', 'Summit', 'Premier', 'Elite', 'Prime', 'Crown', 'Heritage', 'Landmark', 'Victory', 'Horizon']
-  const companySuffixes = ['Restaurant Group', 'Retail LLC', 'Construction Co', 'Healthcare Services', 'Manufacturing Inc', 'Solutions LLC', 'Technologies Inc']
+  
+  // Small business names - NO corporate/bank names
+  // MCA targets: local restaurants, retail shops, small service businesses
+  const restaurantNames = [
+    "Joe's Pizza", "Main Street Diner", "Bella Italia Trattoria", "The Corner Café", 
+    "Golden Dragon Chinese", "Taco Express", "Maria's Bakery", "Burger Haven",
+    "Sunset Grill & Bar", "The Daily Grind Coffee", "Tony's Steakhouse", "Fresh Sushi Bar"
+  ]
+  
+  const retailNames = [
+    "City Hardware Store", "Bella's Boutique", "Quick Stop Convenience", "Green Leaf Market",
+    "The Book Nook", "Sports Gear Plus", "Pet Paradise Store", "Flower Power Florist",
+    "Mike's Auto Parts", "Fashion Forward Outlet", "Tech Corner Electronics", "Home Essentials"
+  ]
+  
+  const serviceNames = [
+    "Quick Clean Laundry", "Elite Hair Salon", "ProFit Gym & Wellness", "Happy Paws Pet Grooming",
+    "Speedy Auto Repair", "Bright Smile Dental", "Total Care Pharmacy", "Ace Plumbing Services",
+    "Green Thumb Landscaping", "All City Moving Co", "Classic Dry Cleaners", "Shine Detailing"
+  ]
+  
+  const constructionNames = [
+    "ABC Contracting LLC", "Summit Builders", "Quality Roofing Co", "Master Remodeling",
+    "Precision Electrical", "Metro HVAC Services", "Foundation Experts", "Elite Carpentry"
+  ]
+  
+  const healthcareNames = [
+    "Community Medical Center", "Sunrise Physical Therapy", "Valley Dental Group", "CarePlus Pharmacy",
+    "HealthFirst Clinic", "Wellness Chiropractic", "Premier Vision Care", "Family Health Practice"
+  ]
 
   for (let i = 0; i < count; i++) {
-    const industry = randomElement(INDUSTRIES)
+    // Use weighted industry selection to favor MCA-suitable businesses
+    const industry = weightedIndustrySelection()
     const state = randomElement(STATES)
     const defaultDate = randomDate(randomInt(1200, 1800), 200)
     const timeSinceDefault = Math.floor((Date.now() - new Date(defaultDate).getTime()) / (1000 * 60 * 60 * 24))
     const signalCount = randomInt(0, 5)
     const growthSignals = generateGrowthSignals(signalCount)
     const healthScore = generateHealthScore()
+    
+    // Generate MCA-appropriate company name based on industry
+    let companyName: string
+    switch (industry) {
+      case 'restaurant':
+        companyName = randomElement(restaurantNames)
+        break
+      case 'retail':
+        companyName = randomElement(retailNames)
+        break
+      case 'services':
+        companyName = randomElement(serviceNames)
+        break
+      case 'construction':
+        companyName = randomElement(constructionNames)
+        break
+      case 'healthcare':
+        companyName = randomElement(healthcareNames)
+        break
+      case 'manufacturing':
+        companyName = `${randomElement(['Metro', 'Regional', 'Local'])} Manufacturing LLC`
+        break
+      case 'technology':
+        companyName = `${randomElement(['Digital', 'Smart', 'Tech'])} Solutions LLC`
+        break
+    }
     
     const totalSignalScore = growthSignals.reduce((sum, s) => sum + s.score, 0)
     const basePriority = Math.min(100, (timeSinceDefault / 14) + totalSignalScore + healthScore.score * 0.3)
@@ -149,10 +231,14 @@ export function generateProspects(count: number): Prospect[] {
       narrativeParts.push(`showing ${growthSignals.length} growth signals (${topSignals})`)
     }
     narrativeParts.push(`Current health grade: ${healthScore.grade}`)
+    
+    // MCA-appropriate revenue range: $100K - $3M (small businesses only)
+    // Exclude large corporations with >$5M revenue
+    const estimatedRevenue = randomInt(100000, 3000000)
 
     prospects.push({
       id: `prospect-${1000 + i}`,
-      companyName: `${randomElement(companyPrefixes)} ${randomElement(companySuffixes)}`,
+      companyName,
       industry,
       state,
       status: Math.random() > 0.8 ? 'claimed' : 'new',
@@ -163,17 +249,18 @@ export function generateProspects(count: number): Prospect[] {
       uccFilings: [{
         id: `ucc-${i}`,
         filingDate: defaultDate,
-        debtorName: `${randomElement(companyPrefixes)} ${randomElement(companySuffixes)}`,
+        debtorName: companyName,
         securedParty: randomElement(['Capital Finance Corp', 'Business Lending LLC', 'Equipment Leasing Inc', 'MCA Direct']),
         state,
-        lienAmount: randomInt(50000, 500000),
+        // MCA-appropriate lien amounts: $25K - $250K (small business ranges)
+        lienAmount: randomInt(25000, 250000),
         status: 'lapsed',
         filingType: 'UCC-1'
       }],
       growthSignals,
       healthScore,
       narrative: narrativeParts.join(', '),
-      estimatedRevenue: randomInt(500000, 5000000),
+      estimatedRevenue,
       claimedBy: Math.random() > 0.8 ? 'Sales Team' : undefined,
       claimedDate: Math.random() > 0.8 ? randomDate(randomInt(1, 30)) : undefined
     })
