@@ -4,9 +4,15 @@
  *
  * Scrapes UCC filings from California and stores them in the database
  * Demonstrates the complete data flow: scrape → store → display
+ *
+ * Usage:
+ *   npm run scrape:ca                    # Use default (mock)
+ *   SCRAPER_IMPLEMENTATION=mock npm run scrape:ca
+ *   SCRAPER_IMPLEMENTATION=puppeteer npm run scrape:ca
+ *   SCRAPER_IMPLEMENTATION=api npm run scrape:ca
  */
 
-import { createCAScraper } from './scrapers/ca-ucc-scraper'
+import { createScraper, ScraperFactory, ScraperImplementation } from './scrapers/scraper-factory'
 import { initDatabase, getDatabase, createQueries, closeDatabase } from '../src/lib/database'
 import chalk from 'chalk'
 
@@ -22,6 +28,20 @@ const SAMPLE_COMPANIES = [
 async function main() {
   console.log(chalk.bold.blue('\n🔍 UCC Filing Scraper - California\n'))
 
+  // Determine scraper implementation
+  const implementation = (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) ||
+    ScraperFactory.getRecommendedImplementation()
+
+  // Check if implementation is available
+  const availability = ScraperFactory.isImplementationAvailable(implementation)
+  if (!availability.available) {
+    console.log(chalk.red(`\n❌ ${implementation.toUpperCase()} implementation not available:`))
+    console.log(chalk.yellow(`   ${availability.reason}\n`))
+    process.exit(1)
+  }
+
+  console.log(chalk.cyan(`📌 Using ${implementation.toUpperCase()} implementation\n`))
+
   try {
     // Initialize database
     console.log(chalk.cyan('📡 Connecting to database...'))
@@ -29,9 +49,9 @@ async function main() {
     const queries = createQueries(db)
     console.log(chalk.green('✅ Database connected\n'))
 
-    // Initialize scraper
-    const scraper = createCAScraper()
-    console.log(chalk.cyan('🤖 Initialized California UCC scraper\n'))
+    // Initialize scraper using factory
+    const scraper = createScraper('CA', { implementation })
+    console.log(chalk.cyan(`🤖 Initialized California UCC scraper (${implementation})\n`))
 
     let totalFilings = 0
     let totalProspects = 0
@@ -134,6 +154,13 @@ async function main() {
 
     // Close database
     await closeDatabase()
+
+    // Close browser if using Puppeteer
+    if (implementation === 'puppeteer' && 'close' in scraper) {
+      console.log(chalk.cyan('\n🔒 Closing browser...'))
+      await (scraper as any).close()
+    }
+
     console.log(chalk.green('\n✅ Complete! Data is ready to view in the UI.\n'))
     console.log(chalk.gray('💡 Tip: Set VITE_USE_MOCK_DATA=false in .env to use database data\n'))
 

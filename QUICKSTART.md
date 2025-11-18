@@ -280,7 +280,64 @@ npm run dev
 psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ucc_intelligence TO ucc_user;"
 ```
 
+## Scraper Implementation Options
+
+The system supports **three different scraper implementations**:
+
+### 1. MOCK (Default - What You Just Used)
+- ✅ **Free**: No costs
+- ✅ **Fast**: Instant data generation
+- ✅ **Reliable**: 100% success rate
+- ❌ **Limitation**: Not real UCC data
+
+**Use for:** Development, demos, testing
+
+### 2. PUPPETEER (Real Web Scraping)
+- ✅ **Free**: No API costs
+- ✅ **Real Data**: Scrapes actual government websites
+- ⚠️ **Complex**: Requires anti-bot measures
+- ❌ **Maintenance**: Website changes break scrapers
+
+**Use for:** Budget-conscious real data collection
+
+**Setup:**
+```bash
+npm install puppeteer-extra puppeteer-extra-plugin-stealth
+SCRAPER_IMPLEMENTATION=puppeteer npm run scrape:ca
+```
+
+### 3. API (Commercial Service - Recommended for Production)
+- ✅ **Reliable**: 99.9% uptime
+- ✅ **Legal**: Licensed data access
+- ✅ **Fast**: < 1 second per search
+- ✅ **All States**: Nationwide coverage
+- 💰 **Cost**: $100-500/month
+
+**Use for:** Production systems, compliance-critical applications
+
+**Setup:**
+```bash
+# Sign up for API (e.g., UCC Plus, SOS Direct)
+# Add to .env:
+SCRAPER_IMPLEMENTATION=api
+UCC_API_KEY=your_api_key_here
+UCC_API_ENDPOINT=https://api.uccplus.com/v1
+
+npm run scrape:ca
+```
+
+**📚 For detailed comparison and decision guide, see: [`docs/SCRAPING_GUIDE.md`](docs/SCRAPING_GUIDE.md)**
+
 ## Next Steps
+
+### Switch Scraper Implementation
+
+Choose the right implementation for your needs:
+- **Development**: Use MOCK (already set up)
+- **Testing with real data**: Try PUPPETEER
+- **Production**: Use commercial API
+
+See [`docs/SCRAPING_GUIDE.md`](docs/SCRAPING_GUIDE.md) for complete guide.
 
 ### Add More States
 

@@ -111,6 +111,8 @@
         "eslint-plugin-react-refresh": "^0.4.19",
         "globals": "^16.0.0",
         "jsdom": "^27.2.0",
+        "puppeteer-extra": "^3.3.6",
+        "puppeteer-extra-plugin-stealth": "^2.11.2",
         "tailwindcss": "^4.1.11",
         "tsx": "^4.20.6",
         "typescript": "~5.7.2",
