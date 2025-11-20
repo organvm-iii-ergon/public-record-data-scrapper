@@ -9,6 +9,7 @@ import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult } from '../typ
 import { CaliforniaScraper } from '../../../../scripts/scrapers/states/california'
 import { TexasScraper } from '../../../../scripts/scrapers/states/texas'
 import { FloridaScraper } from '../../../../scripts/scrapers/states/florida'
+import { NewYorkScraper } from '../../../../scripts/scrapers/states/newyork'
 import { BaseScraper } from '../../../../scripts/scrapers/base-scraper'
 
 export class ScraperAgent extends BaseAgent {
@@ -31,6 +32,7 @@ export class ScraperAgent extends BaseAgent {
     this.scrapers.set('CA', new CaliforniaScraper())
     this.scrapers.set('TX', new TexasScraper())
     this.scrapers.set('FL', new FloridaScraper())
+    this.scrapers.set('NY', new NewYorkScraper())
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
@@ -38,7 +40,7 @@ export class ScraperAgent extends BaseAgent {
     const improvements = []
 
     // Check scraper availability
-    const states = ['CA', 'TX', 'FL']
+    const states = ['CA', 'TX', 'FL', 'NY']
     const unavailable = states.filter(state => !this.scrapers.has(state))
     
     if (unavailable.length > 0) {

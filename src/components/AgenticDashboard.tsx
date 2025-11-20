@@ -4,7 +4,7 @@
  * Displays autonomous system improvements, agent analyses, and execution status
  */
 
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,7 +43,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
     low: 'bg-blue-500'
   }
 
-  const categoryIcons: Record<ImprovementCategory, React.ReactNode> = {
+  const categoryIcons: Record<ImprovementCategory, ReactNode> = {
     'performance': <TrendUp className="w-4 h-4" />,
     'security': <Shield className="w-4 h-4" />,
     'usability': <Sparkle className="w-4 h-4" />,
@@ -207,9 +207,9 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
 
 interface ImprovementCardProps {
   improvement: Improvement
-  onApprove: (id: string) => void
+  onApprove: (id: string) => Promise<void>
   priorityColors: Record<ImprovementPriority, string>
-  categoryIcons: Record<ImprovementCategory, React.ReactNode>
+  categoryIcons: Record<ImprovementCategory, ReactNode>
   showActions?: boolean
 }
 
@@ -326,7 +326,9 @@ function ImprovementCard({
           {showActions && status === 'detected' && (
             <Button
               size="sm"
-              onClick={() => onApprove(improvement.id)}
+              onClick={async () => {
+                await onApprove(improvement.id)
+              }}
               className="gap-2"
             >
               <CheckCircle className="w-4 h-4" />

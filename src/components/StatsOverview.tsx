@@ -15,6 +15,11 @@ interface StatsOverviewProps {
 }
 
 export function StatsOverview({ stats }: StatsOverviewProps) {
+  const totalProspects = stats.totalProspects
+  const highValuePercentage = totalProspects > 0
+    ? Math.round((stats.highValueProspects / totalProspects) * 100)
+    : 0
+
   const statItems = [
     {
       label: 'Total Prospects',
@@ -27,7 +32,7 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
       value: stats.highValueProspects.toLocaleString(),
       icon: TrendUp,
       color: 'text-accent',
-      subtitle: `${Math.round((stats.highValueProspects / stats.totalProspects) * 100)}% of total`
+      subtitle: `${highValuePercentage}% of total`
     },
     {
       label: 'Avg Priority Score',
