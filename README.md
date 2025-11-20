@@ -24,12 +24,14 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 ✅ **Real-Time Monitoring** - Live prospect tracking and analytics with agent orchestration
 ✅ **Export Capabilities** - CSV, JSON, Excel formats
 ✅ **Security First** - Zero vulnerabilities, type-safe codebase
+✅ **Infrastructure as Code** - Complete Terraform configuration for AWS deployment
 
 ## Table of Contents
 
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [CLI Tool](#cli-tool)
+- [Infrastructure Setup](#infrastructure-setup)
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
@@ -96,6 +98,43 @@ npm run scrape -- batch -i companies.csv -o ./results
 ```
 
 See [CLI_USAGE.md](./CLI_USAGE.md) for detailed documentation.
+
+## Infrastructure Setup
+
+The platform includes production-ready Infrastructure as Code (IaC) using Terraform for AWS deployment:
+
+### Quick Infrastructure Deployment
+
+```bash
+# Navigate to terraform directory
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Review infrastructure plan
+terraform plan
+
+# Deploy infrastructure
+terraform apply
+```
+
+### Infrastructure Components
+
+- **Networking**: VPC with Multi-AZ subnets, NAT gateways, security groups
+- **Database**: RDS PostgreSQL 14+ (Multi-AZ, encrypted, automated backups)
+- **Cache**: ElastiCache Redis 7+ (Multi-AZ, encrypted, replication)
+- **Storage**: S3 buckets for exports and backups with lifecycle policies
+- **Monitoring**: CloudWatch logs, metrics, alarms, SNS notifications
+- **Security**: Encryption at rest/transit, private subnets, IAM roles
+
+### Documentation
+
+- [Terraform Quick Start Guide](terraform/QUICK_START.md) - Step-by-step deployment
+- [Infrastructure README](terraform/README.md) - Comprehensive documentation
+- [Configuration Examples](terraform/terraform.tfvars.example) - All configuration options
+
+**Estimated Cost**: ~$512/month (production) | ~$150/month (dev)
 
 ## Features
 
@@ -327,6 +366,8 @@ See [TESTING.md](./TESTING.md) for detailed testing documentation.
 ### Technical Documentation
 - [Data Pipeline Guide](docs/technical/DATA_PIPELINE.md)
 - [Deployment Guide](docs/technical/DEPLOYMENT.md)
+- [Infrastructure Setup](terraform/README.md) - Terraform configuration and deployment
+- [Quick Start Guide](terraform/QUICK_START.md) - Step-by-step infrastructure setup
 - [Ingestion Implementation](docs/technical/INGESTION_IMPLEMENTATION_SUMMARY.md)
 - [State Implementation Plan](docs/technical/STATE_IMPLEMENTATION_PLAN.md) - Priority state collection roadmap
 - [Product Requirements](docs/PRD.md)
