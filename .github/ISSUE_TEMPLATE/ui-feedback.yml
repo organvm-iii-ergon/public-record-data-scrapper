@@ -1,0 +1,114 @@
+name: 🎨 UI Feedback
+description: Provide feedback on the redesigned dashboard and prospect cards
+title: "[UI Feedback]: "
+labels: ["feedback", "ui", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for providing feedback on our new UI! Your insights help us improve the user experience.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which UI component is your feedback about?
+      description: Select the primary component your feedback relates to
+      options:
+        - Dashboard Overview
+        - Prospect Cards
+        - Stats Overview
+        - Filters & Search
+        - Prospect Detail Dialog
+        - Portfolio Monitor
+        - Competitor Intelligence
+        - Navigation & Tabs
+        - Mobile Responsiveness
+        - Visual Effects (Glass/Mica)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: Type of Feedback
+      description: What kind of feedback are you providing?
+      options:
+        - Bug/Issue
+        - Design Improvement
+        - Usability Enhancement
+        - Performance Concern
+        - Accessibility Issue
+        - Feature Request
+        - General Comment
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feedback?
+      options:
+        - Critical (Blocks usage)
+        - High (Major improvement needed)
+        - Medium (Nice to have)
+        - Low (Minor polish)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Detailed Description
+      description: Provide a clear and detailed description of your feedback
+      placeholder: |
+        What did you observe? What would you like to see improved?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce (if applicable)
+      description: If this is a bug or issue, how can we reproduce it?
+      placeholder: |
+        1. Navigate to...
+        2. Click on...
+        3. Notice that...
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: What would you suggest to improve this?
+      placeholder: |
+        Describe your ideal solution or improvement
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device Type
+      description: What device are you using?
+      options:
+        - Desktop
+        - Tablet
+        - Mobile
+        - Multiple devices
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you using?
+      placeholder: e.g., Chrome 120, Safari 17, Firefox 121
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information, screenshots, or context that might be helpful
+      placeholder: |
+        Add screenshots, mockups, or any additional details

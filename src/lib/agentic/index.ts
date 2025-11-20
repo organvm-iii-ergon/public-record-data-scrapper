@@ -14,4 +14,10 @@ export { DataAnalyzerAgent } from './agents/DataAnalyzerAgent'
 export { OptimizerAgent } from './agents/OptimizerAgent'
 export { SecurityAgent } from './agents/SecurityAgent'
 export { UXEnhancerAgent } from './agents/UXEnhancerAgent'
-export { CompetitorAgent } from './agents/CompetitorAgent'
+
+// Export new enrichment agents
+export { DataAcquisitionAgent } from './agents/DataAcquisitionAgent'
+export { ScraperAgent } from './agents/ScraperAgent'
+export { DataNormalizationAgent } from './agents/DataNormalizationAgent'
+export { MonitoringAgent } from './agents/MonitoringAgent'
+export { EnrichmentOrchestratorAgent } from './agents/EnrichmentOrchestratorAgent'
