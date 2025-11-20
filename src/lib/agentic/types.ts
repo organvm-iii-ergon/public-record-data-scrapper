@@ -5,13 +5,20 @@
  * autonomous decision-making, continuous improvement, and self-directed actions.
  */
 
-export type AgentRole = 
+export type AgentRole =
   | 'data-analyzer'
-  | 'optimizer' 
+  | 'optimizer'
   | 'security'
   | 'ux-enhancer'
   | 'quality-assurance'
   | 'competitor-agent'
+  | 'state-collector'
+  | 'entry-point-collector'
+  | 'data-acquisition'
+  | 'scraper'
+  | 'data-normalization'
+  | 'monitoring'
+  | 'enrichment-orchestrator'
 
 export type ImprovementCategory =
   | 'performance'
@@ -19,6 +26,12 @@ export type ImprovementCategory =
   | 'usability'
   | 'data-quality'
   | 'feature-enhancement'
+  | 'competitor-analysis'
+  | 'threat-analysis'
+  | 'opportunity-analysis'
+  | 'strategic-recommendation'
+  | 'strategic'
+  | 'competitor-intelligence'
 
 export type ImprovementPriority = 'critical' | 'high' | 'medium' | 'low'
 
@@ -134,4 +147,43 @@ export interface AgenticConfig {
   maxDailyImprovements: number
   reviewRequired: ImprovementCategory[]
   enabledAgents: AgentRole[]
+}
+
+// New types for data enrichment pipeline
+export type SubscriptionTier = 'free' | 'starter' | 'professional' | 'enterprise'
+
+export interface AgentTask {
+  type: string
+  payload: Record<string, any>
+}
+
+export interface AgentTaskResult {
+  success: boolean
+  data?: any
+  error?: string
+  timestamp: string
+}
+
+export interface DataSource {
+  name: string
+  tier: SubscriptionTier
+  cost: number
+  rateLimit: number
+  timeout: number
+}
+
+export interface EnrichmentRequest {
+  companyName: string
+  state: string
+  tier: SubscriptionTier
+  userId?: string
+}
+
+export interface EnrichmentResult {
+  success: boolean
+  data?: any
+  errors?: string[]
+  sources: string[]
+  cost: number
+  timestamp: string
 }

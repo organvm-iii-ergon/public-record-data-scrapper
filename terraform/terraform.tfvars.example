@@ -1,0 +1,191 @@
+# Example Terraform Variables Configuration
+# Copy this file to terraform.tfvars and update with your values
+# WARNING: Never commit terraform.tfvars to version control!
+
+# ============================================================================
+# REQUIRED VARIABLES - Must be set
+# ============================================================================
+
+# PostgreSQL master password (minimum 8 characters, use strong password)
+db_master_password = "CHANGE_ME_SecurePassword123!"
+
+# Redis authentication token (minimum 16 characters)
+redis_auth_token = "CHANGE_ME_SecureRedisToken456789!"
+
+# Email address for CloudWatch alerts (leave empty to disable email alerts)
+alert_email = "alerts@example.com"
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+
+# Environment: dev, staging, or production
+environment = "production"
+
+# AWS Region
+aws_region = "us-east-1"
+
+# Project name (used for resource naming)
+project_name = "ucc-mca-platform"
+
+# ============================================================================
+# NETWORK CONFIGURATION
+# ============================================================================
+
+# VPC CIDR block
+vpc_cidr = "10.0.0.0/16"
+
+# Number of availability zones (2 or 3)
+availability_zones_count = 2
+
+# Public subnet CIDR blocks (one per AZ)
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24",
+  "10.0.3.0/24"
+]
+
+# Private subnet CIDR blocks (one per AZ)
+private_subnet_cidrs = [
+  "10.0.11.0/24",
+  "10.0.12.0/24",
+  "10.0.13.0/24"
+]
+
+# Database subnet CIDR blocks (one per AZ)
+database_subnet_cidrs = [
+  "10.0.21.0/24",
+  "10.0.22.0/24",
+  "10.0.23.0/24"
+]
+
+# CIDR block allowed for SSH access
+allowed_ssh_cidr = "10.0.0.0/8"
+
+# ============================================================================
+# DATABASE CONFIGURATION (RDS PostgreSQL)
+# ============================================================================
+
+# Database instance class
+# Options: db.t3.medium, db.t3.large, db.t3.xlarge, db.m5.large, etc.
+db_instance_class = "db.t3.large"
+
+# Allocated storage in GB
+db_allocated_storage = 100
+
+# PostgreSQL engine version
+db_engine_version = "14.15"
+
+# Database name
+db_name = "ucc_intelligence"
+
+# Database master username
+db_master_username = "uccadmin"
+
+# Enable Multi-AZ deployment for high availability
+db_multi_az = true
+
+# Backup retention period in days (7-35)
+db_backup_retention_period = 7
+
+# Backup window in UTC (format: hh:mm-hh:mm)
+db_backup_window = "03:00-04:00"
+
+# Maintenance window in UTC (format: ddd:hh:mm-ddd:hh:mm)
+db_maintenance_window = "sun:04:00-sun:05:00"
+
+# Enable Performance Insights
+db_performance_insights_enabled = true
+
+# Enhanced monitoring interval in seconds (0, 1, 5, 10, 15, 30, 60)
+db_monitoring_interval = 60
+
+# Enable deletion protection (set to false for dev/staging)
+db_deletion_protection = true
+
+# Skip final snapshot when destroying (set to true for dev/staging)
+db_skip_final_snapshot = false
+
+# ============================================================================
+# REDIS CONFIGURATION (ElastiCache)
+# ============================================================================
+
+# Redis node type
+# Options: cache.t3.micro, cache.t3.small, cache.t3.medium, cache.m5.large, etc.
+redis_node_type = "cache.t3.medium"
+
+# Number of cache nodes (2 for Multi-AZ)
+redis_num_cache_nodes = 2
+
+# Redis engine version
+redis_engine_version = "7.1"
+
+# Enable automatic failover
+redis_automatic_failover_enabled = true
+
+# Enable Multi-AZ deployment
+redis_multi_az_enabled = true
+
+# Snapshot retention in days
+redis_snapshot_retention_limit = 5
+
+# Snapshot window in UTC (format: hh:mm-hh:mm)
+redis_snapshot_window = "02:00-03:00"
+
+# Maintenance window in UTC (format: ddd:hh:mm-ddd:hh:mm)
+redis_maintenance_window = "sun:05:00-sun:06:00"
+
+# ============================================================================
+# STORAGE CONFIGURATION (S3)
+# ============================================================================
+
+# Number of days before S3 export objects expire
+s3_exports_expiration_days = 90
+
+# ============================================================================
+# MONITORING CONFIGURATION
+# ============================================================================
+
+# CloudWatch log retention in days
+cloudwatch_retention_days = 30
+
+# ============================================================================
+# EXAMPLE CONFIGURATIONS FOR DIFFERENT ENVIRONMENTS
+# ============================================================================
+
+# --- Development Environment ---
+# Uncomment and use these values for dev environment
+# environment                      = "dev"
+# db_instance_class               = "db.t3.medium"
+# db_allocated_storage            = 50
+# db_multi_az                     = false
+# db_deletion_protection          = false
+# db_skip_final_snapshot          = true
+# redis_node_type                 = "cache.t3.micro"
+# redis_num_cache_nodes           = 1
+# redis_multi_az_enabled          = false
+# cloudwatch_retention_days       = 7
+# availability_zones_count        = 2
+
+# --- Staging Environment ---
+# Uncomment and use these values for staging environment
+# environment                      = "staging"
+# db_instance_class               = "db.t3.large"
+# db_allocated_storage            = 100
+# db_multi_az                     = true
+# db_deletion_protection          = true
+# redis_node_type                 = "cache.t3.small"
+# redis_num_cache_nodes           = 2
+# cloudwatch_retention_days       = 14
+
+# --- Production Environment (High Performance) ---
+# Uncomment and use these values for high-performance production
+# environment                      = "production"
+# db_instance_class               = "db.m5.xlarge"
+# db_allocated_storage            = 500
+# db_multi_az                     = true
+# db_deletion_protection          = true
+# redis_node_type                 = "cache.m5.large"
+# redis_num_cache_nodes           = 3
+# cloudwatch_retention_days       = 90
+# availability_zones_count        = 3

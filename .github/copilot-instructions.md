@@ -34,7 +34,7 @@ globs: *
 - Lint with `npm run lint`; Vitest uses `jsdom` with globals configured in `src/test/setup.ts`, so add DOM helpers there when tests need extra utilities.
 
 ## Git Notes
-- Follow the consolidation flow in `BRANCH_CONSOLIDATION.md`: merge sibling branches into the working branch before opening PRs, resolve conflicts locally, then push.
+- Follow the consolidation flow in `docs/archive/BRANCH_CONSOLIDATION.md`: merge sibling branches into the working branch before opening PRs, resolve conflicts locally, then push.
 - When flattening PRs, keep unique work and mark unresolved suggestions as TODOs rather than deleting peer comments.
 - Always stage only the files you touched; if unexpected changes appear, clarify with the requester before proceeding.
 
