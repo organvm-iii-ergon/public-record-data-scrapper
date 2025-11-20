@@ -4,7 +4,8 @@
  * Displays autonomous system improvements, agent analyses, and execution status
  */
 
-import { useState, type ReactNode } from 'react'
+<<<<<<< HEAD
+import { type ReactNode, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,18 +21,19 @@ import {
   Shield,
   Sparkle,
   Users,
-  Lightbulb,
   Target
 } from '@phosphor-icons/react'
 import { Improvement, ImprovementPriority, ImprovementCategory } from '@/lib/agentic/types'
 import { UseAgenticEngineResult } from '@/hooks/use-agentic-engine'
 import CompetitorAnalysis from './CompetitorAnalysis'
+import { CompetitorData } from '@/lib/types'
 
 interface AgenticDashboardProps {
   agentic: UseAgenticEngineResult
+  competitors: CompetitorData[]
 }
 
-export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
+export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview')
   const { systemHealth, improvements, isRunning, runCycle, approveImprovement } = agentic
 
@@ -42,19 +44,19 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
     low: 'bg-blue-500'
   }
 
-  const categoryDetails: Record<ImprovementCategory, { icon: ReactNode; label: string }> = {
-    'performance': { icon: <TrendUp className="w-5 h-5" />, label: 'Performance' },
-    'security': { icon: <Shield className="w-5 h-5" />, label: 'Security' },
-    'usability': { icon: <Sparkle className="w-5 h-5" />, label: 'Usability' },
-    'data-quality': { icon: <Brain className="w-5 h-5" />, label: 'Data Quality' },
-    'feature-enhancement': { icon: <CheckCircle className="w-5 h-5" />, label: 'Feature Enhancement' },
-    'competitor-analysis': { icon: <Users className="w-5 h-5" />, label: 'Competitor Analysis' },
-    'threat-analysis': { icon: <Warning className="w-5 h-5" />, label: 'Threat Analysis' },
-    'opportunity-analysis': { icon: <Lightbulb className="w-5 h-5" />, label: 'Opportunity Analysis' },
-    'strategic-recommendation': { icon: <Target className="w-5 h-5" />, label: 'Strategic Recommendation' }
+  const categoryIcons: Record<ImprovementCategory, ReactNode> = {
+    'performance': <TrendUp className="w-4 h-4" />,
+    'security': <Shield className="w-4 h-4" />,
+    'usability': <Sparkle className="w-4 h-4" />,
+    'data-quality': <Brain className="w-4 h-4" />,
+    'feature-enhancement': <CheckCircle className="w-4 h-4" />,
+    'strategic': <Target className="w-4 h-4" />,
+    'competitor-intelligence': <Users className="w-4 h-4" />
   }
 
   const pendingImprovements = improvements.filter(i => i.status === 'detected' || i.status === 'approved')
+  // Track completed improvements for metrics
+  // const completedImprovements = improvements.filter(i => i.status === 'completed')
 
   return (
     <Card className="p-6">
@@ -141,16 +143,12 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
 
         {/* Improvements Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">
               Overview ({improvements.length})
             </TabsTrigger>
             <TabsTrigger value="pending">
               Pending ({pendingImprovements.length})
-            </TabsTrigger>
-            <TabsTrigger value="competitor">
-              <Users className="w-4 h-4 mr-2" />
-              Competitors
             </TabsTrigger>
           </TabsList>
 
@@ -202,9 +200,6 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
               ))
             )}
           </TabsContent>
-          <TabsContent value="competitor">
-            <CompetitorAnalysis />
-          </TabsContent>
         </Tabs>
       </div>
     </Card>
@@ -213,9 +208,13 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
 
 interface ImprovementCardProps {
   improvement: Improvement
-  onApprove: (id: string) => void
+  onApprove: (id: string) => Promise<void>
   priorityColors: Record<ImprovementPriority, string>
+<<<<<<< HEAD
   categoryDetails: Record<ImprovementCategory, { icon: ReactNode; label: string }>
+=======
+  categoryIcons: Record<ImprovementCategory, ReactNode>
+>>>>>>> origin/main
   showActions?: boolean
 }
 
@@ -335,7 +334,9 @@ function ImprovementCard({
           {showActions && status === 'detected' && (
             <Button
               size="sm"
-              onClick={() => onApprove(improvement.id)}
+              onClick={async () => {
+                await onApprove(improvement.id)
+              }}
               className="gap-2"
             >
               <CheckCircle className="w-4 h-4" />

@@ -26,9 +26,9 @@ export class CompetitorAgent extends BaseAgent {
     const competitors = this.identifyCompetitors(context);
     if (competitors.length > 0) {
       findings.push(this.createFinding(
-        'competitor-analysis',
+        'competitor-intelligence',
         'info',
-        `Identified ${competitors.length} key competitors.`, 
+        `Identified ${competitors.length} key competitors.`,
         { competitors }
       ));
     }
@@ -62,7 +62,7 @@ export class CompetitorAgent extends BaseAgent {
     const findings: Finding[] = [];
     if (competitors.includes("Competitor A")) {
       findings.push(this.createFinding(
-        'threat-analysis',
+        'competitor-intelligence',
         'critical',
         'Competitor A is aggressively targeting our key market segment.',
         { competitor: "Competitor A", segment: "key_market_segment" }
@@ -76,7 +76,7 @@ export class CompetitorAgent extends BaseAgent {
     const findings: Finding[] = [];
     if (!competitors.includes("Competitor D")) {
       findings.push(this.createFinding(
-        'opportunity-analysis',
+        'competitor-intelligence',
         'info',
         'A new market niche is emerging with no strong competitors.',
         { niche: "emerging_niche" }
@@ -87,7 +87,7 @@ export class CompetitorAgent extends BaseAgent {
 
   private suggestThreatMitigation(threats: Finding[]): ImprovementSuggestion {
     return this.createImprovement(
-      'strategic-recommendation',
+      'strategic',
       'high',
       'Develop a counter-campaign to mitigate Competitor A\'s impact.',
       'Launch a targeted marketing campaign to reinforce our value proposition in the contested market segment.',
@@ -111,7 +111,7 @@ export class CompetitorAgent extends BaseAgent {
 
   private suggestOpportunityExploitation(opportunities: Finding[]): ImprovementSuggestion {
     return this.createImprovement(
-      'strategic-recommendation',
+      'strategic',
       'medium',
       'Explore and establish a presence in the new market niche.',
       'Allocate resources to research and develop a product for the emerging niche.',
