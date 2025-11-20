@@ -21,5 +21,5 @@ export default defineConfig({
     alias: {
       '@': resolve(projectRoot, 'src')
     }
-  },
+  }
 });
