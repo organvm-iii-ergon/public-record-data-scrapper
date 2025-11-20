@@ -60,10 +60,13 @@ function App() {
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
   const [userActions, setUserActions] = useKV<UserAction[]>('user-actions', [])
 
+  const competitorData = useMemo(() => competitors ?? [], [competitors])
+  const isCompetitorLoading = competitors === undefined
+
   // Agentic Engine Integration
   const systemContext: SystemContext = useMemo(() => ({
     prospects: prospects || [],
-    competitors: competitors || [],
+    competitors: competitorData,
     portfolio: portfolio || [],
     userActions: userActions || [],
     performanceMetrics: {
@@ -73,7 +76,7 @@ function App() {
       dataFreshnessScore: 85
     } as PerformanceMetrics,
     timestamp: new Date().toISOString()
-  }), [prospects, competitors, portfolio, userActions])
+  }), [prospects, competitorData, portfolio, userActions])
 
   const agentic = useAgenticEngine(systemContext, {
     enabled: true,
@@ -518,7 +521,7 @@ function App() {
                 <p className="text-white/70 mb-4 sm:mb-6 text-sm sm:text-base">
                   Market analysis of UCC filing activity by secured parties
                 </p>
-                <CompetitorChart data={competitors || []} />
+                <CompetitorChart data={competitorData} />
               </div>
             </TabsContent>
 
@@ -536,7 +539,12 @@ function App() {
             </TabsContent>
 
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
-              <AgenticDashboard agentic={agentic} />
+              <AgenticDashboard
+                agentic={agentic}
+                competitors={competitorData}
+                competitorsLoading={isCompetitorLoading}
+                competitorLastUpdated={lastDataRefresh}
+              />
             </TabsContent>
           </Tabs>
         </div>

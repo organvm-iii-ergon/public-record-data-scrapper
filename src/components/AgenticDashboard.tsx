@@ -23,15 +23,25 @@ import {
 } from '@phosphor-icons/react'
 import { Improvement, ImprovementPriority, ImprovementCategory } from '@/lib/agentic/types'
 import { UseAgenticEngineResult } from '@/hooks/use-agentic-engine'
+import { CompetitorData } from '@/lib/types'
 import CompetitorAnalysis from './CompetitorAnalysis'
 
 interface AgenticDashboardProps {
   agentic: UseAgenticEngineResult
+  competitors: CompetitorData[]
+  competitorsLoading?: boolean
+  competitorLastUpdated?: string
 }
 
-export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
+export function AgenticDashboard({
+  agentic,
+  competitors,
+  competitorsLoading = false,
+  competitorLastUpdated
+}: AgenticDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview')
   const { systemHealth, improvements, isRunning, runCycle, approveImprovement } = agentic
+  const competitorCount = competitors.length
 
   const priorityColors: Record<ImprovementPriority, string> = {
     critical: 'bg-red-500',
@@ -145,7 +155,7 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
             </TabsTrigger>
             <TabsTrigger value="competitor">
               <Users className="w-4 h-4 mr-2" />
-              Competitors
+              Competitors ({competitorCount})
             </TabsTrigger>
           </TabsList>
 
@@ -198,7 +208,11 @@ export function AgenticDashboard({ agentic }: AgenticDashboardProps) {
             )}
           </TabsContent>
           <TabsContent value="competitor">
-            <CompetitorAnalysis />
+            <CompetitorAnalysis
+              data={competitors}
+              isLoading={competitorsLoading}
+              lastUpdated={competitorLastUpdated}
+            />
           </TabsContent>
         </Tabs>
       </div>
