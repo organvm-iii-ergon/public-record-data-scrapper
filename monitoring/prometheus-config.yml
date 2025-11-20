@@ -1,0 +1,59 @@
+# Prometheus Configuration for UCC-MCA Intelligence Platform
+# https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    application: 'ucc-intelligence-platform'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules
+rule_files:
+  - 'alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Application metrics
+  - job_name: 'ucc-app'
+    static_configs:
+      - targets: ['localhost:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Data pipeline metrics
+  - job_name: 'data-pipeline'
+    static_configs:
+      - targets: ['localhost:3001']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+
+  # Database metrics
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['localhost:9187']
+    scrape_interval: 30s
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 15s
+
+  # Scheduler metrics
+  - job_name: 'scheduler'
+    static_configs:
+      - targets: ['localhost:3002']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'scheduler_(ingestion|enrichment|refresh)_.*'
+        action: keep

@@ -4,6 +4,7 @@ import "@github/spark/spark"
 
 import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
+import { ThemeProvider } from './components/ThemeProvider.tsx'
 
 import "./main.css"
 import "./styles/theme.css"
@@ -11,6 +12,8 @@ import "./index.css"
 
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <App />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <App />
+    </ThemeProvider>
    </ErrorBoundary>
 )

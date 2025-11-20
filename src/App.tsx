@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,26 +20,32 @@ import { AdvancedFilters, AdvancedFilterState, initialFilters } from '@/componen
 import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { BatchOperations } from '@/components/BatchOperations'
 import { SortControls, SortField, SortDirection } from '@/components/SortControls'
-import { 
-  generateProspects, 
-  generateCompetitorData, 
+import { LegacySearch } from '@/components/LegacySearch'
+import {
+  generateProspects,
+  generateCompetitorData,
   generatePortfolioCompanies,
   generateDashboardStats
 } from '@/lib/mockData'
-import { Prospect, CompetitorData, PortfolioCompany, IndustryType } from '@/lib/types'
+import { Prospect, CompetitorData, PortfolioCompany, IndustryType, ProspectNote, FollowUpReminder, OutreachEmail } from '@/lib/types'
 import { exportProspects, ExportFormat } from '@/lib/exportUtils'
-import { 
-  Target, 
-  ChartBar, 
-  Heart, 
+import {
+  Target,
+  ChartBar,
+  Heart,
   ArrowClockwise,
   MagnifyingGlass,
-  Robot
+  Robot,
+  ChartLineUp
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { AgenticDashboard } from '@/components/AgenticDashboard'
+import { AnalyticsDashboard } from '@/components/AnalyticsDashboard'
 import { useAgenticEngine } from '@/hooks/use-agentic-engine'
 import { SystemContext, PerformanceMetrics, UserAction } from '@/lib/agentic/types'
+import { ThemeToggle } from '@/components/ThemeToggle'
+
+// API Imports
 import {
   fetchProspects,
   claimProspect,
@@ -51,11 +57,17 @@ import { fetchCompetitors } from '@/lib/api/competitors'
 import { fetchPortfolio } from '@/lib/api/portfolio'
 import { fetchUserActions, logUserAction } from '@/lib/api/userActions'
 
+// Simple UUID generator using crypto API
+function generateId(): string {
+  return crypto.randomUUID ? crypto.randomUUID() :
+    `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+}
+
 function App() {
   const [prospects, setProspects, _deleteProspects] = useKV<Prospect[]>('ucc-prospects', [])
   const [competitors, setCompetitors] = useKV<CompetitorData[]>('competitor-data', [])
   const [portfolio, setPortfolio] = useKV<PortfolioCompany[]>('portfolio-companies', [])
-  
+
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -69,12 +81,19 @@ function App() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
   const [userActions, setUserActions] = useKV<UserAction[]>('user-actions', [])
+  
+  // New state from PR #140
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const useMockData =
     import.meta.env.DEV &&
     ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
+
+  // State from Main (Notes/Reminders)
+  const [notes, setNotes] = useKV<ProspectNote[]>('prospect-notes', [])
+  const [reminders, setReminders] = useKV<FollowUpReminder[]>('prospect-reminders', [])
+  // const [outreachEmails, setOutreachEmails] = useKV<OutreachEmail[]>('outreach-emails', [])
 
   // Agentic Engine Integration
   const systemContext: SystemContext = useMemo(() => ({
@@ -97,6 +116,7 @@ function App() {
     safetyThreshold: 80
   })
 
+  // Fetch Data (From PR #140 - API Aware)
   const fetchData = useCallback(
     async ({ signal, silent }: { signal?: AbortSignal; silent?: boolean } = {}) => {
       if (!silent) {
@@ -161,7 +181,6 @@ function App() {
   useEffect(() => {
     const controller = new AbortController()
     void fetchData({ signal: controller.signal })
-
     return () => controller.abort()
   }, [fetchData])
 
@@ -308,6 +327,13 @@ function App() {
         ? 'filtered'
         : undefined
 
+      if (!exportFormat) {
+        toast.error('Export failed', {
+          description: 'No export format specified'
+        })
+        return
+      }
+
       exportProspects(prospectsToExport, exportFormat, filterInfo)
 
       const formatLabel = exportFormat.toUpperCase()
@@ -414,6 +440,65 @@ function App() {
     }
   }
 
+  const handleAddNote = (note: Omit<ProspectNote, 'id' | 'createdAt' | 'createdBy'>) => {
+    const newNote: ProspectNote = {
+      ...note,
+      id: generateId(),
+      createdBy: 'Current User',
+      createdAt: new Date().toISOString()
+    }
+
+    setNotes((current) => [...(current || []), newNote])
+  }
+
+  const handleDeleteNote = (noteId: string) => {
+    setNotes((current) => (current || []).filter(n => n.id !== noteId))
+  }
+
+  const handleAddReminder = (reminder: Omit<FollowUpReminder, 'id' | 'createdAt' | 'createdBy' | 'completed'>) => {
+    const newReminder: FollowUpReminder = {
+      ...reminder,
+      id: generateId(),
+      createdBy: 'Current User',
+      createdAt: new Date().toISOString(),
+      completed: false
+    }
+
+    setReminders((current) => [...(current || []), newReminder])
+  }
+
+  const handleCompleteReminder = (reminderId: string) => {
+    setReminders((current) => {
+      if (!current) return []
+      return current.map(r => {
+        if (r.id === reminderId) {
+          return {
+            ...r,
+            completed: !r.completed,
+            completedAt: !r.completed ? new Date().toISOString() : undefined
+          }
+        }
+        return r
+      })
+    })
+  }
+
+  const handleDeleteReminder = (reminderId: string) => {
+    setReminders((current) => (current || []).filter(r => r.id !== reminderId))
+  }
+
+  const handleSendEmail = (email: Omit<OutreachEmail, 'id' | 'createdAt' | 'createdBy'>) => {
+    const newEmail: OutreachEmail = {
+      ...email,
+      id: generateId(),
+      createdBy: 'Current User',
+      createdAt: new Date().toISOString()
+    }
+
+    // setOutreachEmails((current) => [...(current || []), newEmail])
+    trackAction('send-email', { prospectId: email.prospectId, templateId: email.templateId })
+  }
+
   const filteredAndSortedProspects = useMemo(() => {
     const filtered = (prospects || []).filter(p => {
       const matchesSearch = p.companyName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -421,28 +506,28 @@ function App() {
       const matchesState = stateFilter === 'all' || p.state === stateFilter
       const matchesScore = p.priorityScore >= minScore
 
-      const matchesHealthGrade = advancedFilters.healthGrades.length === 0 || 
+      const matchesHealthGrade = advancedFilters.healthGrades.length === 0 ||
         advancedFilters.healthGrades.includes(p.healthScore.grade)
-      
+
       const matchesStatus = advancedFilters.statuses.length === 0 ||
         advancedFilters.statuses.includes(p.status)
-      
+
       const matchesSignalType = advancedFilters.signalTypes.length === 0 ||
         p.growthSignals.some(s => advancedFilters.signalTypes.includes(s.type))
-      
+
       const matchesSentiment = advancedFilters.sentimentTrends.length === 0 ||
         advancedFilters.sentimentTrends.includes(p.healthScore.sentimentTrend)
-      
+
       const matchesSignalCount = p.growthSignals.length >= advancedFilters.minSignalCount
-      
+
       const yearsSinceDefault = Math.floor(p.timeSinceDefault / 365)
       const matchesDefaultAge = yearsSinceDefault >= advancedFilters.defaultAgeRange[0] &&
         yearsSinceDefault <= advancedFilters.defaultAgeRange[1]
-      
+
       const revenue = p.estimatedRevenue || 0
       const matchesRevenue = revenue >= advancedFilters.revenueRange[0] &&
         revenue <= advancedFilters.revenueRange[1]
-      
+
       const matchesViolations = advancedFilters.hasViolations === null ||
         (advancedFilters.hasViolations === true && p.healthScore.violationCount > 0) ||
         (advancedFilters.hasViolations === false && p.healthScore.violationCount === 0)
@@ -454,7 +539,7 @@ function App() {
 
     return filtered.sort((a, b) => {
       let compareValue = 0
-      
+
       switch (sortField) {
         case 'priorityScore':
           compareValue = a.priorityScore - b.priorityScore
@@ -472,7 +557,7 @@ function App() {
           compareValue = a.companyName.localeCompare(b.companyName)
           break
       }
-      
+
       return sortDirection === 'desc' ? -compareValue : compareValue
     })
   }, [prospects, searchQuery, industryFilter, stateFilter, minScore, advancedFilters, sortField, sortDirection])
@@ -495,26 +580,29 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <header className="mica-effect border-b border-white/20 sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+      <header className="mica-effect border-b-2 border-primary/20 sticky top-0 z-50 shadow-xl shadow-primary/10">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-base sm:text-xl md:text-2xl font-semibold tracking-tight text-white truncate">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-white truncate bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                 UCC-MCA Intelligence Platform
               </h1>
-              <p className="text-xs sm:text-sm text-white/70 hidden sm:block">
+              <p className="text-xs sm:text-sm text-white/80 hidden sm:block font-medium">
                 Automated merchant cash advance opportunity discovery
               </p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleRefreshData}
-              size="sm"
-              className="glass-effect border-white/30 text-white hover:bg-white/10 flex-shrink-0"
-            >
-              <ArrowClockwise size={16} weight="bold" className="sm:mr-2" />
-              <span className="hidden sm:inline">Refresh Data</span>
-            </Button>
+            <div className="flex gap-2 flex-shrink-0">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                onClick={handleRefreshData}
+                size="sm"
+                className="glass-effect border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+              >
+                <ArrowClockwise size={16} weight="bold" className="sm:mr-2" />
+                <span className="hidden sm:inline">Refresh Data</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -555,14 +643,14 @@ function App() {
           )}
 
           {lastDataRefresh && (
-            <StaleDataWarning 
-              lastUpdated={lastDataRefresh} 
+            <StaleDataWarning
+              lastUpdated={lastDataRefresh}
               onRefresh={handleRefreshData}
             />
           )}
 
           <Tabs defaultValue="prospects" className="w-full">
-            <TabsList className="glass-effect grid w-full grid-cols-3 sm:grid-cols-5 mb-4 sm:mb-6 gap-1 sm:gap-0 h-auto sm:h-10 p-1">
+            <TabsList className="glass-effect grid w-full grid-cols-3 sm:grid-cols-6 mb-4 sm:mb-6 gap-1 sm:gap-0 h-auto sm:h-10 p-1">
               <TabsTrigger value="prospects" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0">
                 <Target size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
                 <span className="hidden xs:inline">Prospects</span>
@@ -574,6 +662,10 @@ function App() {
               <TabsTrigger value="intelligence" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0">
                 <ChartBar size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
                 <span className="hidden xs:inline">Intelligence</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0">
+                <ChartLineUp size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden xs:inline">Analytics</span>
               </TabsTrigger>
               <TabsTrigger value="requalification" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0">
                 <ArrowClockwise size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
@@ -588,8 +680,8 @@ function App() {
             <TabsContent value="prospects" className="space-y-4 sm:space-y-6">
               <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="relative flex-1">
-                  <MagnifyingGlass 
-                    size={18} 
+                  <MagnifyingGlass
+                    size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70"
                   />
                   <Input
@@ -730,6 +822,14 @@ function App() {
                 </p>
                 <CompetitorChart data={competitors || []} />
               </div>
+              <LegacySearch />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
+              <AnalyticsDashboard
+                prospects={prospects || []}
+                portfolio={portfolio || []}
+              />
             </TabsContent>
 
             <TabsContent value="requalification" className="space-y-4 sm:space-y-6">
@@ -746,7 +846,10 @@ function App() {
             </TabsContent>
 
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
-              <AgenticDashboard agentic={agentic} />
+              <AgenticDashboard
+                agentic={agentic}
+                competitors={competitors || []}
+              />
             </TabsContent>
           </Tabs>
         </div>
@@ -759,6 +862,14 @@ function App() {
         onClaim={handleClaimLead}
         onUnclaim={handleUnclaimLead}
         onExport={handleExportProspect}
+        notes={notes || []}
+        reminders={reminders || []}
+        onAddNote={handleAddNote}
+        onDeleteNote={handleDeleteNote}
+        onAddReminder={handleAddReminder}
+        onCompleteReminder={handleCompleteReminder}
+        onDeleteReminder={handleDeleteReminder}
+        onSendEmail={handleSendEmail}
       />
     </div>
   )

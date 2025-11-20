@@ -5,9 +5,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { AgenticEngine } from '@/lib/agentic/AgenticEngine'
 import { SystemContext, Improvement, ImprovementStatus, AgenticConfig } from '@/lib/agentic/types'
+import { usePersistentState } from './usePersistentState'
 
 export interface UseAgenticEngineResult {
   engine: AgenticEngine | null
@@ -22,8 +22,8 @@ export interface UseAgenticEngineResult {
 export function useAgenticEngine(context: SystemContext, config?: Partial<AgenticConfig>): UseAgenticEngineResult {
   const [engine] = useState(() => new AgenticEngine(config))
   const [isRunning, setIsRunning] = useState(false)
-  const [improvements, setImprovements] = useKV<Improvement[]>('agentic-improvements', [])
-  const [lastRunTime, setLastRunTime] = useKV<string>('agentic-last-run', '')
+  const [improvements, setImprovements] = usePersistentState<Improvement[]>('agentic-improvements', [])
+  const [lastRunTime, setLastRunTime] = usePersistentState<string>('agentic-last-run', '')
   const [systemHealth, setSystemHealth] = useState(engine.getSystemHealth())
 
   // Run autonomous cycle

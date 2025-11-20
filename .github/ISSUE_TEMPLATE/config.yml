@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 General Discussion
+    url: https://github.com/ivi374forivi/public-record-data-scrapper/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📧 Direct Feedback
+    url: mailto:feedback@example.com
+    about: Send private feedback directly to the team
