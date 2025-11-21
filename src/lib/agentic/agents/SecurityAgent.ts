@@ -53,7 +53,7 @@ export class SecurityAgent extends BaseAgent {
   private checkSensitiveDataHandling(context: SystemContext): Finding | null {
     // Check if financial data is properly handled
     const prospectsWithFinancialData = context.prospects.filter(
-      p => p.estimatedRevenue || (p.uccFilings && p.uccFilings.some(f => f.lienAmount))
+      p => p.estimatedRevenue || (p.uccFilings && p.uccFilings.some((f: any) => f.lienAmount))
     )
 
     if (prospectsWithFinancialData.length > 0) {

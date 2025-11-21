@@ -5,7 +5,7 @@
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult } from '../types'
+import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, Finding, ImprovementSuggestion } from '../types'
 import { CaliforniaScraper } from '../../../../scripts/scrapers/states/california'
 import { TexasScraper } from '../../../../scripts/scrapers/states/texas'
 import { FloridaScraper } from '../../../../scripts/scrapers/states/florida'
@@ -36,8 +36,8 @@ export class ScraperAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
-    const findings = []
-    const improvements = []
+    const findings: Finding[] = []
+    const improvements: ImprovementSuggestion[] = []
 
     // Check scraper availability
     const states = ['CA', 'TX', 'FL', 'NY']

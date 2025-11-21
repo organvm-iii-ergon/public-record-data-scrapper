@@ -5,7 +5,7 @@
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest } from '../types'
+import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest, Finding, ImprovementSuggestion } from '../types'
 import { usageTracker } from '../../subscription/usage-tracker'
 import { 
   SECEdgarSource, 
@@ -51,8 +51,8 @@ export class DataAcquisitionAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
-    const findings = []
-    const improvements = []
+    const findings: Finding[] = []
+    const improvements: ImprovementSuggestion[] = []
 
     // Check data source availability
     const unavailableSources = this.checkSourceAvailability()

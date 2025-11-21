@@ -5,7 +5,7 @@
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest, EnrichmentResult } from '../types'
+import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest, EnrichmentResult, Finding, ImprovementSuggestion } from '../types'
 import { DataAcquisitionAgent } from './DataAcquisitionAgent'
 import { ScraperAgent } from './ScraperAgent'
 import { DataNormalizationAgent } from './DataNormalizationAgent'
@@ -43,8 +43,8 @@ export class EnrichmentOrchestratorAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
-    const findings = []
-    const improvements = []
+    const findings: Finding[] = []
+    const improvements: ImprovementSuggestion[] = []
 
     // Aggregate analyses from all sub-agents
     const analyses = await Promise.all([

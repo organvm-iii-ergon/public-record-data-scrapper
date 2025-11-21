@@ -13,6 +13,11 @@ import {
 } from '@/lib/services'
 import { getDataPipelineConfig, featureFlags } from '@/lib/config/dataPipeline'
 import { generateProspects } from '@/lib/mockData'
+import {
+  initDatabaseService,
+  fetchProspects,
+  hasDatabaseData
+} from '@/lib/services/databaseService'
 
 export interface DataPipelineState {
   prospects: Prospect[]
@@ -55,39 +60,25 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
           setProspects(mockProspects)
           setLastUpdate(new Date().toISOString())
         } else {
-          // Use real data pipeline
-          console.log('Initializing real data pipeline')
-          const config = getDataPipelineConfig()
+          // Use database
+          console.log('Initializing database connection...')
 
-          const scheduler = new DataRefreshScheduler(
-            config.schedule,
-            config.ingestion,
-            config.enrichment
-          )
+          // Initialize database service
+          await initDatabaseService()
 
-          schedulerRef.current = scheduler
+          // Check if database has data
+          const hasData = await hasDatabaseData()
 
-          // Subscribe to scheduler events
-          scheduler.on(handleSchedulerEvent)
-
-          // Get initial data
-          const initialProspects = scheduler.getProspects()
-          if (initialProspects.length > 0) {
-            setProspects(initialProspects)
+          if (hasData) {
+            console.log('Loading prospects from database...')
+            const dbProspects = await fetchProspects()
+            setProspects(dbProspects)
             setLastUpdate(new Date().toISOString())
+            console.log(`Loaded ${dbProspects.length} prospects from database`)
           } else {
-            // Trigger initial ingestion
-            await scheduler.triggerIngestion()
-            setProspects(scheduler.getProspects())
-            setLastUpdate(new Date().toISOString())
+            console.warn('No data in database. Run `npm run db:seed` to seed sample data.')
+            setError('No data in database. Please seed data or switch to mock mode.')
           }
-
-          // Start scheduler if auto-start is enabled
-          if (config.schedule.autoStart) {
-            scheduler.start()
-          }
-
-          setSchedulerStatus(scheduler.getStatus())
         }
 
         setLoading(false)
@@ -149,11 +140,12 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
         const mockProspects = generateProspects(100)
         setProspects(mockProspects)
         setLastUpdate(new Date().toISOString())
-      } else if (schedulerRef.current) {
-        await schedulerRef.current.triggerIngestion()
-        setProspects(schedulerRef.current.getProspects())
-        setSchedulerStatus(schedulerRef.current.getStatus())
+      } else {
+        // Refresh from database
+        const dbProspects = await fetchProspects()
+        setProspects(dbProspects)
         setLastUpdate(new Date().toISOString())
+        console.log(`Refreshed ${dbProspects.length} prospects from database`)
       }
 
       setLoading(false)

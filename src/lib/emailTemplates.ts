@@ -115,7 +115,7 @@ export function populateTemplate(template: EmailTemplate, data: Record<string, s
   // Replace all template variables
   template.variables.forEach(variable => {
     const regex = new RegExp(`{{${variable}}}`, 'g')
-    const value = data[variable] || `[${variable}]`
+    const value = String(data[variable] || `[${variable}]`)
     subject = subject.replace(regex, value)
     body = body.replace(regex, value)
   })

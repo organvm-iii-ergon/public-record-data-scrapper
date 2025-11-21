@@ -11,7 +11,7 @@ import type {
   EnrichmentTree,
   EnrichmentStrategy,
 } from '@/types/recursive';
-import type { Prospect } from '@/types';
+import type { Prospect } from '@/lib/types';
 
 export class RecursiveEnrichmentEngine {
   private trees: Map<string, EnrichmentTree> = new Map();

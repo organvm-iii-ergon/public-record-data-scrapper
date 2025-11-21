@@ -5,7 +5,7 @@
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult } from '../types'
+import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, Finding, ImprovementSuggestion } from '../types'
 
 export class DataNormalizationAgent extends BaseAgent {
   constructor() {
@@ -20,8 +20,8 @@ export class DataNormalizationAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
-    const findings = []
-    const improvements = []
+    const findings: Finding[] = []
+    const improvements: ImprovementSuggestion[] = []
 
     // Check for data quality issues
     const inconsistentData = this.checkDataConsistency(context)

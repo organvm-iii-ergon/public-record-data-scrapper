@@ -28,3 +28,15 @@ export {
   type SchedulerEventType,
   type SchedulerEventHandler
 } from './DataRefreshScheduler'
+
+export {
+  initDatabaseService,
+  fetchProspects,
+  fetchProspectById,
+  searchProspects,
+  updateProspectStatus,
+  fetchDashboardStats,
+  fetchCompetitorData,
+  fetchPortfolioCompanies,
+  hasDatabaseData
+} from './databaseService'

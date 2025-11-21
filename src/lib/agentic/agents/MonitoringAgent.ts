@@ -6,7 +6,7 @@
 
 import { BaseAgent } from '../BaseAgent'
 import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult } from '../types'
-import { usageTracker } from '../../subscription/usage-tracker'
+import { usageTracker, UsageTracker } from '../../subscription/usage-tracker'
 
 
 export class MonitoringAgent extends BaseAgent {
@@ -226,7 +226,7 @@ export class MonitoringAgent extends BaseAgent {
    */
   calculateCost(sources: string[]): number {
     return sources.reduce((total, source) => {
-      return total + (usageTracker.getSourceCost(source) || 0)
+      return total + (UsageTracker.getSourceCost(source) || 0)
     }, 0)
   }
 }
