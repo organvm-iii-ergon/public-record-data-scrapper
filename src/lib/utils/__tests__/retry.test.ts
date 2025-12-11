@@ -545,8 +545,6 @@ describe('processBatch', () => {
   it('should add delay between batches', async () => {
     const items = [1, 2, 3, 4]
     const processor = vi.fn((item: number) => Promise.resolve(item))
-    const startTime = Date.now()
-
     const promise = processBatch(items, processor, { batchSize: 2 })
 
     // Process first batch
