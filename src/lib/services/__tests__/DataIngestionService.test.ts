@@ -106,7 +106,7 @@ describe('DataIngestionService', () => {
 
       const promise = service.ingestData(['TX'])
       await vi.runAllTimersAsync()
-      const results = await promise
+      await promise
 
       expect(fetch).toHaveBeenCalledTimes(1) // Only TX
       expect(fetch).toHaveBeenCalledWith(
