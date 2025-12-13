@@ -310,14 +310,24 @@ ML-powered scoring system:
 public-record-data-scrapper/
 ├── .github/
 │   └── workflows/        # CI/CD workflows
-├── database/             # PostgreSQL schemas
+├── database/             # PostgreSQL schemas & migrations
 ├── docs/                 # Documentation
-│   ├── technical/        # Technical guides
-│   ├── reports/          # Cleanup & consolidation reports
-│   └── archive/          # Historical docs
-├── examples/             # Demo scripts
-├── monitoring/           # Prometheus configs
-├── src/
+│   ├── adr/             # Architectural Decision Records
+│   ├── archive/         # Historical documents & summaries
+│   │   ├── historical/  # Old strategies, analyses, POC data
+│   │   └── summaries/   # Implementation & session summaries
+│   ├── design/          # UI/UX mockups and specs
+│   ├── designs/         # Design system documentation
+│   ├── guides/          # User and developer guides
+│   ├── reports/         # Cleanup & consolidation reports
+│   ├── tasks/           # Task management
+│   └── technical/       # Technical implementation docs
+├── examples/             # Demo scripts and sample data
+├── monitoring/           # Prometheus & alerting configs
+├── public/               # Static web assets
+├── scripts/              # Build, deployment & utility scripts
+├── server/               # Backend server code
+├── src/                  # Frontend source code
 │   ├── components/       # React components
 │   ├── hooks/            # Custom React hooks
 │   ├── lib/
@@ -328,7 +338,9 @@ public-record-data-scrapper/
 │   │   ├── utils/       # Utilities
 │   │   └── validation/  # Zod schemas
 │   └── test/             # Test setup
-└── [config files]
+├── terraform/            # Infrastructure as Code (AWS)
+├── tests/                # Additional test files
+└── [config files]        # Root-level configs (package.json, vite, etc.)
 ```
 
 ## 🧪 Testing
@@ -353,15 +365,17 @@ Comprehensive test suite with **526 tests** covering:
 - Duration: ~27 seconds
 - Latest improvements: Fixed 4 failing async/timeout tests, added 14 comprehensive edge case tests
 
-See [TESTING.md](./TESTING.md) for detailed testing documentation.
+See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
 ## 📚 Documentation
 
 ### User Documentation
 - [README](README.md) - This file
+- [Quick Start Guide](docs/QUICKSTART.md) - Get started quickly
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
-- [TODO Roadmap](TODO.md)
+- [Roadmap](docs/ROADMAP.md) - Future plans and milestones
+- [TODO List](docs/TODO.md) - Current tasks and priorities
 
 ### Technical Documentation
 - [Data Pipeline Guide](docs/technical/DATA_PIPELINE.md)
