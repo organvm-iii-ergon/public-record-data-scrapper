@@ -433,7 +433,7 @@ export class NetworkAnalyzer {
     })
 
     // Detect teams (frequent collaborators)
-    const teams = this.detectTeams(researchers, collaborations)
+    const teams = this.detectTeams(researchers, collaborations, papers)
 
     return {
       researchers,
@@ -448,7 +448,8 @@ export class NetworkAnalyzer {
    */
   private detectTeams(
     researchers: Map<string, Researcher>,
-    collaborations: Collaboration[]
+    collaborations: Collaboration[],
+    papers: Map<string, Paper>
   ): Team[] {
     const teams: Team[] = []
 
@@ -516,6 +517,17 @@ export class NetworkAnalyzer {
           }
         })
 
+        // Calculate impact (average citations per paper)
+        let totalCitations = 0
+        teamPapers.forEach(paperId => {
+          const paper = papers.get(paperId)
+          if (paper) {
+            totalCitations += paper.citationCount
+          }
+        })
+
+        const impact = teamPapers.size > 0 ? totalCitations / teamPapers.size : 0
+
         teams.push({
           id: `team-${teams.length + 1}`,
           name: topTopics[0] ? `${topTopics[0]} Team` : `Research Team ${teams.length + 1}`,
@@ -525,7 +537,7 @@ export class NetworkAnalyzer {
           topics: topTopics,
           papers: Array.from(teamPapers),
           productivity: teamPapers.size / team.size,
-          impact: 0 // TODO: Calculate from citations
+          impact
         })
       }
     })
