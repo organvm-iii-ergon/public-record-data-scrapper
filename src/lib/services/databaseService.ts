@@ -221,13 +221,15 @@ export async function fetchDashboardStats() {
     const queries = createQueries(db)
 
     const stats = await queries.getProspectStats()
+    const portfolioStats = await queries.getPortfolioStats()
+    const signalStats = await queries.getGrowthSignalStats()
 
     return {
       totalProspects: stats.total,
       highValueProspects: stats.total > 0 ? Math.round(stats.total * 0.3) : 0, // Estimate
-      avgPriorityScore: Math.round(stats.avgScore),
-      newSignalsToday: 0, // TODO: Calculate from growth_signals
-      portfolioAtRisk: 0, // TODO: Calculate from portfolio
+      avgPriorityScore: Math.round(stats.avg_priority_score),
+      newSignalsToday: signalStats.newToday,
+      portfolioAtRisk: portfolioStats.atRisk,
       avgHealthGrade: 'B' as const // TODO: Calculate from health scores
     }
   } catch (error) {

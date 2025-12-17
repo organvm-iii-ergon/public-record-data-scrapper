@@ -112,20 +112,20 @@
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.2.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.20.6",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.46.4",
     "vite": "^6.4.1",
-    "vitest": "^4.0.8",
-    "prettier": "^3.6.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "eslint-config-prettier": "^10.1.8"
+    "vitest": "^4.0.15"
   },
   "workspaces": {
     "packages": [

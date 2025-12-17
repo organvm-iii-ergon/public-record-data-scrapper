@@ -329,6 +329,50 @@ export class QueryBuilder {
   }
 
   /**
+   * Get portfolio statistics
+   */
+  async getPortfolioStats(): Promise<{
+    total: number
+    atRisk: number
+  }> {
+    const query = `
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE current_status IN ('at-risk', 'default')) as at_risk
+      FROM portfolio_companies
+    `
+    const result = await this.client.query(query)
+    const row = result.rows[0]
+
+    return {
+      total: parseInt(row.total || '0'),
+      atRisk: parseInt(row.at_risk || '0')
+    }
+  }
+
+  /**
+   * Get growth signal statistics
+   */
+  async getGrowthSignalStats(): Promise<{
+    total: number
+    newToday: number
+  }> {
+    const query = `
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE detected_date = CURRENT_DATE) as new_today
+      FROM growth_signals
+    `
+    const result = await this.client.query(query)
+    const row = result.rows[0]
+
+    return {
+      total: parseInt(row.total || '0'),
+      newToday: parseInt(row.new_today || '0')
+    }
+  }
+
+  /**
    * Get data source performance
    */
   async getDataSourcePerformance(): Promise<any[]> {
