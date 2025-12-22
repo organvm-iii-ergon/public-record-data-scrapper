@@ -214,7 +214,7 @@ importers:
         specifier: ^9.39.1
         version: 9.39.2
       '@tailwindcss/postcss':
-        specifier: ^4.1.17
+        specifier: ^4.1.18
         version: 4.1.18
       '@testing-library/dom':
         specifier: ^10.4.0
