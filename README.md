@@ -11,7 +11,6 @@
 **NEW: Terminal CLI Tool** - Standalone command-line scraper for individual use without GUI. Perfect for field data collection. See [CLI_USAGE.md](./CLI_USAGE.md) for details.
 
 **NEW: Video Production Agent** - Autonomous system for generating professional MP4 videos from markdown scripts. Fully automated local-first workflow. See [scripts/video-production/README.md](./scripts/video-production/README.md) for details.
-
 ## 🎯 Overview
 
 The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that analyzes Uniform Commercial Code (UCC) filings to identify businesses with active financing and predict their likelihood of needing Merchant Cash Advances. The platform combines AI-powered analysis, automated data enrichment, and intelligent scoring to help MCA providers find and prioritize the best prospects.
@@ -78,6 +77,7 @@ npm run dev
 The platform includes a **standalone terminal-based scraper** for individual use:
 
 ### CLI Features
+>>>>>>> origin/main
 - 🔍 **UCC Filing Scraper**: Extract filings from CA, TX, FL state portals
 - 📊 **Data Enrichment**: Fetch data from SEC, OSHA, USPTO, Census, SAM.gov
 - 📝 **Multiple Formats**: Export as JSON or CSV
@@ -132,7 +132,6 @@ npm run video:generate
 ```
 
 See [scripts/video-production/README.md](./scripts/video-production/README.md) for complete documentation and [scripts/video-production/INSTALL.md](./scripts/video-production/INSTALL.md) for installation instructions.
-
 ## Infrastructure Setup
 
 The platform includes production-ready Infrastructure as Code (IaC) using Terraform for AWS deployment:
@@ -173,6 +172,7 @@ terraform apply
 ## Features
 
 ### Core Capabilities
+
 - **Prospect Dashboard**: Displays prioritized list of UCC default prospects with scores, growth signals, and health grades
 - **Data Enrichment Pipeline**: Multi-tier data acquisition from free and commercial sources (see [ENRICHMENT_PIPELINE.md](./ENRICHMENT_PIPELINE.md))
 - **Health Scoring**: Real-time business health monitoring with sentiment analysis and violation tracking
@@ -421,6 +421,12 @@ See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 - [Product Requirements](docs/PRD.md)
 - [Testing Guide](docs/TESTING.md)
 - [Agentic Forces](docs/AGENTIC_FORCES.md) - Complete agent system documentation
+- [Security Implementation](docs/SECURITY_IMPLEMENTATION.md) - **NEW**: Comprehensive security guide
+- [Comprehensive Critique](docs/COMPREHENSIVE_CRITIQUE.md) - **NEW**: 9-dimension platform analysis
+- [Evolution Roadmap](docs/EVOLUTION_ROADMAP.md) - **NEW**: Strategic development roadmap
+
+### Project Reports
+
 
 ### Project Reports
 - [Branch Cleanup Plan](docs/reports/BRANCH_CLEANUP_PLAN.md)
@@ -437,11 +443,27 @@ See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 - **Implementation Summary**: See [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) for implementation details
 
 ### Repository Management
+
 - **Branch Resolution**: See [BRANCH_RESOLUTION.md](./BRANCH_RESOLUTION.md) for branch cleanup strategy
 - **Maintenance Guide**: See [MAINTENANCE_GUIDE.md](./MAINTENANCE_GUIDE.md) for post-merge maintenance actions
 - **PR Comments Resolution**: See [PR_COMMENTS_RESOLUTION.md](./PR_COMMENTS_RESOLUTION.md) for tracking open-ended comments and action items
 
 ### Custom Agents
+
+- **Dynatrace Expert**: See [.github/agents/dynatrace-expert.md](.github/agents/dynatrace-expert.md) - Master observability specialist with complete DQL knowledge
+- **Custom Agents Guide**: See [.github/agents/README.md](.github/agents/README.md) - How to use and create custom agents
+
+## 🔒 Security
+
+- **Zero Vulnerabilities** - All dependencies audited and updated (verified `npm audit`)
+- **Type Safety** - Comprehensive TypeScript coverage
+- **Input Sanitization** - XSS prevention with DOMPurify (38 security tests)
+- **Input Validation** - Zod schema validation for all data types
+- **Security Agent** - Automated vulnerability scanning via agentic system
+- **Regular Audits** - Continuous security monitoring
+
+See [SECURITY_IMPLEMENTATION.md](docs/SECURITY_IMPLEMENTATION.md) for comprehensive security documentation.
+
 - **Dynatrace Expert**: See [.github/agents/dynatrace-expert.md](.github/agents/dynatrace-expert.md) - Master observability specialist with complete DQL knowledge
 - **Custom Agents Guide**: See [.github/agents/README.md](.github/agents/README.md) - How to use and create custom agents
 
