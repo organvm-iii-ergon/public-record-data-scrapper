@@ -24,6 +24,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:test": "tsx scripts/db-test.ts",
     "video:generate": "bash scripts/video-production/generate-videos.sh",
+    "video:validate": "npx tsx scripts/video-production/validate.ts",
     "video:help": "bash scripts/video-production/generate-videos.sh --help",
     "prepare": "husky"
   },
