@@ -10,6 +10,8 @@
 
 **NEW: Terminal CLI Tool** - Standalone command-line scraper for individual use without GUI. Perfect for field data collection. See [CLI_USAGE.md](./CLI_USAGE.md) for details.
 
+**NEW: Video Production Agent** - Autonomous system for generating professional MP4 videos from markdown scripts. Fully automated local-first workflow. See [scripts/video-production/README.md](./scripts/video-production/README.md) for details.
+
 ## 🎯 Overview
 
 The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that analyzes Uniform Commercial Code (UCC) filings to identify businesses with active financing and predict their likelihood of needing Merchant Cash Advances. The platform combines AI-powered analysis, automated data enrichment, and intelligent scoring to help MCA providers find and prioritize the best prospects.
@@ -23,6 +25,7 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 ✅ **Smart Scoring** - ML-based priority scoring and health analysis
 ✅ **Real-Time Monitoring** - Live prospect tracking and analytics with agent orchestration
 ✅ **Export Capabilities** - CSV, JSON, Excel formats
+✅ **Video Production** - Autonomous agent for generating professional portfolio videos
 ✅ **Security First** - Zero vulnerabilities, type-safe codebase
 ✅ **Infrastructure as Code** - Complete Terraform configuration for AWS deployment
 
@@ -31,6 +34,7 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [CLI Tool](#cli-tool)
+- [Video Production](#video-production)
 - [Infrastructure Setup](#infrastructure-setup)
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
@@ -98,6 +102,36 @@ npm run scrape -- batch -i companies.csv -o ./results
 ```
 
 See [CLI_USAGE.md](./CLI_USAGE.md) for detailed documentation.
+
+## Video Production
+
+The platform includes an **autonomous video production agent** for creating professional videos:
+
+### Video Production Features
+- 🎬 **Automated Pipeline**: Script → Narration → Visuals → Final MP4
+- 🎙️ **Local TTS**: Platform-specific text-to-speech (macOS `say`, Linux `espeak`/`festival`)
+- 🎨 **Visual Generation**: Automatic title cards, diagrams, and metrics displays
+- 🎞️ **FFmpeg Rendering**: High-quality 1080p/4K output with scene transitions
+- 🔄 **Intelligent Fallbacks**: Graceful degradation when components unavailable
+- 📊 **Detailed Logging**: Comprehensive render reports and error tracking
+
+### Quick Video Generation
+
+```bash
+# Validate setup
+npm run video:validate
+
+# Generate videos from scripts
+npm run video:generate
+
+# Custom configuration
+./scripts/video-production/generate-videos.sh \
+  --pattern "*.md" \
+  --resolution 3840x2160 \
+  --fps 60
+```
+
+See [scripts/video-production/README.md](./scripts/video-production/README.md) for complete documentation and [scripts/video-production/INSTALL.md](./scripts/video-production/INSTALL.md) for installation instructions.
 
 ## Infrastructure Setup
 

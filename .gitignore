@@ -47,3 +47,6 @@ batch-results/
 # Distribution packages
 dist-package/
 ucc-scraper-*.tar.gz
+
+# Video production output
+video-output/
