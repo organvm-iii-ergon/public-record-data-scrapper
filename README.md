@@ -8,6 +8,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**NEW: Professional Investor Video** - 5-minute presentation video with audio narration showcasing the platform for potential investors and employers. See [VIDEO_GENERATION_SUMMARY.md](./VIDEO_GENERATION_SUMMARY.md) for details.
+
 **NEW: Terminal CLI Tool** - Standalone command-line scraper for individual use without GUI. Perfect for field data collection. See [CLI_USAGE.md](./CLI_USAGE.md) for details.
 
 **NEW: Video Production Agent** - Autonomous system for generating professional MP4 videos from markdown scripts. Fully automated local-first workflow. See [scripts/video-production/README.md](./scripts/video-production/README.md) for details.
@@ -30,6 +32,7 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 
 ## Table of Contents
 
+- [Video Presentation](#video-presentation)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [CLI Tool](#cli-tool)
@@ -41,6 +44,31 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Video Presentation
+
+🎥 **Watch the Platform Presentation** - A professional 5-minute video showcasing the UCC-MCA Intelligence Platform for investors and employers.
+
+The video covers:
+- Business problem and market opportunity
+- Strategic solution architecture
+- Technical sophistication and reliability
+- Measurable business impact
+- Unique differentiators
+
+**Generate your own video:**
+```bash
+# Install dependencies (if not already installed)
+sudo apt-get install -y ffmpeg espeak  # Linux
+brew install ffmpeg                     # macOS
+
+# Generate the video
+npm run video:generate
+```
+
+Output: `video-output/EXECUTIVE_VIDEO_SCRIPT.mp4` (4.1 MB, 5:39 duration)
+
+For complete details, see [VIDEO_GENERATION_SUMMARY.md](./VIDEO_GENERATION_SUMMARY.md) and [VIDEO_GENERATION_GUIDE.md](./VIDEO_GENERATION_GUIDE.md).
 
 ## Quick Start
 
