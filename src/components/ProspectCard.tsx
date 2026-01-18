@@ -1,11 +1,12 @@
 import { Prospect } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { HealthGradeBadge } from './HealthGradeBadge'
 import { Buildings, TrendUp, MapPin, Brain } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { KeyboardEvent } from 'react'
 
 interface ProspectCardProps {
   prospect: Prospect
@@ -27,6 +28,13 @@ export function ProspectCard({ prospect, onSelect }: ProspectCardProps) {
   const hasGrowthSignals = prospect.growthSignals.length > 0
   const yearsSinceDefault = Math.floor(prospect.timeSinceDefault / 365)
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onSelect(prospect)
+    }
+  }
+
   return (
     <motion.div
       whileHover={{ scale: 1.03, y: -8 }}
@@ -34,11 +42,15 @@ export function ProspectCard({ prospect, onSelect }: ProspectCardProps) {
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
     >
       <Card 
+        role="button"
+        tabIndex={0}
         className={cn(
           'glass-effect p-4 sm:p-5 md:p-6 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer group overflow-hidden relative border-2',
           isClaimed && 'border-primary/50 shadow-lg shadow-primary/10'
         )}
         onClick={() => onSelect(prospect)}
+        onKeyDown={handleKeyDown}
+        aria-label={`View details for ${prospect.companyName}`}
       >
         <motion.div 
           className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -162,16 +174,17 @@ export function ProspectCard({ prospect, onSelect }: ProspectCardProps) {
           </p>
 
           <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
-              disabled={isClaimed}
-              aria-label={isClaimed ? (prospect.claimedBy ? `Claimed by ${prospect.claimedBy}` : 'Claimed') : `View details for ${prospect.companyName}`}
+            <div
+              className={cn(
+                buttonVariants({ size: 'sm' }),
+                "flex-1 text-xs sm:text-sm h-8 sm:h-9",
+                isClaimed && "opacity-50 pointer-events-none"
+              )}
               title={isClaimed ? (prospect.claimedBy ? `Claimed by ${prospect.claimedBy}` : 'Claimed') : `View details for ${prospect.companyName}`}
             >
               <Buildings size={14} weight="fill" className="mr-1 sm:mr-2 sm:w-4 sm:h-4" />
               {isClaimed ? 'Claimed' : 'View Details'}
-            </Button>
+            </div>
             {isClaimed && prospect.claimedBy && (
               <Badge variant="secondary" className="text-xs">
                 {prospect.claimedBy}
