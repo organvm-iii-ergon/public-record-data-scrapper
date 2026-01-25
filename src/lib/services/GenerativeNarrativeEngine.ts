@@ -1,4 +1,5 @@
-// @ts-nocheck - Experimental generative features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+// Experimental generative AI features - disabled strict linting
 import type {
   Prospect,
   GenerativeNarrative,
@@ -7,7 +8,7 @@ import type {
   CompanyGraph,
   CompetitorData,
   GrowthSignal,
-  IndustryTrend,
+  IndustryTrend
 } from '../types'
 
 /**
@@ -20,7 +21,10 @@ export class GenerativeNarrativeEngine {
   private model: string = 'claude-3-5-sonnet-20241022'
 
   constructor(apiEndpoint?: string, apiKey?: string) {
-    this.apiEndpoint = apiEndpoint || import.meta.env.VITE_LLM_API_ENDPOINT || 'https://api.anthropic.com/v1/messages'
+    this.apiEndpoint =
+      apiEndpoint ||
+      import.meta.env.VITE_LLM_API_ENDPOINT ||
+      'https://api.anthropic.com/v1/messages'
     this.apiKey = apiKey || import.meta.env.VITE_ANTHROPIC_API_KEY || ''
   }
 
@@ -43,7 +47,7 @@ export class GenerativeNarrativeEngine {
       relationships: relationships as any,
       historicalSignals: historicalSignals as any,
       industryTrends: industryTrends as any,
-      userPreferences,
+      userPreferences
     })
 
     // Call LLM API
@@ -59,7 +63,7 @@ export class GenerativeNarrativeEngine {
       riskFactors: [],
       opportunities: [],
       recommendedActions: [],
-      generatedAt: new Date().toISOString(),
+      generatedAt: new Date().toISOString()
     }
 
     return narrative
@@ -92,9 +96,7 @@ export class GenerativeNarrativeEngine {
 
     return insights.sort((a, b) => {
       const impactWeight = { high: 3, medium: 2, low: 1 }
-      return (
-        impactWeight[b.impact] * b.confidence - impactWeight[a.impact] * a.confidence
-      )
+      return impactWeight[b.impact] * b.confidence - impactWeight[a.impact] * a.confidence
     })
   }
 
@@ -177,7 +179,9 @@ ${prospect.growthSignals.map((s) => `- ${s.type}: ${s.description} (confidence: 
 
 UCC FILINGS (${prospect.uccFilings.length}):
 ${prospect.uccFilings
-  .map((f) => `- ${f.filingDate}: ${f.securedParty} - $${f.lienAmount?.toLocaleString() || 'Unknown'}`)
+  .map(
+    (f) => `- ${f.filingDate}: ${f.securedParty} - $${f.lienAmount?.toLocaleString() || 'Unknown'}`
+  )
   .join('\n')}
 `
 
@@ -193,7 +197,10 @@ Total Network Exposure: $${relationships.metadata.totalExposure?.toLocaleString(
     if (marketData && marketData.length > 0) {
       prompt += `\n\nMARKET CONTEXT:
 Top Competitors:
-${marketData.slice(0, 5).map((c) => `- ${c.lenderName}: ${c.filingCount} deals, $${c.avgDealSize.toLocaleString()} avg`).join('\n')}
+${marketData
+  .slice(0, 5)
+  .map((c) => `- ${c.lenderName}: ${c.filingCount} deals, $${c.avgDealSize.toLocaleString()} avg`)
+  .join('\n')}
 `
     }
 
@@ -261,7 +268,7 @@ Format as plain text with markdown section headers.
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
+          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
           model: this.model,
@@ -269,10 +276,10 @@ Format as plain text with markdown section headers.
           messages: [
             {
               role: 'user',
-              content: prompt,
-            },
-          ],
-        }),
+              content: prompt
+            }
+          ]
+        })
       })
 
       if (!response.ok) {
@@ -337,7 +344,7 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
       riskFactors: [] as string[],
       recommendedActions: [] as string[],
       marketContext: '',
-      competitiveLandscape: '',
+      competitiveLandscape: ''
     }
 
     // Extract sections using regex
@@ -392,7 +399,7 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
       riskFactors: 15,
       recommendedActions: 15,
       marketContext: 10,
-      competitiveLandscape: 5,
+      competitiveLandscape: 5
     }
 
     if (sections.summary.length > 50) score += weights.summary
@@ -481,7 +488,7 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
           .map((s) => s.type)
         signalCorrelations.set(signal.type, [
           ...(signalCorrelations.get(signal.type) || []),
-          ...otherSignals,
+          ...otherSignals
         ])
       }
     }
@@ -490,7 +497,7 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
       industryDistribution,
       avgScoreByIndustry,
       signalCorrelations,
-      healthTrends,
+      healthTrends
     }
   }
 
@@ -504,15 +511,11 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
     const insights: GenerativeInsight[] = []
 
     // High-growth industry insight
-    const topIndustry = [...patterns.avgScoreByIndustry.entries()].sort(
-      (a, b) => b[1] - a[1]
-    )[0]
+    const topIndustry = [...patterns.avgScoreByIndustry.entries()].sort((a, b) => b[1] - a[1])[0]
 
     if (topIndustry) {
       const [industry, avgScore] = topIndustry
-      const relatedProspects = prospects
-        .filter((p) => p.industry === industry)
-        .map((p) => p.id)
+      const relatedProspects = prospects.filter((p) => p.industry === industry).map((p) => p.id)
 
       insights.push({
         id: `insight-opportunity-${Date.now()}-1`,
@@ -526,8 +529,8 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
         evidence: [
           `Average score: ${avgScore.toFixed(1)}`,
           `Prospect count: ${relatedProspects.length}`,
-          `Industry distribution analysis`,
-        ],
+          `Industry distribution analysis`
+        ]
       })
     }
 
@@ -545,8 +548,8 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
         generatedAt: new Date().toISOString(),
         evidence: [
           `Prospects with 3+ signals: ${prospectsWithMultipleSignals.length}`,
-          `Signal correlation analysis`,
-        ],
+          `Signal correlation analysis`
+        ]
       })
     }
 
@@ -582,8 +585,8 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
         generatedAt: new Date().toISOString(),
         evidence: [
           `Declining prospects: ${decliningCount}`,
-          `Percentage: ${((decliningCount / totalCount) * 100).toFixed(1)}%`,
-        ],
+          `Percentage: ${((decliningCount / totalCount) * 100).toFixed(1)}%`
+        ]
       })
     }
 
@@ -623,8 +626,8 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
         generatedAt: new Date().toISOString(),
         evidence: [
           `Top industries: ${topIndustries.map(([ind, count]) => `${ind} (${count})`).join(', ')}`,
-          `Concentration: ${concentration.toFixed(1)}%`,
-        ],
+          `Concentration: ${concentration.toFixed(1)}%`
+        ]
       })
     }
 
@@ -641,9 +644,7 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
     const insights: GenerativeInsight[] = []
 
     // High-priority unclaimed prospects
-    const unclaimedHighPriority = prospects.filter(
-      (p) => !p.claimedBy && p.priorityScore >= 75
-    )
+    const unclaimedHighPriority = prospects.filter((p) => !p.claimedBy && p.priorityScore >= 75)
 
     if (unclaimedHighPriority.length > 0) {
       insights.push({
@@ -658,8 +659,8 @@ Analysis shows moderate competition in this segment with 5 major lenders active.
         evidence: [
           `Unclaimed prospects: ${unclaimedHighPriority.length}`,
           `Priority threshold: 75`,
-          `Average score: ${(unclaimedHighPriority.reduce((sum, p) => sum + p.priorityScore, 0) / unclaimedHighPriority.length).toFixed(1)}`,
-        ],
+          `Average score: ${(unclaimedHighPriority.reduce((sum, p) => sum + p.priorityScore, 0) / unclaimedHighPriority.length).toFixed(1)}`
+        ]
       })
     }
 

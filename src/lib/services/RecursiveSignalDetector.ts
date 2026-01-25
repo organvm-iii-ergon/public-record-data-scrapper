@@ -1,11 +1,10 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
 import type {
   Prospect,
   GrowthSignal,
   SignalChain,
   ChainedSignal,
   RecursiveSignalConfig,
-  SignalType,
+  SignalType
 } from '../types'
 
 /**
@@ -122,7 +121,7 @@ export class RecursiveSignalDetector {
             depth: depth + 1,
             parentSignalId: currentSignal.id,
             relationshipType: 'triggered_by',
-            confidence: relationshipConfidence,
+            confidence: relationshipConfidence
           }
 
           chainedSignals.push(chained)
@@ -197,7 +196,7 @@ export class RecursiveSignalDetector {
             depth: 1,
             parentSignalId: currentSignal.id,
             relationshipType: 'correlated_with',
-            confidence: correlation,
+            confidence: correlation
           })
         }
       }
@@ -223,7 +222,7 @@ export class RecursiveSignalDetector {
       expansion: ['equipment', 'permit'], // Expansion needs equipment and permits
       permit: ['equipment'], // Permits often lead to equipment purchases
       contract: ['hiring', 'expansion'], // New contracts drive hiring and expansion
-      equipment: [], // Equipment doesn't directly imply other signals
+      equipment: [] // Equipment doesn't directly imply other signals
     }
 
     const impliedTypes = implications[currentSignal.type] || []
@@ -254,7 +253,7 @@ export class RecursiveSignalDetector {
               depth: 1,
               parentSignalId: currentSignal.id,
               relationshipType: 'implies',
-              confidence: implicationConfidence,
+              confidence: implicationConfidence
             })
           }
         }
@@ -296,7 +295,7 @@ export class RecursiveSignalDetector {
       totalConfidence,
       chainStrength,
       discoveryPath,
-      detectedAt: new Date().toISOString(),
+      detectedAt: new Date().toISOString()
     }
   }
 
@@ -375,32 +374,32 @@ export class RecursiveSignalDetector {
         expansion: 0.9,
         equipment: 0.8,
         contract: 0.7,
-        permit: 0.6,
+        permit: 0.6
       },
       expansion: {
         hiring: 0.9,
         equipment: 0.8,
         permit: 0.9,
-        contract: 0.6,
+        contract: 0.6
       },
       equipment: {
         expansion: 0.8,
         hiring: 0.7,
         permit: 0.7,
-        contract: 0.5,
+        contract: 0.5
       },
       permit: {
         expansion: 0.9,
         equipment: 0.7,
         hiring: 0.6,
-        contract: 0.5,
+        contract: 0.5
       },
       contract: {
         hiring: 0.8,
         expansion: 0.7,
         equipment: 0.6,
-        permit: 0.5,
-      },
+        permit: 0.5
+      }
     }
 
     return synergy[type1]?.[type2] || 0.3 // Default low synergy
@@ -409,9 +408,7 @@ export class RecursiveSignalDetector {
   /**
    * Analyze signal clusters across multiple prospects
    */
-  async analyzeSignalClusters(
-    config: RecursiveSignalConfig
-  ): Promise<{
+  async analyzeSignalClusters(config: RecursiveSignalConfig): Promise<{
     clusters: Map<string, Prospect[]>
     patterns: {
       signalCombination: SignalType[]
@@ -421,11 +418,14 @@ export class RecursiveSignalDetector {
     }[]
   }> {
     const clusters = new Map<string, Prospect[]>()
-    const patternMap = new Map<string, {
-      frequency: number
-      totalConfidence: number
-      prospects: string[]
-    }>()
+    const patternMap = new Map<
+      string,
+      {
+        frequency: number
+        totalConfidence: number
+        prospects: string[]
+      }
+    >()
 
     // Analyze each prospect
     for (const prospect of this.prospects) {
@@ -435,7 +435,7 @@ export class RecursiveSignalDetector {
       for (const chain of chains) {
         const signalTypes = [
           chain.rootSignal.type,
-          ...chain.chainedSignals.map((s) => s.signal.type),
+          ...chain.chainedSignals.map((s) => s.signal.type)
         ].sort()
 
         const key = signalTypes.join('+')
@@ -451,7 +451,7 @@ export class RecursiveSignalDetector {
           patternMap.set(key, {
             frequency: 0,
             totalConfidence: 0,
-            prospects: [],
+            prospects: []
           })
         }
 
@@ -468,7 +468,7 @@ export class RecursiveSignalDetector {
         signalCombination: key.split('+') as SignalType[],
         frequency: data.frequency,
         avgConfidence: data.totalConfidence / data.frequency,
-        prospects: data.prospects,
+        prospects: data.prospects
       }))
       .sort((a, b) => b.frequency - a.frequency)
 
@@ -481,12 +481,14 @@ export class RecursiveSignalDetector {
   async predictNextSignals(
     prospectId: string,
     config: RecursiveSignalConfig
-  ): Promise<{
-    signalType: SignalType
-    probability: number
-    reasoning: string
-    basedOn: GrowthSignal[]
-  }[]> {
+  ): Promise<
+    {
+      signalType: SignalType
+      probability: number
+      reasoning: string
+      basedOn: GrowthSignal[]
+    }[]
+  > {
     const prospect = this.prospects.find((p) => p.id === prospectId)
     if (!prospect) return []
 
@@ -544,7 +546,7 @@ export class RecursiveSignalDetector {
           signalType,
           probability: Math.min(probability, 1.0),
           reasoning: reasons.join('; '),
-          basedOn,
+          basedOn
         })
       }
     }
@@ -592,9 +594,9 @@ export class RecursiveSignalDetector {
         expansion: ['equipment', 'permit', 'hiring'],
         equipment: ['hiring'],
         permit: ['equipment', 'expansion'],
-        contract: ['hiring', 'expansion'],
+        contract: ['hiring', 'expansion']
       },
-      correlationThreshold: 0.6,
+      correlationThreshold: 0.6
     }
   }
 }

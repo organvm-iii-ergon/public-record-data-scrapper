@@ -1,11 +1,12 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
+/* eslint-disable no-case-declarations */
+// Experimental recursive enrichment features
 import type {
   Prospect,
   EnrichmentPlan,
   EnrichmentStep,
   RecursiveEnrichmentResult,
   GrowthSignal,
-  HealthScore,
+  HealthScore
 } from '../types'
 
 /**
@@ -62,7 +63,7 @@ export class RecursiveEnrichmentEngine {
       executedSteps: plan.steps.filter((s) => plan.completedSteps.includes(s.id)),
       improvements,
       totalDepth: plan.currentDepth,
-      duration,
+      duration
     }
   }
 
@@ -87,7 +88,7 @@ export class RecursiveEnrichmentEngine {
         type: 'revenue',
         priority: 1,
         dependencies: [],
-        estimatedDuration: 2000,
+        estimatedDuration: 2000
       })
     }
 
@@ -99,7 +100,7 @@ export class RecursiveEnrichmentEngine {
         type: 'industry',
         priority: 2,
         dependencies: [],
-        estimatedDuration: 1500,
+        estimatedDuration: 1500
       })
     }
 
@@ -111,7 +112,7 @@ export class RecursiveEnrichmentEngine {
         type: 'signals',
         priority: 3,
         dependencies: ['step-0'], // May depend on revenue
-        estimatedDuration: 3000,
+        estimatedDuration: 3000
       })
     }
 
@@ -123,7 +124,7 @@ export class RecursiveEnrichmentEngine {
         type: 'health',
         priority: 4,
         dependencies: [],
-        estimatedDuration: 2500,
+        estimatedDuration: 2500
       })
     }
 
@@ -135,7 +136,7 @@ export class RecursiveEnrichmentEngine {
         type: 'relationships',
         priority: 5,
         dependencies: ['step-0', 'step-1'], // May need revenue and industry
-        estimatedDuration: 4000,
+        estimatedDuration: 4000
       })
     }
 
@@ -146,7 +147,7 @@ export class RecursiveEnrichmentEngine {
       type: 'market',
       priority: 6,
       dependencies: ['step-1', 'step-2'], // Needs industry and signals
-      estimatedDuration: 2000,
+      estimatedDuration: 2000
     })
 
     // Sort by priority
@@ -159,7 +160,7 @@ export class RecursiveEnrichmentEngine {
       maxDepth,
       adaptiveStrategy: true,
       completedSteps: [],
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     }
   }
 
@@ -229,10 +230,7 @@ export class RecursiveEnrichmentEngine {
   /**
    * Execute a single enrichment step
    */
-  private async executeEnrichmentStep(
-    prospect: Prospect,
-    step: EnrichmentStep
-  ): Promise<Prospect> {
+  private async executeEnrichmentStep(prospect: Prospect, step: EnrichmentStep): Promise<Prospect> {
     const enriched = { ...prospect }
 
     switch (step.type) {
@@ -284,7 +282,7 @@ export class RecursiveEnrichmentEngine {
         prospect.healthScore.reviewCount === 0 ||
         !prospect.healthScore.lastUpdated ||
         this.isStale(prospect.healthScore.lastUpdated),
-      relationships: false, // Would check relationship data
+      relationships: false // Would check relationship data
     }
   }
 
@@ -362,7 +360,7 @@ export class RecursiveEnrichmentEngine {
     return {
       dataCompleteness,
       confidenceIncrease,
-      newFieldsAdded,
+      newFieldsAdded
     }
   }
 
@@ -408,7 +406,7 @@ export class RecursiveEnrichmentEngine {
         healthcare: 4000000,
         manufacturing: 5000000,
         services: 1800000,
-        technology: 3500000,
+        technology: 3500000
       }
 
       return industryAverages[prospect.industry] || 2000000
@@ -435,7 +433,7 @@ export class RecursiveEnrichmentEngine {
         description: 'Estimated hiring activity based on revenue size',
         detectedDate: new Date().toISOString(),
         score: 65,
-        confidence: 0.6,
+        confidence: 0.6
       })
     }
 
@@ -447,7 +445,7 @@ export class RecursiveEnrichmentEngine {
         description: 'Improving health trend suggests expansion',
         detectedDate: new Date().toISOString(),
         score: 70,
-        confidence: 0.65,
+        confidence: 0.65
       })
     }
 
@@ -485,7 +483,7 @@ export class RecursiveEnrichmentEngine {
       ...prospect.healthScore,
       score,
       grade,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
     }
   }
 
@@ -536,7 +534,7 @@ export class RecursiveEnrichmentEngine {
       totalEnriched,
       avgImprovementRate: 0, // Would calculate from improvement data
       avgDepth: totalEnriched > 0 ? totalDepth / totalEnriched : 0,
-      totalStepsExecuted: totalSteps,
+      totalStepsExecuted: totalSteps
     }
   }
 }

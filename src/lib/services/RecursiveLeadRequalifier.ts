@@ -1,11 +1,12 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Experimental lead requalification features
 import type {
   Prospect,
   RequalificationLead,
   NetworkRequalification,
   NetworkRecommendation,
   CompanyGraph,
-  GrowthSignal,
+  GrowthSignal
 } from '../types'
 import { RecursiveRelationshipMapper } from './RecursiveRelationshipMapper'
 
@@ -42,8 +43,8 @@ export class RecursiveLeadRequalifier {
       relationshipTypes: ['parent', 'subsidiary', 'affiliate', 'common_secured_party'],
       includeProspectData: true,
       stopConditions: {
-        maxNodes: 50,
-      },
+        maxNodes: 50
+      }
     })
 
     // Requalify root lead
@@ -55,10 +56,7 @@ export class RecursiveLeadRequalifier {
     await this.requalifyNetworkRecursively(networkGraph, requalifiedLeads, 0, maxDepth)
 
     // Generate network recommendations
-    const recommendations = this.generateNetworkRecommendations(
-      requalifiedLeads,
-      networkGraph
-    )
+    const recommendations = this.generateNetworkRecommendations(requalifiedLeads, networkGraph)
 
     // Calculate total opportunity value
     const totalOpportunityValue = requalifiedLeads
@@ -72,7 +70,7 @@ export class RecursiveLeadRequalifier {
       totalOpportunityValue,
       recommendations,
       executionDepth: maxDepth,
-      completedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString()
     }
   }
 
@@ -99,11 +97,11 @@ export class RecursiveLeadRequalifier {
         // If lead should be revived, check its connections too
         if (requalification.recommendation === 'revive' && currentDepth + 1 < maxDepth) {
           // Get related prospects
-          const relatedNodes = this.relationshipMapper.getRelatedCompanies(
-            node.id,
-            graph,
-            ['parent', 'subsidiary', 'affiliate']
-          )
+          const relatedNodes = this.relationshipMapper.getRelatedCompanies(node.id, graph, [
+            'parent',
+            'subsidiary',
+            'affiliate'
+          ])
 
           for (const relatedNode of relatedNodes) {
             if (!processedIds.has(relatedNode.id) && relatedNode.prospect) {
@@ -129,7 +127,7 @@ export class RecursiveLeadRequalifier {
         newSignals: [],
         netScore: prospect.priorityScore,
         recommendation: 'dismiss',
-        reasoning: 'Already qualified',
+        reasoning: 'Already qualified'
       }
     }
 
@@ -150,7 +148,7 @@ export class RecursiveLeadRequalifier {
       newSignals,
       netScore,
       recommendation: shouldRevive ? 'revive' : 'dismiss',
-      reasoning,
+      reasoning
     }
   }
 
@@ -172,7 +170,7 @@ export class RecursiveLeadRequalifier {
         description: 'Recent job postings detected',
         detectedDate: new Date().toISOString(),
         score: 70,
-        confidence: 0.7,
+        confidence: 0.7
       })
     }
 
@@ -184,7 +182,7 @@ export class RecursiveLeadRequalifier {
         description: 'Improving business metrics indicate expansion',
         detectedDate: new Date().toISOString(),
         score: 65,
-        confidence: 0.65,
+        confidence: 0.65
       })
     }
 
@@ -220,11 +218,7 @@ export class RecursiveLeadRequalifier {
   /**
    * Determine if lead should be revived
    */
-  private shouldRevive(
-    prospect: Prospect,
-    newSignals: GrowthSignal[],
-    netScore: number
-  ): boolean {
+  private shouldRevive(prospect: Prospect, newSignals: GrowthSignal[], netScore: number): boolean {
     // Must have at least one new signal
     if (newSignals.length === 0) return false
 
@@ -317,7 +311,7 @@ export class RecursiveLeadRequalifier {
               0
             ),
             confidence: 0.8,
-            priority: 1,
+            priority: 1
           })
         }
       }
@@ -325,11 +319,11 @@ export class RecursiveLeadRequalifier {
 
     // Find cross-sell opportunities
     for (const lead of revivableLeads) {
-      const related = this.relationshipMapper.getRelatedCompanies(
-        lead.originalProspect.id,
-        graph,
-        ['parent', 'subsidiary', 'affiliate']
-      )
+      const related = this.relationshipMapper.getRelatedCompanies(lead.originalProspect.id, graph, [
+        'parent',
+        'subsidiary',
+        'affiliate'
+      ])
 
       const relatedRevivable = related.filter((node) =>
         revivableLeads.some((l) => l.originalProspect.id === node.id)
@@ -344,7 +338,7 @@ export class RecursiveLeadRequalifier {
             (lead.originalProspect.estimatedRevenue || 0) +
             relatedRevivable.reduce((sum, n) => sum + (n.prospect?.estimatedRevenue || 0), 0),
           confidence: 0.75,
-          priority: 2,
+          priority: 2
         })
       }
     }

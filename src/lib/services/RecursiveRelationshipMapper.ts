@@ -1,4 +1,5 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Experimental relationship mapping features
 import type {
   Prospect,
   CompanyGraph,
@@ -6,7 +7,7 @@ import type {
   CompanyRelationship,
   RelationshipType,
   RecursiveTraversalConfig,
-  UCCFiling,
+  UCCFiling
 } from '../types'
 
 /**
@@ -42,13 +43,7 @@ export class RecursiveRelationshipMapper {
     const edges: CompanyRelationship[] = []
 
     // Recursively traverse the graph
-    await this.traverseRecursively(
-      rootCompanyId,
-      0,
-      config,
-      nodes,
-      edges
-    )
+    await this.traverseRecursively(rootCompanyId, 0, config, nodes, edges)
 
     // Calculate metadata
     const metadata = this.calculateGraphMetadata(nodes, edges)
@@ -61,7 +56,7 @@ export class RecursiveRelationshipMapper {
       totalNodes: nodes.size,
       totalEdges: edges.length,
       createdAt: new Date().toISOString(),
-      metadata,
+      metadata
     }
 
     console.log(
@@ -92,11 +87,7 @@ export class RecursiveRelationshipMapper {
     if (!prospect) return
 
     // Create node for current company
-    const relationships = await this.discoverRelationships(
-      prospect,
-      currentDepth,
-      config
-    )
+    const relationships = await this.discoverRelationships(prospect, currentDepth, config)
 
     const node: CompanyNode = {
       id: companyId,
@@ -104,7 +95,7 @@ export class RecursiveRelationshipMapper {
       prospect: config.includeProspectData ? prospect : undefined,
       relationships,
       depth: currentDepth,
-      visitedAt: new Date().toISOString(),
+      visitedAt: new Date().toISOString()
     }
 
     nodes.set(companyId, node)
@@ -117,13 +108,7 @@ export class RecursiveRelationshipMapper {
       }
 
       const nextCompanyId = relationship.toCompanyId
-      await this.traverseRecursively(
-        nextCompanyId,
-        currentDepth + 1,
-        config,
-        nodes,
-        edges
-      )
+      await this.traverseRecursively(nextCompanyId, currentDepth + 1, config, nodes, edges)
     }
   }
 
@@ -143,9 +128,7 @@ export class RecursiveRelationshipMapper {
 
     // Discover relationships from UCC filings
     if (config.relationshipTypes.includes('common_secured_party')) {
-      relationships.push(
-        ...this.findCommonSecuredPartyRelationships(prospect, depth)
-      )
+      relationships.push(...this.findCommonSecuredPartyRelationships(prospect, depth))
     }
 
     if (config.relationshipTypes.includes('guarantor')) {
@@ -184,9 +167,7 @@ export class RecursiveRelationshipMapper {
     depth: number
   ): CompanyRelationship[] {
     const relationships: CompanyRelationship[] = []
-    const securedParties = new Set(
-      prospect.uccFilings.map((f) => f.securedParty.toLowerCase())
-    )
+    const securedParties = new Set(prospect.uccFilings.map((f) => f.securedParty.toLowerCase()))
 
     for (const other of this.prospects) {
       if (other.id === prospect.id) continue
@@ -209,8 +190,8 @@ export class RecursiveRelationshipMapper {
           discoveredDate: new Date().toISOString(),
           depth,
           metadata: {
-            securedParty: commonFiling?.securedParty,
-          },
+            securedParty: commonFiling?.securedParty
+          }
         })
       }
     }
@@ -221,10 +202,7 @@ export class RecursiveRelationshipMapper {
   /**
    * Find guarantor relationships (from UCC filing patterns)
    */
-  private findGuarantorRelationships(
-    prospect: Prospect,
-    depth: number
-  ): CompanyRelationship[] {
+  private findGuarantorRelationships(prospect: Prospect, depth: number): CompanyRelationship[] {
     const relationships: CompanyRelationship[] = []
 
     // Look for cross-collateralization or guarantor patterns in filings
@@ -245,8 +223,8 @@ export class RecursiveRelationshipMapper {
               discoveredDate: new Date().toISOString(),
               depth,
               metadata: {
-                debtorName: filing.debtorName,
-              },
+                debtorName: filing.debtorName
+              }
             })
           }
         }
@@ -259,10 +237,7 @@ export class RecursiveRelationshipMapper {
   /**
    * Find companies in the same industry
    */
-  private findSameIndustryRelationships(
-    prospect: Prospect,
-    depth: number
-  ): CompanyRelationship[] {
+  private findSameIndustryRelationships(prospect: Prospect, depth: number): CompanyRelationship[] {
     const relationships: CompanyRelationship[] = []
     const sameIndustryProspects = this.prospects.filter(
       (p) => p.industry === prospect.industry && p.id !== prospect.id && p.state === prospect.state
@@ -283,8 +258,8 @@ export class RecursiveRelationshipMapper {
         depth,
         metadata: {
           industry: prospect.industry,
-          state: prospect.state,
-        },
+          state: prospect.state
+        }
       })
     }
 
@@ -331,8 +306,8 @@ export class RecursiveRelationshipMapper {
           discoveredDate: new Date().toISOString(),
           depth,
           metadata: {
-            baseName,
-          },
+            baseName
+          }
         })
       }
     }
@@ -343,10 +318,7 @@ export class RecursiveRelationshipMapper {
   /**
    * Find affiliate relationships
    */
-  private findAffiliateRelationships(
-    prospect: Prospect,
-    depth: number
-  ): CompanyRelationship[] {
+  private findAffiliateRelationships(prospect: Prospect, depth: number): CompanyRelationship[] {
     const relationships: CompanyRelationship[] = []
 
     // Affiliates are companies with similar names but different legal entities
@@ -357,10 +329,7 @@ export class RecursiveRelationshipMapper {
 
       const otherBaseName = this.extractBaseName(other.companyName)
 
-      if (
-        this.areNamesSimilar(baseName, otherBaseName) &&
-        prospect.industry === other.industry
-      ) {
+      if (this.areNamesSimilar(baseName, otherBaseName) && prospect.industry === other.industry) {
         relationships.push({
           fromCompanyId: prospect.id,
           toCompanyId: other.id,
@@ -370,8 +339,8 @@ export class RecursiveRelationshipMapper {
           depth,
           metadata: {
             baseName,
-            industry: prospect.industry,
-          },
+            industry: prospect.industry
+          }
         })
       }
     }
@@ -418,7 +387,7 @@ export class RecursiveRelationshipMapper {
     return {
       riskConcentration,
       networkHealth,
-      totalExposure,
+      totalExposure
     }
   }
 
@@ -437,9 +406,7 @@ export class RecursiveRelationshipMapper {
    */
   private findProspectByNameFuzzy(name: string): Prospect | undefined {
     const normalizedName = name.toLowerCase().trim()
-    return this.prospects.find((p) =>
-      p.companyName.toLowerCase().includes(normalizedName)
-    )
+    return this.prospects.find((p) => p.companyName.toLowerCase().includes(normalizedName))
   }
 
   /**
@@ -526,9 +493,7 @@ export class RecursiveRelationshipMapper {
     const relatedNodes: CompanyNode[] = []
     const edges = graph.edges.filter((e) => {
       const matchesCompany = e.fromCompanyId === companyId
-      const matchesType = relationshipTypes
-        ? relationshipTypes.includes(e.relationshipType)
-        : true
+      const matchesType = relationshipTypes ? relationshipTypes.includes(e.relationshipType) : true
       return matchesCompany && matchesType
     })
 
@@ -625,8 +590,7 @@ export class RecursiveRelationshipMapper {
         )
 
         for (const edge of connectedEdges) {
-          const nextId =
-            edge.fromCompanyId === currentId ? edge.toCompanyId : edge.fromCompanyId
+          const nextId = edge.fromCompanyId === currentId ? edge.toCompanyId : edge.fromCompanyId
           if (!visited.has(nextId)) {
             queue.push(nextId)
           }

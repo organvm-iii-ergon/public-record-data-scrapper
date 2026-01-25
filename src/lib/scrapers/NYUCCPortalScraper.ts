@@ -1,4 +1,6 @@
-// @ts-nocheck - Commented out playwright code
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Scraper with dynamic data handling
+
 /**
  * New York UCC Portal Scraper
  *
@@ -82,7 +84,8 @@ export class NYUCCPortalScraper {
       })
 
       const context = await browser.newContext({
-        userAgent: this.config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        userAgent:
+          this.config.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       })
 
       const page = await context.newPage()
@@ -157,7 +160,9 @@ export class NYUCCPortalScraper {
               }
             }
           } catch (error) {
-            errors.push(`Error parsing row ${i}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            errors.push(
+              `Error parsing row ${i}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
           }
         }
       } finally {
@@ -221,7 +226,6 @@ export class NYUCCPortalScraper {
         // Extract filing details from detail page
         // Implementation similar to searchByDebtorName
         // ...
-
       } finally {
         await browser.close()
       }
@@ -363,7 +367,7 @@ export async function exampleUsage() {
 
   if (result.success) {
     console.log(`Found ${result.filings.length} filings`)
-    result.filings.forEach(filing => {
+    result.filings.forEach((filing) => {
       console.log(`- ${filing.id}: ${filing.debtorName} (${filing.filingDate})`)
     })
   } else {
@@ -440,6 +444,6 @@ export class RateLimitedNYUCCScraper {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }

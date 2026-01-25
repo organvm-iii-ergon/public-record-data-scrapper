@@ -1,4 +1,5 @@
-// @ts-nocheck - Experimental generative features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
+// Experimental generative AI features - disabled strict linting
 import type {
   Prospect,
   GenerativeReport,
@@ -7,7 +8,7 @@ import type {
   CompetitorData,
   CompanyGraph,
   Visualization,
-  IndustryType,
+  IndustryType
 } from '../types'
 import { GenerativeNarrativeEngine } from './GenerativeNarrativeEngine'
 
@@ -85,10 +86,10 @@ export class GenerativeReportBuilder {
         generatedBy: userId,
         dataRange: dateRange,
         prospectCount: this.prospects.length,
-        sources: ['UCC Filings', 'Growth Signals', 'Health Scores', 'Market Data'],
+        sources: ['UCC Filings', 'Growth Signals', 'Health Scores', 'Market Data']
       },
       format: 'markdown',
-      content,
+      content
     }
   }
 
@@ -140,20 +141,17 @@ export class GenerativeReportBuilder {
         prospectCount: industry
           ? this.prospects.filter((p) => p.industry === industry).length
           : this.prospects.length,
-        sources: ['Market Data', 'Competitor Analysis', 'Industry Trends'],
+        sources: ['Market Data', 'Competitor Analysis', 'Industry Trends']
       },
       format: 'markdown',
-      content,
+      content
     }
   }
 
   /**
    * Generate a prospect-specific report
    */
-  async generateProspectReport(
-    prospectId: string,
-    userId: string
-  ): Promise<GenerativeReport> {
+  async generateProspectReport(prospectId: string, userId: string): Promise<GenerativeReport> {
     const prospect = this.prospects.find((p) => p.id === prospectId)
     if (!prospect) {
       throw new Error(`Prospect ${prospectId} not found`)
@@ -191,7 +189,7 @@ export class GenerativeReportBuilder {
     const narrative = await this.narrativeEngine.generateNarrative({
       prospect,
       marketData: this.competitorData,
-      relationships: this.relationshipGraphs?.get(prospectId),
+      relationships: this.relationshipGraphs?.get(prospectId)
     })
 
     const content = this.compileMarkdown(sections)
@@ -211,8 +209,8 @@ export class GenerativeReportBuilder {
           impact: 'high',
           relatedProspects: [prospectId],
           generatedAt: new Date().toISOString(),
-          evidence: narrative.sources,
-        },
+          evidence: narrative.sources
+        }
       ],
       recommendations: narrative.sections.recommendedActions,
       metadata: {
@@ -220,10 +218,10 @@ export class GenerativeReportBuilder {
         generatedBy: userId,
         dataRange: { start: '', end: '' },
         prospectCount: 1,
-        sources: narrative.sources,
+        sources: narrative.sources
       },
       format: 'markdown',
-      content,
+      content
     }
   }
 
@@ -265,10 +263,10 @@ export class GenerativeReportBuilder {
         generatedBy: userId,
         dataRange: { start: '', end: '' },
         prospectCount: this.prospects.length,
-        sources: ['Competitor Data', 'Market Share Analysis', 'Deal Flow Data'],
+        sources: ['Competitor Data', 'Market Share Analysis', 'Deal Flow Data']
       },
       format: 'markdown',
-      content,
+      content
     }
   }
 
@@ -276,8 +274,7 @@ export class GenerativeReportBuilder {
 
   private async generateExecutiveSummary(): Promise<ReportSection> {
     const totalProspects = this.prospects.length
-    const avgScore =
-      this.prospects.reduce((sum, p) => sum + p.priorityScore, 0) / totalProspects
+    const avgScore = this.prospects.reduce((sum, p) => sum + p.priorityScore, 0) / totalProspects
     const highValue = this.prospects.filter((p) => p.priorityScore >= 75).length
     const claimed = this.prospects.filter((p) => p.claimedBy).length
 
@@ -297,7 +294,7 @@ The portfolio shows ${avgScore >= 70 ? 'strong' : avgScore >= 60 ? 'moderate' : 
     return {
       id: 'executive-summary',
       title: 'Executive Summary',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -310,7 +307,10 @@ The portfolio shows ${avgScore >= 70 ? 'strong' : avgScore >= 60 ? 'moderate' : 
 **Industry Distribution:**
 ${Array.from(byIndustry.entries())
   .sort((a, b) => b[1] - a[1])
-  .map(([industry, count]) => `- ${industry}: ${count} prospects (${((count / this.prospects.length) * 100).toFixed(1)}%)`)
+  .map(
+    ([industry, count]) =>
+      `- ${industry}: ${count} prospects (${((count / this.prospects.length) * 100).toFixed(1)}%)`
+  )
   .join('\n')}
 
 **Geographic Distribution:**
@@ -326,7 +326,10 @@ ${Array.from(byHealth.entries())
     const gradeOrder = { A: 5, B: 4, C: 3, D: 2, F: 1 }
     return gradeOrder[b[0] as keyof typeof gradeOrder] - gradeOrder[a[0] as keyof typeof gradeOrder]
   })
-  .map(([grade, count]) => `- Grade ${grade}: ${count} prospects (${((count / this.prospects.length) * 100).toFixed(1)}%)`)
+  .map(
+    ([grade, count]) =>
+      `- Grade ${grade}: ${count} prospects (${((count / this.prospects.length) * 100).toFixed(1)}%)`
+  )
   .join('\n')}
 `
 
@@ -340,10 +343,10 @@ ${Array.from(byHealth.entries())
           config: { chartType: 'pie', title: 'Industry Distribution' },
           data: Array.from(byIndustry.entries()).map(([industry, count]) => ({
             label: industry,
-            value: count,
-          })),
-        },
-      ],
+            value: count
+          }))
+        }
+      ]
     }
   }
 
@@ -369,7 +372,7 @@ ${Array.from(byHealth.entries())
     return {
       id: 'performance-analysis',
       title: 'Performance Analysis',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -377,9 +380,7 @@ ${Array.from(byHealth.entries())
     const lowHealth = this.prospects.filter(
       (p) => p.healthScore.grade === 'D' || p.healthScore.grade === 'F'
     )
-    const declining = this.prospects.filter(
-      (p) => p.healthScore.sentimentTrend === 'declining'
-    )
+    const declining = this.prospects.filter((p) => p.healthScore.sentimentTrend === 'declining')
     const longDefault = this.prospects.filter((p) => p.timeSinceDefault > 365)
 
     const content = `
@@ -400,16 +401,14 @@ ${this.calculateRiskConcentration()}
     return {
       id: 'risk-assessment',
       title: 'Risk Assessment',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
   private async generateGrowthOpportunities(): Promise<ReportSection> {
     const withSignals = this.prospects.filter((p) => p.growthSignals.length > 0)
     const multiSignal = this.prospects.filter((p) => p.growthSignals.length >= 3)
-    const improving = this.prospects.filter(
-      (p) => p.healthScore.sentimentTrend === 'improving'
-    )
+    const improving = this.prospects.filter((p) => p.healthScore.sentimentTrend === 'improving')
 
     const content = `
 **Growth Signal Analysis:**
@@ -432,7 +431,7 @@ ${this.prospects
     return {
       id: 'growth-opportunities',
       title: 'Growth Opportunities',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -454,7 +453,7 @@ ${Array.from(byIndustry.entries())
     return {
       id: 'industry-breakdown',
       title: 'Industry Breakdown',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -466,7 +465,9 @@ Based on the portfolio analysis, we recommend:
 
 2. **Address Declining Health**: Implement proactive monitoring for the ${this.prospects.filter((p) => p.healthScore.sentimentTrend === 'declining').length} prospects showing health deterioration.
 
-3. **Industry Focus**: Concentrate efforts on top-performing industries: ${Array.from(this.calculateAvgScoreByIndustry().entries())
+3. **Industry Focus**: Concentrate efforts on top-performing industries: ${Array.from(
+      this.calculateAvgScoreByIndustry().entries()
+    )
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([ind]) => ind)
@@ -480,7 +481,7 @@ Based on the portfolio analysis, we recommend:
     return {
       id: 'recommendations',
       title: 'Strategic Recommendations',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -504,15 +505,12 @@ ${prospect.claimedBy ? `- Claimed by: ${prospect.claimedBy}` : '- Unclaimed'}
     return {
       id: 'company-profile',
       title: 'Company Profile',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
   private generateFinancialOverview(prospect: Prospect): ReportSection {
-    const totalLiens = prospect.uccFilings.reduce(
-      (sum, f) => sum + (f.lienAmount || 0),
-      0
-    )
+    const totalLiens = prospect.uccFilings.reduce((sum, f) => sum + (f.lienAmount || 0), 0)
 
     const content = `
 **UCC Filing Summary:**
@@ -528,14 +526,16 @@ ${prospect.claimedBy ? `- Claimed by: ${prospect.claimedBy}` : '- Unclaimed'}
 **Recent Filings:**
 ${prospect.uccFilings
   .slice(0, 5)
-  .map((f) => `- ${f.filingDate}: ${f.securedParty} - $${f.lienAmount?.toLocaleString() || 'Unknown'}`)
+  .map(
+    (f) => `- ${f.filingDate}: ${f.securedParty} - $${f.lienAmount?.toLocaleString() || 'Unknown'}`
+  )
   .join('\n')}
 `
 
     return {
       id: 'financial-overview',
       title: 'Financial Overview',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -551,7 +551,7 @@ ${prospect.growthSignals.length >= 3 ? 'Strong - Multiple concurrent signals ind
     return {
       id: 'growth-signal-analysis',
       title: 'Growth Signal Analysis',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -572,7 +572,7 @@ ${prospect.healthScore.score >= 80 ? 'Strong operational health with positive in
     return {
       id: 'health-assessment',
       title: 'Health Assessment',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -600,7 +600,7 @@ ${Array.from(graph.nodes.values())
     return {
       id: 'network-analysis',
       title: 'Network Analysis',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -618,7 +618,7 @@ ${Array.from(graph.nodes.values())
     return {
       id: 'competitive-position',
       title: 'Competitive Position',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -651,7 +651,7 @@ ${risks.length > 0 ? risks.map((r, i) => `${i + 1}. ${r}`).join('\n') : 'No sign
     return {
       id: 'risk-factors',
       title: 'Risk Factors',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -678,13 +678,15 @@ ${opportunities.length > 0 ? opportunities.map((o, i) => `${i + 1}. ${o}`).join(
 **Opportunity Rating:** ${opportunities.length >= 3 ? 'High' : opportunities.length >= 1 ? 'Moderate' : 'Low'}
 
 **Recommended Next Steps:**
-${this.generateNextSteps(prospect).map((s, i) => `${i + 1}. ${s}`).join('\n')}
+${this.generateNextSteps(prospect)
+  .map((s, i) => `${i + 1}. ${s}`)
+  .join('\n')}
 `
 
     return {
       id: 'opportunity-assessment',
       title: 'Opportunity Assessment',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -695,7 +697,10 @@ ${this.generateNextSteps(prospect).map((s, i) => `${i + 1}. ${s}`).join('\n')}
 ${this.competitorData
   .sort((a, b) => b.filingCount - a.filingCount)
   .slice(0, 10)
-  .map((c, i) => `${i + 1}. ${c.lenderName} - ${c.filingCount} filings, $${c.avgDealSize.toLocaleString()} avg deal size`)
+  .map(
+    (c, i) =>
+      `${i + 1}. ${c.lenderName} - ${c.filingCount} filings, $${c.avgDealSize.toLocaleString()} avg deal size`
+  )
   .join('\n')}
 `
       : 'No competitor data available'
@@ -703,7 +708,7 @@ ${this.competitorData
     return {
       id: 'competitor-overview',
       title: 'Competitor Overview',
-      content: content.trim(),
+      content: content.trim()
     }
   }
 
@@ -711,7 +716,7 @@ ${this.competitorData
     return {
       id: 'market-position',
       title: 'Market Position',
-      content: 'Market position analysis would go here',
+      content: 'Market position analysis would go here'
     }
   }
 
@@ -719,7 +724,7 @@ ${this.competitorData
     return {
       id: 'deal-flow',
       title: 'Deal Flow Analysis',
-      content: 'Deal flow analysis would go here',
+      content: 'Deal flow analysis would go here'
     }
   }
 
@@ -727,7 +732,7 @@ ${this.competitorData
     return {
       id: 'industry-focus',
       title: 'Industry Focus',
-      content: 'Industry focus analysis would go here',
+      content: 'Industry focus analysis would go here'
     }
   }
 
@@ -735,7 +740,7 @@ ${this.competitorData
     return {
       id: 'competitive-threats',
       title: 'Competitive Threats',
-      content: 'Competitive threats analysis would go here',
+      content: 'Competitive threats analysis would go here'
     }
   }
 
@@ -743,7 +748,7 @@ ${this.competitorData
     return {
       id: 'strategic-opportunities',
       title: 'Strategic Opportunities',
-      content: 'Strategic opportunities would go here',
+      content: 'Strategic opportunities would go here'
     }
   }
 
@@ -751,7 +756,7 @@ ${this.competitorData
     return {
       id: 'market-overview',
       title: 'Market Overview',
-      content: `Market overview for ${industry || 'all industries'}`,
+      content: `Market overview for ${industry || 'all industries'}`
     }
   }
 
@@ -759,7 +764,7 @@ ${this.competitorData
     return {
       id: 'competitive-landscape',
       title: 'Competitive Landscape',
-      content: 'Competitive landscape analysis',
+      content: 'Competitive landscape analysis'
     }
   }
 
@@ -767,7 +772,7 @@ ${this.competitorData
     return {
       id: 'market-trends',
       title: 'Market Trends',
-      content: `Market trends for ${industry || 'all industries'}`,
+      content: `Market trends for ${industry || 'all industries'}`
     }
   }
 
@@ -775,7 +780,7 @@ ${this.competitorData
     return {
       id: 'opportunity-analysis',
       title: 'Opportunity Analysis',
-      content: 'Opportunity analysis',
+      content: 'Opportunity analysis'
     }
   }
 
@@ -783,17 +788,15 @@ ${this.competitorData
     return {
       id: 'market-share',
       title: 'Market Share Analysis',
-      content: 'Market share analysis',
+      content: 'Market share analysis'
     }
   }
 
-  private async generateStrategicRecommendations(
-    industry?: IndustryType
-  ): Promise<ReportSection> {
+  private async generateStrategicRecommendations(industry?: IndustryType): Promise<ReportSection> {
     return {
       id: 'strategic-recommendations',
       title: 'Strategic Recommendations',
-      content: 'Strategic recommendations',
+      content: 'Strategic recommendations'
     }
   }
 
@@ -804,9 +807,7 @@ ${this.competitorData
       .map((section) => {
         let md = `# ${section.title}\n\n${section.content}\n\n`
         if (section.subsections) {
-          md += section.subsections
-            .map((sub) => `## ${sub.title}\n\n${sub.content}\n\n`)
-            .join('')
+          md += section.subsections.map((sub) => `## ${sub.title}\n\n${sub.content}\n\n`).join('')
         }
         return md
       })
@@ -894,10 +895,7 @@ ${this.competitorData
     return ((rank / sorted.length) * 100).toFixed(0) as any
   }
 
-  private compareToIndustryAverage(
-    prospect: Prospect,
-    metric: 'signals' | 'health'
-  ): string {
+  private compareToIndustryAverage(prospect: Prospect, metric: 'signals' | 'health'): string {
     const sameIndustry = this.prospects.filter((p) => p.industry === prospect.industry)
 
     if (metric === 'signals') {

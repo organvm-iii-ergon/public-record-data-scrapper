@@ -1,4 +1,4 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
   UserProfile,
   SavedFilter,
@@ -8,8 +8,9 @@ import type {
   IndustryType,
   HealthGrade,
   SignalType,
-  ProspectStatus,
+  ProspectStatus
 } from '../types'
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
  * UserProfileManager - Manages user profiles, preferences, and personalization
@@ -50,35 +51,32 @@ export class UserProfileManager {
         minPriorityScore: 60,
         minHealthGrade: 'C',
         preferredSignalTypes: [],
-        riskTolerance: 'medium',
+        riskTolerance: 'medium'
       },
       behavior: {
         claimPatterns: [],
         conversionRate: 0,
         avgTimeToContact: 0,
         successfulIndustries: [],
-        preferredDealSize: { min: 100000, max: 5000000 },
+        preferredDealSize: { min: 100000, max: 5000000 }
       },
       customFilters: [],
       dashboardLayout: this.getDefaultDashboardLayout(),
       notificationSettings: this.getDefaultNotificationSettings(),
       createdAt: new Date().toISOString(),
-      lastActive: new Date().toISOString(),
+      lastActive: new Date().toISOString()
     }
   }
 
   /**
    * Update user preferences
    */
-  updatePreferences(
-    userId: string,
-    preferences: Partial<UserProfile['preferences']>
-  ): UserProfile {
+  updatePreferences(userId: string, preferences: Partial<UserProfile['preferences']>): UserProfile {
     const profile = this.getUserProfile(userId)
 
     profile.preferences = {
       ...profile.preferences,
-      ...preferences,
+      ...preferences
     }
 
     profile.lastActive = new Date().toISOString()
@@ -159,7 +157,7 @@ export class UserProfileManager {
 
       // Merge signal types
       existingPattern.signalTypes = [
-        ...new Set([...existingPattern.signalTypes, ...prospectData.signalTypes]),
+        ...new Set([...existingPattern.signalTypes, ...prospectData.signalTypes])
       ]
     } else {
       // Create new pattern
@@ -168,7 +166,7 @@ export class UserProfileManager {
         avgScore: prospectData.priorityScore,
         signalTypes: prospectData.signalTypes,
         outcomeRate: 0.5, // Neutral until we have outcomes
-        frequency: 1,
+        frequency: 1
       })
     }
   }
@@ -227,7 +225,7 @@ export class UserProfileManager {
       filters: filter.filters,
       isDefault: filter.isDefault || false,
       createdAt: new Date().toISOString(),
-      usageCount: 0,
+      usageCount: 0
     }
 
     profile.customFilters.push(savedFilter)
@@ -279,15 +277,12 @@ export class UserProfileManager {
   /**
    * Update notification settings
    */
-  updateNotificationSettings(
-    userId: string,
-    settings: Partial<NotificationSettings>
-  ): UserProfile {
+  updateNotificationSettings(userId: string, settings: Partial<NotificationSettings>): UserProfile {
     const profile = this.getUserProfile(userId)
 
     profile.notificationSettings = {
       ...profile.notificationSettings,
-      ...settings,
+      ...settings
     }
 
     profile.lastActive = new Date().toISOString()
@@ -307,25 +302,25 @@ export class UserProfileManager {
           type: 'prospects',
           position: { x: 0, y: 0 },
           size: { width: 12, height: 6 },
-          config: {},
+          config: {}
         },
         {
           id: 'stats',
           type: 'stats',
           position: { x: 0, y: 6 },
           size: { width: 6, height: 3 },
-          config: {},
+          config: {}
         },
         {
           id: 'signals',
           type: 'signals',
           position: { x: 6, y: 6 },
           size: { width: 6, height: 3 },
-          config: {},
-        },
+          config: {}
+        }
       ],
       columns: 12,
-      theme: 'auto',
+      theme: 'auto'
     }
   }
 
@@ -344,8 +339,8 @@ export class UserProfileManager {
       channels: {
         email: false,
         inApp: true,
-        push: false,
-      },
+        push: false
+      }
     }
   }
 
@@ -445,7 +440,7 @@ export class UserProfileManager {
       mostFrequentIndustry,
       avgClaimScore,
       preferredSignals: profile.preferences.preferredSignalTypes,
-      conversionRate: profile.behavior.conversionRate,
+      conversionRate: profile.behavior.conversionRate
     }
   }
 
@@ -497,7 +492,7 @@ export class UserProfileManager {
       this.saveProfiles()
 
       return profile
-    } catch (error) {
+    } catch {
       throw new Error('Invalid profile data')
     }
   }

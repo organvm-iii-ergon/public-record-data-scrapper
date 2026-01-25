@@ -1,4 +1,5 @@
-// @ts-nocheck - Experimental features with incomplete type definitions
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Experimental recommendation features - disabled strict linting
 import type {
   Prospect,
   UserProfile,
@@ -7,7 +8,7 @@ import type {
   CompanyGraph,
   ClaimPattern,
   IndustryType,
-  SignalType,
+  SignalType
 } from '../types'
 
 /**
@@ -72,7 +73,7 @@ export class PersonalizedRecommendationEngine {
           matchFactors,
           generatedAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-          status: 'new',
+          status: 'new'
         }
 
         return recommendation
@@ -95,7 +96,7 @@ export class PersonalizedRecommendationEngine {
       scoreMatch: 0.2,
       signalMatch: 0.2,
       behaviorMatch: 0.2,
-      networkMatch: 0.15,
+      networkMatch: 0.15
     }
 
     // Calculate individual match factors
@@ -110,7 +111,7 @@ export class PersonalizedRecommendationEngine {
       scoreMatch,
       signalMatch,
       behaviorMatch,
-      networkMatch,
+      networkMatch
     }
 
     // Calculate weighted total score
@@ -123,7 +124,7 @@ export class PersonalizedRecommendationEngine {
 
     return {
       totalScore: totalScore * 100, // Scale to 0-100
-      matchFactors,
+      matchFactors
     }
   }
 
@@ -259,7 +260,7 @@ export class PersonalizedRecommendationEngine {
       }
     }
 
-    return (behaviorScore * 0.7 + dealSizeScore * 0.3)
+    return behaviorScore * 0.7 + dealSizeScore * 0.3
   }
 
   /**
@@ -276,9 +277,7 @@ export class PersonalizedRecommendationEngine {
     }
 
     // Check if related to any claimed prospects
-    const claimedProspects = this.prospects.filter(
-      (p) => p.claimedBy === this.userProfile.userId
-    )
+    const claimedProspects = this.prospects.filter((p) => p.claimedBy === this.userProfile.userId)
 
     let relationshipScore = 0
     let relationshipCount = 0
@@ -338,8 +337,8 @@ export class PersonalizedRecommendationEngine {
         weight: matchFactors.industryMatch,
         evidence: [
           isPreferred ? 'Preferred industry' : 'Historical success',
-          `Match score: ${(matchFactors.industryMatch * 100).toFixed(0)}%`,
-        ],
+          `Match score: ${(matchFactors.industryMatch * 100).toFixed(0)}%`
+        ]
       })
     }
 
@@ -357,8 +356,8 @@ export class PersonalizedRecommendationEngine {
         weight: matchFactors.scoreMatch,
         evidence: [
           `Prospect score: ${prospect.priorityScore}`,
-          `Your average: ${avgClaimScore.toFixed(0)}`,
-        ],
+          `Your average: ${avgClaimScore.toFixed(0)}`
+        ]
       })
     }
 
@@ -374,8 +373,8 @@ export class PersonalizedRecommendationEngine {
         weight: matchFactors.signalMatch,
         evidence: [
           `Total signals: ${prospect.growthSignals.length}`,
-          `Matching signals: ${matchingSignals.map((s) => s.type).join(', ')}`,
-        ],
+          `Matching signals: ${matchingSignals.map((s) => s.type).join(', ')}`
+        ]
       })
     }
 
@@ -387,8 +386,8 @@ export class PersonalizedRecommendationEngine {
         weight: matchFactors.behaviorMatch,
         evidence: [
           `Match score: ${(matchFactors.behaviorMatch * 100).toFixed(0)}%`,
-          `Based on ${this.userProfile.behavior.claimPatterns.length} historical patterns`,
-        ],
+          `Based on ${this.userProfile.behavior.claimPatterns.length} historical patterns`
+        ]
       })
     }
 
@@ -411,8 +410,8 @@ export class PersonalizedRecommendationEngine {
         weight: matchFactors.networkMatch,
         evidence: [
           `Related prospects: ${relatedClaimed.length}`,
-          `Network score: ${(matchFactors.networkMatch * 100).toFixed(0)}%`,
-        ],
+          `Network score: ${(matchFactors.networkMatch * 100).toFixed(0)}%`
+        ]
       })
     }
 
@@ -423,13 +422,11 @@ export class PersonalizedRecommendationEngine {
   /**
    * Learn from user actions to update profile
    */
-  async learnFromAction(
-    action: {
-      type: 'claim' | 'dismiss' | 'view'
-      prospectId: string
-      outcome?: 'qualified' | 'contacted' | 'dead'
-    }
-  ): Promise<UserProfile> {
+  async learnFromAction(action: {
+    type: 'claim' | 'dismiss' | 'view'
+    prospectId: string
+    outcome?: 'qualified' | 'contacted' | 'dead'
+  }): Promise<UserProfile> {
     const prospect = this.prospects.find((p) => p.id === action.prospectId)
     if (!prospect) return this.userProfile
 
@@ -463,8 +460,8 @@ export class PersonalizedRecommendationEngine {
     const signalTypes = prospect.growthSignals.map((s) => s.type)
 
     // Find matching pattern or create new one
-    const matchingPattern = this.userProfile.behavior.claimPatterns.find(
-      (p) => p.industries.includes(prospect.industry)
+    const matchingPattern = this.userProfile.behavior.claimPatterns.find((p) =>
+      p.industries.includes(prospect.industry)
     )
 
     if (matchingPattern) {
@@ -475,9 +472,7 @@ export class PersonalizedRecommendationEngine {
         matchingPattern.frequency
 
       // Merge signal types
-      matchingPattern.signalTypes = [
-        ...new Set([...matchingPattern.signalTypes, ...signalTypes]),
-      ]
+      matchingPattern.signalTypes = [...new Set([...matchingPattern.signalTypes, ...signalTypes])]
 
       // Update outcome rate if outcome provided
       if (outcome === 'qualified') {
@@ -496,7 +491,7 @@ export class PersonalizedRecommendationEngine {
         avgScore: prospect.priorityScore,
         signalTypes: signalTypes,
         outcomeRate: outcome === 'qualified' ? 1 : outcome === 'dead' ? 0 : 0.5,
-        frequency: 1,
+        frequency: 1
       }
       this.userProfile.behavior.claimPatterns.push(newPattern)
     }
@@ -513,8 +508,7 @@ export class PersonalizedRecommendationEngine {
     )
 
     if (outcome === 'qualified') {
-      this.userProfile.behavior.conversionRate =
-        (currentRate * (totalClaims - 1) + 1) / totalClaims
+      this.userProfile.behavior.conversionRate = (currentRate * (totalClaims - 1) + 1) / totalClaims
     } else if (outcome === 'dead') {
       this.userProfile.behavior.conversionRate = (currentRate * (totalClaims - 1)) / totalClaims
     }
@@ -523,10 +517,7 @@ export class PersonalizedRecommendationEngine {
   /**
    * Get similar prospects based on a reference prospect
    */
-  async getSimilarProspects(
-    referenceProspectId: string,
-    limit: number = 10
-  ): Promise<Prospect[]> {
+  async getSimilarProspects(referenceProspectId: string, limit: number = 10): Promise<Prospect[]> {
     const reference = this.prospects.find((p) => p.id === referenceProspectId)
     if (!reference) return []
 
@@ -535,7 +526,7 @@ export class PersonalizedRecommendationEngine {
       .filter((p) => p.id !== referenceProspectId)
       .map((prospect) => ({
         prospect,
-        similarity: this.calculateSimilarity(reference, prospect),
+        similarity: this.calculateSimilarity(reference, prospect)
       }))
 
     // Sort by similarity and return top N
