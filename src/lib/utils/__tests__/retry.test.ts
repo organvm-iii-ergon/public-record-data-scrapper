@@ -41,7 +41,8 @@ describe('retry', () => {
     })
 
     it('should retry on failure and eventually succeed', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Attempt 1 failed'))
         .mockRejectedValueOnce(new Error('Attempt 2 failed'))
         .mockResolvedValue('success')
@@ -69,20 +70,29 @@ describe('retry', () => {
       }
 
       const promise = retry(fn, options)
+
+      // Catch the rejection to prevent unhandled rejection
+      let caughtError: RetryError | null = null
+      promise.catch((e) => {
+        caughtError = e as RetryError
+      })
+
       await vi.runAllTimersAsync()
 
-      await expect(promise).rejects.toThrow(RetryError)
-      await expect(promise).rejects.toMatchObject({
-        attempts: 3,
-        lastError: error
-      })
+      // Wait for the promise to settle
+      await vi.waitFor(() => expect(caughtError).not.toBeNull())
+
+      expect(caughtError).toBeInstanceOf(RetryError)
+      expect(caughtError?.attempts).toBe(3)
+      expect(caughtError?.lastError).toBe(error)
       expect(fn).toHaveBeenCalledTimes(3)
     })
   })
 
   describe('exponential backoff', () => {
     it('should use exponential backoff by default', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValue('success')
@@ -111,7 +121,8 @@ describe('retry', () => {
     })
 
     it('should use fixed delay when exponentialBackoff is false', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValue('success')
@@ -137,9 +148,7 @@ describe('retry', () => {
     })
 
     it('should respect maxDelay cap', async () => {
-      const fn = vi.fn()
-        .mockRejectedValueOnce(new Error('Fail'))
-        .mockResolvedValue('success')
+      const fn = vi.fn().mockRejectedValueOnce(new Error('Fail')).mockResolvedValue('success')
 
       const options: RetryOptions = {
         maxAttempts: 10,
@@ -161,7 +170,8 @@ describe('retry', () => {
 
   describe('onRetry callback', () => {
     it('should call onRetry callback on each retry', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValue('success')
@@ -198,7 +208,8 @@ describe('retryIf', () => {
     const retryableError = new Error('HTTP error! status: 500')
     const nonRetryableError = new Error('Bad Request')
 
-    const fn = vi.fn()
+    const fn = vi
+      .fn()
       .mockRejectedValueOnce(retryableError)
       .mockRejectedValueOnce(nonRetryableError)
 
@@ -211,12 +222,19 @@ describe('retryIf', () => {
 
     const promise = retryIf(fn, shouldRetry, options)
 
+    // Catch the rejection to prevent unhandled rejection
+    let caughtError: Error | null = null
+    promise.catch((e) => {
+      caughtError = e as Error
+    })
+
     // Run timers to advance through retries
     await vi.runAllTimersAsync()
 
-    // Expect promise to reject with final error
-    await expect(promise).rejects.toThrow('Bad Request')
+    // Wait for the promise to settle
+    await vi.waitFor(() => expect(caughtError).not.toBeNull())
 
+    expect(caughtError?.message).toBe('Bad Request')
     expect(fn).toHaveBeenCalledTimes(2) // Retried once, then failed
   })
 
@@ -318,7 +336,7 @@ describe('CircuitBreaker', () => {
     for (let i = 0; i < 3; i++) {
       try {
         await breaker.execute(fn)
-      } catch (error) {
+      } catch {
         // Expected
       }
     }
@@ -334,7 +352,7 @@ describe('CircuitBreaker', () => {
     for (let i = 0; i < 2; i++) {
       try {
         await breaker.execute(fn)
-      } catch (error) {
+      } catch {
         // Expected
       }
     }
@@ -348,7 +366,8 @@ describe('CircuitBreaker', () => {
   it('should transition to half-open after timeout', async () => {
     vi.useFakeTimers()
     const breaker = new CircuitBreaker(2, 5000)
-    const fn = vi.fn()
+    const fn = vi
+      .fn()
       .mockRejectedValueOnce(new Error('Fail 1'))
       .mockRejectedValueOnce(new Error('Fail 2'))
       .mockResolvedValue('success')
@@ -357,7 +376,7 @@ describe('CircuitBreaker', () => {
     for (let i = 0; i < 2; i++) {
       try {
         await breaker.execute(fn)
-      } catch (error) {
+      } catch {
         // Expected
       }
     }
@@ -377,7 +396,8 @@ describe('CircuitBreaker', () => {
   it('should reset to closed on successful execution in half-open state', async () => {
     vi.useFakeTimers()
     const breaker = new CircuitBreaker(2, 5000)
-    const fn = vi.fn()
+    const fn = vi
+      .fn()
       .mockRejectedValueOnce(new Error('Fail 1'))
       .mockRejectedValueOnce(new Error('Fail 2'))
       .mockResolvedValue('success')
@@ -386,7 +406,7 @@ describe('CircuitBreaker', () => {
     for (let i = 0; i < 2; i++) {
       try {
         await breaker.execute(fn)
-      } catch (error) {
+      } catch {
         // Expected
       }
     }
@@ -408,7 +428,7 @@ describe('CircuitBreaker', () => {
     // Fail once
     try {
       await breaker.execute(fn)
-    } catch (error) {
+    } catch {
       // Expected
     }
 
@@ -417,14 +437,14 @@ describe('CircuitBreaker', () => {
     // Should need 2 more failures to open, not 1
     try {
       await breaker.execute(fn)
-    } catch (error) {
+    } catch {
       // Expected
     }
     expect(breaker.getState()).toBe('closed')
 
     try {
       await breaker.execute(fn)
-    } catch (error) {
+    } catch {
       // Expected
     }
     expect(breaker.getState()).toBe('open')
@@ -504,7 +524,7 @@ describe('processBatch', () => {
     const processor = vi.fn(async (item: number) => {
       concurrent++
       maxConcurrent = Math.max(maxConcurrent, concurrent)
-      await new Promise(resolve => setTimeout(resolve, 10))
+      await new Promise((resolve) => setTimeout(resolve, 10))
       concurrent--
       return item
     })
@@ -522,7 +542,8 @@ describe('processBatch', () => {
 
   it('should retry failed items when retryOptions provided', async () => {
     const items = [1, 2, 3]
-    const processor = vi.fn()
+    const processor = vi
+      .fn()
       .mockRejectedValueOnce(new Error('Fail 1'))
       .mockResolvedValueOnce(10)
       .mockResolvedValueOnce(20)

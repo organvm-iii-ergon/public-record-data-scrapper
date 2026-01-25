@@ -38,7 +38,7 @@ describe('AgenticCouncil', () => {
   describe('Council Review', () => {
     it('should conduct review with all agents', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review).toBeDefined()
       expect(review.id).toBeTruthy()
       expect(review.startedAt).toBeTruthy()
@@ -48,24 +48,25 @@ describe('AgenticCouncil', () => {
 
     it('should have all agents participate', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review.agents).toBeDefined()
-      expect(review.agents.length).toBe(4) // DataAnalyzer, Optimizer, Security, UXEnhancer
-      
-      const agentRoles = review.agents.map(a => a.role)
+      expect(review.agents.length).toBe(5) // DataAnalyzer, Optimizer, Security, UXEnhancer, CompetitorAnalyzer
+
+      const agentRoles = review.agents.map((a) => a.role)
       expect(agentRoles).toContain('data-analyzer')
       expect(agentRoles).toContain('optimizer')
       expect(agentRoles).toContain('security')
       expect(agentRoles).toContain('ux-enhancer')
+      expect(agentRoles).toContain('competitor-agent')
     })
 
     it('should collect analyses from all agents', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review.analyses).toBeDefined()
-      expect(review.analyses.length).toBe(4) // One from each agent
-      
-      review.analyses.forEach(analysis => {
+      expect(review.analyses.length).toBe(5) // One from each agent
+
+      review.analyses.forEach((analysis) => {
         expect(analysis).toHaveProperty('agentId')
         expect(analysis).toHaveProperty('agentRole')
         expect(analysis).toHaveProperty('findings')
@@ -76,11 +77,11 @@ describe('AgenticCouncil', () => {
 
     it('should aggregate improvements from all agents', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review.improvements).toBeDefined()
       expect(review.improvements.length).toBeGreaterThan(0)
-      
-      review.improvements.forEach(improvement => {
+
+      review.improvements.forEach((improvement) => {
         expect(improvement).toHaveProperty('id')
         expect(improvement).toHaveProperty('suggestion')
         expect(improvement).toHaveProperty('status')
@@ -92,7 +93,7 @@ describe('AgenticCouncil', () => {
     it('should create unique review ID', async () => {
       const review1 = await council.conductReview(mockContext)
       const review2 = await council.conductReview(mockContext)
-      
+
       expect(review1.id).not.toBe(review2.id)
     })
   })
@@ -100,12 +101,12 @@ describe('AgenticCouncil', () => {
   describe('Agent Handoff Mechanism', () => {
     it('should execute agents in sequence', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       // Verify all agents completed
       expect(review.analyses.length).toBe(review.agents.length)
-      
+
       // Verify each agent analyzed
-      const roles = review.analyses.map(a => a.agentRole)
+      const roles = review.analyses.map((a) => a.agentRole)
       expect(roles).toContain('data-analyzer')
       expect(roles).toContain('optimizer')
       expect(roles).toContain('security')
@@ -114,8 +115,8 @@ describe('AgenticCouncil', () => {
 
     it('should include timestamp for each analysis', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.analyses.forEach(analysis => {
+
+      review.analyses.forEach((analysis) => {
         expect(analysis.timestamp).toBeTruthy()
         const timestamp = new Date(analysis.timestamp)
         expect(timestamp.getTime()).toBeLessThanOrEqual(Date.now())
@@ -126,16 +127,16 @@ describe('AgenticCouncil', () => {
   describe('Improvement Status Management', () => {
     it('should set initial status to detected', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.improvements.forEach(improvement => {
+
+      review.improvements.forEach((improvement) => {
         expect(improvement.status).toBe('detected')
       })
     })
 
     it('should set detectedAt timestamp', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.improvements.forEach(improvement => {
+
+      review.improvements.forEach((improvement) => {
         expect(improvement.detectedAt).toBeTruthy()
         const detectedAt = new Date(improvement.detectedAt)
         expect(detectedAt.getTime()).toBeLessThanOrEqual(Date.now())
@@ -144,8 +145,8 @@ describe('AgenticCouncil', () => {
 
     it('should link improvement to suggestion', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.improvements.forEach(improvement => {
+
+      review.improvements.forEach((improvement) => {
         expect(improvement.suggestion).toBeDefined()
         expect(improvement.suggestion).toHaveProperty('id')
         expect(improvement.suggestion).toHaveProperty('title')
@@ -166,10 +167,10 @@ describe('AgenticCouncil', () => {
 
     it('should set completedAt when finished', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review.completedAt).toBeDefined()
       expect(review.completedAt).toBeTruthy()
-      
+
       const started = new Date(review.startedAt)
       const completed = new Date(review.completedAt!)
       expect(completed.getTime()).toBeGreaterThanOrEqual(started.getTime())
@@ -180,12 +181,12 @@ describe('AgenticCouncil', () => {
     it('should handle context with performance issues', async () => {
       mockContext.performanceMetrics.avgResponseTime = 2000
       mockContext.performanceMetrics.errorRate = 0.08
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       // Should detect performance issues
       const perfImprovements = review.improvements.filter(
-        i => i.suggestion.category === 'performance'
+        (i) => i.suggestion.category === 'performance'
       )
       expect(perfImprovements.length).toBeGreaterThan(0)
     })
@@ -195,12 +196,12 @@ describe('AgenticCouncil', () => {
         { id: '1', estimatedRevenue: 1000000 },
         { id: '2', estimatedRevenue: 2000000 }
       ]
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       // Should detect security issues
       const securityImprovements = review.improvements.filter(
-        i => i.suggestion.category === 'security'
+        (i) => i.suggestion.category === 'security'
       )
       expect(securityImprovements.length).toBeGreaterThan(0)
     })
@@ -212,12 +213,12 @@ describe('AgenticCouncil', () => {
         timestamp: new Date().toISOString(),
         details: {}
       })
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       // Should detect UX issues
       const uxImprovements = review.improvements.filter(
-        i => i.suggestion.category === 'usability'
+        (i) => i.suggestion.category === 'usability'
       )
       expect(uxImprovements.length).toBeGreaterThan(0)
     })
@@ -225,7 +226,7 @@ describe('AgenticCouncil', () => {
     it('should handle optimal context', async () => {
       // Good performance, no issues
       const review = await council.conductReview(mockContext)
-      
+
       expect(review).toBeDefined()
       expect(review.status).toBe('completed')
       // May have minimal improvements like encryption suggestion
@@ -235,30 +236,30 @@ describe('AgenticCouncil', () => {
   describe('Analysis Aggregation', () => {
     it('should preserve all findings from agents', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       let totalFindings = 0
-      review.analyses.forEach(analysis => {
+      review.analyses.forEach((analysis) => {
         totalFindings += analysis.findings.length
       })
-      
+
       expect(totalFindings).toBeGreaterThanOrEqual(0)
     })
 
     it('should create separate improvement objects for each suggestion', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       let totalSuggestions = 0
-      review.analyses.forEach(analysis => {
+      review.analyses.forEach((analysis) => {
         totalSuggestions += analysis.improvements.length
       })
-      
+
       expect(review.improvements.length).toBe(totalSuggestions)
     })
 
     it('should maintain improvement metadata', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.improvements.forEach(improvement => {
+
+      review.improvements.forEach((improvement) => {
         // Each improvement should have its original suggestion data
         expect(improvement.suggestion.category).toBeTruthy()
         expect(improvement.suggestion.priority).toBeTruthy()
@@ -271,18 +272,18 @@ describe('AgenticCouncil', () => {
   describe('Edge Cases', () => {
     it('should handle empty prospects list', async () => {
       mockContext.prospects = []
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       expect(review).toBeDefined()
       expect(review.status).toBe('completed')
     })
 
     it('should handle empty user actions', async () => {
       mockContext.userActions = []
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       expect(review).toBeDefined()
       expect(review.status).toBe('completed')
     })
@@ -292,15 +293,15 @@ describe('AgenticCouncil', () => {
         id: 'test',
         companyName: 'Test Company'
       })
-      
+
       const review = await council.conductReview(mockContext)
-      
+
       expect(review).toBeDefined()
       expect(review.status).toBe('completed')
-      
+
       // Should suggest pagination for large dataset
-      const paginationSuggestion = review.improvements.find(
-        i => i.suggestion.title.includes('pagination')
+      const paginationSuggestion = review.improvements.find((i) =>
+        i.suggestion.title.includes('pagination')
       )
       expect(paginationSuggestion).toBeDefined()
     })
@@ -309,7 +310,7 @@ describe('AgenticCouncil', () => {
   describe('Council Structure', () => {
     it('should maintain agent order', async () => {
       const review = await council.conductReview(mockContext)
-      
+
       expect(review.agents[0].role).toBe('data-analyzer')
       expect(review.agents[1].role).toBe('optimizer')
       expect(review.agents[2].role).toBe('security')
@@ -318,8 +319,8 @@ describe('AgenticCouncil', () => {
 
     it('should preserve agent capabilities', async () => {
       const review = await council.conductReview(mockContext)
-      
-      review.agents.forEach(agent => {
+
+      review.agents.forEach((agent) => {
         expect(agent.capabilities).toBeDefined()
         expect(agent.capabilities.length).toBeGreaterThan(0)
       })
@@ -327,8 +328,8 @@ describe('AgenticCouncil', () => {
 
     it('should have unique agent IDs', async () => {
       const review = await council.conductReview(mockContext)
-      
-      const agentIds = review.agents.map(a => a.id)
+
+      const agentIds = review.agents.map((a) => a.id)
       const uniqueIds = new Set(agentIds)
       expect(uniqueIds.size).toBe(agentIds.length)
     })
