@@ -1,0 +1,234 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { Request, Response, NextFunction } from 'express'
+
+// Mock config before importing rateLimiter
+vi.mock('../../config', () => ({
+  config: {
+    server: {
+      env: 'development' // Use in-memory rate limiter for tests
+    },
+    rateLimit: {
+      windowMs: 60000, // 1 minute
+      max: 5 // 5 requests per window
+    },
+    redis: {
+      host: 'localhost',
+      port: 6379,
+      password: undefined
+    }
+  }
+}))
+
+// Import after mocking - use the in-memory rate limiter for tests
+import { inMemoryRateLimiter, createRateLimiter } from '../../middleware/rateLimiter'
+
+describe('inMemoryRateLimiter middleware', () => {
+  let mockReq: Partial<Request>
+  let mockRes: Partial<Response>
+  let mockNext: NextFunction
+  let headers: Record<string, string>
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    headers = {}
+
+    mockReq = {
+      ip: `192.168.1.${Math.floor(Math.random() * 255)}`, // Unique IP for each test
+      headers: {}
+    }
+    mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+      set: vi.fn((key: string, value: string) => {
+        headers[key] = value
+        return mockRes
+      })
+    }
+    mockNext = vi.fn()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('allows first request from new IP', () => {
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).toHaveBeenCalled()
+    expect(mockRes.status).not.toHaveBeenCalled()
+  })
+
+  it('sets rate limit headers on subsequent requests', () => {
+    const ip = `headers-ip-${Date.now()}`
+    mockReq.ip = ip
+
+    // First request doesn't set headers (early return)
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    // Second request should set headers
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockRes.set).toHaveBeenCalledWith('X-RateLimit-Limit', '5')
+    expect(mockRes.set).toHaveBeenCalledWith('X-RateLimit-Remaining', expect.any(String))
+    expect(mockRes.set).toHaveBeenCalledWith('X-RateLimit-Reset', expect.any(String))
+  })
+
+  it('decrements remaining count with each request', () => {
+    const ip = `test-ip-${Date.now()}`
+    mockReq.ip = ip
+
+    // First request (count = 1, no headers set)
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    // Second request (count = 2, remaining = 3)
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    expect(headers['X-RateLimit-Remaining']).toBe('3')
+
+    // Third request (count = 3, remaining = 2)
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    expect(headers['X-RateLimit-Remaining']).toBe('2')
+
+    // Fourth request (count = 4, remaining = 1)
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    expect(headers['X-RateLimit-Remaining']).toBe('1')
+  })
+
+  it('blocks requests exceeding the limit', () => {
+    const ip = `blocked-ip-${Date.now()}`
+    mockReq.ip = ip
+
+    // Make 5 requests (the limit)
+    for (let i = 0; i < 5; i++) {
+      inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    }
+
+    expect(mockNext).toHaveBeenCalledTimes(5)
+
+    // Reset mocks for the 6th request
+    mockNext = vi.fn()
+    mockRes.status = vi.fn().mockReturnThis()
+    mockRes.json = vi.fn().mockReturnThis()
+
+    // 6th request should be blocked
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).not.toHaveBeenCalled()
+    expect(mockRes.status).toHaveBeenCalledWith(429)
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({
+          message: 'Too many requests. Please try again later.',
+          code: 'RATE_LIMIT_EXCEEDED',
+          statusCode: 429
+        })
+      })
+    )
+  })
+
+  it('includes Retry-After header when rate limited', () => {
+    const ip = `retry-ip-${Date.now()}`
+    mockReq.ip = ip
+
+    // Exhaust the limit
+    for (let i = 0; i < 6; i++) {
+      inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    }
+
+    expect(mockRes.set).toHaveBeenCalledWith('Retry-After', expect.any(String))
+    expect(headers['X-RateLimit-Remaining']).toBe('0')
+  })
+
+  it('resets count after window expires', () => {
+    const ip = `reset-ip-${Date.now()}`
+    mockReq.ip = ip
+
+    // Exhaust the limit
+    for (let i = 0; i < 5; i++) {
+      inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    }
+
+    expect(mockNext).toHaveBeenCalledTimes(5)
+
+    // Advance time past the window
+    vi.advanceTimersByTime(61000) // 61 seconds
+
+    // Reset mocks
+    mockNext = vi.fn()
+    mockRes.set = vi.fn().mockReturnThis()
+
+    // Should be allowed again
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).toHaveBeenCalled()
+  })
+
+  it('tracks different IPs separately', () => {
+    const ip1 = `ip1-${Date.now()}`
+    const ip2 = `ip2-${Date.now()}`
+
+    // Exhaust limit for IP1
+    mockReq.ip = ip1
+    for (let i = 0; i < 5; i++) {
+      inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    }
+
+    // IP2 should still be allowed
+    mockReq.ip = ip2
+    mockNext = vi.fn()
+
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).toHaveBeenCalled()
+  })
+
+  it('handles missing IP gracefully', () => {
+    mockReq.ip = undefined
+
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).toHaveBeenCalled()
+  })
+
+  it('uses X-Forwarded-For header when available', () => {
+    const forwardedIp = '10.0.0.1'
+    mockReq.ip = '127.0.0.1'
+    mockReq.headers = {
+      'x-forwarded-for': forwardedIp
+    }
+
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    expect(mockNext).toHaveBeenCalled()
+
+    // Make requests until limit is hit for the forwarded IP
+    for (let i = 0; i < 4; i++) {
+      inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    }
+
+    // 6th request should be blocked
+    mockNext = vi.fn()
+    mockRes.status = vi.fn().mockReturnThis()
+    mockRes.json = vi.fn().mockReturnThis()
+
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+
+    expect(mockNext).not.toHaveBeenCalled()
+    expect(mockRes.status).toHaveBeenCalledWith(429)
+  })
+
+  it('handles comma-separated X-Forwarded-For headers', () => {
+    const clientIp = '192.168.1.100'
+    mockReq.headers = {
+      'x-forwarded-for': `${clientIp}, 10.0.0.2, 10.0.0.1`
+    }
+
+    inMemoryRateLimiter(mockReq as Request, mockRes as Response, mockNext)
+    expect(mockNext).toHaveBeenCalled()
+  })
+})
+
+describe('createRateLimiter factory', () => {
+  it('returns in-memory rate limiter in development mode', () => {
+    const limiter = createRateLimiter()
+    expect(limiter).toBe(inMemoryRateLimiter)
+  })
+})

@@ -2,26 +2,17 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
 import { StatsOverview } from '@/components/StatsOverview'
-import { ProspectCard } from '@/components/ProspectCard'
 import { ProspectDetailDialog } from '@/components/ProspectDetailDialog'
 import { CompetitorChart } from '@/components/CompetitorChart'
 import { PortfolioMonitor } from '@/components/PortfolioMonitor'
-import { AdvancedFilters, AdvancedFilterState, initialFilters } from '@/components/AdvancedFilters'
 import { StaleDataWarning } from '@/components/StaleDataWarning'
-import { BatchOperations } from '@/components/BatchOperations'
-import { SortControls, SortField, SortDirection } from '@/components/SortControls'
 import { LegacySearch } from '@/components/LegacySearch'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
+import { ProspectsTab } from '@/features/prospects'
+import { useProspectFilters } from '@/hooks/useProspectFilters'
+import { useProspectSorting } from '@/hooks/useProspectSorting'
+import { useProspectSelection } from '@/hooks/useProspectSelection'
 import {
   generateProspects,
   generateCompetitorData,
@@ -32,21 +23,12 @@ import {
   Prospect,
   CompetitorData,
   PortfolioCompany,
-  IndustryType,
   ProspectNote,
   FollowUpReminder,
   OutreachEmail
 } from '@/lib/types'
 import { exportProspects, ExportFormat } from '@/lib/exportUtils'
-import {
-  Target,
-  ChartBar,
-  Heart,
-  ArrowClockwise,
-  MagnifyingGlass,
-  Robot,
-  ChartLineUp
-} from '@phosphor-icons/react'
+import { Target, ChartBar, Heart, ArrowClockwise, Robot, ChartLineUp } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { AgenticDashboard } from '@/components/AgenticDashboard'
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard'
@@ -80,20 +62,17 @@ function App() {
 
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [industryFilter, setIndustryFilter] = useState<string>('all')
-  const [stateFilter, setStateFilter] = useState<string>('all')
-  const [minScore, setMinScore] = useState<number>(0)
-  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>(initialFilters)
-  const [selectedProspectIds, setSelectedProspectIds] = useState<Set<string>>(new Set())
   const [lastDataRefresh, setLastDataRefresh] = useKV<string>(
     'last-data-refresh',
     new Date().toISOString()
   )
-  const [sortField, setSortField] = useState<SortField>('priorityScore')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
   const [userActions, setUserActions] = useKV<UserAction[]>('user-actions', [])
+
+  // Use extracted hooks for filtering, sorting, and selection
+  const filters = useProspectFilters(prospects || [])
+  const sorting = useProspectSorting(filters.filteredProspects)
+  const selection = useProspectSelection()
 
   // New state from PR #140
   const [isLoading, setIsLoading] = useState(true)
@@ -341,26 +320,23 @@ function App() {
 
   const handleExportProspects = (prospectsToExport: Prospect[]) => {
     try {
-      const filterInfo =
-        searchQuery || industryFilter !== 'all' || stateFilter !== 'all' || minScore > 0
-          ? 'filtered'
-          : undefined
+      const hasFilters =
+        filters.searchQuery ||
+        filters.industryFilter !== 'all' ||
+        filters.stateFilter !== 'all' ||
+        filters.minScore > 0
+      const filterInfo = hasFilters ? 'filtered' : undefined
 
-      if (!exportFormat) {
-        toast.error('Export failed', {
-          description: 'No export format specified'
-        })
-        return
-      }
+      const format = exportFormat || 'json'
 
-      exportProspects(prospectsToExport, exportFormat, filterInfo)
+      exportProspects(prospectsToExport, format, filterInfo)
 
-      const formatLabel = exportFormat.toUpperCase()
+      const formatLabel = format.toUpperCase()
       toast.success(`Prospect(s) exported as ${formatLabel}`, {
         description: `${prospectsToExport.length} lead(s) exported successfully.`
       })
       void trackAction('export-prospects', {
-        format: exportFormat,
+        format,
         count: prospectsToExport.length,
         filtered: Boolean(filterInfo)
       })
@@ -525,117 +501,8 @@ function App() {
     })
   }
 
-  const filteredAndSortedProspects = useMemo(() => {
-    const filtered = (prospects || []).filter((p) => {
-      const matchesSearch = p.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter
-      const matchesState = stateFilter === 'all' || p.state === stateFilter
-      const matchesScore = p.priorityScore >= minScore
-
-      const matchesHealthGrade =
-        advancedFilters.healthGrades.length === 0 ||
-        advancedFilters.healthGrades.includes(p.healthScore.grade)
-
-      const matchesStatus =
-        advancedFilters.statuses.length === 0 || advancedFilters.statuses.includes(p.status)
-
-      const matchesSignalType =
-        advancedFilters.signalTypes.length === 0 ||
-        p.growthSignals.some((s) => advancedFilters.signalTypes.includes(s.type))
-
-      const matchesSentiment =
-        advancedFilters.sentimentTrends.length === 0 ||
-        advancedFilters.sentimentTrends.includes(p.healthScore.sentimentTrend)
-
-      const matchesSignalCount = p.growthSignals.length >= advancedFilters.minSignalCount
-
-      const yearsSinceDefault = Math.floor(p.timeSinceDefault / 365)
-      const matchesDefaultAge =
-        yearsSinceDefault >= advancedFilters.defaultAgeRange[0] &&
-        yearsSinceDefault <= advancedFilters.defaultAgeRange[1]
-
-      const revenue = p.estimatedRevenue || 0
-      const matchesRevenue =
-        revenue >= advancedFilters.revenueRange[0] && revenue <= advancedFilters.revenueRange[1]
-
-      const matchesViolations =
-        advancedFilters.hasViolations === null ||
-        (advancedFilters.hasViolations === true && p.healthScore.violationCount > 0) ||
-        (advancedFilters.hasViolations === false && p.healthScore.violationCount === 0)
-
-      return (
-        matchesSearch &&
-        matchesIndustry &&
-        matchesState &&
-        matchesScore &&
-        matchesHealthGrade &&
-        matchesStatus &&
-        matchesSignalType &&
-        matchesSentiment &&
-        matchesSignalCount &&
-        matchesDefaultAge &&
-        matchesRevenue &&
-        matchesViolations
-      )
-    })
-
-    return filtered.sort((a, b) => {
-      let compareValue = 0
-
-      switch (sortField) {
-        case 'priorityScore':
-          compareValue = a.priorityScore - b.priorityScore
-          break
-        case 'healthScore':
-          compareValue = a.healthScore.score - b.healthScore.score
-          break
-        case 'signalCount':
-          compareValue = a.growthSignals.length - b.growthSignals.length
-          break
-        case 'defaultAge':
-          compareValue = a.timeSinceDefault - b.timeSinceDefault
-          break
-        case 'companyName':
-          compareValue = a.companyName.localeCompare(b.companyName)
-          break
-      }
-
-      return sortDirection === 'desc' ? -compareValue : compareValue
-    })
-  }, [
-    prospects,
-    searchQuery,
-    industryFilter,
-    stateFilter,
-    minScore,
-    advancedFilters,
-    sortField,
-    sortDirection
-  ])
-
-  const activeFilterCount = useMemo(() => {
-    let count = 0
-    if (advancedFilters.healthGrades.length > 0) count++
-    if (advancedFilters.statuses.length > 0) count++
-    if (advancedFilters.signalTypes.length > 0) count++
-    if (advancedFilters.sentimentTrends.length > 0) count++
-    if (advancedFilters.minSignalCount > 0) count++
-    if (advancedFilters.defaultAgeRange[0] > 0 || advancedFilters.defaultAgeRange[1] < 7) count++
-    if (advancedFilters.revenueRange[0] > 0 || advancedFilters.revenueRange[1] < 10000000) count++
-    if (advancedFilters.hasViolations !== null) count++
-    return count
-  }, [advancedFilters])
-
-  const industries: IndustryType[] = [
-    'restaurant',
-    'retail',
-    'construction',
-    'healthcare',
-    'manufacturing',
-    'services',
-    'technology'
-  ]
-  const states = Array.from(new Set((prospects || []).map((p) => p.state))).sort()
+  // Filtered and sorted prospects from hooks
+  const filteredAndSortedProspects = sorting.sortedProspects
 
   return (
     <div className="min-h-screen">
@@ -754,140 +621,35 @@ function App() {
             </TabsList>
 
             <TabsContent value="prospects" className="space-y-4 sm:space-y-6">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="relative flex-1">
-                  <MagnifyingGlass
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70"
-                  />
-                  <Input
-                    placeholder="Search companies..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 glass-effect border-white/30 text-white placeholder:text-white/50 h-10 sm:h-11"
-                  />
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                    <SelectTrigger className="flex-1 min-w-[140px] sm:w-[180px] glass-effect border-white/30 text-white h-10 sm:h-11">
-                      <SelectValue placeholder="Industry" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect border-white/30">
-                      <SelectItem value="all">All Industries</SelectItem>
-                      {industries.map((ind) => (
-                        <SelectItem key={ind} value={ind} className="capitalize">
-                          {ind}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={stateFilter} onValueChange={setStateFilter}>
-                    <SelectTrigger className="flex-1 min-w-[100px] sm:w-[140px] glass-effect border-white/30 text-white h-10 sm:h-11">
-                      <SelectValue placeholder="State" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect border-white/30">
-                      <SelectItem value="all">All States</SelectItem>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={minScore.toString()}
-                    onValueChange={(val) => setMinScore(Number(val))}
-                  >
-                    <SelectTrigger className="flex-1 min-w-[120px] sm:w-[140px] glass-effect border-white/30 text-white h-10 sm:h-11">
-                      <SelectValue placeholder="Min Score" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect border-white/30">
-                      <SelectItem value="0">Any Score</SelectItem>
-                      <SelectItem value="50">50+</SelectItem>
-                      <SelectItem value="70">70+ (High)</SelectItem>
-                      <SelectItem value="85">85+ (Elite)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={exportFormat}
-                    onValueChange={(val) => setExportFormat(val as ExportFormat)}
-                  >
-                    <SelectTrigger className="flex-1 min-w-[110px] sm:w-[130px] glass-effect border-white/30 text-white h-10 sm:h-11">
-                      <SelectValue placeholder="Export Format" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-effect border-white/30">
-                      <SelectItem value="json">Export: JSON</SelectItem>
-                      <SelectItem value="csv">Export: CSV</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    <div className="text-xs sm:text-sm text-white/70">
-                      Showing {filteredAndSortedProspects.length} of {(prospects || []).length}{' '}
-                      prospects
-                    </div>
-                    <SortControls
-                      sortField={sortField}
-                      sortDirection={sortDirection}
-                      onSortChange={(field, direction) => {
-                        setSortField(field)
-                        setSortDirection(direction)
-                      }}
-                    />
-                  </div>
-                  <AdvancedFilters
-                    filters={advancedFilters}
-                    onFiltersChange={setAdvancedFilters}
-                    activeFilterCount={activeFilterCount}
-                  />
-                </div>
-
-                <BatchOperations
-                  prospects={filteredAndSortedProspects}
-                  selectedIds={selectedProspectIds}
-                  onSelectionChange={setSelectedProspectIds}
-                  onBatchClaim={handleBatchClaim}
-                  onBatchExport={handleBatchExport}
-                  onBatchDelete={handleBatchDelete}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                  {filteredAndSortedProspects.map((prospect) => {
-                    const isSelected = selectedProspectIds.has(prospect.id)
-                    return (
-                      <div key={prospect.id} className="relative">
-                        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              const newSelected = new Set(selectedProspectIds)
-                              if (checked) {
-                                newSelected.add(prospect.id)
-                              } else {
-                                newSelected.delete(prospect.id)
-                              }
-                              setSelectedProspectIds(newSelected)
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="glass-effect border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                        </div>
-                        <ProspectCard prospect={prospect} onSelect={handleProspectSelect} />
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {filteredAndSortedProspects.length === 0 && (
-                  <div className="text-center py-12 text-white/70 glass-effect rounded-lg p-8">
-                    No prospects match your current filters
-                  </div>
-                )}
-              </div>
+              <ProspectsTab
+                prospects={prospects || []}
+                filteredProspects={filteredAndSortedProspects}
+                totalCount={(prospects || []).length}
+                searchQuery={filters.searchQuery}
+                industryFilter={filters.industryFilter}
+                stateFilter={filters.stateFilter}
+                minScore={filters.minScore}
+                advancedFilters={filters.advancedFilters}
+                activeFilterCount={filters.activeFilterCount}
+                industries={filters.industries}
+                states={filters.states}
+                sortField={sorting.sortField}
+                sortDirection={sorting.sortDirection}
+                selectedIds={selection.selectedIds}
+                exportFormat={exportFormat || 'json'}
+                onSearchChange={filters.setSearchQuery}
+                onIndustryChange={filters.setIndustryFilter}
+                onStateChange={filters.setStateFilter}
+                onMinScoreChange={filters.setMinScore}
+                onAdvancedFiltersChange={filters.setAdvancedFilters}
+                onSortChange={sorting.handleSortChange}
+                onSelectionChange={selection.setSelectedIds}
+                onExportFormatChange={(format) => setExportFormat(format)}
+                onProspectSelect={handleProspectSelect}
+                onBatchClaim={handleBatchClaim}
+                onBatchExport={handleBatchExport}
+                onBatchDelete={handleBatchDelete}
+              />
             </TabsContent>
 
             <TabsContent value="portfolio" className="space-y-4 sm:space-y-6">

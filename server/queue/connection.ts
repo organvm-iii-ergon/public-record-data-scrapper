@@ -13,7 +13,7 @@ class RedisConnection {
     const redisConfig = {
       host: config.redis.host,
       port: config.redis.port,
-      password: config.redis.password || undefined,
+      password: config.redis.password,
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
       retryStrategy: (times: number) => {

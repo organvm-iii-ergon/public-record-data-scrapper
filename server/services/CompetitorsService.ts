@@ -1,5 +1,25 @@
 import { database } from '../database/connection'
 
+// Allowlist of valid columns for sorting - prevents SQL injection
+const ALLOWED_SORT_COLUMNS = [
+  'name',
+  'filing_count',
+  'total_amount',
+  'avg_amount',
+  'first_filing',
+  'last_filing',
+  'market_share'
+] as const
+
+type AllowedSortColumn = (typeof ALLOWED_SORT_COLUMNS)[number]
+
+function validateSortColumn(column: string): AllowedSortColumn {
+  if (ALLOWED_SORT_COLUMNS.includes(column as AllowedSortColumn)) {
+    return column as AllowedSortColumn
+  }
+  return 'filing_count' // Safe default
+}
+
 interface Competitor {
   id: string
   name: string
@@ -24,11 +44,12 @@ interface ListParams {
 export class CompetitorsService {
   async list(params: ListParams) {
     const { page, limit, state, sort_by, sort_order } = params
+    const safeSortBy = validateSortColumn(sort_by)
     const offset = (page - 1) * limit
 
     // Build WHERE clause
     const conditions: string[] = []
-    const values: any[] = []
+    const values: (string | number)[] = []
     let paramCount = 1
 
     if (state) {
@@ -39,7 +60,8 @@ export class CompetitorsService {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
-    // Query competitors (aggregated from UCC filings)
+    // Query competitors (aggregated from UCC filings) - safeSortBy is validated against allowlist
+    const safeSortOrder = sort_order.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'
     const query = `
       SELECT
         uuid_generate_v4() as id,
@@ -53,7 +75,7 @@ export class CompetitorsService {
       FROM ucc_filings
       ${whereClause}
       GROUP BY secured_party_normalized
-      ORDER BY ${sort_by} ${sort_order.toUpperCase()}
+      ORDER BY ${safeSortBy} ${safeSortOrder}
       LIMIT $${paramCount++} OFFSET $${paramCount++}
     `
     values.push(limit, offset)
@@ -144,12 +166,14 @@ export class CompetitorsService {
     `
 
     const results = await database.query(query)
-    return results[0] || {
-      total_competitors: 0,
-      total_filings: 0,
-      total_market_value: 0,
-      avg_filing_amount: 0
-    }
+    return (
+      results[0] || {
+        total_competitors: 0,
+        total_filings: 0,
+        total_market_value: 0,
+        avg_filing_amount: 0
+      }
+    )
   }
 
   private calculateStrengths(competitor: Competitor, marketShare: number): string[] {
@@ -187,6 +211,7 @@ export class CompetitorsService {
     return weaknesses.length > 0 ? weaknesses : ['Competitive pressure from larger players']
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private calculateOpportunities(competitor: Competitor): string[] {
     return [
       'Expansion into underserved markets',
@@ -195,6 +220,7 @@ export class CompetitorsService {
     ]
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private calculateThreats(competitor: Competitor): string[] {
     return [
       'Increased competition from fintech lenders',

@@ -2,11 +2,13 @@ import express, { Express } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
-import { config } from './config'
+import { config, validateConfig } from './config'
 import { database } from './database/connection'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 import { requestLogger } from './middleware/requestLogger'
-import { rateLimiter } from './middleware/rateLimiter'
+import { createRateLimiter, closeRateLimiterConnection } from './middleware/rateLimiter'
+import { authMiddleware } from './middleware/authMiddleware'
+import { httpsRedirect } from './middleware/httpsRedirect'
 
 // Import routes
 import prospectsRouter from './routes/prospects'
@@ -32,12 +34,17 @@ export class Server {
   }
 
   private setupMiddleware(): void {
-    // Security
+    // HTTPS redirect (before everything else in production)
+    this.app.use(httpsRedirect)
+
+    // Security headers
     this.app.use(helmet())
-    this.app.use(cors({
-      origin: config.cors.origin,
-      credentials: config.cors.credentials
-    }))
+    this.app.use(
+      cors({
+        origin: config.cors.origin,
+        credentials: config.cors.credentials
+      })
+    )
 
     // Parsing
     this.app.use(express.json({ limit: '10mb' }))
@@ -49,18 +56,20 @@ export class Server {
     // Logging
     this.app.use(requestLogger)
 
-    // Rate limiting
-    this.app.use(rateLimiter)
+    // Rate limiting (Redis-based in production, in-memory in development)
+    this.app.use(createRateLimiter())
   }
 
   private setupRoutes(): void {
-    // API routes
-    this.app.use('/api/prospects', prospectsRouter)
-    this.app.use('/api/competitors', competitorsRouter)
-    this.app.use('/api/portfolio', portfolioRouter)
-    this.app.use('/api/enrichment', enrichmentRouter)
+    // Public routes (no authentication required)
     this.app.use('/api/health', healthRouter)
-    this.app.use('/api/jobs', jobsRouter)
+
+    // Protected API routes (authentication required)
+    this.app.use('/api/prospects', authMiddleware, prospectsRouter)
+    this.app.use('/api/competitors', authMiddleware, competitorsRouter)
+    this.app.use('/api/portfolio', authMiddleware, portfolioRouter)
+    this.app.use('/api/enrichment', authMiddleware, enrichmentRouter)
+    this.app.use('/api/jobs', authMiddleware, jobsRouter)
 
     // Root endpoint
     this.app.get('/', (req, res) => {
@@ -92,6 +101,14 @@ export class Server {
   async start(): Promise<void> {
     const port = config.server.port
     const host = config.server.host
+
+    // Validate configuration
+    try {
+      validateConfig()
+    } catch (error) {
+      console.error('Configuration error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
 
     // Connect to database
     try {
@@ -142,6 +159,9 @@ export class Server {
 
     // Close queues
     await closeQueues()
+
+    // Close rate limiter Redis connection
+    await closeRateLimiterConnection()
 
     // Disconnect from Redis
     await redisConnection.disconnect()

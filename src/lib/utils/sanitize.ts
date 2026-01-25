@@ -54,13 +54,46 @@ export function sanitizeUrl(url: string): string {
 }
 
 /**
+ * Email validation regex
+ * Validates:
+ * - Valid local part characters (before @)
+ * - Domain must have at least one dot (requires TLD)
+ * - Valid domain label characters
+ */
+const EMAIL_REGEX =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
+
+/**
  * Validates and sanitizes email addresses
+ * Requires a proper domain with TLD (e.g., user@domain.com, not user@domain)
+ *
+ * @throws Error if email is invalid
  */
 export function sanitizeEmail(email: string): string {
-  const trimmed = email.trim().toLowerCase()
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!email || typeof email !== 'string') {
+    throw new Error('Email is required')
+  }
 
-  if (!emailRegex.test(trimmed)) {
+  const trimmed = email.trim().toLowerCase()
+
+  // Check length limits (RFC 5321)
+  if (trimmed.length > 254) {
+    throw new Error('Email address too long')
+  }
+
+  // Check local part length (before @)
+  const atIndex = trimmed.indexOf('@')
+  if (atIndex === -1 || atIndex > 64) {
+    throw new Error('Invalid email address')
+  }
+
+  // Must have at least one dot after @ (requires TLD)
+  const domain = trimmed.substring(atIndex + 1)
+  if (!domain.includes('.')) {
+    throw new Error('Invalid email address')
+  }
+
+  if (!EMAIL_REGEX.test(trimmed)) {
     throw new Error('Invalid email address')
   }
 

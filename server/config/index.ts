@@ -1,3 +1,26 @@
+// Parse Redis URL into components
+function parseRedisUrl(url: string): { host: string; port: number; password?: string } {
+  try {
+    const parsed = new URL(url)
+    return {
+      host: parsed.hostname || 'localhost',
+      port: parseInt(parsed.port) || 6379,
+      password: parsed.password || undefined
+    }
+  } catch {
+    return { host: 'localhost', port: 6379 }
+  }
+}
+
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+const parsedRedis = parseRedisUrl(redisUrl)
+
+const isProduction = process.env.NODE_ENV === 'production'
+
+// In production, JWT_SECRET is required - no fallback allowed
+const jwtSecret =
+  process.env.JWT_SECRET || (isProduction ? '' : 'development-secret-change-in-production')
+
 export const config = {
   server: {
     port: parseInt(process.env.PORT || '3000'),
@@ -8,10 +31,12 @@ export const config = {
     url: process.env.DATABASE_URL || 'postgresql://localhost:5432/ucc_intelligence',
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 2000
   },
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173', 'http://localhost:5000'],
+    origin:
+      process.env.CORS_ORIGIN?.split(',') ||
+      (isProduction ? [] : ['http://localhost:5173', 'http://localhost:5000']),
     credentials: true
   },
   rateLimit: {
@@ -19,8 +44,9 @@ export const config = {
     max: 100 // requests per window
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'development-secret-change-in-production',
-    expiresIn: '7d'
+    secret: jwtSecret,
+    expiresIn: '1h',
+    refreshExpiresIn: '7d'
   },
   auth0: {
     domain: process.env.AUTH0_DOMAIN || '',
@@ -29,7 +55,35 @@ export const config = {
     audience: process.env.AUTH0_AUDIENCE || ''
   },
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: redisUrl,
+    host: parsedRedis.host,
+    port: parsedRedis.port,
+    password: parsedRedis.password,
     maxRetriesPerRequest: 3
+  }
+}
+
+/**
+ * Validates that required configuration is present for production.
+ * Call this at server startup.
+ * @throws Error if required config is missing in production
+ */
+export function validateConfig(): void {
+  const errors: string[] = []
+
+  if (isProduction) {
+    if (!process.env.JWT_SECRET) {
+      errors.push('JWT_SECRET is required in production')
+    }
+    if (!process.env.DATABASE_URL) {
+      errors.push('DATABASE_URL is required in production')
+    }
+    if (config.cors.origin.length === 0 && !process.env.CORS_ORIGIN) {
+      errors.push('CORS_ORIGIN is required in production')
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Configuration validation failed:\n  - ${errors.join('\n  - ')}`)
   }
 }
