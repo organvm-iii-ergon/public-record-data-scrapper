@@ -1,6 +1,18 @@
+/**
+ * CompetitorsService
+ *
+ * Service layer for competitor analysis in the UCC-MCA Intelligence Platform.
+ * Aggregates UCC filing data to identify and analyze competing secured parties.
+ *
+ * @module server/services/CompetitorsService
+ */
+
 import { database } from '../database/connection'
 
-// Allowlist of valid columns for sorting - prevents SQL injection
+/**
+ * Allowlist of valid columns for sorting to prevent SQL injection.
+ * Only these columns can be used in ORDER BY clauses.
+ */
 const ALLOWED_SORT_COLUMNS = [
   'name',
   'filing_count',
@@ -13,6 +25,12 @@ const ALLOWED_SORT_COLUMNS = [
 
 type AllowedSortColumn = (typeof ALLOWED_SORT_COLUMNS)[number]
 
+/**
+ * Validates and sanitizes a sort column to prevent SQL injection.
+ *
+ * @param column - The requested sort column name
+ * @returns A safe column name from the allowlist, defaults to 'filing_count'
+ */
 function validateSortColumn(column: string): AllowedSortColumn {
   if (ALLOWED_SORT_COLUMNS.includes(column as AllowedSortColumn)) {
     return column as AllowedSortColumn
@@ -20,28 +38,86 @@ function validateSortColumn(column: string): AllowedSortColumn {
   return 'filing_count' // Safe default
 }
 
+/**
+ * Competitor entity representing an aggregated secured party from UCC filings.
+ */
 interface Competitor {
+  /** Unique identifier */
   id: string
+  /** Normalized secured party name */
   name: string
+  /** Total number of UCC filings */
   filing_count: number
+  /** Sum of all lien amounts */
   total_amount: number
+  /** Average lien amount per filing */
   avg_amount: number
+  /** States where filings exist */
   states: string[]
+  /** Industries served */
   industries: string[]
+  /** Date of first filing */
   first_filing: string
+  /** Date of most recent filing */
   last_filing: string
+  /** Percentage of total market */
   market_share: number
 }
 
+/**
+ * Parameters for listing competitors with filtering and pagination.
+ */
 interface ListParams {
+  /** Page number (1-indexed) */
   page: number
+  /** Number of items per page */
   limit: number
+  /** Filter by state code */
   state?: string
+  /** Column to sort by (validated against allowlist) */
   sort_by: string
+  /** Sort direction */
   sort_order: 'asc' | 'desc'
 }
 
+/**
+ * Service for competitor intelligence and market analysis.
+ *
+ * Provides methods for:
+ * - Listing competitors with aggregated metrics
+ * - Individual competitor analysis
+ * - SWOT analysis generation
+ * - Market statistics
+ *
+ * @example
+ * ```typescript
+ * const service = new CompetitorsService()
+ *
+ * // List competitors
+ * const result = await service.list({
+ *   page: 1,
+ *   limit: 20,
+ *   sort_by: 'filing_count',
+ *   sort_order: 'desc'
+ * })
+ *
+ * // Get competitor SWOT analysis
+ * const analysis = await service.getAnalysis('competitor-id')
+ * ```
+ */
 export class CompetitorsService {
+  /**
+   * List competitors with aggregated metrics from UCC filings.
+   *
+   * Aggregates UCC filing data by secured party to calculate:
+   * - Filing count
+   * - Total and average lien amounts
+   * - Geographic presence (states)
+   * - Filing date range
+   *
+   * @param params - Query parameters for filtering and pagination
+   * @returns Paginated list of competitors with total count
+   */
   async list(params: ListParams) {
     const { page, limit, state, sort_by, sort_order } = params
     const safeSortBy = validateSortColumn(sort_by)
@@ -99,6 +175,15 @@ export class CompetitorsService {
     }
   }
 
+  /**
+   * Get a competitor by ID.
+   *
+   * Note: Competitors are dynamically aggregated from UCC filings,
+   * so this queries the underlying filing data.
+   *
+   * @param id - The competitor's unique identifier
+   * @returns The competitor if found, null otherwise
+   */
   async getById(id: string) {
     // For competitors, we aggregate data by name
     // Since we don't store competitors separately, we need to query UCC filings
@@ -125,6 +210,15 @@ export class CompetitorsService {
     return results[0] || null
   }
 
+  /**
+   * Get detailed analysis for a competitor including SWOT analysis.
+   *
+   * Calculates market share and generates a SWOT analysis based on
+   * the competitor's metrics compared to the overall market.
+   *
+   * @param id - The competitor's unique identifier
+   * @returns Competitor with SWOT analysis, or null if not found
+   */
   async getAnalysis(id: string) {
     // Get competitor and perform SWOT analysis
     const competitor = await this.getById(id)
@@ -155,6 +249,12 @@ export class CompetitorsService {
     }
   }
 
+  /**
+   * Get aggregate market statistics.
+   *
+   * @returns Market-wide statistics including total competitors,
+   *          filings, market value, and average filing amount
+   */
   async getStats() {
     const query = `
       SELECT
@@ -176,6 +276,13 @@ export class CompetitorsService {
     )
   }
 
+  /**
+   * Calculate strengths based on competitor metrics.
+   *
+   * @param competitor - The competitor to analyze
+   * @param marketShare - The competitor's market share percentage
+   * @returns Array of strength statements
+   */
   private calculateStrengths(competitor: Competitor, marketShare: number): string[] {
     const strengths: string[] = []
 
@@ -195,6 +302,13 @@ export class CompetitorsService {
     return strengths.length > 0 ? strengths : ['Established market presence']
   }
 
+  /**
+   * Calculate weaknesses based on competitor metrics.
+   *
+   * @param competitor - The competitor to analyze
+   * @param marketShare - The competitor's market share percentage
+   * @returns Array of weakness statements
+   */
   private calculateWeaknesses(competitor: Competitor, marketShare: number): string[] {
     const weaknesses: string[] = []
 
@@ -211,8 +325,14 @@ export class CompetitorsService {
     return weaknesses.length > 0 ? weaknesses : ['Competitive pressure from larger players']
   }
 
+  /**
+   * Calculate market opportunities.
+   *
+   * @param _competitor - The competitor to analyze (unused, for consistency)
+   * @returns Array of opportunity statements
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private calculateOpportunities(competitor: Competitor): string[] {
+  private calculateOpportunities(_competitor: Competitor): string[] {
     return [
       'Expansion into underserved markets',
       'Partnerships with local lenders',
@@ -220,8 +340,14 @@ export class CompetitorsService {
     ]
   }
 
+  /**
+   * Calculate market threats.
+   *
+   * @param _competitor - The competitor to analyze (unused, for consistency)
+   * @returns Array of threat statements
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private calculateThreats(competitor: Competitor): string[] {
+  private calculateThreats(_competitor: Competitor): string[] {
     return [
       'Increased competition from fintech lenders',
       'Regulatory changes affecting lending practices',
