@@ -1,0 +1,36 @@
+import { Button } from '@/components/ui/button'
+
+interface LoadingAndErrorStateProps {
+  isLoading: boolean
+  loadError: string | null
+  onRetry: () => void
+}
+
+export function LoadingAndErrorState({ isLoading, loadError, onRetry }: LoadingAndErrorStateProps) {
+  return (
+    <>
+      {loadError && (
+        <div className="glass-effect border border-red-500/40 rounded-lg p-4 text-red-100 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div>
+            <p className="font-semibold">Failed to load live data</p>
+            <p className="text-sm text-red-100/80">{loadError}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            className="border-red-500/60 text-red-100 hover:bg-red-500/20"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="glass-effect border border-white/20 rounded-lg p-4 text-sm text-white/80">
+          Loading live data from ingestion services...
+        </div>
+      )}
+    </>
+  )
+}
