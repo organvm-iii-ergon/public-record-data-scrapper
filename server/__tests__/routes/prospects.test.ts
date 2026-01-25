@@ -1,51 +1,98 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-// TODO: These tests require database connection - TestDataFactory needs DB
-// Commenting out imports to avoid module resolution errors when tests are skipped
-// import { ApiTestHelper } from '../helpers/apiHelper'
-// import { TestDataFactory } from '../helpers/testData'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import request from 'supertest'
+import { createTestApp, createAuthHeader } from '../helpers/testApp'
+import type { Express } from 'express'
+import { NotFoundError } from '../../errors'
 
-type ApiTestHelper = { get: () => void; post: () => void }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type TestDataFactory = { createProspect: () => void; createProspects: () => void }
+// Use vi.hoisted to ensure mocks are available when vi.mock runs
+const { mockList, mockGetById, mockCreate, mockUpdate, mockDelete } = vi.hoisted(() => ({
+  mockList: vi.fn(),
+  mockGetById: vi.fn(),
+  mockCreate: vi.fn(),
+  mockUpdate: vi.fn(),
+  mockDelete: vi.fn()
+}))
 
-describe.skip('Prospects API', () => {
-  let api: ApiTestHelper
+// Mock the ProspectsService
+vi.mock('../../services/ProspectsService', () => ({
+  ProspectsService: class MockProspectsService {
+    list = mockList
+    getById = mockGetById
+    create = mockCreate
+    update = mockUpdate
+    delete = mockDelete
+  }
+}))
+
+describe('Prospects API', () => {
+  let app: Express
+  let authHeader: string
 
   beforeEach(() => {
-    // api = new ApiTestHelper()
+    vi.clearAllMocks()
+    app = createTestApp()
+    authHeader = createAuthHeader()
   })
 
   describe('GET /api/prospects', () => {
     it('should return paginated list of prospects', async () => {
-      await TestDataFactory.createProspects(5)
+      const mockProspects = [
+        { id: '1', company_name: 'Company A', state: 'NY', priority_score: 80 },
+        { id: '2', company_name: 'Company B', state: 'CA', priority_score: 75 }
+      ]
 
-      const response = await api.get('/api/prospects')
+      mockList.mockResolvedValueOnce({
+        prospects: mockProspects,
+        page: 1,
+        limit: 20,
+        total: 2
+      })
+
+      const response = await request(app).get('/api/prospects').set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
       expect(response.body).toHaveProperty('prospects')
       expect(response.body).toHaveProperty('pagination')
       expect(response.body.prospects).toBeInstanceOf(Array)
-      expect(response.body.prospects.length).toBe(5)
-      expect(response.body.pagination.total).toBe(5)
+      expect(response.body.prospects.length).toBe(2)
+      expect(response.body.pagination.total).toBe(2)
     })
 
     it('should filter by state query parameter', async () => {
-      await TestDataFactory.createProspects(3, { state: 'NY' })
-      await TestDataFactory.createProspects(2, { state: 'CA' })
+      const mockProspects = [
+        { id: '1', company_name: 'NY Company 1', state: 'NY' },
+        { id: '2', company_name: 'NY Company 2', state: 'NY' }
+      ]
 
-      const response = await api.get('/api/prospects?state=NY')
+      mockList.mockResolvedValueOnce({
+        prospects: mockProspects,
+        page: 1,
+        limit: 20,
+        total: 2
+      })
+
+      const response = await request(app)
+        .get('/api/prospects?state=NY')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
-      expect(response.body.prospects.length).toBe(3)
-      response.body.prospects.forEach((p: { state: string }) => {
-        expect(p.state).toBe('NY')
-      })
+      expect(response.body.prospects.length).toBe(2)
+
+      // Verify service was called with state filter
+      expect(mockList).toHaveBeenCalledWith(expect.objectContaining({ state: 'NY' }))
     })
 
     it('should handle pagination parameters', async () => {
-      await TestDataFactory.createProspects(25)
+      mockList.mockResolvedValueOnce({
+        prospects: Array(10).fill({ id: '1', company_name: 'Test' }),
+        page: 2,
+        limit: 10,
+        total: 25
+      })
 
-      const response = await api.get('/api/prospects?page=2&limit=10')
+      const response = await request(app)
+        .get('/api/prospects?page=2&limit=10')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
       expect(response.body.prospects.length).toBe(10)
@@ -55,56 +102,97 @@ describe.skip('Prospects API', () => {
     })
 
     it('should validate pagination parameters', async () => {
-      const response = await api.get('/api/prospects?page=0')
+      const response = await request(app)
+        .get('/api/prospects?page=invalid')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(400)
       expect(response.body.error).toBeDefined()
-      expect(response.body.error.code).toBe('VALIDATION_ERROR')
     })
 
     it('should support sorting', async () => {
-      await TestDataFactory.createProspect({ companyName: 'Alpha Corp', riskScore: 50 })
-      await TestDataFactory.createProspect({ companyName: 'Beta Inc', riskScore: 90 })
-      await TestDataFactory.createProspect({ companyName: 'Gamma LLC', riskScore: 70 })
+      mockList.mockResolvedValueOnce({
+        prospects: [
+          { id: '1', company_name: 'High Score', priority_score: 90 },
+          { id: '2', company_name: 'Low Score', priority_score: 50 }
+        ],
+        page: 1,
+        limit: 20,
+        total: 2
+      })
 
-      const response = await api.get('/api/prospects?sort_by=risk_score&sort_order=desc')
+      const response = await request(app)
+        .get('/api/prospects?sort_by=priority_score&sort_order=desc')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
-      expect(response.body.prospects[0].risk_score).toBe(90)
-      expect(response.body.prospects[1].risk_score).toBe(70)
-      expect(response.body.prospects[2].risk_score).toBe(50)
+
+      // Verify service was called with sort params
+      expect(mockList).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sort_by: 'priority_score',
+          sort_order: 'desc'
+        })
+      )
     })
 
-    it('should filter by risk score range', async () => {
-      await TestDataFactory.createProspect({ riskScore: 50 })
-      await TestDataFactory.createProspect({ riskScore: 75 })
-      await TestDataFactory.createProspect({ riskScore: 90 })
+    it('should filter by score range', async () => {
+      mockList.mockResolvedValueOnce({
+        prospects: [{ id: '1', priority_score: 75 }],
+        page: 1,
+        limit: 20,
+        total: 1
+      })
 
-      const response = await api.get('/api/prospects?min_score=60&max_score=85')
+      const response = await request(app)
+        .get('/api/prospects?min_score=60&max_score=85')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
-      expect(response.body.prospects.length).toBe(1)
-      expect(response.body.prospects[0].risk_score).toBe(75)
+
+      // Verify service was called with score filters (query params are transformed to numbers by Zod)
+      expect(mockList).toHaveBeenCalledWith(
+        expect.objectContaining({
+          min_score: expect.anything(),
+          max_score: expect.anything()
+        })
+      )
+    })
+
+    it('should require authentication', async () => {
+      const response = await request(app).get('/api/prospects')
+
+      expect(response.status).toBe(401)
     })
   })
 
   describe('GET /api/prospects/:id', () => {
     it('should return prospect by id', async () => {
-      const prospect = await TestDataFactory.createProspect({
-        companyName: 'Test Company',
-        state: 'NY'
-      })
+      const mockProspect = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        company_name: 'Test Company',
+        state: 'NY',
+        priority_score: 85
+      }
 
-      const response = await api.get(`/api/prospects/${prospect.id}`)
+      mockGetById.mockResolvedValueOnce(mockProspect)
+
+      const response = await request(app)
+        .get('/api/prospects/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(200)
-      expect(response.body.id).toBe(prospect.id)
+      expect(response.body.id).toBe('550e8400-e29b-41d4-a716-446655440000')
       expect(response.body.company_name).toBe('Test Company')
       expect(response.body.state).toBe('NY')
     })
 
     it('should return 404 for non-existent prospect', async () => {
-      const response = await api.get('/api/prospects/00000000-0000-0000-0000-000000000000')
+      mockGetById.mockResolvedValueOnce(null)
+
+      const response = await request(app)
+        .get('/api/prospects/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(404)
       expect(response.body.error).toBeDefined()
@@ -112,7 +200,9 @@ describe.skip('Prospects API', () => {
     })
 
     it('should validate UUID format', async () => {
-      const response = await api.get('/api/prospects/invalid-uuid')
+      const response = await request(app)
+        .get('/api/prospects/invalid-uuid')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(400)
       expect(response.body.error).toBeDefined()
@@ -124,157 +214,173 @@ describe.skip('Prospects API', () => {
       const prospectData = {
         company_name: 'New Test Company',
         state: 'CA',
-        industry: 'Technology',
-        lien_amount: 750000,
-        risk_score: 85
+        industry: 'technology',
+        lien_amount: 750000
       }
 
-      const response = await api.post('/api/prospects', prospectData)
+      const mockCreated = {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        ...prospectData,
+        status: 'unclaimed',
+        created_at: new Date().toISOString()
+      }
+
+      mockCreate.mockResolvedValueOnce(mockCreated)
+
+      const response = await request(app)
+        .post('/api/prospects')
+        .set('Authorization', authHeader)
+        .send(prospectData)
 
       expect(response.status).toBe(201)
       expect(response.body.id).toBeDefined()
       expect(response.body.company_name).toBe(prospectData.company_name)
       expect(response.body.state).toBe(prospectData.state)
       expect(response.body.industry).toBe(prospectData.industry)
-      expect(response.body.lien_amount).toBe(prospectData.lien_amount)
-      expect(response.body.risk_score).toBe(prospectData.risk_score)
     })
 
     it('should validate required fields', async () => {
-      const response = await api.post('/api/prospects', {
-        state: 'CA'
-        // missing company_name
-      })
+      const response = await request(app)
+        .post('/api/prospects')
+        .set('Authorization', authHeader)
+        .send({
+          state: 'CA'
+          // missing company_name
+        })
 
       expect(response.status).toBe(400)
       expect(response.body.error).toBeDefined()
-      expect(response.body.error.code).toBe('VALIDATION_ERROR')
     })
 
     it('should validate state format', async () => {
-      const response = await api.post('/api/prospects', {
-        company_name: 'Test',
-        state: 'INVALID' // should be 2 letters
-      })
+      const response = await request(app)
+        .post('/api/prospects')
+        .set('Authorization', authHeader)
+        .send({
+          company_name: 'Test',
+          state: 'INVALID', // should be 2 letters
+          industry: 'technology'
+        })
 
       expect(response.status).toBe(400)
     })
 
-    it('should validate risk score range', async () => {
-      const response = await api.post('/api/prospects', {
-        company_name: 'Test',
-        state: 'NY',
-        risk_score: 150 // should be 0-100
-      })
+    it('should validate industry enum', async () => {
+      const response = await request(app)
+        .post('/api/prospects')
+        .set('Authorization', authHeader)
+        .send({
+          company_name: 'Test',
+          state: 'NY',
+          industry: 'invalid_industry'
+        })
 
       expect(response.status).toBe(400)
-    })
-
-    it('should set default values', async () => {
-      const response = await api.post('/api/prospects', {
-        company_name: 'Minimal Test',
-        state: 'TX'
-      })
-
-      expect(response.status).toBe(201)
-      expect(response.body.status).toBe('active')
     })
   })
 
   describe('PATCH /api/prospects/:id', () => {
     it('should update prospect fields', async () => {
-      const prospect = await TestDataFactory.createProspect({
-        companyName: 'Original Name',
-        riskScore: 70
-      })
-
-      const response = await api.patch(`/api/prospects/${prospect.id}`, {
+      const mockUpdated = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
         company_name: 'Updated Name',
-        risk_score: 85
-      })
+        state: 'NY',
+        priority_score: 85
+      }
+
+      mockUpdate.mockResolvedValueOnce(mockUpdated)
+
+      const response = await request(app)
+        .patch('/api/prospects/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
+        .send({
+          company_name: 'Updated Name'
+        })
 
       expect(response.status).toBe(200)
       expect(response.body.company_name).toBe('Updated Name')
-      expect(response.body.risk_score).toBe(85)
     })
 
     it('should return 404 for non-existent prospect', async () => {
-      const response = await api.patch('/api/prospects/00000000-0000-0000-0000-000000000000', {
-        company_name: 'Test'
-      })
+      mockUpdate.mockRejectedValueOnce(
+        new NotFoundError('Prospect', '00000000-0000-0000-0000-000000000000')
+      )
+
+      const response = await request(app)
+        .patch('/api/prospects/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', authHeader)
+        .send({
+          company_name: 'Test'
+        })
 
       expect(response.status).toBe(404)
+      expect(response.body.error.code).toBe('NOT_FOUND')
     })
 
     it('should validate update data', async () => {
-      const prospect = await TestDataFactory.createProspect()
-
-      const response = await api.patch(`/api/prospects/${prospect.id}`, {
-        risk_score: -10 // invalid
-      })
+      const response = await request(app)
+        .patch('/api/prospects/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
+        .send({
+          state: 'INVALID' // should be 2 letters
+        })
 
       expect(response.status).toBe(400)
     })
 
     it('should allow partial updates', async () => {
-      const prospect = await TestDataFactory.createProspect({
-        companyName: 'Test Company',
+      const mockUpdated = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        company_name: 'Test Company',
         state: 'NY',
-        riskScore: 75
-      })
+        industry: 'technology'
+      }
 
-      const response = await api.patch(`/api/prospects/${prospect.id}`, {
-        risk_score: 90
-      })
+      mockUpdate.mockResolvedValueOnce(mockUpdated)
+
+      const response = await request(app)
+        .patch('/api/prospects/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
+        .send({
+          industry: 'technology'
+        })
 
       expect(response.status).toBe(200)
       expect(response.body.company_name).toBe('Test Company')
-      expect(response.body.state).toBe('NY')
-      expect(response.body.risk_score).toBe(90)
+      expect(response.body.industry).toBe('technology')
     })
   })
 
   describe('DELETE /api/prospects/:id', () => {
     it('should delete a prospect', async () => {
-      const prospect = await TestDataFactory.createProspect()
+      mockDelete.mockResolvedValueOnce(true)
 
-      const response = await api.delete(`/api/prospects/${prospect.id}`)
+      const response = await request(app)
+        .delete('/api/prospects/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(204)
-
-      // Verify deletion
-      const getResponse = await api.get(`/api/prospects/${prospect.id}`)
-      expect(getResponse.status).toBe(404)
     })
 
     it('should return 404 for non-existent prospect', async () => {
-      const response = await api.delete('/api/prospects/00000000-0000-0000-0000-000000000000')
+      mockDelete.mockRejectedValueOnce(
+        new NotFoundError('Prospect', '00000000-0000-0000-0000-000000000000')
+      )
+
+      const response = await request(app)
+        .delete('/api/prospects/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', authHeader)
 
       expect(response.status).toBe(404)
-    })
-  })
-
-  describe('GET /api/prospects/stats', () => {
-    it('should return prospect statistics', async () => {
-      await TestDataFactory.createProspects(5, { status: 'active' })
-      await TestDataFactory.createProspects(3, { status: 'converted' })
-      await TestDataFactory.createProspects(2, { status: 'archived' })
-
-      const response = await api.get('/api/prospects/stats')
-
-      expect(response.status).toBe(200)
-      expect(response.body.total_prospects).toBe(10)
-      expect(response.body.active_prospects).toBe(5)
-      expect(response.body.converted_prospects).toBe(3)
-      expect(response.body.archived_prospects).toBe(2)
+      expect(response.body.error.code).toBe('NOT_FOUND')
     })
 
-    it('should return zero stats when no prospects exist', async () => {
-      const response = await api.get('/api/prospects/stats')
+    it('should validate UUID format', async () => {
+      const response = await request(app)
+        .delete('/api/prospects/invalid-uuid')
+        .set('Authorization', authHeader)
 
-      expect(response.status).toBe(200)
-      expect(response.body.total_prospects).toBe(0)
-      expect(response.body.active_prospects).toBe(0)
+      expect(response.status).toBe(400)
     })
   })
 })
