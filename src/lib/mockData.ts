@@ -1,8 +1,8 @@
-import { 
-  Prospect, 
-  GrowthSignal, 
-  HealthScore, 
-  CompetitorData, 
+import {
+  Prospect,
+  GrowthSignal,
+  HealthScore,
+  CompetitorData,
   PortfolioCompany,
   DashboardStats,
   IndustryType,
@@ -12,16 +12,24 @@ import {
 import { calculateMLScoring, addMLConfidenceToSignal } from './mlScoring'
 
 // MCA-focused industries: high credit card volume businesses
-const INDUSTRIES: IndustryType[] = ['restaurant', 'retail', 'construction', 'healthcare', 'manufacturing', 'services', 'technology']
+const INDUSTRIES: IndustryType[] = [
+  'restaurant',
+  'retail',
+  'construction',
+  'healthcare',
+  'manufacturing',
+  'services',
+  'technology'
+]
 // Weight industries towards those best suited for MCA (restaurants, retail, services have high card processing)
 const MCA_INDUSTRY_WEIGHTS: Record<IndustryType, number> = {
-  'restaurant': 0.25,  // High card volume, perfect for MCA
-  'retail': 0.25,      // High card volume, perfect for MCA
-  'services': 0.20,    // Good card volume
-  'construction': 0.15, // Moderate fit
-  'healthcare': 0.10,  // Lower priority
-  'manufacturing': 0.03, // Lower priority
-  'technology': 0.02   // Lowest priority for MCA
+  restaurant: 0.25, // High card volume, perfect for MCA
+  retail: 0.25, // High card volume, perfect for MCA
+  services: 0.2, // Good card volume
+  construction: 0.15, // Moderate fit
+  healthcare: 0.1, // Lower priority
+  manufacturing: 0.03, // Lower priority
+  technology: 0.02 // Lowest priority for MCA
 }
 
 const STATES = ['NY', 'CA', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI']
@@ -35,14 +43,14 @@ function randomElement<T>(arr: T[]): T {
 function weightedIndustrySelection(): IndustryType {
   const rand = Math.random()
   let cumulative = 0
-  
+
   for (const [industry, weight] of Object.entries(MCA_INDUSTRY_WEIGHTS)) {
     cumulative += weight
     if (rand <= cumulative) {
       return industry as IndustryType
     }
   }
-  
+
   return 'restaurant' // Fallback to restaurant (best for MCA)
 }
 
@@ -59,11 +67,11 @@ function randomDate(daysAgo: number, variance: number = 0): string {
 
 export function generateHealthScore(): HealthScore {
   const grades: HealthGrade[] = ['A', 'B', 'C', 'D', 'F']
-  const weights = [0.25, 0.35, 0.25, 0.10, 0.05]
+  const weights = [0.25, 0.35, 0.25, 0.1, 0.05]
   const rand = Math.random()
   let cumulative = 0
   let grade: HealthGrade = 'B'
-  
+
   for (let i = 0; i < grades.length; i++) {
     cumulative += weights[i]
     if (rand <= cumulative) {
@@ -73,16 +81,16 @@ export function generateHealthScore(): HealthScore {
   }
 
   const scoreMap: Record<HealthGrade, [number, number]> = {
-    'A': [85, 100],
-    'B': [70, 84],
-    'C': [55, 69],
-    'D': [40, 54],
-    'F': [0, 39]
+    A: [85, 100],
+    B: [70, 84],
+    C: [55, 69],
+    D: [40, 54],
+    F: [0, 39]
   }
 
   const [min, max] = scoreMap[grade]
   const score = randomInt(min, max)
-  
+
   return {
     grade,
     score,
@@ -94,7 +102,10 @@ export function generateHealthScore(): HealthScore {
   }
 }
 
-export function generateGrowthSignals(count: number): GrowthSignal[] {
+export function generateGrowthSignals(
+  count: number,
+  includeTodaySignals: boolean = false
+): GrowthSignal[] {
   const signals: GrowthSignal[] = []
   const descriptions: Record<SignalType, string[]> = {
     hiring: [
@@ -131,14 +142,24 @@ export function generateGrowthSignals(count: number): GrowthSignal[] {
 
   for (let i = 0; i < count; i++) {
     const type = randomElement(SIGNAL_TYPES)
-    const score = type === 'expansion' ? randomInt(20, 30) : 
-                  type === 'contract' ? randomInt(18, 28) :
-                  type === 'permit' ? randomInt(15, 25) :
-                  type === 'equipment' ? randomInt(12, 22) : randomInt(10, 20)
-    
-    const detectedDate = randomDate(randomInt(5, 60))
+    const score =
+      type === 'expansion'
+        ? randomInt(20, 30)
+        : type === 'contract'
+          ? randomInt(18, 28)
+          : type === 'permit'
+            ? randomInt(15, 25)
+            : type === 'equipment'
+              ? randomInt(12, 22)
+              : randomInt(10, 20)
+
+    // For demo: first signal gets today's date if includeTodaySignals is true
+    const detectedDate =
+      includeTodaySignals && i === 0
+        ? new Date().toISOString().split('T')[0]
+        : randomDate(randomInt(5, 60))
     const baseConfidence = 0.7 + Math.random() * 0.25
-    
+
     const signal = {
       id: `signal-${Date.now()}-${i}`,
       type,
@@ -148,7 +169,7 @@ export function generateGrowthSignals(count: number): GrowthSignal[] {
       score,
       confidence: baseConfidence
     }
-    
+
     // Add ML confidence to signal
     const mlConfidence = addMLConfidenceToSignal({
       type,
@@ -156,47 +177,88 @@ export function generateGrowthSignals(count: number): GrowthSignal[] {
       score,
       detectedDate
     })
-    
+
     signals.push({
       ...signal,
       mlConfidence
     })
   }
 
-  return signals.sort((a, b) => new Date(b.detectedDate).getTime() - new Date(a.detectedDate).getTime())
+  return signals.sort(
+    (a, b) => new Date(b.detectedDate).getTime() - new Date(a.detectedDate).getTime()
+  )
 }
 
 export function generateProspects(count: number): Prospect[] {
   const prospects: Prospect[] = []
-  
+
   // Small business names - NO corporate/bank names
   // MCA targets: local restaurants, retail shops, small service businesses
   const restaurantNames = [
-    "Joe's Pizza", "Main Street Diner", "Bella Italia Trattoria", "The Corner Café", 
-    "Golden Dragon Chinese", "Taco Express", "Maria's Bakery", "Burger Haven",
-    "Sunset Grill & Bar", "The Daily Grind Coffee", "Tony's Steakhouse", "Fresh Sushi Bar"
+    "Joe's Pizza",
+    'Main Street Diner',
+    'Bella Italia Trattoria',
+    'The Corner Café',
+    'Golden Dragon Chinese',
+    'Taco Express',
+    "Maria's Bakery",
+    'Burger Haven',
+    'Sunset Grill & Bar',
+    'The Daily Grind Coffee',
+    "Tony's Steakhouse",
+    'Fresh Sushi Bar'
   ]
-  
+
   const retailNames = [
-    "City Hardware Store", "Bella's Boutique", "Quick Stop Convenience", "Green Leaf Market",
-    "The Book Nook", "Sports Gear Plus", "Pet Paradise Store", "Flower Power Florist",
-    "Mike's Auto Parts", "Fashion Forward Outlet", "Tech Corner Electronics", "Home Essentials"
+    'City Hardware Store',
+    "Bella's Boutique",
+    'Quick Stop Convenience',
+    'Green Leaf Market',
+    'The Book Nook',
+    'Sports Gear Plus',
+    'Pet Paradise Store',
+    'Flower Power Florist',
+    "Mike's Auto Parts",
+    'Fashion Forward Outlet',
+    'Tech Corner Electronics',
+    'Home Essentials'
   ]
-  
+
   const serviceNames = [
-    "Quick Clean Laundry", "Elite Hair Salon", "ProFit Gym & Wellness", "Happy Paws Pet Grooming",
-    "Speedy Auto Repair", "Bright Smile Dental", "Total Care Pharmacy", "Ace Plumbing Services",
-    "Green Thumb Landscaping", "All City Moving Co", "Classic Dry Cleaners", "Shine Detailing"
+    'Quick Clean Laundry',
+    'Elite Hair Salon',
+    'ProFit Gym & Wellness',
+    'Happy Paws Pet Grooming',
+    'Speedy Auto Repair',
+    'Bright Smile Dental',
+    'Total Care Pharmacy',
+    'Ace Plumbing Services',
+    'Green Thumb Landscaping',
+    'All City Moving Co',
+    'Classic Dry Cleaners',
+    'Shine Detailing'
   ]
-  
+
   const constructionNames = [
-    "ABC Contracting LLC", "Summit Builders", "Quality Roofing Co", "Master Remodeling",
-    "Precision Electrical", "Metro HVAC Services", "Foundation Experts", "Elite Carpentry"
+    'ABC Contracting LLC',
+    'Summit Builders',
+    'Quality Roofing Co',
+    'Master Remodeling',
+    'Precision Electrical',
+    'Metro HVAC Services',
+    'Foundation Experts',
+    'Elite Carpentry'
   ]
-  
+
   const healthcareNames = [
-    "Community Medical Center", "Sunrise Physical Therapy", "Valley Dental Group", "CarePlus Pharmacy",
-    "HealthFirst Clinic", "Wellness Chiropractic", "Premier Vision Care", "Family Health Practice"
+    'Community Medical Center',
+    'Sunrise Physical Therapy',
+    'Valley Dental Group',
+    'CarePlus Pharmacy',
+    'HealthFirst Clinic',
+    'Wellness Chiropractic',
+    'Premier Vision Care',
+    'Family Health Practice'
   ]
 
   for (let i = 0; i < count; i++) {
@@ -204,11 +266,15 @@ export function generateProspects(count: number): Prospect[] {
     const industry = weightedIndustrySelection()
     const state = randomElement(STATES)
     const defaultDate = randomDate(randomInt(1200, 1800), 200)
-    const timeSinceDefault = Math.floor((Date.now() - new Date(defaultDate).getTime()) / (1000 * 60 * 60 * 24))
+    const timeSinceDefault = Math.floor(
+      (Date.now() - new Date(defaultDate).getTime()) / (1000 * 60 * 60 * 24)
+    )
     const signalCount = randomInt(0, 5)
-    const growthSignals = generateGrowthSignals(signalCount)
+    // First 3 prospects with signals get today's date for demo impact
+    const includeTodaySignals = i < 3 && signalCount > 0
+    const growthSignals = generateGrowthSignals(signalCount, includeTodaySignals)
     const healthScore = generateHealthScore()
-    
+
     // Generate MCA-appropriate company name based on industry
     let companyName: string
     switch (industry) {
@@ -234,21 +300,29 @@ export function generateProspects(count: number): Prospect[] {
         companyName = `${randomElement(['Digital', 'Smart', 'Tech'])} Solutions LLC`
         break
     }
-    
+
     const totalSignalScore = growthSignals.reduce((sum, s) => sum + s.score, 0)
-    const basePriority = Math.min(100, (timeSinceDefault / 14) + totalSignalScore + healthScore.score * 0.3)
+    const basePriority = Math.min(
+      100,
+      timeSinceDefault / 14 + totalSignalScore + healthScore.score * 0.3
+    )
     const priorityScore = Math.round(basePriority)
 
     const narrativeParts: string[] = []
     if (timeSinceDefault > 1095) {
-      narrativeParts.push(`Defaulted ${Math.floor(timeSinceDefault / 365)} years ago on equipment financing`)
+      narrativeParts.push(
+        `Defaulted ${Math.floor(timeSinceDefault / 365)} years ago on equipment financing`
+      )
     }
     if (growthSignals.length > 0) {
-      const topSignals = growthSignals.slice(0, 2).map(s => s.type).join(', ')
+      const topSignals = growthSignals
+        .slice(0, 2)
+        .map((s) => s.type)
+        .join(', ')
       narrativeParts.push(`showing ${growthSignals.length} growth signals (${topSignals})`)
     }
     narrativeParts.push(`Current health grade: ${healthScore.grade}`)
-    
+
     // MCA-appropriate revenue range: $100K - $3M (small businesses only)
     // Exclude large corporations with >$5M revenue
     const estimatedRevenue = randomInt(100000, 3000000)
@@ -263,17 +337,24 @@ export function generateProspects(count: number): Prospect[] {
       defaultDate,
       timeSinceDefault,
       lastFilingDate: Math.random() > 0.7 ? randomDate(randomInt(1500, 2000)) : undefined,
-      uccFilings: [{
-        id: `ucc-${i}`,
-        filingDate: defaultDate,
-        debtorName: companyName,
-        securedParty: randomElement(['Capital Finance Corp', 'Business Lending LLC', 'Equipment Leasing Inc', 'MCA Direct']),
-        state,
-        // MCA-appropriate lien amounts: $25K - $250K (small business ranges)
-        lienAmount: randomInt(25000, 250000),
-        status: 'lapsed',
-        filingType: 'UCC-1'
-      }],
+      uccFilings: [
+        {
+          id: `ucc-${i}`,
+          filingDate: defaultDate,
+          debtorName: companyName,
+          securedParty: randomElement([
+            'Capital Finance Corp',
+            'Business Lending LLC',
+            'Equipment Leasing Inc',
+            'MCA Direct'
+          ]),
+          state,
+          // MCA-appropriate lien amounts: $25K - $250K (small business ranges)
+          lienAmount: randomInt(25000, 250000),
+          status: 'lapsed',
+          filingType: 'UCC-1'
+        }
+      ],
       growthSignals,
       healthScore,
       narrative: narrativeParts.join(', '),
@@ -284,7 +365,7 @@ export function generateProspects(count: number): Prospect[] {
 
     // Add ML scoring
     prospect.mlScoring = calculateMLScoring(prospect)
-    
+
     prospects.push(prospect)
   }
 
@@ -305,21 +386,23 @@ export function generateCompetitorData(): CompetitorData[] {
     'Enterprise Lending Network'
   ]
 
-  return lenders.map((lenderName) => {
-    const filingCount = randomInt(50, 500)
-    const avgDealSize = randomInt(75000, 350000)
-    const marketShare = Math.round((filingCount / 2000) * 100 * 10) / 10
-    
-    return {
-      lenderName,
-      filingCount,
-      avgDealSize,
-      marketShare,
-      industries: INDUSTRIES.slice(0, randomInt(2, 5)),
-      topState: randomElement(STATES),
-      monthlyTrend: -10 + Math.random() * 30
-    }
-  }).sort((a, b) => b.filingCount - a.filingCount)
+  return lenders
+    .map((lenderName) => {
+      const filingCount = randomInt(50, 500)
+      const avgDealSize = randomInt(75000, 350000)
+      const marketShare = Math.round((filingCount / 2000) * 100 * 10) / 10
+
+      return {
+        lenderName,
+        filingCount,
+        avgDealSize,
+        marketShare,
+        industries: INDUSTRIES.slice(0, randomInt(2, 5)),
+        topState: randomElement(STATES),
+        monthlyTrend: -10 + Math.random() * 30
+      }
+    })
+    .sort((a, b) => b.filingCount - a.filingCount)
 }
 
 export function generatePortfolioCompanies(count: number): PortfolioCompany[] {
@@ -329,10 +412,14 @@ export function generatePortfolioCompanies(count: number): PortfolioCompany[] {
 
   for (let i = 0; i < count; i++) {
     const healthScore = generateHealthScore()
-    const currentStatus = 
-      healthScore.grade === 'A' || healthScore.grade === 'B' ? 'performing' :
-      healthScore.grade === 'C' ? 'watch' :
-      healthScore.grade === 'D' ? 'at-risk' : 'default'
+    const currentStatus =
+      healthScore.grade === 'A' || healthScore.grade === 'B'
+        ? 'performing'
+        : healthScore.grade === 'C'
+          ? 'watch'
+          : healthScore.grade === 'D'
+            ? 'at-risk'
+            : 'default'
 
     companies.push({
       id: `portfolio-${i}`,
@@ -348,36 +435,44 @@ export function generatePortfolioCompanies(count: number): PortfolioCompany[] {
   return companies
 }
 
-export function generateDashboardStats(prospects: Prospect[], portfolio: PortfolioCompany[]): DashboardStats {
-  const highValueProspects = prospects.filter(p => p.priorityScore >= 70).length
-  const avgPriorityScore = prospects.length === 0
-    ? 0
-    : Math.round(prospects.reduce((sum, p) => sum + p.priorityScore, 0) / prospects.length)
+export function generateDashboardStats(
+  prospects: Prospect[],
+  portfolio: PortfolioCompany[]
+): DashboardStats {
+  const highValueProspects = prospects.filter((p) => p.priorityScore >= 70).length
+  const avgPriorityScore =
+    prospects.length === 0
+      ? 0
+      : Math.round(prospects.reduce((sum, p) => sum + p.priorityScore, 0) / prospects.length)
   const newSignalsToday = prospects.reduce((sum, p) => {
-    const todaySignals = p.growthSignals.filter(s => {
+    const todaySignals = p.growthSignals.filter((s) => {
       const daysDiff = (Date.now() - new Date(s.detectedDate).getTime()) / (1000 * 60 * 60 * 24)
       return daysDiff < 1
     })
     return sum + todaySignals.length
   }, 0)
-  const portfolioAtRisk = portfolio.filter(c => c.currentStatus === 'at-risk' || c.currentStatus === 'default').length
+  const portfolioAtRisk = portfolio.filter(
+    (c) => c.currentStatus === 'at-risk' || c.currentStatus === 'default'
+  ).length
 
-  const avgGradeScore = portfolio.length === 0
-    ? 0
-    : portfolio.reduce((sum, c) => {
-        const gradeValues: Record<HealthGrade, number> = { 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'F': 0 }
-        return sum + gradeValues[c.healthScore.grade]
-      }, 0) / portfolio.length
+  const avgGradeScore =
+    portfolio.length === 0
+      ? 0
+      : portfolio.reduce((sum, c) => {
+          const gradeValues: Record<HealthGrade, number> = { A: 4, B: 3, C: 2, D: 1, F: 0 }
+          return sum + gradeValues[c.healthScore.grade]
+        }, 0) / portfolio.length
 
-  const avgHealthGrade = portfolio.length === 0
-    ? 'N/A'
-    : avgGradeScore >= 3.5
-      ? 'A-'
-      : avgGradeScore >= 2.5
-        ? 'B'
-        : avgGradeScore >= 1.5
-          ? 'C'
-          : 'D'
+  const avgHealthGrade =
+    portfolio.length === 0
+      ? 'N/A'
+      : avgGradeScore >= 3.5
+        ? 'A-'
+        : avgGradeScore >= 2.5
+          ? 'B'
+          : avgGradeScore >= 1.5
+            ? 'C'
+            : 'D'
 
   return {
     totalProspects: prospects.length,

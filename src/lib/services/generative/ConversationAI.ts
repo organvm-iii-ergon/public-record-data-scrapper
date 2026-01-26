@@ -10,53 +10,53 @@ import type {
   ActionResult,
   ConversationContext,
   ConversationSession,
-  AICapability,
-} from '@/types/generative';
-import type LLMService from '../integration/LLMService';
+  AICapability
+} from '@/types/generative'
+import type LLMService from '../integration/LLMService'
 
 export class ConversationAI {
-  private llmService: LLMService;
-  private sessions: Map<string, ConversationSession> = new Map();
-  private capabilities: AICapability[];
+  private llmService: LLMService
+  private sessions: Map<string, ConversationSession> = new Map()
+  private capabilities: AICapability[]
 
   constructor(llmService: LLMService) {
-    this.llmService = llmService;
-    this.capabilities = this.initializeCapabilities();
+    this.llmService = llmService
+    this.capabilities = this.initializeCapabilities()
   }
 
   /**
    * Send message and get AI response
    */
   async sendMessage(sessionId: string, userMessage: string): Promise<Message> {
-    const session = this.getOrCreateSession(sessionId);
+    const session = this.getOrCreateSession(sessionId)
 
     // Create user message
     const userMsg: Message = {
       messageId: `msg_${Date.now()}_user`,
       role: 'user',
       content: userMessage,
-      timestamp: new Date(),
-    };
+      timestamp: new Date()
+    }
 
-    session.messages.push(userMsg);
-    session.lastActiveAt = new Date();
+    session.messages.push(userMsg)
+    session.lastActiveAt = new Date()
 
     // Detect intent
-    const intent = await this.detectIntent(userMessage);
-    userMsg.intent = intent;
+    const intent = await this.detectIntent(userMessage)
+    userMsg.intent = intent
 
     // Extract entities
-    const entities = await this.extractEntities(userMessage);
-    userMsg.entities = entities;
+    const entities = await this.extractEntities(userMessage)
+    userMsg.entities = entities
 
     // Execute action if needed
-    let actionResult: ActionResult | undefined;
+    let actionResult: ActionResult | undefined
     if (intent.primary === 'action' || intent.primary === 'query') {
-      actionResult = await this.executeAction(intent, session.context);
+      actionResult = await this.executeAction(intent, session.context)
     }
 
     // Generate AI response
-    const aiResponse = await this.generateResponse(session, intent, entities, actionResult);
+    const aiResponse = await this.generateResponse(session, intent, entities, actionResult)
 
     // Create assistant message
     const assistantMsg: Message = {
@@ -68,12 +68,12 @@ export class ConversationAI {
       entities,
       actionTaken: actionResult,
       results: actionResult?.result,
-      confidence: intent.confidence,
-    };
+      confidence: intent.confidence
+    }
 
-    session.messages.push(assistantMsg);
+    session.messages.push(assistantMsg)
 
-    return assistantMsg;
+    return assistantMsg
   }
 
   /**
@@ -94,26 +94,26 @@ Respond in JSON format:
   "specific": "find_prospects",
   "confidence": 0.95,
   "parameters": { "industry": "construction", "state": "NY" }
-}`;
+}`
 
     const response = await this.llmService.complete({
       prompt,
       systemPrompt: 'You are an intent classification system. Always respond with valid JSON.',
       temperature: 0.3,
-      maxTokens: 300,
-    });
+      maxTokens: 300
+    })
 
     try {
-      const parsed = JSON.parse(response.text);
+      const parsed = JSON.parse(response.text)
       return {
         primary: parsed.primary || 'query',
         specific: parsed.specific || 'unknown',
         confidence: parsed.confidence || 0.5,
-        parameters: parsed.parameters || {},
-      };
+        parameters: parsed.parameters || {}
+      }
     } catch {
       // Fallback to rule-based intent detection
-      return this.ruleBasedIntentDetection(message);
+      return this.ruleBasedIntentDetection(message)
     }
   }
 
@@ -131,79 +131,85 @@ Respond in JSON array format:
 [
   { "type": "industry", "value": "construction", "confidence": 0.95 },
   { "type": "location", "value": "New York", "confidence": 0.9 }
-]`;
+]`
 
     const response = await this.llmService.complete({
       prompt,
       systemPrompt: 'You are an entity extraction system. Always respond with valid JSON array.',
       temperature: 0.2,
-      maxTokens: 500,
-    });
+      maxTokens: 500
+    })
 
     try {
-      const parsed = JSON.parse(response.text);
-      return parsed.map((entity: any) => ({
+      const parsed = JSON.parse(response.text)
+      return parsed.map((entity: { type: string; value: string; confidence?: number }) => ({
         type: entity.type,
         value: entity.value,
         normalizedValue: this.normalizeEntity(entity.type, entity.value),
-        confidence: entity.confidence || 0.7,
-      }));
+        confidence: entity.confidence || 0.7
+      }))
     } catch {
-      return [];
+      return []
     }
   }
 
   /**
    * Execute action based on intent
    */
-  async executeAction(
-    intent: DetectedIntent,
-    context: ConversationContext
-  ): Promise<ActionResult> {
-    const startTime = Date.now();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async executeAction(intent: DetectedIntent, context: ConversationContext): Promise<ActionResult> {
+    const startTime = Date.now()
 
     try {
-      let result: any;
+      let result: Record<string, unknown>
 
       switch (intent.specific) {
         case 'find_prospects':
-          result = await this.findProspects(intent.parameters);
-          break;
+          result = await this.findProspects(intent.parameters)
+          break
 
         case 'analyze_competitor':
-          result = await this.analyzeCompetitor(intent.parameters);
-          break;
+          result = await this.analyzeCompetitor(intent.parameters)
+          break
 
         case 'generate_report':
-          result = await this.generateReport(intent.parameters);
-          break;
+          result = await this.generateReport(intent.parameters)
+          break
 
         case 'export_data':
-          result = await this.exportData(intent.parameters);
-          break;
+          result = await this.exportData(intent.parameters)
+          break
 
         case 'get_statistics':
-          result = await this.getStatistics(intent.parameters);
-          break;
+          result = await this.getStatistics(intent.parameters)
+          break
+
+        case 'analyze_data':
+          result = await this.analyzeData(intent.parameters)
+          break
+
+        case 'general_query':
+          result = await this.handleGeneralQuery(intent.parameters)
+          break
 
         default:
-          result = { message: 'Action not implemented yet' };
+          result = await this.handleGeneralQuery(intent.parameters)
       }
 
       return {
         actionType: intent.specific,
         status: 'success',
         result,
-        executionTimeMs: Date.now() - startTime,
-      };
+        executionTimeMs: Date.now() - startTime
+      }
     } catch (error) {
       return {
         actionType: intent.specific,
         status: 'failure',
         result: null,
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        executionTimeMs: Date.now() - startTime,
-      };
+        executionTimeMs: Date.now() - startTime
+      }
     }
   }
 
@@ -220,13 +226,13 @@ Respond in JSON array format:
     const history = session.messages
       .slice(-5) // Last 5 messages for context
       .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-      .join('\n\n');
+      .join('\n\n')
 
-    const entitiesStr = entities.map((e) => `${e.type}: ${e.value}`).join(', ');
+    const entitiesStr = entities.map((e) => `${e.type}: ${e.value}`).join(', ')
 
     const actionResultStr = actionResult
       ? `Action executed: ${actionResult.actionType}\nStatus: ${actionResult.status}\nResult: ${JSON.stringify(actionResult.result, null, 2)}`
-      : 'No action executed';
+      : 'No action executed'
 
     const prompt = `Based on this conversation context:
 
@@ -243,24 +249,24 @@ Generate a helpful, concise response that:
 3. Offers relevant follow-up suggestions
 4. Maintains professional but friendly tone
 
-Keep response under 200 words unless more detail is clearly needed.`;
+Keep response under 200 words unless more detail is clearly needed.`
 
     const response = await this.llmService.complete({
       prompt,
       systemPrompt: `You are a helpful AI assistant for a UCC intelligence platform. You help users find prospects, analyze data, and make informed decisions. Be concise, accurate, and actionable.`,
       temperature: 0.7,
-      maxTokens: 500,
-    });
+      maxTokens: 500
+    })
 
-    return response.text;
+    return response.text
   }
 
   /**
    * Get conversation session
    */
   getSessionHistory(sessionId: string): Message[] {
-    const session = this.sessions.get(sessionId);
-    return session?.messages || [];
+    const session = this.sessions.get(sessionId)
+    return session?.messages || []
   }
 
   /**
@@ -271,24 +277,24 @@ Keep response under 200 words unless more detail is clearly needed.`;
       'Show me prospects in construction industry',
       'Which competitors are most active this month?',
       'Find prospects with hiring signals',
-      'What\'s my conversion rate this quarter?',
-      'Generate an executive summary report',
-    ];
+      "What's my conversion rate this quarter?",
+      'Generate an executive summary report'
+    ]
 
     // Personalize based on context
     if (context.currentView === 'prospects') {
       suggestions.unshift(
         'Filter prospects by health grade A or B',
         'Show prospects with 3+ growth signals'
-      );
+      )
     } else if (context.currentView === 'intelligence') {
       suggestions.unshift(
         'Analyze competitor market share trends',
         'Identify white space opportunities'
-      );
+      )
     }
 
-    return suggestions.slice(0, 5);
+    return suggestions.slice(0, 5)
   }
 
   /**
@@ -296,14 +302,14 @@ Keep response under 200 words unless more detail is clearly needed.`;
    */
   async explainResponse(messageId: string): Promise<string> {
     // Find message
-    let message: Message | undefined;
+    let message: Message | undefined
     for (const session of this.sessions.values()) {
-      message = session.messages.find((m) => m.messageId === messageId);
-      if (message) break;
+      message = session.messages.find((m) => m.messageId === messageId)
+      if (message) break
     }
 
     if (!message) {
-      return 'Message not found';
+      return 'Message not found'
     }
 
     const prompt = `Explain the reasoning behind this AI response:
@@ -318,16 +324,16 @@ Provide a clear explanation of:
 1. How the intent was detected
 2. What entities were found and why they matter
 3. What action was taken and why
-4. How the response was formulated`;
+4. How the response was formulated`
 
     const response = await this.llmService.complete({
       prompt,
       systemPrompt: 'You explain AI decision-making in clear, understandable terms.',
       temperature: 0.5,
-      maxTokens: 400,
-    });
+      maxTokens: 400
+    })
 
-    return response.text;
+    return response.text
   }
 
   // ==================== PRIVATE METHODS ====================
@@ -336,7 +342,7 @@ Provide a clear explanation of:
    * Get or create conversation session
    */
   private getOrCreateSession(sessionId: string): ConversationSession {
-    let session = this.sessions.get(sessionId);
+    let session = this.sessions.get(sessionId)
 
     if (!session) {
       session = {
@@ -349,15 +355,15 @@ Provide a clear explanation of:
           userId: 'unknown',
           recentActions: [],
           userGoals: [],
-          sessionMetadata: {},
+          sessionMetadata: {}
         },
-        persistent: true,
-      };
+        persistent: true
+      }
 
-      this.sessions.set(sessionId, session);
+      this.sessions.set(sessionId, session)
     }
 
-    return session;
+    return session
   }
 
   /**
@@ -371,10 +377,10 @@ Provide a clear explanation of:
         examples: [
           'Show me construction companies in Texas',
           'Find prospects with hiring signals and health grade A',
-          'Companies that defaulted in the last 30 days',
+          'Companies that defaulted in the last 30 days'
         ],
         category: 'query',
-        enabled: true,
+        enabled: true
       },
       {
         name: 'Competitor Analysis',
@@ -382,10 +388,10 @@ Provide a clear explanation of:
         examples: [
           'Who are my top competitors?',
           'Analyze competitor market share trends',
-          'Which competitors are active in healthcare?',
+          'Which competitors are active in healthcare?'
         ],
         category: 'analysis',
-        enabled: true,
+        enabled: true
       },
       {
         name: 'Report Generation',
@@ -393,10 +399,10 @@ Provide a clear explanation of:
         examples: [
           'Create an executive summary',
           'Generate performance report for last month',
-          'Market analysis for construction industry',
+          'Market analysis for construction industry'
         ],
         category: 'generation',
-        enabled: true,
+        enabled: true
       },
       {
         name: 'Data Export',
@@ -404,19 +410,19 @@ Provide a clear explanation of:
         examples: [
           'Export top 50 prospects to CSV',
           'Download all prospects with growth signals',
-          'Export competitor data as JSON',
+          'Export competitor data as JSON'
         ],
         category: 'action',
-        enabled: true,
-      },
-    ];
+        enabled: true
+      }
+    ]
   }
 
   /**
    * Rule-based intent detection (fallback)
    */
   private ruleBasedIntentDetection(message: string): DetectedIntent {
-    const lower = message.toLowerCase();
+    const lower = message.toLowerCase()
 
     // Query patterns
     if (
@@ -430,16 +436,16 @@ Provide a clear explanation of:
           primary: 'query',
           specific: 'find_prospects',
           confidence: 0.8,
-          parameters: {},
-        };
+          parameters: {}
+        }
       }
       if (lower.includes('competitor')) {
         return {
           primary: 'query',
           specific: 'analyze_competitor',
           confidence: 0.8,
-          parameters: {},
-        };
+          parameters: {}
+        }
       }
     }
 
@@ -449,8 +455,8 @@ Provide a clear explanation of:
         primary: 'analysis',
         specific: 'analyze_data',
         confidence: 0.7,
-        parameters: {},
-      };
+        parameters: {}
+      }
     }
 
     // Export patterns
@@ -459,8 +465,8 @@ Provide a clear explanation of:
         primary: 'export',
         specific: 'export_data',
         confidence: 0.9,
-        parameters: {},
-      };
+        parameters: {}
+      }
     }
 
     // Report generation
@@ -469,8 +475,8 @@ Provide a clear explanation of:
         primary: 'analysis',
         specific: 'generate_report',
         confidence: 0.8,
-        parameters: {},
-      };
+        parameters: {}
+      }
     }
 
     // Default
@@ -478,44 +484,47 @@ Provide a clear explanation of:
       primary: 'query',
       specific: 'general_query',
       confidence: 0.5,
-      parameters: {},
-    };
+      parameters: {}
+    }
   }
 
   /**
    * Normalize entity values
    */
-  private normalizeEntity(type: string, value: string): any {
+  private normalizeEntity(type: string, value: string): string | number | Date {
     switch (type) {
       case 'date':
       case 'date_range':
         // Parse date strings
-        return new Date(value);
+        return new Date(value)
 
       case 'number':
       case 'metric':
-        return parseFloat(value.replace(/[^0-9.-]/g, ''));
+        return parseFloat(value.replace(/[^0-9.-]/g, ''))
 
       case 'location':
-      case 'state':
+      case 'state': {
         // Normalize state names to abbreviations
         const stateMap: Record<string, string> = {
           'new york': 'NY',
           california: 'CA',
-          texas: 'TX',
+          texas: 'TX'
           // ... etc
-        };
-        return stateMap[value.toLowerCase()] || value;
+        }
+        return stateMap[value.toLowerCase()] || value
+      }
 
       default:
-        return value;
+        return value
     }
   }
 
   /**
    * Find prospects (mock implementation)
    */
-  private async findProspects(parameters: any): Promise<any> {
+  private async findProspects(
+    parameters: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     return {
       count: 42,
       prospects: [
@@ -523,61 +532,109 @@ Provide a clear explanation of:
           id: '1',
           companyName: 'Acme Construction',
           industry: parameters.industry || 'Construction',
-          state: parameters.state || 'NY',
-        },
+          state: parameters.state || 'NY'
+        }
         // ... more prospects
       ],
-      filters: parameters,
-    };
+      filters: parameters
+    }
   }
 
   /**
    * Analyze competitor (mock implementation)
    */
-  private async analyzeCompetitor(parameters: any): Promise<any> {
+  private async analyzeCompetitor(
+    parameters: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     return {
       competitor: parameters.competitor || 'Top Lender XYZ',
       marketShare: 15.3,
       filingVolume: 1250,
       trend: 'growing',
-      opportunities: ['White space in construction sector', 'Pricing gap in NY market'],
-    };
+      opportunities: ['White space in construction sector', 'Pricing gap in NY market']
+    }
   }
 
   /**
    * Generate report (mock implementation)
    */
-  private async generateReport(parameters: any): Promise<any> {
+  private async generateReport(
+    parameters: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     return {
       reportType: parameters.reportType || 'executive_summary',
       generated: true,
       sections: ['Overview', 'Key Metrics', 'Insights', 'Recommendations'],
-      downloadUrl: '/reports/executive-summary-2024-01.pdf',
-    };
+      downloadUrl: '/reports/executive-summary-2024-01.pdf'
+    }
   }
 
   /**
    * Export data (mock implementation)
    */
-  private async exportData(parameters: any): Promise<any> {
+  private async exportData(parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
     return {
       format: parameters.format || 'csv',
       records: parameters.count || 50,
-      downloadUrl: '/exports/prospects-2024-01.csv',
-    };
+      downloadUrl: '/exports/prospects-2024-01.csv'
+    }
   }
 
   /**
    * Get statistics (mock implementation)
    */
-  private async getStatistics(parameters: any): Promise<any> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async getStatistics(
+    parameters: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
     return {
       totalProspects: 1543,
       conversionRate: 0.28,
       averageDealSize: 125000,
-      pipelineValue: 5400000,
-    };
+      pipelineValue: 5400000
+    }
+  }
+
+  /**
+   * Analyze data (mock implementation)
+   */
+  private async analyzeData(parameters: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return {
+      analysisType: parameters.type || 'trend',
+      insights: [
+        'Construction industry shows 15% YoY growth in UCC filings',
+        'Average deal size increased by $12,000 this quarter',
+        'Health grade A prospects convert 2.3x better than grade C'
+      ],
+      recommendations: [
+        'Focus outreach on construction and retail sectors',
+        'Prioritize prospects with 3+ growth signals',
+        'Consider expanding into Texas market'
+      ],
+      dataPoints: 1543,
+      timeRange: 'Last 90 days'
+    }
+  }
+
+  /**
+   * Handle general query (mock implementation)
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async handleGeneralQuery(
+    parameters: Record<string, unknown>
+  ): Promise<Record<string, unknown>> {
+    return {
+      type: 'general_response',
+      message:
+        'I can help you with prospect searches, competitor analysis, report generation, and data exports. What would you like to explore?',
+      suggestions: [
+        'Show me high-value prospects in construction',
+        'Analyze competitor activity this month',
+        'Generate an executive summary report',
+        'Export top 50 prospects to CSV'
+      ]
+    }
   }
 }
 
-export default ConversationAI;
+export default ConversationAI

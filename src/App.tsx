@@ -5,6 +5,7 @@ import { StatsOverview } from '@/components/StatsOverview'
 import { ProspectDetailDialog } from '@/components/ProspectDetailDialog'
 import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
+import { DemoTour } from '@/components/DemoTour'
 
 // Layout components
 import { Header, LoadingAndErrorState, TabNavigation } from '@/components/layout'
@@ -39,6 +40,7 @@ function App() {
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
+  const [tourOpen, setTourOpen] = useState(false)
 
   const useMockData =
     import.meta.env.DEV &&
@@ -155,8 +157,9 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} />
+      <Header onRefresh={handleRefreshData} onStartTour={() => setTourOpen(true)} />
       <QuickAccessBanner />
+      <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
 
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <div className="space-y-4 sm:space-y-6 md:space-y-8">

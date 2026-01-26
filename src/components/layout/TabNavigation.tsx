@@ -6,6 +6,7 @@ export function TabNavigation() {
     <TabsList className="glass-effect grid w-full grid-cols-3 sm:grid-cols-6 mb-4 sm:mb-6 gap-1 sm:gap-0 h-auto sm:h-10 p-1">
       <TabsTrigger
         value="prospects"
+        data-tour="prospects-tab"
         className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
       >
         <Target size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
@@ -20,6 +21,7 @@ export function TabNavigation() {
       </TabsTrigger>
       <TabsTrigger
         value="intelligence"
+        data-tour="intelligence-tab"
         className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
       >
         <ChartBar size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
@@ -27,6 +29,7 @@ export function TabNavigation() {
       </TabsTrigger>
       <TabsTrigger
         value="analytics"
+        data-tour="analytics-tab"
         className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
       >
         <ChartLineUp size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
@@ -41,6 +44,7 @@ export function TabNavigation() {
       </TabsTrigger>
       <TabsTrigger
         value="agentic"
+        data-tour="agentic-tab"
         className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
       >
         <Robot size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />

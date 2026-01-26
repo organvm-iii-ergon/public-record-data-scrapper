@@ -184,10 +184,14 @@ export function ProspectsTab({
 
         {/* Prospect Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          {filteredProspects.map((prospect) => {
+          {filteredProspects.map((prospect, index) => {
             const isSelected = selectedIds.has(prospect.id)
             return (
-              <div key={prospect.id} className="relative">
+              <div
+                key={prospect.id}
+                className="relative"
+                {...(index === 0 ? { 'data-tour': 'prospect-card' } : {})}
+              >
                 <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
                   <Checkbox
                     checked={isSelected}
