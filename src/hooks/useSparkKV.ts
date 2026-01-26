@@ -122,7 +122,8 @@ export function useSafeKV<T = string>(key: string, initialValue?: T): UseKVRetur
       setValue(initialValue)
       persistValue(key, initialValue, storage)
     }
-  }, [key, initialValue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialValue intentionally excluded to prevent infinite re-renders with object/array values
+  }, [key])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -156,7 +157,7 @@ export function useSafeKV<T = string>(key: string, initialValue?: T): UseKVRetur
 
   const setPersistedValue = useCallback(
     (nextValue: T | ((current?: T) => T)) => {
-      setValue(currentValue => {
+      setValue((currentValue) => {
         const resolvedValue =
           typeof nextValue === 'function'
             ? (nextValue as (current?: T) => T)(currentValue)
@@ -175,7 +176,10 @@ export function useSafeKV<T = string>(key: string, initialValue?: T): UseKVRetur
     initializedRef.current = false
   }, [key])
 
-  return useMemo(() => [value, setPersistedValue, deleteValue] as const, [value, setPersistedValue, deleteValue])
+  return useMemo(
+    () => [value, setPersistedValue, deleteValue] as const,
+    [value, setPersistedValue, deleteValue]
+  )
 }
 
 export { useSafeKV as useKV }

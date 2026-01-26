@@ -267,10 +267,7 @@ describe('useSparkKV (useSafeKV)', () => {
       expect(result.current[0]).toBe(true)
     })
 
-    // Note: Object/array tests are skipped due to a potential infinite loop
-    // caused by object reference changes in the initialValue useEffect dependency.
-    // The hook needs to be fixed to memoize or ref-ify the initialValue.
-    it.skip('should handle object values', () => {
+    it('should handle object values', () => {
       const { result } = renderHook(() => useSafeKV('obj-key', { a: 1 }))
 
       act(() => {
@@ -280,7 +277,7 @@ describe('useSparkKV (useSafeKV)', () => {
       expect(result.current[0]).toEqual({ a: 2 })
     })
 
-    it.skip('should handle array values', () => {
+    it('should handle array values', () => {
       const { result } = renderHook(() => useSafeKV<number[]>('array-key', [1, 2, 3]))
 
       act(() => {
