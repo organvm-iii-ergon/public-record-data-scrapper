@@ -239,6 +239,7 @@ export async function fetchDashboardStats() {
 
     const stats = await queries.getProspectStats()
     const newSignalsCount = await queries.getNewSignalsCountForToday()
+    const portfolioStats = await queries.getPortfolioStats()
 
     // Helper to calculate grade from score
     const scoreToGrade = (score: number): 'A' | 'B' | 'C' | 'D' | 'F' => {
@@ -254,7 +255,7 @@ export async function fetchDashboardStats() {
       highValueProspects: stats.total > 0 ? Math.round(stats.total * 0.3) : 0, // Estimate
       avgPriorityScore: Math.round(stats.avg_priority_score || 0),
       newSignalsToday: newSignalsCount,
-      portfolioAtRisk: 0, // TODO: Calculate from portfolio
+      portfolioAtRisk: portfolioStats.atRisk,
       avgHealthGrade: scoreToGrade(Math.round(stats.avg_health_score || 0))
     }
   } catch (error) {
