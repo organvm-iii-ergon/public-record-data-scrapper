@@ -8,7 +8,7 @@ import { QuickAccessBanner } from '@/components/QuickAccessBanner'
 import { DemoTour } from '@/components/DemoTour'
 
 // Layout components
-import { Header, LoadingAndErrorState, TabNavigation } from '@/components/layout'
+import { Header, LoadingAndErrorState, TabNavigation, MobileBottomNav } from '@/components/layout'
 
 // Feature tabs
 import { ProspectsTab } from '@/features/prospects'
@@ -161,7 +161,7 @@ function App() {
       <QuickAccessBanner />
       <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
 
-      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 pb-20 md:pb-8">
         <div className="space-y-4 sm:space-y-6 md:space-y-8">
           <LoadingAndErrorState
             isLoading={data.isLoading}
@@ -237,6 +237,7 @@ function App() {
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
               <AgenticTab agentic={agentic} competitors={data.competitors} />
             </TabsContent>
+            <MobileBottomNav />
           </Tabs>
         </div>
       </main>

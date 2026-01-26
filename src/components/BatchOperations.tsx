@@ -1,22 +1,16 @@
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu'
-import { 
-  CaretDown, 
-  Export, 
-  CheckSquare,
-  Trash,
-  UserPlus
-} from '@phosphor-icons/react'
+import { CaretDown, Export, Trash, UserPlus } from '@phosphor-icons/react'
 import { Prospect } from '@/lib/types'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface BatchOperationsProps {
   prospects: Prospect[]
@@ -27,16 +21,17 @@ interface BatchOperationsProps {
   onBatchDelete: (ids: string[]) => void
 }
 
-export function BatchOperations({ 
-  prospects, 
-  selectedIds, 
+export function BatchOperations({
+  prospects,
+  selectedIds,
   onSelectionChange,
   onBatchClaim,
   onBatchExport,
   onBatchDelete
 }: BatchOperationsProps) {
-  const allIds = prospects.map(p => p.id)
-  const isAllSelected = allIds.length > 0 && allIds.every(id => selectedIds.has(id))
+  const isMobile = useIsMobile()
+  const allIds = prospects.map((p) => p.id)
+  const isAllSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id))
   const isSomeSelected = selectedIds.size > 0 && !isAllSelected
 
   const handleToggleAll = () => {
@@ -66,52 +61,106 @@ export function BatchOperations({
   if (prospects.length === 0) return null
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-      <div className="flex items-center gap-2">
+    <>
+      {/* Desktop: Inline controls */}
+      <div className="hidden md:flex flex-row items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={isAllSelected || (isSomeSelected ? 'indeterminate' : false)}
+            onCheckedChange={handleToggleAll}
+            className="glass-effect border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          />
+          <span className="text-sm text-white/70">
+            {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
+          </span>
+        </div>
+
+        {selectedIds.size > 0 && (
+          <>
+            <Badge variant="secondary" className="glass-effect border-white/30">
+              {selectedIds.size} prospects
+            </Badge>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="glass-effect border-white/30 text-white h-9 text-sm"
+                >
+                  Batch Actions
+                  <CaretDown size={14} className="ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="glass-effect border-white/30">
+                <DropdownMenuItem onClick={() => handleBatchAction('claim')}>
+                  <UserPlus size={16} className="mr-2" />
+                  Claim Selected ({selectedIds.size})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBatchAction('export')}>
+                  <Export size={16} className="mr-2" />
+                  Export Selected ({selectedIds.size})
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handleBatchAction('delete')}
+                  className="text-destructive"
+                >
+                  <Trash size={16} className="mr-2" />
+                  Remove Selected ({selectedIds.size})
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
+      </div>
+
+      {/* Mobile: Select all checkbox inline */}
+      <div className="md:hidden flex items-center gap-2 mb-3">
         <Checkbox
           checked={isAllSelected || (isSomeSelected ? 'indeterminate' : false)}
           onCheckedChange={handleToggleAll}
           className="glass-effect border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
         />
-        <span className="text-xs sm:text-sm text-white/70">
+        <span className="text-xs text-white/70">
           {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
         </span>
       </div>
 
-      {selectedIds.size > 0 && (
-        <>
-          <Badge variant="secondary" className="glass-effect border-white/30">
-            {selectedIds.size} prospects
-          </Badge>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="glass-effect border-white/30 text-white h-8 sm:h-9 text-xs sm:text-sm">
-                Batch Actions
-                <CaretDown size={12} className="ml-2 sm:w-3.5 sm:h-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="glass-effect border-white/30">
-              <DropdownMenuItem onClick={() => handleBatchAction('claim')}>
-                <UserPlus size={14} className="mr-2 sm:w-4 sm:h-4" />
-                Claim Selected ({selectedIds.size})
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBatchAction('export')}>
-                <Export size={14} className="mr-2 sm:w-4 sm:h-4" />
-                Export Selected ({selectedIds.size})
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleBatchAction('delete')}
-                className="text-destructive"
+      {/* Mobile: Sticky selection bar (above bottom nav) */}
+      {isMobile && selectedIds.size > 0 && (
+        <div className="fixed bottom-16 left-0 right-0 z-40 p-3 glass-effect border-t border-white/20 safe-area-pb">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium">{selectedIds.size} selected</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBatchAction('claim')}
+                className="h-10 touch-target glass-effect border-white/30"
               >
-                <Trash size={14} className="mr-2 sm:w-4 sm:h-4" />
-                Remove Selected ({selectedIds.size})
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
+                <UserPlus size={18} weight="bold" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBatchAction('export')}
+                className="h-10 touch-target glass-effect border-white/30"
+              >
+                <Export size={18} weight="bold" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBatchAction('delete')}
+                className="h-10 touch-target glass-effect border-white/30 text-destructive hover:text-destructive"
+              >
+                <Trash size={18} weight="bold" />
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   )
 }

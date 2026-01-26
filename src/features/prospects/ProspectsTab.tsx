@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -7,13 +10,21 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription
+} from '@/components/ui/sheet'
 import { ProspectCard } from '@/components/ProspectCard'
 import { AdvancedFilters, AdvancedFilterState } from '@/components/AdvancedFilters'
 import { BatchOperations } from '@/components/BatchOperations'
 import { SortControls, SortField, SortDirection } from '@/components/SortControls'
 import { Prospect, IndustryType } from '@/lib/types'
 import { ExportFormat } from '@/lib/exportUtils'
-import { MagnifyingGlass } from '@phosphor-icons/react'
+import { MagnifyingGlass, Faders } from '@phosphor-icons/react'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface ProspectsTabProps {
   // Data
@@ -81,10 +92,21 @@ export function ProspectsTab({
   onBatchExport,
   onBatchDelete
 }: ProspectsTabProps) {
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+  const isMobile = useIsMobile()
+
+  // Count total active filters for FAB badge
+  const totalActiveFilters =
+    activeFilterCount +
+    (industryFilter !== 'all' ? 1 : 0) +
+    (stateFilter !== 'all' ? 1 : 0) +
+    (minScore > 0 ? 1 : 0)
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Search and Filter Controls */}
       <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Search - always visible */}
         <div className="relative flex-1">
           <MagnifyingGlass
             size={18}
@@ -97,7 +119,9 @@ export function ProspectsTab({
             className="pl-10 glass-effect border-white/30 text-white placeholder:text-white/50 h-10 sm:h-11"
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+
+        {/* Desktop filter dropdowns - hidden on mobile */}
+        <div className="hidden md:flex gap-2 flex-wrap">
           <Select value={industryFilter} onValueChange={onIndustryChange}>
             <SelectTrigger className="flex-1 min-w-[140px] sm:w-[180px] glass-effect border-white/30 text-white h-10 sm:h-11">
               <SelectValue placeholder="Industry" />
@@ -166,11 +190,14 @@ export function ProspectsTab({
               onSortChange={onSortChange}
             />
           </div>
-          <AdvancedFilters
-            filters={advancedFilters}
-            onFiltersChange={onAdvancedFiltersChange}
-            activeFilterCount={activeFilterCount}
-          />
+          {/* Desktop Advanced Filters */}
+          <div className="hidden md:block">
+            <AdvancedFilters
+              filters={advancedFilters}
+              onFiltersChange={onAdvancedFiltersChange}
+              activeFilterCount={activeFilterCount}
+            />
+          </div>
         </div>
 
         <BatchOperations
@@ -221,6 +248,146 @@ export function ProspectsTab({
           </div>
         )}
       </div>
+
+      {/* Mobile Filter FAB */}
+      {isMobile && (
+        <Button
+          onClick={() => setFilterSheetOpen(true)}
+          className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg touch-target"
+          size="icon"
+        >
+          <Faders size={24} weight="bold" />
+          {totalActiveFilters > 0 && (
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-accent">
+              {totalActiveFilters}
+            </Badge>
+          )}
+        </Button>
+      )}
+
+      {/* Mobile Filter Sheet */}
+      <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="glass-effect rounded-t-2xl max-h-[85vh] overflow-y-auto"
+        >
+          <SheetHeader className="pb-4">
+            <SheetTitle>Filters & Sort</SheetTitle>
+            <SheetDescription>Refine your prospect search</SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-6 pb-8">
+            {/* Sort */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sort By</label>
+              <SortControls
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+              />
+            </div>
+
+            {/* Industry Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Industry</label>
+              <Select value={industryFilter} onValueChange={onIndustryChange}>
+                <SelectTrigger className="w-full glass-effect border-white/30 text-white h-12 touch-target">
+                  <SelectValue placeholder="All Industries" />
+                </SelectTrigger>
+                <SelectContent className="glass-effect border-white/30">
+                  <SelectItem value="all">All Industries</SelectItem>
+                  {industries.map((ind) => (
+                    <SelectItem key={ind} value={ind} className="capitalize h-11 touch-target">
+                      {ind}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* State Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">State</label>
+              <Select value={stateFilter} onValueChange={onStateChange}>
+                <SelectTrigger className="w-full glass-effect border-white/30 text-white h-12 touch-target">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent className="glass-effect border-white/30">
+                  <SelectItem value="all">All States</SelectItem>
+                  {states.map((state) => (
+                    <SelectItem key={state} value={state} className="h-11 touch-target">
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Min Score Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Minimum Score</label>
+              <Select
+                value={minScore.toString()}
+                onValueChange={(val) => onMinScoreChange(Number(val))}
+              >
+                <SelectTrigger className="w-full glass-effect border-white/30 text-white h-12 touch-target">
+                  <SelectValue placeholder="Any Score" />
+                </SelectTrigger>
+                <SelectContent className="glass-effect border-white/30">
+                  <SelectItem value="0" className="h-11 touch-target">
+                    Any Score
+                  </SelectItem>
+                  <SelectItem value="50" className="h-11 touch-target">
+                    50+
+                  </SelectItem>
+                  <SelectItem value="70" className="h-11 touch-target">
+                    70+ (High)
+                  </SelectItem>
+                  <SelectItem value="85" className="h-11 touch-target">
+                    85+ (Elite)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Export Format */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Export Format</label>
+              <Select
+                value={exportFormat}
+                onValueChange={(val) => onExportFormatChange(val as ExportFormat)}
+              >
+                <SelectTrigger className="w-full glass-effect border-white/30 text-white h-12 touch-target">
+                  <SelectValue placeholder="JSON" />
+                </SelectTrigger>
+                <SelectContent className="glass-effect border-white/30">
+                  <SelectItem value="json" className="h-11 touch-target">
+                    JSON
+                  </SelectItem>
+                  <SelectItem value="csv" className="h-11 touch-target">
+                    CSV
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Advanced Filters</label>
+              <AdvancedFilters
+                filters={advancedFilters}
+                onFiltersChange={onAdvancedFiltersChange}
+                activeFilterCount={activeFilterCount}
+              />
+            </div>
+
+            {/* Apply Button */}
+            <Button onClick={() => setFilterSheetOpen(false)} className="w-full h-12 touch-target">
+              Apply Filters
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

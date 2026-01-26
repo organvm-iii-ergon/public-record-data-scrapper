@@ -101,19 +101,28 @@ describe('BatchOperations', () => {
     it('renders checkbox', () => {
       render(<BatchOperations {...defaultProps} />)
 
-      expect(screen.getByTestId('checkbox')).toBeInTheDocument()
+      // Both desktop and mobile checkboxes are rendered
+      const checkboxes = screen.getAllByTestId('checkbox')
+      expect(checkboxes.length).toBeGreaterThan(0)
+      expect(checkboxes[0]).toBeInTheDocument()
     })
 
     it('renders "Select all" text when nothing selected', () => {
       render(<BatchOperations {...defaultProps} />)
 
-      expect(screen.getByText('Select all')).toBeInTheDocument()
+      // Both desktop and mobile versions show "Select all"
+      const selectAllTexts = screen.getAllByText('Select all')
+      expect(selectAllTexts.length).toBeGreaterThan(0)
+      expect(selectAllTexts[0]).toBeInTheDocument()
     })
 
     it('renders selection count when items selected', () => {
       render(<BatchOperations {...defaultProps} selectedIds={new Set(['1', '2'])} />)
 
-      expect(screen.getByText('2 selected')).toBeInTheDocument()
+      // Both desktop and mobile versions show selection count
+      const selectedTexts = screen.getAllByText('2 selected')
+      expect(selectedTexts.length).toBeGreaterThan(0)
+      expect(selectedTexts[0]).toBeInTheDocument()
     })
 
     it('does not render dropdown when nothing selected', () => {
@@ -139,22 +148,22 @@ describe('BatchOperations', () => {
     it('checkbox is unchecked when nothing selected', () => {
       render(<BatchOperations {...defaultProps} />)
 
-      const checkbox = screen.getByTestId('checkbox')
-      expect(checkbox).not.toBeChecked()
+      const checkboxes = screen.getAllByTestId('checkbox')
+      expect(checkboxes[0]).not.toBeChecked()
     })
 
     it('checkbox is checked when all selected', () => {
       render(<BatchOperations {...defaultProps} selectedIds={new Set(['1', '2', '3'])} />)
 
-      const checkbox = screen.getByTestId('checkbox')
-      expect(checkbox).toBeChecked()
+      const checkboxes = screen.getAllByTestId('checkbox')
+      expect(checkboxes[0]).toBeChecked()
     })
 
     it('checkbox is indeterminate when some selected', () => {
       render(<BatchOperations {...defaultProps} selectedIds={new Set(['1'])} />)
 
-      const checkbox = screen.getByTestId('checkbox')
-      expect(checkbox).toHaveAttribute('data-indeterminate', 'true')
+      const checkboxes = screen.getAllByTestId('checkbox')
+      expect(checkboxes[0]).toHaveAttribute('data-indeterminate', 'true')
     })
   })
 
@@ -162,7 +171,8 @@ describe('BatchOperations', () => {
     it('selects all when checkbox clicked and none selected', () => {
       render(<BatchOperations {...defaultProps} />)
 
-      fireEvent.click(screen.getByTestId('checkbox'))
+      const checkboxes = screen.getAllByTestId('checkbox')
+      fireEvent.click(checkboxes[0])
 
       expect(mockOnSelectionChange).toHaveBeenCalledWith(new Set(['1', '2', '3']))
     })
@@ -170,7 +180,8 @@ describe('BatchOperations', () => {
     it('deselects all when checkbox clicked and all selected', () => {
       render(<BatchOperations {...defaultProps} selectedIds={new Set(['1', '2', '3'])} />)
 
-      fireEvent.click(screen.getByTestId('checkbox'))
+      const checkboxes = screen.getAllByTestId('checkbox')
+      fireEvent.click(checkboxes[0])
 
       expect(mockOnSelectionChange).toHaveBeenCalledWith(new Set())
     })
@@ -178,7 +189,8 @@ describe('BatchOperations', () => {
     it('selects all when checkbox clicked and some selected', () => {
       render(<BatchOperations {...defaultProps} selectedIds={new Set(['1'])} />)
 
-      fireEvent.click(screen.getByTestId('checkbox'))
+      const checkboxes = screen.getAllByTestId('checkbox')
+      fireEvent.click(checkboxes[0])
 
       expect(mockOnSelectionChange).toHaveBeenCalledWith(new Set(['1', '2', '3']))
     })

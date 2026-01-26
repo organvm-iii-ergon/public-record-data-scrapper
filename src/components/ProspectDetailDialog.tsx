@@ -4,8 +4,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  DialogDescription
 } from '@/components/ui/dialog'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription
+} from '@/components/ui/drawer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -13,15 +20,14 @@ import { HealthGradeBadge } from './HealthGradeBadge'
 import { SignalTimeline } from './SignalTimeline'
 import { NotesAndReminders } from './NotesAndReminders'
 import { EmailComposer } from './EmailComposer'
-import { 
-  Buildings, 
-  Export, 
-  MapPin, 
-  Calendar,
+import { MobileProspectDetails } from './MobileProspectDetails'
+import {
+  Buildings,
+  Export,
+  MapPin,
   CurrencyDollar,
   TrendUp,
   TrendDown,
-  ArrowRight,
   Brain,
   Envelope
 } from '@phosphor-icons/react'
@@ -30,6 +36,7 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import type { ProspectNote, FollowUpReminder, OutreachEmail } from '@/lib/types'
 import { useState } from 'react'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface ProspectDetailDialogProps {
   prospect: Prospect | null
@@ -42,15 +49,17 @@ interface ProspectDetailDialogProps {
   reminders?: FollowUpReminder[]
   onAddNote?: (note: Omit<ProspectNote, 'id' | 'createdAt' | 'createdBy'>) => void
   onDeleteNote?: (noteId: string) => void
-  onAddReminder?: (reminder: Omit<FollowUpReminder, 'id' | 'createdAt' | 'createdBy' | 'completed'>) => void
+  onAddReminder?: (
+    reminder: Omit<FollowUpReminder, 'id' | 'createdAt' | 'createdBy' | 'completed'>
+  ) => void
   onCompleteReminder?: (reminderId: string) => void
   onDeleteReminder?: (reminderId: string) => void
   onSendEmail?: (email: Omit<OutreachEmail, 'id' | 'createdAt' | 'createdBy'>) => void
 }
 
-export function ProspectDetailDialog({ 
-  prospect, 
-  open, 
+export function ProspectDetailDialog({
+  prospect,
+  open,
   onOpenChange,
   onClaim,
   onUnclaim,
@@ -64,24 +73,62 @@ export function ProspectDetailDialog({
   onDeleteReminder = () => {},
   onSendEmail = () => {}
 }: ProspectDetailDialogProps) {
+  const [emailComposerOpen, setEmailComposerOpen] = useState(false)
+  const isMobile = useIsMobile()
+
   if (!prospect) return null
 
-  const [emailComposerOpen, setEmailComposerOpen] = useState(false)
   const yearsSinceDefault = Math.floor(prospect.timeSinceDefault / 365)
   const isClaimed = prospect.status === 'claimed'
-  
-  const prospectNotes = notes.filter(n => n.prospectId === prospect.id)
-  const prospectReminders = reminders.filter(r => r.prospectId === prospect.id)
 
+  const prospectNotes = notes.filter((n) => n.prospectId === prospect.id)
+  const prospectReminders = reminders.filter((r) => r.prospectId === prospect.id)
+
+  // Mobile: Use Drawer with swipe-to-dismiss
+  if (isMobile) {
+    return (
+      <>
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[90vh] glass-effect">
+            <DrawerHeader className="sr-only">
+              <DrawerTitle>{prospect.companyName}</DrawerTitle>
+              <DrawerDescription>Prospect details</DrawerDescription>
+            </DrawerHeader>
+            <MobileProspectDetails
+              prospect={prospect}
+              onClaim={onClaim}
+              onUnclaim={onUnclaim}
+              onExport={onExport}
+              onSendEmail={() => setEmailComposerOpen(true)}
+              notes={notes}
+              reminders={reminders}
+              onAddNote={onAddNote}
+              onDeleteNote={onDeleteNote}
+              onAddReminder={onAddReminder}
+              onCompleteReminder={onCompleteReminder}
+              onDeleteReminder={onDeleteReminder}
+            />
+          </DrawerContent>
+        </Drawer>
+
+        <EmailComposer
+          prospect={prospect}
+          open={emailComposerOpen}
+          onOpenChange={setEmailComposerOpen}
+          onSendEmail={onSendEmail}
+        />
+      </>
+    )
+  }
+
+  // Desktop: Use Dialog
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-2xl mb-2">
-                {prospect.companyName}
-              </DialogTitle>
+              <DialogTitle className="text-2xl mb-2">{prospect.companyName}</DialogTitle>
               <DialogDescription className="flex items-center gap-4 text-base">
                 <span className="flex items-center gap-1">
                   <MapPin size={16} weight="fill" />
@@ -93,8 +140,8 @@ export function ProspectDetailDialog({
                   <>
                     <span>•</span>
                     <span className="flex items-center gap-1">
-                      <CurrencyDollar size={16} weight="fill" />
-                      ${(prospect.estimatedRevenue / 1000000).toFixed(1)}M est. revenue
+                      <CurrencyDollar size={16} weight="fill" />$
+                      {(prospect.estimatedRevenue / 1000000).toFixed(1)}M est. revenue
                     </span>
                   </>
                 )}
@@ -188,7 +235,7 @@ export function ProspectDetailDialog({
                   Model {prospect.mlScoring.modelVersion}
                 </Badge>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div>
                   <div className="text-sm text-muted-foreground mb-2">Overall Confidence</div>
@@ -197,12 +244,16 @@ export function ProspectDetailDialog({
                       {prospect.mlScoring.confidence}%
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {prospect.mlScoring.confidence >= 70 ? 'High' : prospect.mlScoring.confidence >= 50 ? 'Medium' : 'Low'}
+                      {prospect.mlScoring.confidence >= 70
+                        ? 'High'
+                        : prospect.mlScoring.confidence >= 50
+                          ? 'Medium'
+                          : 'Low'}
                     </span>
                   </div>
                   <Progress value={prospect.mlScoring.confidence} className="mt-2" />
                 </div>
-                
+
                 <div>
                   <div className="text-sm text-muted-foreground mb-2">Recovery Likelihood</div>
                   <div className="flex items-baseline gap-2">
@@ -210,7 +261,11 @@ export function ProspectDetailDialog({
                       {prospect.mlScoring.recoveryLikelihood}%
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {prospect.mlScoring.recoveryLikelihood >= 70 ? 'Excellent' : prospect.mlScoring.recoveryLikelihood >= 50 ? 'Good' : 'Fair'}
+                      {prospect.mlScoring.recoveryLikelihood >= 70
+                        ? 'Excellent'
+                        : prospect.mlScoring.recoveryLikelihood >= 50
+                          ? 'Good'
+                          : 'Fair'}
                     </span>
                   </div>
                   <Progress value={prospect.mlScoring.recoveryLikelihood} className="mt-2" />
@@ -223,13 +278,11 @@ export function ProspectDetailDialog({
                 <div className="text-sm font-medium text-muted-foreground mb-3">
                   Model Factors (weighted analysis)
                 </div>
-                
+
                 {Object.entries(prospect.mlScoring.factors).map(([key, value]) => (
                   <div key={key} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
+                      <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                       <span className="font-mono text-xs">{value}%</span>
                     </div>
                     <Progress value={value} className="h-1.5" />
@@ -248,18 +301,14 @@ export function ProspectDetailDialog({
               <TabsTrigger value="signals">
                 Growth Signals ({prospect.growthSignals.length})
               </TabsTrigger>
-              <TabsTrigger value="filings">
-                UCC Filings ({prospect.uccFilings.length})
-              </TabsTrigger>
-              <TabsTrigger value="notes">
-                Notes & Reminders
-              </TabsTrigger>
+              <TabsTrigger value="filings">UCC Filings ({prospect.uccFilings.length})</TabsTrigger>
+              <TabsTrigger value="notes">Notes & Reminders</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signals" className="mt-4">
               <SignalTimeline signals={prospect.growthSignals} />
             </TabsContent>
-            
+
             <TabsContent value="filings" className="mt-4 space-y-3">
               {prospect.uccFilings.map((filing) => (
                 <Card key={filing.id} className="p-4">
@@ -321,8 +370,8 @@ export function ProspectDetailDialog({
           <Separator />
 
           <div className="flex items-center gap-3">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="flex-1"
               disabled={isClaimed}
               onClick={() => onClaim(prospect)}
@@ -331,27 +380,15 @@ export function ProspectDetailDialog({
               {isClaimed ? `Claimed by ${prospect.claimedBy}` : 'Claim Lead'}
             </Button>
             {isClaimed && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => onUnclaim(prospect)}
-              >
+              <Button size="lg" variant="outline" onClick={() => onUnclaim(prospect)}>
                 Unclaim
               </Button>
             )}
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => setEmailComposerOpen(true)}
-            >
+            <Button size="lg" variant="outline" onClick={() => setEmailComposerOpen(true)}>
               <Envelope size={20} weight="bold" className="mr-2" />
               Send Email
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => onExport(prospect)}
-            >
+            <Button size="lg" variant="outline" onClick={() => onExport(prospect)}>
               <Export size={20} weight="bold" className="mr-2" />
               Export
             </Button>

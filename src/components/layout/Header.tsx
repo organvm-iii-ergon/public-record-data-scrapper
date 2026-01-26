@@ -1,6 +1,14 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { ArrowClockwise, Info } from '@phosphor-icons/react'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription
+} from '@/components/ui/sheet'
+import { ArrowClockwise, Info, List } from '@phosphor-icons/react'
 
 interface HeaderProps {
   onRefresh: () => void
@@ -8,6 +16,7 @@ interface HeaderProps {
 }
 
 export function Header({ onRefresh, onStartTour }: HeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
   const isDemoMode =
     import.meta.env.DEV ||
     ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
@@ -34,7 +43,8 @@ export function Header({ onRefresh, onStartTour }: HeaderProps) {
                 : 'Automated merchant cash advance opportunity discovery'}
             </p>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          {/* Desktop Actions */}
+          <div className="hidden md:flex gap-2 flex-shrink-0">
             {onStartTour && (
               <Button
                 variant="outline"
@@ -42,8 +52,8 @@ export function Header({ onRefresh, onStartTour }: HeaderProps) {
                 size="sm"
                 className="glass-effect border-white/30 text-white hover:bg-white/10 hover:border-white/50"
               >
-                <Info size={16} weight="bold" className="sm:mr-2" />
-                <span className="hidden sm:inline">Tour</span>
+                <Info size={16} weight="bold" className="mr-2" />
+                <span>Tour</span>
               </Button>
             )}
             <ThemeToggle />
@@ -53,12 +63,64 @@ export function Header({ onRefresh, onStartTour }: HeaderProps) {
               size="sm"
               className="glass-effect border-white/30 text-white hover:bg-white/10 hover:border-white/50"
             >
-              <ArrowClockwise size={16} weight="bold" className="sm:mr-2" />
-              <span className="hidden sm:inline">Refresh Data</span>
+              <ArrowClockwise size={16} weight="bold" className="mr-2" />
+              <span>Refresh Data</span>
+            </Button>
+          </div>
+
+          {/* Mobile Hamburger Menu */}
+          <div className="md:hidden flex-shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => setMenuOpen(true)}
+              size="sm"
+              className="glass-effect border-white/30 text-white hover:bg-white/10 hover:border-white/50 touch-target"
+            >
+              <List size={20} weight="bold" />
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Sheet */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="right" className="glass-effect w-[280px]">
+          <SheetHeader className="pb-6">
+            <SheetTitle>Menu</SheetTitle>
+            <SheetDescription>Quick actions</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-3">
+            {onStartTour && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onStartTour()
+                  setMenuOpen(false)
+                }}
+                className="w-full justify-start h-12 touch-target glass-effect border-white/30 text-white hover:bg-white/10"
+              >
+                <Info size={20} weight="bold" className="mr-3" />
+                Take a Tour
+              </Button>
+            )}
+            <div className="flex items-center justify-between h-12 touch-target px-4 rounded-md glass-effect border border-white/30">
+              <span className="text-sm font-medium">Theme</span>
+              <ThemeToggle />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                onRefresh()
+                setMenuOpen(false)
+              }}
+              className="w-full justify-start h-12 touch-target glass-effect border-white/30 text-white hover:bg-white/10"
+            >
+              <ArrowClockwise size={20} weight="bold" className="mr-3" />
+              Refresh Data
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   )
 }

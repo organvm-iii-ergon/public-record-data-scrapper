@@ -3,52 +3,46 @@ import { Target, ChartBar, Heart, ArrowClockwise, Robot, ChartLineUp } from '@ph
 
 export function TabNavigation() {
   return (
-    <TabsList className="glass-effect grid w-full grid-cols-3 sm:grid-cols-6 mb-4 sm:mb-6 gap-1 sm:gap-0 h-auto sm:h-10 p-1">
+    <TabsList className="glass-effect hidden md:grid w-full grid-cols-6 mb-4 sm:mb-6 gap-0 h-10 p-1">
       <TabsTrigger
         value="prospects"
         data-tour="prospects-tab"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
+        className="flex items-center gap-2 text-sm"
       >
-        <Target size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Prospects</span>
+        <Target size={18} weight="fill" />
+        <span>Prospects</span>
       </TabsTrigger>
-      <TabsTrigger
-        value="portfolio"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
-      >
-        <Heart size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Portfolio</span>
+      <TabsTrigger value="portfolio" className="flex items-center gap-2 text-sm">
+        <Heart size={18} weight="fill" />
+        <span>Portfolio</span>
       </TabsTrigger>
       <TabsTrigger
         value="intelligence"
         data-tour="intelligence-tab"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
+        className="flex items-center gap-2 text-sm"
       >
-        <ChartBar size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Intelligence</span>
+        <ChartBar size={18} weight="fill" />
+        <span>Intelligence</span>
       </TabsTrigger>
       <TabsTrigger
         value="analytics"
         data-tour="analytics-tab"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
+        className="flex items-center gap-2 text-sm"
       >
-        <ChartLineUp size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Analytics</span>
+        <ChartLineUp size={18} weight="fill" />
+        <span>Analytics</span>
       </TabsTrigger>
-      <TabsTrigger
-        value="requalification"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
-      >
-        <ArrowClockwise size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Re-qual</span>
+      <TabsTrigger value="requalification" className="flex items-center gap-2 text-sm">
+        <ArrowClockwise size={18} weight="fill" />
+        <span>Re-qual</span>
       </TabsTrigger>
       <TabsTrigger
         value="agentic"
         data-tour="agentic-tab"
-        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-2 sm:py-0"
+        className="flex items-center gap-2 text-sm"
       >
-        <Robot size={16} weight="fill" className="sm:w-[18px] sm:h-[18px]" />
-        <span className="hidden xs:inline">Agentic</span>
+        <Robot size={18} weight="fill" />
+        <span>Agentic</span>
       </TabsTrigger>
     </TabsList>
   )
