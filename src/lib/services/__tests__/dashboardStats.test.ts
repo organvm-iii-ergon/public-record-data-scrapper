@@ -1,5 +1,4 @@
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import { fetchDashboardStats } from '../databaseService'
 import { getDatabase, createQueries } from '@/lib/database'
 
@@ -11,8 +10,11 @@ vi.mock('@/lib/database', () => ({
 }))
 
 describe('fetchDashboardStats', () => {
-  let mockQueries: any
-  let mockDb: any
+  let mockQueries: {
+    getProspectStats: Mock
+    getNewSignalsCountForToday: Mock
+    getPortfolioStats: Mock
+  }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -24,13 +26,17 @@ describe('fetchDashboardStats', () => {
         by_status: { new: 50, contacted: 50 },
         avg_priority_score: 75,
         avg_health_score: 85
+      }),
+      getNewSignalsCountForToday: vi.fn().mockResolvedValue(5),
+      getPortfolioStats: vi.fn().mockResolvedValue({
+        atRisk: 10,
+        total: 100
       })
     }
 
     // Setup database mocks
-    mockDb = {}
-    ;(getDatabase as any).mockReturnValue(mockDb)
-    ;(createQueries as any).mockReturnValue(mockQueries)
+    vi.mocked(getDatabase).mockReturnValue({} as ReturnType<typeof getDatabase>)
+    vi.mocked(createQueries).mockReturnValue(mockQueries as ReturnType<typeof createQueries>)
   })
 
   it('calculates average health grade correctly', async () => {
@@ -53,7 +59,7 @@ describe('fetchDashboardStats', () => {
   })
 
   it('calculates C grade correctly', async () => {
-     mockQueries.getProspectStats.mockResolvedValue({
+    mockQueries.getProspectStats.mockResolvedValue({
       total: 100,
       avg_priority_score: 75,
       avg_health_score: 75

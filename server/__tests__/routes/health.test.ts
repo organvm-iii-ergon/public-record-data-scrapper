@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import express, { Express } from 'express'
 import request from 'supertest'
 import healthRouter from '../../routes/health'
@@ -14,12 +14,19 @@ import { database } from '../../database/connection'
 
 describe('Health Routes', () => {
   let app: Express
+  const originalNodeEnv = process.env.NODE_ENV
 
   beforeEach(() => {
+    // Set NODE_ENV to development so we get full response details
+    process.env.NODE_ENV = 'development'
     app = express()
     app.use(express.json())
     app.use('/api/health', healthRouter)
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    process.env.NODE_ENV = originalNodeEnv
   })
 
   describe('GET /api/health', () => {
