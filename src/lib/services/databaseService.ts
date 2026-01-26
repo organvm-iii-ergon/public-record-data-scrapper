@@ -5,7 +5,16 @@
  */
 
 import { initDatabase, getDatabase, createQueries } from '@/lib/database'
-import type { Prospect, GrowthSignal, HealthScore, CompetitorData, PortfolioCompany } from '@/lib/types'
+import type {
+  Prospect,
+  GrowthSignal,
+  HealthScore,
+  CompetitorData,
+  PortfolioCompany,
+  SignalType,
+  IndustryType,
+  ProspectStatus
+} from '@/lib/types'
 import type { ProspectRow, UCCFilingRow, GrowthSignalRow } from '@/lib/database/queries'
 
 /**
@@ -30,9 +39,9 @@ function mapProspectRowToProspect(
   growthSignals: GrowthSignalRow[]
 ): Prospect {
   // Map growth signals
-  const signals: GrowthSignal[] = growthSignals.map(s => ({
+  const signals: GrowthSignal[] = growthSignals.map((s) => ({
     id: s.id,
-    type: s.type as any,
+    type: s.type as SignalType,
     description: s.description,
     detectedDate: s.detected_date.toISOString().split('T')[0],
     sourceUrl: s.source_url || undefined,
@@ -52,14 +61,14 @@ function mapProspectRowToProspect(
   }
 
   // Map UCC filings
-  const filings = uccFilings.map(f => ({
+  const filings = uccFilings.map((f) => ({
     id: f.id,
     filingDate: f.filing_date.toISOString().split('T')[0],
     debtorName: f.debtor_name,
     securedParty: f.secured_party,
     state: f.state,
     lienAmount: f.lien_amount,
-    status: f.status as any,
+    status: f.status as 'active' | 'terminated' | 'lapsed',
     filingType: f.filing_type
   }))
 
@@ -71,7 +80,10 @@ function mapProspectRowToProspect(
     narrativeParts.push(`Defaulted ${Math.floor(timeSinceDefaultDays / 365)} years ago`)
   }
   if (signals.length > 0) {
-    const topSignals = signals.slice(0, 2).map(s => s.type).join(', ')
+    const topSignals = signals
+      .slice(0, 2)
+      .map((s) => s.type)
+      .join(', ')
     narrativeParts.push(`showing ${signals.length} growth signals (${topSignals})`)
   }
   narrativeParts.push(`Current health grade: ${healthScore.grade}`)
@@ -79,9 +91,9 @@ function mapProspectRowToProspect(
   return {
     id: row.id,
     companyName: row.company_name,
-    industry: row.industry as any,
+    industry: row.industry as IndustryType,
     state: row.state,
-    status: row.status as any,
+    status: row.status as ProspectStatus,
     priorityScore: row.priority_score,
     defaultDate: row.default_date.toISOString().split('T')[0],
     timeSinceDefault: row.time_since_default,
@@ -221,6 +233,7 @@ export async function fetchDashboardStats() {
     const queries = createQueries(db)
 
     const stats = await queries.getProspectStats()
+    const newSignalsCount = await queries.getNewSignalsCountForToday()
 
     // Helper to calculate grade from score
     const scoreToGrade = (score: number): 'A' | 'B' | 'C' | 'D' | 'F' => {
@@ -235,7 +248,7 @@ export async function fetchDashboardStats() {
       totalProspects: stats.total,
       highValueProspects: stats.total > 0 ? Math.round(stats.total * 0.3) : 0, // Estimate
       avgPriorityScore: Math.round(stats.avg_priority_score || 0),
-      newSignalsToday: 0, // TODO: Calculate from growth_signals
+      newSignalsToday: newSignalsCount,
       portfolioAtRisk: 0, // TODO: Calculate from portfolio
       avgHealthGrade: scoreToGrade(Math.round(stats.avg_health_score || 0))
     }

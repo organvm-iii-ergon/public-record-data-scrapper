@@ -186,27 +186,22 @@ export class QueryBuilder {
   /**
    * Create growth signal
    */
-  async createGrowthSignal(
-    signal: Partial<GrowthSignal> & { companyId: string; prospectId: string }
-  ): Promise<void> {
+  async createGrowthSignal(signal: Partial<GrowthSignal> & { prospectId: string }): Promise<void> {
     const query = `
       INSERT INTO growth_signals (
-        company_id, prospect_id, signal_type, description,
-        signal_date, source, confidence, impact, amount, url, raw_data
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        prospect_id, type, description,
+        detected_date, source_url, score, confidence, raw_data
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `
 
     const values = [
-      signal.companyId,
       signal.prospectId,
       signal.type,
       signal.description,
-      signal.date,
-      signal.source,
+      signal.detectedDate || new Date().toISOString().split('T')[0],
+      signal.sourceUrl,
+      signal.score || 0,
       signal.confidence,
-      signal.impact,
-      0, // amount
-      null, // url
       JSON.stringify(signal)
     ]
 
@@ -220,11 +215,25 @@ export class QueryBuilder {
     const query = `
       SELECT * FROM growth_signals
       WHERE prospect_id = $1
-      ORDER BY signal_date DESC
+      ORDER BY detected_date DESC
     `
 
     const result = await this.client.query<GrowthSignal>(query, [prospectId])
     return result.rows
+  }
+
+  /**
+   * Get count of new signals detected today
+   */
+  async getNewSignalsCountForToday(): Promise<number> {
+    const query = `
+      SELECT COUNT(*) as count
+      FROM growth_signals
+      WHERE detected_date = CURRENT_DATE
+    `
+
+    const result = await this.client.query<{ count: string }>(query)
+    return parseInt(result.rows[0]?.count || '0', 10)
   }
 
   // ============================================================================
