@@ -129,8 +129,7 @@ vi.mock('@phosphor-icons/react', () => ({
   )
 }))
 
-// Skip: AgenticDashboard component has undefined variables (categoryDetails) that cause runtime errors
-describe.skip('AgenticDashboard', () => {
+describe('AgenticDashboard', () => {
   const mockSystemHealth: SystemHealth = {
     totalImprovements: 15,
     implemented: 10,
@@ -184,7 +183,8 @@ describe.skip('AgenticDashboard', () => {
 
     it('renders robot icon', () => {
       render(<AgenticDashboard {...defaultProps} />)
-      expect(screen.getByTestId('robot-icon')).toBeInTheDocument()
+      const robotIcons = screen.getAllByTestId('robot-icon')
+      expect(robotIcons.length).toBeGreaterThan(0)
     })
   })
 

@@ -483,19 +483,19 @@ describeConditional('JobScheduler', () => {
       scheduler.stop()
     })
 
-    // Skip this test - it requires handling multiple interval callbacks and their errors
-    // which causes test timeouts due to real setInterval usage
-    it.skip('should handle immediate callback errors', async () => {
+    it('should handle immediate callback errors', async () => {
       mocks.mockDatabaseQuery.mockRejectedValue(new Error('DB error'))
 
       const { JobScheduler } = await import('../../queue/scheduler')
       const scheduler = new JobScheduler()
 
+      // Start the scheduler (this triggers immediate callbacks)
       await scheduler.start()
 
-      // Wait for the async callback to complete and error to be logged
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      // The immediate callback is async - let the microtask queue flush
+      await vi.advanceTimersByTimeAsync(1)
 
+      // Verify error was logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[Scheduler] Error in enrichment-refresh:',
         expect.any(Error)

@@ -65,7 +65,7 @@ describeConditional('Ingestion Worker', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Use real timers for these tests since the worker uses setTimeout for simulating API calls
+    vi.useFakeTimers()
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mocks.mockDatabaseQuery.mockResolvedValue([])
@@ -74,6 +74,7 @@ describeConditional('Ingestion Worker', () => {
   afterEach(() => {
     consoleSpy.mockRestore()
     consoleErrorSpy.mockRestore()
+    vi.useRealTimers()
     vi.resetModules()
   })
 
@@ -151,10 +152,7 @@ describeConditional('Ingestion Worker', () => {
   })
 
   describe('processIngestion', () => {
-    // Skip these tests as they require real timeouts due to simulateApiCall
-    // The worker implementation uses setTimeout which causes test timeouts
-    // Testing the createIngestionWorker function and event handlers is sufficient
-    it.skip('should update progress from 0 to 100', async () => {
+    it('should update progress from 0 to 100', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -164,7 +162,9 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       // Check progress updates: 0, 25, 50, 75, 100
       expect(mocks.mockUpdateProgress).toHaveBeenCalledWith(0)
@@ -174,7 +174,7 @@ describeConditional('Ingestion Worker', () => {
       expect(mocks.mockUpdateProgress).toHaveBeenCalledWith(100)
     })
 
-    it.skip('should log start message with state', async () => {
+    it('should log start message with state', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -184,14 +184,16 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '[Ingestion Worker] Starting UCC ingestion for state: CA'
       )
     })
 
-    it.skip('should insert success log into database', async () => {
+    it('should insert success log into database', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -201,7 +203,9 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(mocks.mockDatabaseQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO data_ingestion_logs'),
@@ -214,7 +218,7 @@ describeConditional('Ingestion Worker', () => {
       )
     })
 
-    it.skip('should use default batchSize of 1000', async () => {
+    it('should use default batchSize of 1000', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -224,7 +228,9 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(mocks.mockDatabaseQuery).toHaveBeenCalledWith(
         expect.any(String),
@@ -237,7 +243,7 @@ describeConditional('Ingestion Worker', () => {
       )
     })
 
-    it.skip('should include date range in metadata', async () => {
+    it('should include date range in metadata', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -247,7 +253,9 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(mocks.mockDatabaseQuery).toHaveBeenCalledWith(
         expect.any(String),
@@ -260,7 +268,7 @@ describeConditional('Ingestion Worker', () => {
       )
     })
 
-    it.skip('should handle errors and log failure', async () => {
+    it('should handle errors and log failure', async () => {
       mocks.mockDatabaseQuery
         .mockRejectedValueOnce(new Error('DB connection failed'))
         .mockResolvedValue([])
@@ -274,15 +282,20 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await expect(worker.processor(mockJob)).rejects.toThrow('DB connection failed')
+      // Start processing and attach error handler immediately
+      const processPromise = worker.processor(mockJob).catch((e) => e)
+      await vi.runAllTimersAsync()
+      const error = await processPromise
 
+      expect(error).toBeInstanceOf(Error)
+      expect(error.message).toBe('DB connection failed')
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[Ingestion Worker] Error processing OH:',
         expect.any(Error)
       )
     })
 
-    it.skip('should insert failure log on error', async () => {
+    it('should insert failure log on error', async () => {
       mocks.mockDatabaseQuery
         .mockRejectedValueOnce(new Error('Database error'))
         .mockResolvedValue([])
@@ -296,15 +309,19 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await expect(worker.processor(mockJob)).rejects.toThrow()
+      // Start processing and attach error handler immediately
+      const processPromise = worker.processor(mockJob).catch((e) => e)
+      await vi.runAllTimersAsync()
+      const error = await processPromise
 
+      expect(error).toBeInstanceOf(Error)
       expect(mocks.mockDatabaseQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO data_ingestion_logs'),
         expect.arrayContaining(['ucc_pa', 'failed', 'Database error'])
       )
     })
 
-    it.skip('should generate mock filings count between 50 and 150', async () => {
+    it('should generate mock filings count between 50 and 150', async () => {
       const { createIngestionWorker } = await import('../../../queue/workers/ingestionWorker')
 
       const worker = createIngestionWorker()
@@ -314,7 +331,9 @@ describeConditional('Ingestion Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       const insertCall = mocks.mockDatabaseQuery.mock.calls.find((call) =>
         call[0].includes('INSERT INTO data_ingestion_logs')

@@ -1,6 +1,6 @@
 /**
  * Agentic Dashboard Component
- * 
+ *
  * Displays autonomous system improvements, agent analyses, and execution status
  */
 
@@ -15,13 +15,11 @@ import {
   Brain,
   CheckCircle,
   Clock,
-  Warning,
   TrendUp,
   Shield,
   Sparkle,
   Users,
-  Target,
-  LightbulbFilament
+  Target
 } from '@phosphor-icons/react'
 import { Improvement, ImprovementPriority, ImprovementCategory } from '@/lib/agentic/types'
 import { UseAgenticEngineResult } from '@/hooks/use-agentic-engine'
@@ -31,9 +29,16 @@ import { CompetitorData } from '@/lib/types'
 interface AgenticDashboardProps {
   agentic: UseAgenticEngineResult
   competitors: CompetitorData[]
+  competitorsLoading?: boolean
+  competitorLastUpdated?: string
 }
 
-export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps) {
+export function AgenticDashboard({
+  agentic,
+  competitors,
+  competitorsLoading = false,
+  competitorLastUpdated
+}: AgenticDashboardProps) {
   const [selectedTab, setSelectedTab] = useState('overview')
   const { systemHealth, improvements, isRunning, runCycle, approveImprovement } = agentic
   const competitorCount = competitors.length
@@ -45,17 +50,25 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
     low: 'bg-blue-500'
   }
 
-  const categoryIcons: Record<ImprovementCategory, ReactNode> = {
-    performance: <TrendUp className="w-4 h-4" />,
-    security: <Shield className="w-4 h-4" />,
-    usability: <Sparkle className="w-4 h-4" />,
-    'data-quality': <Brain className="w-4 h-4" />,
-    'feature-enhancement': <CheckCircle className="w-4 h-4" />,
-    strategic: <Target className="w-4 h-4" />,
-    'competitor-intelligence': <Users className="w-4 h-4" />
+  const categoryDetails: Record<ImprovementCategory, { icon: ReactNode; label: string }> = {
+    performance: { icon: <TrendUp className="w-4 h-4" />, label: 'Performance' },
+    security: { icon: <Shield className="w-4 h-4" />, label: 'Security' },
+    usability: { icon: <Sparkle className="w-4 h-4" />, label: 'Usability' },
+    'data-quality': { icon: <Brain className="w-4 h-4" />, label: 'Data Quality' },
+    'feature-enhancement': {
+      icon: <CheckCircle className="w-4 h-4" />,
+      label: 'Feature Enhancement'
+    },
+    strategic: { icon: <Target className="w-4 h-4" />, label: 'Strategic' },
+    'competitor-intelligence': {
+      icon: <Users className="w-4 h-4" />,
+      label: 'Competitor Intelligence'
+    }
   }
 
-  const pendingImprovements = improvements.filter(i => i.status === 'detected' || i.status === 'approved')
+  const pendingImprovements = improvements.filter(
+    (i) => i.status === 'detected' || i.status === 'approved'
+  )
   // Track completed improvements for metrics
   // const completedImprovements = improvements.filter(i => i.status === 'completed')
 
@@ -73,11 +86,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
               </p>
             </div>
           </div>
-          <Button 
-            onClick={runCycle} 
-            disabled={isRunning}
-            className="gap-2"
-          >
+          <Button onClick={runCycle} disabled={isRunning} className="gap-2">
             {isRunning ? (
               <>
                 <Clock className="w-4 h-4 animate-spin" />
@@ -100,7 +109,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
               <div className="text-3xl font-bold">{systemHealth.totalImprovements}</div>
             </div>
           </Card>
-          
+
           <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">Implemented</div>
@@ -109,7 +118,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950">
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">Pending Review</div>
@@ -118,7 +127,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">Success Rate</div>
@@ -144,13 +153,9 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
 
         {/* Improvements Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">
-              Overview ({improvements.length})
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending ({pendingImprovements.length})
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview ({improvements.length})</TabsTrigger>
+            <TabsTrigger value="pending">Pending ({pendingImprovements.length})</TabsTrigger>
             <TabsTrigger value="competitor">
               <Users className="w-4 h-4 mr-2" />
               Competitors ({competitorCount})
@@ -171,7 +176,7 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
                 </Button>
               </Card>
             ) : (
-              improvements.map(improvement => (
+              improvements.map((improvement) => (
                 <ImprovementCard
                   key={improvement.id}
                   improvement={improvement}
@@ -188,12 +193,10 @@ export function AgenticDashboard({ agentic, competitors }: AgenticDashboardProps
               <Card className="p-8 text-center">
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
                 <h3 className="text-lg font-semibold mb-2">All Clear!</h3>
-                <p className="text-muted-foreground">
-                  No pending improvements requiring review
-                </p>
+                <p className="text-muted-foreground">No pending improvements requiring review</p>
               </Card>
             ) : (
-              pendingImprovements.map(improvement => (
+              pendingImprovements.map((improvement) => (
                 <ImprovementCard
                   key={improvement.id}
                   improvement={improvement}
@@ -223,7 +226,6 @@ interface ImprovementCardProps {
   onApprove: (id: string) => Promise<void>
   priorityColors: Record<ImprovementPriority, string>
   categoryDetails: Record<ImprovementCategory, { icon: ReactNode; label: string }>
-  categoryIcons: Record<ImprovementCategory, ReactNode>
   showActions?: boolean
 }
 
@@ -261,12 +263,8 @@ function ImprovementCard({
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-semibold">{suggestion.title}</h3>
-                <Badge className={priorityColors[suggestion.priority]}>
-                  {suggestion.priority}
-                </Badge>
-                <Badge className={statusColors[status]}>
-                  {status}
-                </Badge>
+                <Badge className={priorityColors[suggestion.priority]}>{suggestion.priority}</Badge>
+                <Badge className={statusColors[status]}>{status}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">{suggestion.description}</p>
             </div>
@@ -285,7 +283,7 @@ function ImprovementCard({
               <h4 className="text-sm font-semibold mb-1">Reasoning</h4>
               <p className="text-sm text-muted-foreground">{suggestion.reasoning}</p>
             </div>
-            
+
             <div>
               <h4 className="text-sm font-semibold mb-1">Estimated Impact</h4>
               <p className="text-sm text-muted-foreground">{suggestion.estimatedImpact}</p>
@@ -332,11 +330,7 @@ function ImprovementCard({
         )}
 
         <div className="flex items-center justify-between pt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? 'Show Less' : 'Show More'}
           </Button>
 

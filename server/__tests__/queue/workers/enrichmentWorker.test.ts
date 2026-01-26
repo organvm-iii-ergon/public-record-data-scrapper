@@ -66,7 +66,7 @@ describeConditional('Enrichment Worker', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Don't use fake timers - worker uses real setTimeout for delays
+    vi.useFakeTimers()
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mocks.mockEnrichProspect.mockResolvedValue({ enriched: true })
@@ -75,6 +75,7 @@ describeConditional('Enrichment Worker', () => {
   afterEach(() => {
     consoleSpy.mockRestore()
     consoleErrorSpy.mockRestore()
+    vi.useRealTimers()
     vi.resetModules()
   })
 
@@ -138,9 +139,7 @@ describeConditional('Enrichment Worker', () => {
   })
 
   describe('processEnrichment', () => {
-    // Skip tests that process multiple prospects - they use real 100ms delays
-    // which cause test timeouts. Testing createEnrichmentWorker and event handlers is sufficient.
-    it.skip('should update progress from 0 to 100', async () => {
+    it('should update progress from 0 to 100', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -150,14 +149,16 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(mocks.mockUpdateProgress).toHaveBeenCalledWith(0)
       expect(mocks.mockUpdateProgress).toHaveBeenCalledWith(50)
       expect(mocks.mockUpdateProgress).toHaveBeenCalledWith(100)
     })
 
-    it.skip('should log start message with prospect count', async () => {
+    it('should log start message with prospect count', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -167,14 +168,16 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '[Enrichment Worker] Starting enrichment for 3 prospects'
       )
     })
 
-    it.skip('should call enrichProspect for each prospect', async () => {
+    it('should call enrichProspect for each prospect', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -184,7 +187,9 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(mocks.mockEnrichProspect).toHaveBeenCalledTimes(3)
       expect(mocks.mockEnrichProspect).toHaveBeenCalledWith('id-1')
@@ -192,7 +197,7 @@ describeConditional('Enrichment Worker', () => {
       expect(mocks.mockEnrichProspect).toHaveBeenCalledWith('id-3')
     })
 
-    it.skip('should log progress for each enriched prospect', async () => {
+    it('should log progress for each enriched prospect', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -202,12 +207,14 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(consoleSpy).toHaveBeenCalledWith('[Enrichment Worker] Enriched id-1 (1/1)')
     })
 
-    it.skip('should handle individual prospect failures', async () => {
+    it('should handle individual prospect failures', async () => {
       mocks.mockEnrichProspect
         .mockResolvedValueOnce({ enriched: true })
         .mockRejectedValueOnce(new Error('API rate limit'))
@@ -222,7 +229,9 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      const result = await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      const result = await processPromise
 
       expect(result.successful).toBe(2)
       expect(result.failed).toBe(1)
@@ -232,7 +241,7 @@ describeConditional('Enrichment Worker', () => {
       )
     })
 
-    it.skip('should return summary with total, successful, and failed counts', async () => {
+    it('should return summary with total, successful, and failed counts', async () => {
       mocks.mockEnrichProspect
         .mockResolvedValueOnce({ enriched: true })
         .mockRejectedValueOnce(new Error('Failed'))
@@ -246,7 +255,9 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      const result = await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      const result = await processPromise
 
       expect(result).toMatchObject({
         total: 2,
@@ -255,7 +266,7 @@ describeConditional('Enrichment Worker', () => {
       })
     })
 
-    it.skip('should include results array with success and failure details', async () => {
+    it('should include results array with success and failure details', async () => {
       mocks.mockEnrichProspect
         .mockResolvedValueOnce({ score: 85 })
         .mockRejectedValueOnce(new Error('API error'))
@@ -269,7 +280,9 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      const result = await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      const result = await processPromise
 
       expect(result.results).toHaveLength(2)
       expect(result.results[0]).toMatchObject({
@@ -284,7 +297,7 @@ describeConditional('Enrichment Worker', () => {
       })
     })
 
-    it.skip('should add delay between prospects to avoid API overwhelming', async () => {
+    it('should add delay between prospects to avoid API overwhelming', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -295,19 +308,14 @@ describeConditional('Enrichment Worker', () => {
       }
 
       const processPromise = worker.processor(mockJob)
-
-      // Advance timers by 100ms for the first delay
-      await vi.advanceTimersByTimeAsync(100)
-      // Advance again for second prospect
-      await vi.advanceTimersByTimeAsync(100)
-
+      await vi.runAllTimersAsync()
       await processPromise
 
       // Should have had delays
       expect(mocks.mockEnrichProspect).toHaveBeenCalledTimes(2)
     })
 
-    it.skip('should log completion summary', async () => {
+    it('should log completion summary', async () => {
       mocks.mockEnrichProspect
         .mockResolvedValueOnce({ enriched: true })
         .mockRejectedValueOnce(new Error('Failed'))
@@ -321,14 +329,16 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '[Enrichment Worker] Completed batch: 1 successful, 1 failed'
       )
     })
 
-    it.skip('should handle empty prospect array', async () => {
+    it('should handle empty prospect array', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -338,14 +348,16 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      const result = await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      const result = await processPromise
 
       expect(result.total).toBe(0)
       expect(result.successful).toBe(0)
       expect(result.failed).toBe(0)
     })
 
-    it.skip('should handle force flag', async () => {
+    it('should handle force flag', async () => {
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
 
       const worker = createEnrichmentWorker()
@@ -355,13 +367,15 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      await processPromise
 
       // Job should still process - force flag may be used elsewhere
       expect(mocks.mockEnrichProspect).toHaveBeenCalled()
     })
 
-    it.skip('should handle non-Error exceptions', async () => {
+    it('should handle non-Error exceptions', async () => {
       mocks.mockEnrichProspect.mockRejectedValueOnce('String error')
 
       const { createEnrichmentWorker } = await import('../../../queue/workers/enrichmentWorker')
@@ -373,7 +387,9 @@ describeConditional('Enrichment Worker', () => {
         updateProgress: mocks.mockUpdateProgress
       }
 
-      const result = await worker.processor(mockJob)
+      const processPromise = worker.processor(mockJob)
+      await vi.runAllTimersAsync()
+      const result = await processPromise
 
       expect(result.results[0].error).toBe('Unknown error')
     })

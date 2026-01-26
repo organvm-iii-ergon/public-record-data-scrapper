@@ -137,8 +137,7 @@ describe('useAgenticEngine', () => {
       vi.spyOn(AgenticEngine.prototype, 'getConfig').mockReturnValue({ enabled: false } as any)
     })
 
-    // Skip this test - React state batching causes isRunning to not update synchronously
-    it.skip('should set isRunning to true during cycle', async () => {
+    it('should set isRunning to true during cycle', async () => {
       let resolvePromise: () => void
       const cycleDone = new Promise<void>((resolve) => {
         resolvePromise = resolve
@@ -152,16 +151,24 @@ describe('useAgenticEngine', () => {
       const context = createMockContext([{ id: 'p-1' }])
       const { result } = renderHook(() => useAgenticEngine(context, { enabled: false }))
 
-      let isRunningDuringCycle = false
+      // Start the cycle
       act(() => {
         result.current.runCycle()
-        isRunningDuringCycle = result.current.isRunning
       })
 
-      expect(isRunningDuringCycle).toBe(true)
+      // Wait for isRunning to be true (React may batch the update)
+      await waitFor(() => {
+        expect(result.current.isRunning).toBe(true)
+      })
 
+      // Complete the cycle
       await act(async () => {
         resolvePromise!()
+      })
+
+      // Verify it's back to false
+      await waitFor(() => {
+        expect(result.current.isRunning).toBe(false)
       })
     })
 
@@ -209,25 +216,45 @@ describe('useAgenticEngine', () => {
       expect(result.current.improvements).toEqual(mockImprovements)
     })
 
-    // Skip this test - React 19's concurrent mode batches calls differently
-    it.skip('should prevent concurrent cycles', async () => {
+    it('should prevent concurrent cycles', async () => {
+      let resolvePromise: () => void
+      const cycleDone = new Promise<void>((resolve) => {
+        resolvePromise = resolve
+      })
+
       const runSpy = vi
         .spyOn(AgenticEngine.prototype, 'runAutonomousCycle')
         .mockImplementation(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 100))
+          await cycleDone
           return mockCycleResult as any
         })
 
       const context = createMockContext([{ id: 'p-1' }])
       const { result } = renderHook(() => useAgenticEngine(context, { enabled: false }))
 
-      await act(async () => {
+      // Start first cycle
+      act(() => {
         result.current.runCycle()
+      })
+
+      // Wait for isRunning to be true
+      await waitFor(() => {
+        expect(result.current.isRunning).toBe(true)
+      })
+
+      // Try to start more cycles while first is running
+      act(() => {
         result.current.runCycle()
         result.current.runCycle()
       })
 
+      // Should still only have one call
       expect(runSpy).toHaveBeenCalledTimes(1)
+
+      // Complete the cycle
+      await act(async () => {
+        resolvePromise!()
+      })
     })
 
     it('should handle cycle errors gracefully', async () => {

@@ -151,12 +151,34 @@ describe('apiRequest', () => {
       expect(LONG_TIMEOUT_MS).toBe(120000)
     })
 
-    // Note: Testing actual timeouts is unreliable in test environments
-    // The timeout functionality is implemented using AbortController
-    // and has been manually verified to work correctly
-    it.skip('throws TimeoutError when request exceeds timeout', async () => {
-      // This test is skipped because mocking fetch with setTimeout
-      // doesn't interact correctly with AbortController in jsdom
+    it('throws TimeoutError when request exceeds timeout', async () => {
+      vi.useFakeTimers()
+
+      // Create a fetch that never resolves until aborted
+      vi.mocked(fetch).mockImplementationOnce((_, options) => {
+        return new Promise((_, reject) => {
+          const signal = options?.signal as AbortSignal | undefined
+          if (signal?.aborted) {
+            reject(new DOMException('Aborted', 'AbortError'))
+            return
+          }
+          signal?.addEventListener('abort', () => {
+            reject(new DOMException('Aborted', 'AbortError'))
+          })
+        })
+      })
+
+      // Attach catch handler immediately to avoid unhandled rejection
+      const promise = apiRequest('/test', { timeout: 100 }).catch((e) => e)
+
+      // Advance time past the timeout
+      await vi.advanceTimersByTimeAsync(150)
+
+      const error = await promise
+      expect(error).toBeInstanceOf(TimeoutError)
+      expect(error.message).toContain('Request timed out')
+
+      vi.useRealTimers()
     })
 
     it('completes request before timeout', { timeout: 1000 }, async () => {
