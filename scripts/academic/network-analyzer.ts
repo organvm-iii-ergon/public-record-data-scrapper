@@ -427,6 +427,35 @@ export class NetworkAnalyzer {
       })
     })
 
+    // Calculate h-index and citation stats
+    researchers.forEach(researcher => {
+      // Get all papers for this researcher
+      const researcherPapers = researcher.papers
+        .map(id => papers.get(id))
+        .filter((p): p is Paper => p !== undefined)
+
+      // Calculate total citations
+      researcher.citation_count = researcherPapers.reduce(
+        (sum, paper) => sum + paper.citationCount,
+        0
+      )
+
+      // Calculate h-index
+      const citations = researcherPapers
+        .map(p => p.citationCount)
+        .sort((a, b) => b - a)
+
+      let h = 0
+      for (let i = 0; i < citations.length; i++) {
+        if (citations[i] >= i + 1) {
+          h = i + 1
+        } else {
+          break
+        }
+      }
+      researcher.h_index = h
+    })
+
     // Update network sizes
     researchers.forEach(researcher => {
       researcher.network_size = researcher.collaborators.length
