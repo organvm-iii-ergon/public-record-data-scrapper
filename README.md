@@ -3,9 +3,9 @@
 > AI-powered lead generation and prospect intelligence platform for Merchant Cash Advance (MCA) providers
 
 [![CI](https://github.com/ivi374forivi/public-record-data-scrapper/actions/workflows/ci.yml/badge.svg)](https://github.com/ivi374forivi/public-record-data-scrapper/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-1830%20passing-brightgreen)](https://github.com/ivi374forivi/public-record-data-scrapper)
+[![Tests](https://img.shields.io/badge/tests-2055%20passing-brightgreen)](https://github.com/ivi374forivi/public-record-data-scrapper)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-success)](https://github.com/ivi374forivi/public-record-data-scrapper)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -44,7 +44,7 @@ The UCC-MCA Intelligence Platform combines AI-powered analysis of public UCC fil
 
 **NEW: Professional Investor Video** - 5-minute presentation video with audio narration showcasing the platform for potential investors and employers. See [VIDEO_GENERATION_SUMMARY.md](./VIDEO_GENERATION_SUMMARY.md) for details.
 
-**NEW: Terminal CLI Tool** - Standalone command-line scraper for individual use without GUI. Perfect for field data collection. See [CLI_USAGE.md](./CLI_USAGE.md) for details.
+**NEW: Terminal CLI Tool** - Standalone command-line scraper for individual use without GUI. Perfect for field data collection. See [CLI_USAGE.md](docs/guides/CLI_USAGE.md) for details.
 
 **NEW: Video Production Agent** - Autonomous system for generating professional MP4 videos from markdown scripts. Fully automated local-first workflow. See [scripts/video-production/README.md](./scripts/video-production/README.md) for details.
 
@@ -54,7 +54,7 @@ The UCC-MCA Intelligence Platform is a sophisticated lead generation tool that a
 
 ### Key Features
 
-✅ **526 Automated Tests** - Comprehensive test coverage with vitest (100% pass rate)
+✅ **2055 Automated Tests** - Comprehensive test coverage with vitest (100% pass rate)
 ✅ **60+ Autonomous Agents** - Multi-agent system with state-specific and entry-point agents
 ✅ **50-State Coverage** - Dedicated agents for all US states with state-specific configurations
 ✅ **Data Pipeline** - Automated ingestion, enrichment, and refresh across all states
@@ -90,7 +90,7 @@ A professional presentation video with audio narration showcasing the UCC-MCA In
 
 - 📊 Business problem and $2B+ market opportunity
 - 🏗️ Strategic three-tier solution architecture
-- 🔒 Technical sophistication with 526 tests and zero vulnerabilities
+- 🔒 Technical sophistication with 2055 tests and zero vulnerabilities
 - 📈 Measurable business impact: -60% sales cycle, +40% lead quality
 - 💡 Unique differentiators and competitive advantages
 
@@ -133,7 +133,7 @@ npm run scrape -- scrape-ucc -c "Company Name" -s CA -o results.json
 npm run scrape -- enrich -c "Company Name" -s CA -o enriched.json
 ```
 
-See [CLI_USAGE.md](./CLI_USAGE.md) for complete CLI documentation.
+See [CLI_USAGE.md](docs/guides/CLI_USAGE.md) for complete CLI documentation.
 
 ### Web Application
 
@@ -165,8 +165,6 @@ The platform includes a **standalone terminal-based scraper** for individual use
 
 ### CLI Features
 
-> > > > > > > origin/main
-
 - 🔍 **UCC Filing Scraper**: Extract filings from CA, TX, FL state portals
 - 📊 **Data Enrichment**: Fetch data from SEC, OSHA, USPTO, Census, SAM.gov
 - 📝 **Multiple Formats**: Export as JSON or CSV
@@ -190,7 +188,7 @@ npm run scrape -- normalize -n "acme corporation, llc"
 npm run scrape -- batch -i companies.csv -o ./results
 ```
 
-See [CLI_USAGE.md](./CLI_USAGE.md) for detailed documentation.
+See [CLI_USAGE.md](docs/guides/CLI_USAGE.md) for detailed documentation.
 
 ## Video Production
 
@@ -265,7 +263,7 @@ terraform apply
 ### Core Capabilities
 
 - **Prospect Dashboard**: Displays prioritized list of UCC default prospects with scores, growth signals, and health grades
-- **Data Enrichment Pipeline**: Multi-tier data acquisition from free and commercial sources (see [ENRICHMENT_PIPELINE.md](./ENRICHMENT_PIPELINE.md))
+- **Data Enrichment Pipeline**: Multi-tier data acquisition from free and commercial sources (see [ENRICHMENT_PIPELINE.md](docs/technical/ENRICHMENT_PIPELINE.md))
 - **Health Scoring**: Real-time business health monitoring with sentiment analysis and violation tracking
 - **Growth Signal Detection**: Automated detection of hiring, permits, contracts, expansion, and equipment signals
 - **Competitor Intelligence**: Market analysis of UCC filing activity by secured parties
@@ -284,13 +282,11 @@ The platform includes a comprehensive data enrichment pipeline with:
   - Starter: D&B, Google Places, Clearbit
   - Professional: Experian, ZoomInfo, NewsAPI (structure ready)
 - **UCC Scraping**: State-specific scrapers for CA, TX, FL with real Puppeteer implementation
-- **CLI Tool**: Standalone terminal scraper for individual use (see [CLI_USAGE.md](./CLI_USAGE.md))
+- **CLI Tool**: Standalone terminal scraper for individual use (see [CLI_USAGE.md](docs/guides/CLI_USAGE.md))
 - **Usage Tracking**: Quota management and cost tracking
 - **Rate Limiting**: Token bucket algorithm for API protection
 
-See [ENRICHMENT_PIPELINE.md](./ENRICHMENT_PIPELINE.md) for detailed documentation.
-
-### Data Export
+See [ENRICHMENT_PIPELINE.md](docs/technical/ENRICHMENT_PIPELINE.md) for detailed documentation.
 
 ## 🚀 Quick Start
 
@@ -316,7 +312,7 @@ npm run dev
 ### Running Tests
 
 ```bash
-# Run all tests (526 tests)
+# Run all tests (2055 tests)
 npm test
 
 # Run tests in watch mode
@@ -331,10 +327,10 @@ npm run test:coverage
 
 **Test Statistics:**
 
-- Total Tests: 526 (100% passing)
-- Test Files: 15
+- Total Tests: 2055 (100% passing)
+- Test Files: 91
 - Test Suites: 60+
-- Duration: ~27 seconds
+- Duration: ~60 seconds
 - Coverage: Comprehensive edge case and integration coverage
 
 ### Building for Production
@@ -425,13 +421,13 @@ ML-powered scoring system:
 
 ### Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Vite
+- **Frontend**: React 19 + TypeScript + Vite
 - **UI Library**: Radix UI + Tailwind CSS
 - **State Management**: React Hooks + KV Store
 - **Testing**: Vitest + Testing Library + jsdom
 - **Data Validation**: Zod schemas
-- **Build Tool**: Vite 6.4
-- **Type Checking**: TypeScript 5.6
+- **Build Tool**: Vite 7.3
+- **Type Checking**: TypeScript 5.9
 
 ### Project Structure
 
@@ -474,7 +470,7 @@ public-record-data-scrapper/
 
 ## 🧪 Testing
 
-Comprehensive test suite with **526 tests** covering:
+Comprehensive test suite with **2055 tests** covering:
 
 - **Agentic System** - All 5 analysis agents + engine + council
 - **State Agents** - State-specific collection agents and factory
@@ -488,12 +484,11 @@ Comprehensive test suite with **526 tests** covering:
 
 **Test Coverage**:
 
-- Test Files: 15
+- Test Files: 91
 - Test Suites: 60+
-- Total Tests: 526
+- Total Tests: 2055
 - Pass Rate: 100%
-- Duration: ~27 seconds
-- Latest improvements: Fixed 4 failing async/timeout tests, added 14 comprehensive edge case tests
+- Duration: ~60 seconds
 
 See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
@@ -525,8 +520,6 @@ See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
 ### Project Reports
 
-### Project Reports
-
 - [Branch Cleanup Plan](docs/reports/BRANCH_CLEANUP_PLAN.md)
 - [Branch Review Summary](docs/reports/BRANCH_REVIEW_SUMMARY.md)
 - [Mega Consolidation Summary](docs/reports/MEGA_CONSOLIDATION_SUMMARY.md)
@@ -534,18 +527,18 @@ See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
 ### Core Documentation
 
-- **Product Requirements**: See [PRD.md](./PRD.md) for detailed feature specifications
-- **Logic Analysis**: See [LOGIC_ANALYSIS.md](./LOGIC_ANALYSIS.md) for implementation details
+- **Product Requirements**: See [PRD.md](docs/PRD.md) for detailed feature specifications
+- **Logic Analysis**: See [LOGIC_ANALYSIS.md](docs/LOGIC_ANALYSIS.md) for implementation details
 - **Security**: See [SECURITY.md](./SECURITY.md) for security policies
-- **Competitive Analysis**: See [COMPETITIVE_ANALYSIS.md](./COMPETITIVE_ANALYSIS.md) for market research and improvement roadmap
-- **Agentic Forces**: See [AGENTIC_FORCES.md](./AGENTIC_FORCES.md) for AI agent orchestration system documentation
-- **Implementation Summary**: See [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) for implementation details
+- **Competitive Analysis**: See [COMPETITIVE_ANALYSIS.md](docs/COMPETITIVE_ANALYSIS.md) for market research and improvement roadmap
+- **Agentic Forces**: See [AGENTIC_FORCES.md](docs/AGENTIC_FORCES.md) for AI agent orchestration system documentation
+- **Implementation Summary**: See [IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md) for implementation details
 
 ### Repository Management
 
-- **Branch Resolution**: See [BRANCH_RESOLUTION.md](./BRANCH_RESOLUTION.md) for branch cleanup strategy
-- **Maintenance Guide**: See [MAINTENANCE_GUIDE.md](./MAINTENANCE_GUIDE.md) for post-merge maintenance actions
-- **PR Comments Resolution**: See [PR_COMMENTS_RESOLUTION.md](./PR_COMMENTS_RESOLUTION.md) for tracking open-ended comments and action items
+- **Branch Resolution**: See [BRANCH_RESOLUTION.md](docs/archive/BRANCH_RESOLUTION.md) for branch cleanup strategy
+- **Maintenance Guide**: See [MAINTENANCE_GUIDE.md](docs/guides/MAINTENANCE_GUIDE.md) for post-merge maintenance actions
+- **PR Comments Resolution**: See [PR_COMMENTS_RESOLUTION.md](docs/archive/pr-summaries/PR_COMMENTS_RESOLUTION.md) for tracking open-ended comments and action items
 
 ### Custom Agents
 
@@ -563,23 +556,12 @@ See [TESTING.md](./docs/TESTING.md) for detailed testing documentation.
 
 See [SECURITY_IMPLEMENTATION.md](docs/SECURITY_IMPLEMENTATION.md) for comprehensive security documentation.
 
-- **Dynatrace Expert**: See [.github/agents/dynatrace-expert.md](.github/agents/dynatrace-expert.md) - Master observability specialist with complete DQL knowledge
-- **Custom Agents Guide**: See [.github/agents/README.md](.github/agents/README.md) - How to use and create custom agents
-
 ### Portfolio & Hiring
 
 - **Executive Hiring Video System**: See [docs/video-portfolio/](docs/video-portfolio/) - Complete system for creating a 3-5 minute portfolio video for non-technical executives
   - Transform this repository into a compelling hiring pitch
   - Includes script, visuals, production guide, and translation glossary
   - Designed for decision-makers who don't read code
-
-## 🔒 Security
-
-- **Zero Vulnerabilities** - All dependencies audited and updated
-- **Type Safety** - Comprehensive TypeScript coverage
-- **Input Validation** - Zod schema validation
-- **Security Agent** - Automated vulnerability scanning
-- **Regular Audits** - Continuous security monitoring
 
 ## 🛠️ Development
 
@@ -630,7 +612,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ## 📈 Roadmap
 
-See [TODO.md](TODO.md) for the complete project roadmap including:
+See [TODO.md](docs/TODO.md) for the complete project roadmap including:
 
 - Production data source integration
 - Database setup and migrations
@@ -658,6 +640,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Status**: ✅ Production Ready | **Tests**: 526/526 Passing (100%) | **Build**: Passing | **Security**: 0 Vulnerabilities
+**Status**: ✅ Production Ready | **Tests**: 2055/2055 Passing (100%) | **Build**: Passing | **Security**: 0 Vulnerabilities
 
 Made with ❤️ for the MCA industry
