@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ElementType } from 'react'
 import { DashboardStats } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,7 @@ function StatCard({
   item,
   index
 }: {
-  item: { label: string; value: string; icon: React.ElementType; color: string; subtitle?: string }
+  item: { label: string; value: string; icon: ElementType; color: string; subtitle?: string }
   index: number
 }) {
   const Icon = item.icon
