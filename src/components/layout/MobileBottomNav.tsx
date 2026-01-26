@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TabsTrigger } from '@/components/ui/tabs'
+import { TabsTrigger, TabsList } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -25,7 +25,7 @@ export function MobileBottomNav() {
     <>
       {/* Bottom Navigation - Mobile Only */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass-effect border-t border-white/20 safe-area-pb">
-        <div className="grid grid-cols-5 h-16">
+        <TabsList className="grid grid-cols-5 h-16 w-full rounded-none bg-transparent border-0 p-0">
           <TabsTrigger
             value="prospects"
             className="flex flex-col items-center justify-center gap-1 touch-target rounded-none border-0 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
@@ -66,7 +66,7 @@ export function MobileBottomNav() {
             <DotsThree size={20} weight="bold" />
             <span className="text-[10px] font-medium">More</span>
           </Button>
-        </div>
+        </TabsList>
       </nav>
 
       {/* More Menu Sheet */}
@@ -76,7 +76,7 @@ export function MobileBottomNav() {
             <SheetTitle>More Options</SheetTitle>
             <SheetDescription>Access additional features</SheetDescription>
           </SheetHeader>
-          <div className="space-y-2 pb-4">
+          <TabsList className="flex flex-col w-full bg-transparent border-0 p-0 h-auto space-y-2 pb-4">
             <TabsTrigger
               value="requalification"
               onClick={() => setMoreOpen(false)}
@@ -100,7 +100,7 @@ export function MobileBottomNav() {
                 <div className="text-xs text-muted-foreground">AI-powered insights</div>
               </div>
             </TabsTrigger>
-          </div>
+          </TabsList>
         </SheetContent>
       </Sheet>
     </>
