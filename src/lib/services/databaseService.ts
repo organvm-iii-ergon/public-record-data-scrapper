@@ -222,13 +222,22 @@ export async function fetchDashboardStats() {
 
     const stats = await queries.getProspectStats()
 
+    // Helper to calculate grade from score
+    const scoreToGrade = (score: number): 'A' | 'B' | 'C' | 'D' | 'F' => {
+      if (score >= 90) return 'A'
+      if (score >= 80) return 'B'
+      if (score >= 70) return 'C'
+      if (score >= 60) return 'D'
+      return 'F'
+    }
+
     return {
       totalProspects: stats.total,
       highValueProspects: stats.total > 0 ? Math.round(stats.total * 0.3) : 0, // Estimate
-      avgPriorityScore: Math.round(stats.avgScore),
+      avgPriorityScore: Math.round(stats.avg_priority_score || 0),
       newSignalsToday: 0, // TODO: Calculate from growth_signals
       portfolioAtRisk: 0, // TODO: Calculate from portfolio
-      avgHealthGrade: 'B' as const // TODO: Calculate from health scores
+      avgHealthGrade: scoreToGrade(Math.round(stats.avg_health_score || 0))
     }
   } catch (error) {
     console.error('Failed to fetch dashboard stats:', error)
