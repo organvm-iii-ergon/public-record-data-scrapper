@@ -170,7 +170,7 @@ export class MetricsCollector {
       avg: sum / values.length,
       min: sorted[0],
       max: sorted[sorted.length - 1],
-      p50: this.percentile(sorted, 0.50),
+      p50: this.percentile(sorted, 0.5),
       p95: this.percentile(sorted, 0.95),
       p99: this.percentile(sorted, 0.99)
     }
@@ -183,9 +183,11 @@ export class MetricsCollector {
     const lines: string[] = []
 
     // Export counters and gauges
-    this.metrics.forEach(metric => {
+    this.metrics.forEach((metric) => {
       const labelsStr = metric.labels
-        ? `{${Object.entries(metric.labels).map(([k, v]) => `${k}="${v}"`).join(',')}}`
+        ? `{${Object.entries(metric.labels)
+            .map(([k, v]) => `${k}="${v}"`)
+            .join(',')}}`
         : ''
 
       lines.push(`# TYPE ${metric.name} ${metric.type}`)
@@ -212,8 +214,12 @@ export class MetricsCollector {
   /**
    * Export metrics as JSON
    */
-  toJSON(): any {
-    const histogramStats: any = {}
+  toJSON(): {
+    metrics: Metric[]
+    histograms: Record<string, ReturnType<MetricsCollector['getHistogramStats']>>
+    timestamp: string
+  } {
+    const histogramStats: Record<string, ReturnType<MetricsCollector['getHistogramStats']>> = {}
     this.histograms.forEach((_, name) => {
       histogramStats[name] = this.getHistogramStats(name)
     })
@@ -273,20 +279,38 @@ export class AppMetrics {
   // DATA PIPELINE METRICS
   // ============================================================================
 
-  recordIngestionJob(state: string, recordsProcessed: number, duration: number, success: boolean): void {
-    this.collector.incrementCounter('ingestion_jobs_total', 1, { state, status: success ? 'success' : 'failure' })
+  recordIngestionJob(
+    state: string,
+    recordsProcessed: number,
+    duration: number,
+    success: boolean
+  ): void {
+    this.collector.incrementCounter('ingestion_jobs_total', 1, {
+      state,
+      status: success ? 'success' : 'failure'
+    })
     this.collector.incrementCounter('ingestion_records_total', recordsProcessed, { state })
     this.collector.recordDuration('ingestion_job', duration, { state })
   }
 
-  recordEnrichmentJob(prospectId: string, fieldsEnriched: number, duration: number, success: boolean): void {
-    this.collector.incrementCounter('enrichment_jobs_total', 1, { status: success ? 'success' : 'failure' })
+  recordEnrichmentJob(
+    prospectId: string,
+    fieldsEnriched: number,
+    duration: number,
+    success: boolean
+  ): void {
+    this.collector.incrementCounter('enrichment_jobs_total', 1, {
+      status: success ? 'success' : 'failure'
+    })
     this.collector.incrementCounter('enrichment_fields_total', fieldsEnriched)
     this.collector.recordDuration('enrichment_job', duration)
   }
 
   recordDataSourceCall(source: string, duration: number, success: boolean, cost?: number): void {
-    this.collector.incrementCounter('data_source_calls_total', 1, { source, status: success ? 'success' : 'failure' })
+    this.collector.incrementCounter('data_source_calls_total', 1, {
+      source,
+      status: success ? 'success' : 'failure'
+    })
     this.collector.recordDuration('data_source_call', duration, { source })
 
     if (cost !== undefined) {
@@ -299,7 +323,9 @@ export class AppMetrics {
   // ============================================================================
 
   recordQuery(duration: number, success: boolean): void {
-    this.collector.incrementCounter('db_queries_total', 1, { status: success ? 'success' : 'failure' })
+    this.collector.incrementCounter('db_queries_total', 1, {
+      status: success ? 'success' : 'failure'
+    })
     this.collector.recordDuration('db_query', duration)
   }
 
@@ -319,7 +345,11 @@ export class AppMetrics {
   // ============================================================================
 
   recordAPIRequest(endpoint: string, method: string, statusCode: number, duration: number): void {
-    this.collector.incrementCounter('api_requests_total', 1, { endpoint, method, status: String(statusCode) })
+    this.collector.incrementCounter('api_requests_total', 1, {
+      endpoint,
+      method,
+      status: String(statusCode)
+    })
     this.collector.recordDuration('api_request', duration, { endpoint, method })
   }
 
@@ -332,10 +362,12 @@ export class AppMetrics {
   // ============================================================================
 
   recordCacheHit(key: string): void {
+    void key
     this.collector.incrementCounter('cache_hits_total', 1)
   }
 
   recordCacheMiss(key: string): void {
+    void key
     this.collector.incrementCounter('cache_misses_total', 1)
   }
 
@@ -398,7 +430,7 @@ export class AppMetrics {
     return this.collector.toPrometheus()
   }
 
-  toJSON(): any {
+  toJSON(): ReturnType<MetricsCollector['toJSON']> {
     return this.collector.toJSON()
   }
 
@@ -414,14 +446,12 @@ export const metrics = new AppMetrics()
  * Performance decorator
  */
 export function measurePerformance(metricName: string) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
-    const originalMethod = descriptor.value
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
+    void target
+    void propertyKey
+    const originalMethod = descriptor.value as (...args: unknown[]) => Promise<unknown> | unknown
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const endTimer = metrics.getCollector().startTimer(metricName)
 
       try {

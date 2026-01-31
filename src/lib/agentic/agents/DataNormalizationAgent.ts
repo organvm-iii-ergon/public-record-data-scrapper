@@ -1,11 +1,20 @@
 /**
  * Data Normalization Agent
- * 
+ *
  * Canonicalizes, standardizes, and deduplicates data from multiple sources
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, Finding, ImprovementSuggestion } from '../types'
+import {
+  AgentAnalysis,
+  SystemContext,
+  AgentTask,
+  AgentTaskResult,
+  Finding,
+  ImprovementSuggestion
+} from '../types'
+
+type NormalizedRecord = Record<string, unknown>
 
 export class DataNormalizationAgent extends BaseAgent {
   constructor() {
@@ -26,12 +35,14 @@ export class DataNormalizationAgent extends BaseAgent {
     // Check for data quality issues
     const inconsistentData = this.checkDataConsistency(context)
     if (inconsistentData.length > 0) {
-      findings.push(this.createFinding(
-        'data-quality',
-        'warning',
-        `Found ${inconsistentData.length} prospects with inconsistent data`,
-        { inconsistentData: inconsistentData.slice(0, 5) }
-      ))
+      findings.push(
+        this.createFinding(
+          'data-quality',
+          'warning',
+          `Found ${inconsistentData.length} prospects with inconsistent data`,
+          { inconsistentData: inconsistentData.slice(0, 5) }
+        )
+      )
     }
 
     return this.createAnalysis(findings, improvements)
@@ -42,19 +53,35 @@ export class DataNormalizationAgent extends BaseAgent {
    */
   async executeTask(task: AgentTask): Promise<AgentTaskResult> {
     const { type, payload } = task
+    const data = payload as Record<string, unknown>
 
     try {
       switch (type) {
         case 'normalize-company-name':
-          return this.normalizeCompanyName(payload.name)
+          if (typeof data.name !== 'string') {
+            throw new Error('Invalid payload for normalize-company-name')
+          }
+          return this.normalizeCompanyName(data.name)
         case 'normalize-address':
-          return this.normalizeAddress(payload.address)
+          if (typeof data.address !== 'string') {
+            throw new Error('Invalid payload for normalize-address')
+          }
+          return this.normalizeAddress(data.address)
         case 'normalize-date':
-          return this.normalizeDate(payload.date)
+          if (!(typeof data.date === 'string' || data.date instanceof Date)) {
+            throw new Error('Invalid payload for normalize-date')
+          }
+          return this.normalizeDate(data.date)
         case 'normalize-data':
-          return this.normalizeData(payload.data)
+          if (!data.data || typeof data.data !== 'object') {
+            throw new Error('Invalid payload for normalize-data')
+          }
+          return this.normalizeData(data.data as NormalizedRecord)
         case 'deduplicate':
-          return this.deduplicateRecords(payload.records)
+          if (!Array.isArray(data.records)) {
+            throw new Error('Invalid payload for deduplicate')
+          }
+          return this.deduplicateRecords(data.records as NormalizedRecord[])
         default:
           return {
             success: false,
@@ -79,12 +106,24 @@ export class DataNormalizationAgent extends BaseAgent {
 
     // Remove common suffixes
     const suffixes = [
-      'LLC', 'L.L.C.', 'L.L.C', 'L L C',
-      'Inc', 'Inc.', 'Incorporated',
-      'Corp', 'Corp.', 'Corporation',
-      'Ltd', 'Ltd.', 'Limited',
-      'Co', 'Co.', 'Company',
-      'LLP', 'L.L.P.'
+      'LLC',
+      'L.L.C.',
+      'L.L.C',
+      'L L C',
+      'Inc',
+      'Inc.',
+      'Incorporated',
+      'Corp',
+      'Corp.',
+      'Corporation',
+      'Ltd',
+      'Ltd.',
+      'Limited',
+      'Co',
+      'Co.',
+      'Company',
+      'LLP',
+      'L.L.P.'
     ]
 
     // Remove suffixes (case insensitive)
@@ -119,18 +158,18 @@ export class DataNormalizationAgent extends BaseAgent {
 
     // Standardize street abbreviations
     const streetAbbreviations: Record<string, string> = {
-      'Street': 'St',
-      'Avenue': 'Ave',
-      'Boulevard': 'Blvd',
-      'Drive': 'Dr',
-      'Road': 'Rd',
-      'Lane': 'Ln',
-      'Court': 'Ct',
-      'Circle': 'Cir',
-      'Place': 'Pl',
-      'Square': 'Sq',
-      'Highway': 'Hwy',
-      'Parkway': 'Pkwy'
+      Street: 'St',
+      Avenue: 'Ave',
+      Boulevard: 'Blvd',
+      Drive: 'Dr',
+      Road: 'Rd',
+      Lane: 'Ln',
+      Court: 'Ct',
+      Circle: 'Cir',
+      Place: 'Pl',
+      Square: 'Sq',
+      Highway: 'Hwy',
+      Parkway: 'Pkwy'
     }
 
     Object.entries(streetAbbreviations).forEach(([full, abbr]) => {
@@ -140,14 +179,14 @@ export class DataNormalizationAgent extends BaseAgent {
 
     // Standardize directions
     const directions: Record<string, string> = {
-      'North': 'N',
-      'South': 'S',
-      'East': 'E',
-      'West': 'W',
-      'Northeast': 'NE',
-      'Northwest': 'NW',
-      'Southeast': 'SE',
-      'Southwest': 'SW'
+      North: 'N',
+      South: 'S',
+      East: 'E',
+      West: 'W',
+      Northeast: 'NE',
+      Northwest: 'NW',
+      Southeast: 'SE',
+      Southwest: 'SW'
     }
 
     Object.entries(directions).forEach(([full, abbr]) => {
@@ -175,7 +214,7 @@ export class DataNormalizationAgent extends BaseAgent {
   private normalizeDate(date: string | Date): AgentTaskResult {
     try {
       const dateObj = typeof date === 'string' ? new Date(date) : date
-      
+
       if (isNaN(dateObj.getTime())) {
         throw new Error('Invalid date')
       }
@@ -203,20 +242,22 @@ export class DataNormalizationAgent extends BaseAgent {
   /**
    * Normalize all data in a record
    */
-  private normalizeData(data: Record<string, any>): AgentTaskResult {
-    const normalized: Record<string, any> = { ...data }
+  private normalizeData(data: NormalizedRecord): AgentTaskResult {
+    const normalized: NormalizedRecord = { ...data }
 
     // Normalize company name if present
-    if (normalized.companyName) {
-      const result = this.normalizeCompanyName(normalized.companyName)
+    const companyName = normalized.companyName
+    if (typeof companyName === 'string') {
+      const result = this.normalizeCompanyName(companyName)
       if (result.success && result.data) {
         normalized.companyName = result.data.normalized
       }
     }
 
     // Normalize addresses
-    if (normalized.address) {
-      const result = this.normalizeAddress(normalized.address)
+    const address = normalized.address
+    if (typeof address === 'string') {
+      const result = this.normalizeAddress(address)
       if (result.success && result.data) {
         normalized.address = result.data.normalized
       }
@@ -224,9 +265,10 @@ export class DataNormalizationAgent extends BaseAgent {
 
     // Normalize dates
     const dateFields = ['filingDate', 'defaultDate', 'detectedDate', 'lastUpdated']
-    dateFields.forEach(field => {
-      if (normalized[field]) {
-        const result = this.normalizeDate(normalized[field])
+    dateFields.forEach((field) => {
+      const value = normalized[field]
+      if (typeof value === 'string' || value instanceof Date) {
+        const result = this.normalizeDate(value)
         if (result.success && result.data) {
           normalized[field] = result.data.normalized
         }
@@ -234,8 +276,9 @@ export class DataNormalizationAgent extends BaseAgent {
     })
 
     // Normalize state codes to uppercase
-    if (normalized.state) {
-      normalized.state = normalized.state.toUpperCase()
+    const state = normalized.state
+    if (typeof state === 'string') {
+      normalized.state = state.toUpperCase()
     }
 
     return {
@@ -243,8 +286,8 @@ export class DataNormalizationAgent extends BaseAgent {
       data: {
         original: data,
         normalized,
-        fieldsNormalized: Object.keys(normalized).filter(k => 
-          JSON.stringify(data[k]) !== JSON.stringify(normalized[k])
+        fieldsNormalized: Object.keys(normalized).filter(
+          (k) => JSON.stringify(data[k]) !== JSON.stringify(normalized[k])
         )
       },
       timestamp: new Date().toISOString()
@@ -254,13 +297,13 @@ export class DataNormalizationAgent extends BaseAgent {
   /**
    * Deduplicate records using fuzzy matching
    */
-  private deduplicateRecords(records: any[]): AgentTaskResult {
-    const unique: any[] = []
-    const duplicates: any[] = []
+  private deduplicateRecords(records: NormalizedRecord[]): AgentTaskResult {
+    const unique: NormalizedRecord[] = []
+    const duplicates: NormalizedRecord[] = []
 
-    records.forEach(record => {
-      const isDuplicate = unique.some(existing => 
-        this.calculateSimilarity(record, existing) > 0.85
+    records.forEach((record) => {
+      const isDuplicate = unique.some(
+        (existing) => this.calculateSimilarity(record, existing) > 0.85
       )
 
       if (isDuplicate) {
@@ -287,17 +330,17 @@ export class DataNormalizationAgent extends BaseAgent {
   /**
    * Calculate similarity between two records
    */
-  private calculateSimilarity(record1: any, record2: any): number {
+  private calculateSimilarity(record1: NormalizedRecord, record2: NormalizedRecord): number {
     // Simple similarity calculation based on company name
-    const name1 = (record1.companyName || '').toLowerCase()
-    const name2 = (record2.companyName || '').toLowerCase()
+    const name1 = typeof record1.companyName === 'string' ? record1.companyName.toLowerCase() : ''
+    const name2 = typeof record2.companyName === 'string' ? record2.companyName.toLowerCase() : ''
 
     if (!name1 || !name2) return 0
 
     // Levenshtein distance-based similarity
     const distance = this.levenshteinDistance(name1, name2)
     const maxLength = Math.max(name1.length, name2.length)
-    return 1 - (distance / maxLength)
+    return 1 - distance / maxLength
   }
 
   /**
@@ -335,33 +378,48 @@ export class DataNormalizationAgent extends BaseAgent {
    * Convert string to title case
    */
   private toTitleCase(str: string): string {
-    return str.replace(/\w\S*/g, txt => 
-      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    )
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
   }
 
   /**
    * Check data consistency in context
    */
-  private checkDataConsistency(context: SystemContext): any[] {
-    const inconsistent: any[] = []
+  private checkDataConsistency(context: SystemContext): Array<{
+    id: string
+    companyName: string
+    issues: string[]
+  }> {
+    const inconsistent: Array<{
+      id: string
+      companyName: string
+      issues: string[]
+    }> = []
 
-    context.prospects.forEach(prospect => {
+    const prospects = context.prospects as NormalizedRecord[]
+
+    prospects.forEach((prospect) => {
       const issues: string[] = []
 
       // Check for missing required fields
-      if (!prospect.companyName) issues.push('missing company name')
-      if (!prospect.state) issues.push('missing state')
+      const companyName = typeof prospect.companyName === 'string' ? prospect.companyName : ''
+      const state = typeof prospect.state === 'string' ? prospect.state : ''
+
+      if (!companyName) issues.push('missing company name')
+      if (!state) issues.push('missing state')
 
       // Check date formats
-      if (prospect.defaultDate && isNaN(new Date(prospect.defaultDate).getTime())) {
+      const defaultDate = prospect.defaultDate
+      if (
+        (typeof defaultDate === 'string' || defaultDate instanceof Date) &&
+        isNaN(new Date(defaultDate).getTime())
+      ) {
         issues.push('invalid default date')
       }
 
       if (issues.length > 0) {
         inconsistent.push({
-          id: prospect.id,
-          companyName: prospect.companyName,
+          id: String(prospect.id ?? ''),
+          companyName: companyName || 'Unknown',
           issues
         })
       }

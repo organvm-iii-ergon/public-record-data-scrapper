@@ -583,10 +583,10 @@ Provide a clear explanation of:
   /**
    * Get statistics (mock implementation)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async getStatistics(
     parameters: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
+    void parameters
     return {
       totalProspects: 1543,
       conversionRate: 0.28,
@@ -619,10 +619,10 @@ Provide a clear explanation of:
   /**
    * Handle general query (mock implementation)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async handleGeneralQuery(
     parameters: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
+    void parameters
     return {
       type: 'general_response',
       message:

@@ -57,14 +57,17 @@ export class EntryPointAgent extends BaseAgent implements Agent {
       `Collect from ${config.name} via ${config.type.charAt(0).toUpperCase() + config.type.slice(1)}`,
       `Parse ${config.dataFormat.toUpperCase()} format`,
       config.authRequired && config.authMethod
-        ? `Handle ${config.authMethod.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} authentication`
+        ? `Handle ${config.authMethod
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ')} authentication`
         : 'Public access (no auth required)',
       `Rate limit: ${config.rateLimit.requestsPerMinute} req/min`,
       'Monitor endpoint health',
       'Detect schema changes'
     ]
 
-    super('entry-point-collector' as any, agentName, capabilities)
+    super('entry-point-collector', agentName, capabilities)
     this.customId = customId
 
     this.config = config
@@ -79,13 +82,15 @@ export class EntryPointAgent extends BaseAgent implements Agent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
+    void context
     const findings: Finding[] = []
     const improvements: ImprovementSuggestion[] = []
 
     // Check endpoint reliability
-    const successRate = this.metrics.totalRequests > 0
-      ? (this.metrics.successfulRequests / this.metrics.totalRequests) * 100
-      : 100
+    const successRate =
+      this.metrics.totalRequests > 0
+        ? (this.metrics.successfulRequests / this.metrics.totalRequests) * 100
+        : 100
 
     if (successRate < 95) {
       findings.push({
@@ -205,6 +210,7 @@ export class EntryPointAgent extends BaseAgent implements Agent {
     findings: Finding[]
     improvements: ImprovementSuggestion[]
   } {
+    void context
     const findings: Finding[] = []
     const improvements: ImprovementSuggestion[] = []
 
@@ -243,7 +249,8 @@ export class EntryPointAgent extends BaseAgent implements Agent {
             title: `Optimize ${this.config.name} database queries`,
             description: 'Slow queries detected, consider indexing or query optimization',
             reasoning: 'Database performance directly impacts user experience',
-            estimatedImpact: 'Reduce query time from ' + this.metrics.averageLatency + 'ms to <500ms',
+            estimatedImpact:
+              'Reduce query time from ' + this.metrics.averageLatency + 'ms to <500ms',
             automatable: false,
             safetyScore: 70
           })
@@ -265,7 +272,7 @@ export class EntryPointAgent extends BaseAgent implements Agent {
     return { findings, improvements }
   }
 
-  async collect(params?: any): Promise<any> {
+  async collect(params?: Record<string, unknown>): Promise<unknown[]> {
     console.log(`[${this.customId}] Collecting data from ${this.config.name}`, params)
     this.metrics.totalRequests++
     this.metrics.lastRequestTime = new Date().toISOString()
@@ -363,7 +370,7 @@ export class EntryPointAgentFactory {
   }
 
   createEntryPointAgent(id: string): EntryPointAgent | undefined {
-    const config = ENTRY_POINT_CONFIGS.find(c => c.id === id)
+    const config = ENTRY_POINT_CONFIGS.find((c) => c.id === id)
     if (!config) {
       return undefined
     }
@@ -387,9 +394,7 @@ export class EntryPointAgentFactory {
   }
 
   getAgentsByType(type: EntryPointType): EntryPointAgent[] {
-    return Array.from(this.agents.values()).filter(agent =>
-      agent.getConfig().type === type
-    )
+    return Array.from(this.agents.values()).filter((agent) => agent.getConfig().type === type)
   }
 
   clear(): void {

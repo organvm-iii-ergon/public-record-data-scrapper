@@ -1,6 +1,6 @@
 /**
  * Agentic Forces - Type Definitions
- * 
+ *
  * This module defines the core types for the agentic system that enables
  * autonomous decision-making, continuous improvement, and self-directed actions.
  */
@@ -35,7 +35,7 @@ export type ImprovementCategory =
 
 export type ImprovementPriority = 'critical' | 'high' | 'medium' | 'low'
 
-export type ImprovementStatus = 
+export type ImprovementStatus =
   | 'detected'
   | 'analyzing'
   | 'approved'
@@ -53,9 +53,9 @@ export interface Agent {
 }
 
 export interface SystemContext {
-  prospects: any[]
-  competitors: any[]
-  portfolio: any[]
+  prospects: unknown[]
+  competitors: unknown[]
+  portfolio: unknown[]
   userActions: UserAction[]
   performanceMetrics: PerformanceMetrics
   timestamp: string
@@ -64,7 +64,7 @@ export interface SystemContext {
 export interface UserAction {
   type: string
   timestamp: string
-  details: Record<string, any>
+  details: Record<string, unknown>
 }
 
 export interface PerformanceMetrics {
@@ -87,7 +87,7 @@ export interface Finding {
   category: ImprovementCategory
   severity: 'info' | 'warning' | 'critical'
   description: string
-  evidence: any
+  evidence: unknown
 }
 
 export interface ImprovementSuggestion {
@@ -126,8 +126,8 @@ export interface ImprovementResult {
   success: boolean
   changes: string[]
   metrics: {
-    before: Record<string, any>
-    after: Record<string, any>
+    before: Record<string, unknown>
+    after: Record<string, unknown>
   }
   feedback: string
 }
@@ -135,7 +135,7 @@ export interface ImprovementResult {
 export interface FeedbackLoop {
   id: string
   type: 'user-feedback' | 'system-metrics' | 'agent-review'
-  data: any
+  data: unknown
   timestamp: string
   processedBy: string[]
 }
@@ -154,12 +154,12 @@ export type SubscriptionTier = 'free' | 'starter' | 'professional' | 'enterprise
 
 export interface AgentTask {
   type: string
-  payload: Record<string, any>
+  payload: Record<string, unknown>
 }
 
 export interface AgentTaskResult {
   success: boolean
-  data?: any
+  data?: unknown
   error?: string
   timestamp: string
 }
@@ -181,7 +181,7 @@ export interface EnrichmentRequest {
 
 export interface EnrichmentResult {
   success: boolean
-  data?: any
+  data?: unknown
   errors?: string[]
   sources: string[]
   cost: number

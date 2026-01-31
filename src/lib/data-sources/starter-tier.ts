@@ -1,11 +1,11 @@
 /**
  * Starter Tier Data Sources
- * 
+ *
  * Implementation of commercial data sources for Starter tier:
  * - D&B Direct (Dun & Bradstreet)
  * - Google Places API
  * - Clearbit
- * 
+ *
  * Note: These require API keys to be configured in environment variables
  */
 
@@ -21,16 +21,16 @@ export class DnBSource extends BaseDataSource {
     super({
       name: 'dnb',
       tier: 'starter',
-      cost: 0.50,
+      cost: 0.5,
       timeout: 15000,
       retryAttempts: 2,
       retryDelay: 2000
     })
-    
+
     this.apiKey = process.env.DNB_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -42,15 +42,16 @@ export class DnBSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, state } = query
-      
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const state = typeof query.state === 'string' ? query.state : ''
+
       // D&B Direct API endpoint (example - actual endpoint may differ)
       const searchUrl = 'https://plus.dnb.com/v1/data/duns'
-      
+
       const response = await fetch(searchUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -64,7 +65,7 @@ export class DnBSource extends BaseDataSource {
       }
 
       const data = await response.json()
-      
+
       return {
         dunsNumber: data.dunsNumber || null,
         businessName: data.businessName || null,
@@ -78,8 +79,8 @@ export class DnBSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.companyName.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' && query.companyName.length > 0
   }
 }
 
@@ -98,11 +99,11 @@ export class GooglePlacesSource extends BaseDataSource {
       retryAttempts: 3,
       retryDelay: 1000
     })
-    
+
     this.apiKey = process.env.GOOGLE_PLACES_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -114,11 +115,12 @@ export class GooglePlacesSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, state } = query
-      
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const state = typeof query.state === 'string' ? query.state : ''
+
       // Google Places Text Search API
       const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(companyName + ' ' + state)}&key=${this.apiKey}`
-      
+
       const response = await fetch(searchUrl)
 
       if (!response.ok) {
@@ -126,13 +128,13 @@ export class GooglePlacesSource extends BaseDataSource {
       }
 
       const data = await response.json()
-      
+
       if (data.status !== 'OK') {
         throw new Error(`Google Places API error: ${data.status}`)
       }
 
       const place = data.results?.[0]
-      
+
       return {
         placeId: place?.place_id || null,
         name: place?.name || null,
@@ -147,8 +149,8 @@ export class GooglePlacesSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.companyName.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' && query.companyName.length > 0
   }
 }
 
@@ -162,16 +164,16 @@ export class ClearbitSource extends BaseDataSource {
     super({
       name: 'clearbit',
       tier: 'starter',
-      cost: 1.00,
+      cost: 1.0,
       timeout: 10000,
       retryAttempts: 2,
       retryDelay: 2000
     })
-    
+
     this.apiKey = process.env.CLEARBIT_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -183,15 +185,16 @@ export class ClearbitSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, domain } = query
-      
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const domain = typeof query.domain === 'string' ? query.domain : ''
+
       // Clearbit Company API
       const searchParam = domain || companyName
       const searchUrl = `https://company.clearbit.com/v2/companies/find?name=${encodeURIComponent(searchParam)}`
-      
+
       const response = await fetch(searchUrl, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`
         }
       })
 
@@ -200,7 +203,7 @@ export class ClearbitSource extends BaseDataSource {
       }
 
       const data = await response.json()
-      
+
       return {
         id: data.id || null,
         name: data.name || null,
@@ -218,7 +221,7 @@ export class ClearbitSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName || query.domain)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' || typeof query.domain === 'string'
   }
 }

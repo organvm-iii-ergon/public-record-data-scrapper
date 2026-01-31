@@ -2,15 +2,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ClockCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 
 interface StaleDataWarningProps {
   lastUpdated: string
   onRefresh: () => void
 }
 
+const getNow = () => Date.now()
+
 export function StaleDataWarning({ lastUpdated, onRefresh }: StaleDataWarningProps) {
+  const [now] = useState(getNow)
   const daysSinceUpdate = Math.floor(
-    (Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60 * 24)
+    (now - new Date(lastUpdated).getTime()) / (1000 * 60 * 60 * 24)
   )
 
   if (daysSinceUpdate < 7) return null
@@ -27,11 +31,16 @@ export function StaleDataWarning({ lastUpdated, onRefresh }: StaleDataWarningPro
         <ClockCounterClockwise size={18} weight="fill" className="sm:w-5 sm:h-5" />
         <AlertDescription className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <span className="text-sm sm:text-base">
-            <span className="font-semibold">Data is {daysSinceUpdate} days old.</span> 
-            <span className="block sm:inline"> {daysSinceUpdate >= 30 ? 'Critical: Health scores may be inaccurate.' : 'Consider refreshing for latest signals.'}</span>
+            <span className="font-semibold">Data is {daysSinceUpdate} days old.</span>
+            <span className="block sm:inline">
+              {' '}
+              {daysSinceUpdate >= 30
+                ? 'Critical: Health scores may be inaccurate.'
+                : 'Consider refreshing for latest signals.'}
+            </span>
           </span>
-          <Button 
-            variant={severity === 'destructive' ? 'destructive' : 'outline'} 
+          <Button
+            variant={severity === 'destructive' ? 'destructive' : 'outline'}
             size="sm"
             onClick={onRefresh}
             className="glass-effect border-white/30 w-full sm:w-auto"

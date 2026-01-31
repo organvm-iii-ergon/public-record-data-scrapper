@@ -87,7 +87,7 @@ export class NewYorkScraper extends BaseScraper {
       const nyResult = await this.nyPortalScraper.searchByDebtorName(companyName)
 
       // Convert NY scraper result format to our standard format
-      const convertedFilings: UCCFiling[] = (nyResult.filings || []).map(filing => ({
+      const convertedFilings: UCCFiling[] = (nyResult.filings || []).map((filing) => ({
         filingNumber: filing.id.replace('ny-', ''),
         debtorName: filing.debtorName,
         securedParty: filing.securedParty,
@@ -137,6 +137,7 @@ export class NewYorkScraper extends BaseScraper {
    * Get manual search URL for New York
    */
   getManualSearchUrl(companyName: string): string {
-    return this.config.baseUrl
+    const encoded = encodeURIComponent(companyName)
+    return `${this.config.baseUrl}?search=${encoded}`
   }
 }

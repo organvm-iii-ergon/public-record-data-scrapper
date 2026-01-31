@@ -7,7 +7,7 @@ Object.defineProperty(globalThis, 'crypto', {
   value: { randomUUID: mockUUID }
 })
 
-// Mock useKV
+// Mock useSafeKV
 const mockNotes: Array<{
   id: string
   prospectId: string
@@ -42,17 +42,79 @@ const mockSetReminders = vi.fn((updater) => {
   }
 })
 
-vi.mock('@github/spark/hooks', () => ({
-  useKV: vi.fn((key: string) => {
-    if (key === 'prospect-notes') {
-      return [mockNotes, mockSetNotes]
-    }
-    if (key === 'prospect-reminders') {
-      return [mockReminders, mockSetReminders]
-    }
-    return [[], vi.fn()]
-  })
-}))
+vi.mock('@/hooks/useSparkKV', async () => {
+  const React = await import('react')
+
+  const useSafeKV = (key: string, defaultValue: unknown) => {
+    const [value, setValue] = React.useState(() => {
+      if (key === 'prospect-notes') {
+        return mockNotes
+      }
+      if (key === 'prospect-reminders') {
+        return mockReminders
+      }
+      return defaultValue
+    })
+
+    const setPersistedValue = React.useCallback(
+      (updater: unknown) => {
+        if (key === 'prospect-notes') {
+          mockSetNotes(updater)
+          const nextValue =
+            typeof updater === 'function'
+              ? (updater as (current: typeof mockNotes) => typeof mockNotes)(mockNotes)
+              : updater
+          const nextNotes = Array.isArray(nextValue) ? [...nextValue] : []
+          mockNotes.length = 0
+          mockNotes.push(...nextNotes)
+          setValue(nextNotes)
+          return
+        }
+
+        if (key === 'prospect-reminders') {
+          mockSetReminders(updater)
+          const nextValue =
+            typeof updater === 'function'
+              ? (updater as (current: typeof mockReminders) => typeof mockReminders)(mockReminders)
+              : updater
+          const nextReminders = Array.isArray(nextValue) ? [...nextValue] : []
+          mockReminders.length = 0
+          mockReminders.push(...nextReminders)
+          setValue(nextReminders)
+          return
+        }
+
+        setValue((current) =>
+          typeof updater === 'function'
+            ? (updater as (current: unknown) => unknown)(current)
+            : updater
+        )
+      },
+      [key, setValue]
+    )
+
+    const deleteValue = React.useCallback(() => {
+      if (key === 'prospect-notes') {
+        mockNotes.length = 0
+        setValue([])
+        return
+      }
+      if (key === 'prospect-reminders') {
+        mockReminders.length = 0
+        setValue([])
+        return
+      }
+      setValue(undefined)
+    }, [key, setValue])
+
+    return React.useMemo(
+      () => [value, setPersistedValue, deleteValue] as const,
+      [value, setPersistedValue, deleteValue]
+    )
+  }
+
+  return { useSafeKV, useKV: useSafeKV }
+})
 
 import { useNotesAndReminders } from '../useNotesAndReminders'
 

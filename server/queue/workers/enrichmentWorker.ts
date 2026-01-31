@@ -3,18 +3,31 @@ import { redisConnection } from '../connection'
 import { EnrichmentJobData } from '../queues'
 import { EnrichmentService } from '../../services/EnrichmentService'
 
-async function processEnrichment(job: Job<EnrichmentJobData>): Promise<void> {
+type EnrichmentSuccess = { prospectId: string; success: true; result: unknown }
+type EnrichmentFailure = { prospectId: string; success: false; error: string }
+type EnrichmentResultItem = EnrichmentSuccess | EnrichmentFailure
+type EnrichmentBatchSummary = {
+  total: number
+  successful: number
+  failed: number
+  results: EnrichmentResultItem[]
+}
+
+async function processEnrichment(job: Job<EnrichmentJobData>): Promise<EnrichmentBatchSummary> {
   const { prospectIds, force = false } = job.data
   const enrichmentService = new EnrichmentService()
 
   await job.updateProgress(0)
 
   console.log(`[Enrichment Worker] Starting enrichment for ${prospectIds.length} prospects`)
+  if (force) {
+    console.log('[Enrichment Worker] Force enrichment enabled')
+  }
 
   try {
     const total = prospectIds.length
     let completed = 0
-    const results = []
+    const results: EnrichmentResultItem[] = []
 
     for (const prospectId of prospectIds) {
       try {
@@ -39,11 +52,11 @@ async function processEnrichment(job: Job<EnrichmentJobData>): Promise<void> {
       }
 
       // Small delay to avoid overwhelming external APIs
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100))
     }
 
-    const successCount = results.filter(r => r.success).length
-    const failCount = results.filter(r => !r.success).length
+    const successCount = results.filter((r) => r.success).length
+    const failCount = results.filter((r) => !r.success).length
 
     console.log(
       `[Enrichment Worker] Completed batch: ${successCount} successful, ${failCount} failed`
@@ -55,7 +68,7 @@ async function processEnrichment(job: Job<EnrichmentJobData>): Promise<void> {
       successful: successCount,
       failed: failCount,
       results
-    } as any
+    }
   } catch (error) {
     console.error('[Enrichment Worker] Error processing batch:', error)
     throw error
@@ -65,14 +78,18 @@ async function processEnrichment(job: Job<EnrichmentJobData>): Promise<void> {
 export function createEnrichmentWorker() {
   const { client } = redisConnection.connect()
 
-  const worker = new Worker<EnrichmentJobData>('data-enrichment', processEnrichment, {
-    connection: client,
-    concurrency: 5, // Process 5 batches concurrently
-    limiter: {
-      max: 50, // Max 50 jobs
-      duration: 60000 // per minute
+  const worker = new Worker<EnrichmentJobData, EnrichmentBatchSummary>(
+    'data-enrichment',
+    processEnrichment,
+    {
+      connection: client,
+      concurrency: 5, // Process 5 batches concurrently
+      limiter: {
+        max: 50, // Max 50 jobs
+        duration: 60000 // per minute
+      }
     }
-  })
+  )
 
   worker.on('completed', (job, returnvalue) => {
     console.log(`[Enrichment Worker] Job ${job.id} completed:`, returnvalue)

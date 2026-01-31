@@ -18,38 +18,28 @@ export class ApiTestHelper {
    * Make a GET request to an endpoint
    */
   async get(path: string, headers: Record<string, string> = {}) {
-    return request(this.app)
-      .get(path)
-      .set(headers)
+    return request(this.app).get(path).set(headers)
   }
 
   /**
    * Make a POST request to an endpoint
    */
-  async post(path: string, body: any, headers: Record<string, string> = {}) {
-    return request(this.app)
-      .post(path)
-      .send(body)
-      .set(headers)
+  async post(path: string, body: unknown, headers: Record<string, string> = {}) {
+    return request(this.app).post(path).send(body).set(headers)
   }
 
   /**
    * Make a PATCH request to an endpoint
    */
-  async patch(path: string, body: any, headers: Record<string, string> = {}) {
-    return request(this.app)
-      .patch(path)
-      .send(body)
-      .set(headers)
+  async patch(path: string, body: unknown, headers: Record<string, string> = {}) {
+    return request(this.app).patch(path).send(body).set(headers)
   }
 
   /**
    * Make a DELETE request to an endpoint
    */
   async delete(path: string, headers: Record<string, string> = {}) {
-    return request(this.app)
-      .delete(path)
-      .set(headers)
+    return request(this.app).delete(path).set(headers)
   }
 
   /**
@@ -77,9 +67,14 @@ export class ApiTestHelper {
   /**
    * Assert response has required fields
    */
-  assertHasFields(obj: any, fields: string[]) {
+  assertHasFields(obj: unknown, fields: string[]) {
+    if (!obj || typeof obj !== 'object') {
+      throw new Error('Expected object for field assertions')
+    }
+
+    const record = obj as Record<string, unknown>
     for (const field of fields) {
-      if (!(field in obj)) {
+      if (!(field in record)) {
         throw new Error(`Expected object to have field '${field}', but it was missing`)
       }
     }

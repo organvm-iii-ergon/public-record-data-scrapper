@@ -2,7 +2,7 @@
  * Tests for AgentOrchestrator
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import {
   AgentOrchestrator,
   DEFAULT_ORCHESTRATION_CONFIG,
@@ -120,7 +120,7 @@ describe('AgentOrchestrator', () => {
       const analyses = await orch.analyzeAllAgents(mockContext)
 
       expect(analyses.length).toBe(2)
-      analyses.forEach(analysis => {
+      analyses.forEach((analysis) => {
         expect(analysis.agentRole).toBe('state-collector')
         expect(analysis.findings).toBeDefined()
         expect(analysis.improvements).toBeDefined()
@@ -139,7 +139,7 @@ describe('AgentOrchestrator', () => {
       const analyses = await orch.analyzeAllAgents(mockContext)
 
       expect(analyses.length).toBeGreaterThan(0)
-      analyses.forEach(analysis => {
+      analyses.forEach((analysis) => {
         expect(analysis.agentRole).toBe('entry-point-collector')
       })
     })
@@ -273,7 +273,7 @@ describe('AgentOrchestrator', () => {
       const orch = new AgentOrchestrator(config)
       const results = await orch.collectFromAllSources({ statesOnly: true })
 
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.agentId).toContain('state-agent')
       })
     })
@@ -290,7 +290,7 @@ describe('AgentOrchestrator', () => {
       const orch = new AgentOrchestrator(config)
       const results = await orch.collectFromAllSources({ entryPointsOnly: true })
 
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.agentId).not.toContain('state-agent')
       })
     })
@@ -330,7 +330,7 @@ describe('AgentOrchestrator', () => {
       const results = await orchestrator.collectFromAllSources({ limit: 2 })
 
       expect(results.length).toBeGreaterThan(0)
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.duration).toBeGreaterThan(0)
       })
     }, 15000)
@@ -450,7 +450,7 @@ describe('AgentOrchestrator', () => {
       const timerId = orch.startPeriodicCollection()
 
       // Wait for at least one collection to complete (100ms interval + 500ms collection time)
-      await new Promise(resolve => setTimeout(resolve, 650))
+      await new Promise((resolve) => setTimeout(resolve, 650))
 
       orch.stopPeriodicCollection(timerId)
 
@@ -507,8 +507,8 @@ describe('AgentOrchestrator', () => {
         orch.collectFromState('CA')
       ])
 
-      const successful = results.filter(r => r.success).length
-      const failed = results.filter(r => !r.success).length
+      const successful = results.filter((r) => r.success).length
+      const failed = results.filter((r) => !r.success).length
 
       expect(successful).toBeGreaterThan(0)
       expect(failed).toBeGreaterThan(0)
@@ -544,9 +544,7 @@ describe('AgentOrchestrator', () => {
       await orch.collectFromAllSources()
 
       const status = orch.getStatus()
-      expect(status.successfulCollections + status.failedCollections).toBe(
-        status.totalCollections
-      )
+      expect(status.successfulCollections + status.failedCollections).toBe(status.totalCollections)
     })
 
     it('should track collections in progress correctly', async () => {
@@ -616,7 +614,7 @@ describe('AgentOrchestrator', () => {
         ])
 
         expect(results).toHaveLength(3)
-        results.forEach(result => {
+        results.forEach((result) => {
           expect(result.success).toBe(false)
           expect(result.errors).toBeDefined()
         })
@@ -720,7 +718,7 @@ describe('AgentOrchestrator', () => {
       it('should update lastCollectionTime only after successful collection', async () => {
         const beforeTime = orchestrator.getStatus().lastCollectionTime
 
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
         await orchestrator.collectFromState('INVALID')
 
         const afterStatus = orchestrator.getStatus()
@@ -746,7 +744,7 @@ describe('AgentOrchestrator', () => {
         })
 
         expect(results.length).toBeGreaterThan(0)
-        results.forEach(result => {
+        results.forEach((result) => {
           expect(result.agentId).toContain('state-agent')
         })
       })
@@ -757,7 +755,7 @@ describe('AgentOrchestrator', () => {
         })
 
         expect(results.length).toBeGreaterThan(0)
-        results.forEach(result => {
+        results.forEach((result) => {
           expect(result.agentId).not.toContain('state-agent')
         })
       })

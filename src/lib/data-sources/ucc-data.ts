@@ -25,7 +25,7 @@ export class CaliforniaUCCSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
       const { debtorName, fileNumber } = query
 
@@ -68,14 +68,14 @@ export class CaliforniaUCCSource extends BaseDataSource {
         available: true,
         state: 'CA',
         totalFilings: filings.length,
-        filings: filings.map((f: any) => ({
-          fileNumber: f.fileNumber,
-          filingDate: f.filingDate,
-          debtorName: f.debtorName,
-          securedParty: f.securedPartyName,
-          collateral: f.collateralDescription,
-          status: f.status,
-          lapseDate: f.lapseDate
+        filings: filings.map((filing: Record<string, unknown>) => ({
+          fileNumber: filing.fileNumber,
+          filingDate: filing.filingDate,
+          debtorName: filing.debtorName,
+          securedParty: filing.securedPartyName,
+          collateral: filing.collateralDescription,
+          status: filing.status,
+          lapseDate: filing.lapseDate
         })),
         debtorName,
         fileNumber
@@ -83,7 +83,7 @@ export class CaliforniaUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName || query.fileNumber)
   }
 }
@@ -103,7 +103,7 @@ export class TexasUCCSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
       const { debtorName, fileNumber } = query
 
@@ -123,7 +123,7 @@ export class TexasUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName || query.fileNumber)
   }
 }
@@ -143,7 +143,7 @@ export class NewYorkUCCSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
       const { debtorName, fileNumber } = query
 
@@ -163,7 +163,7 @@ export class NewYorkUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName || query.fileNumber)
   }
 }
@@ -183,7 +183,7 @@ export class FloridaUCCSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
       const { debtorName, fileNumber } = query
 
@@ -202,7 +202,7 @@ export class FloridaUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName || query.fileNumber)
   }
 }
@@ -219,7 +219,7 @@ export class CSCUCCSource extends BaseDataSource {
     super({
       name: 'csc-ucc',
       tier: 'professional',
-      cost: 2.50,
+      cost: 2.5,
       timeout: 20000,
       retryAttempts: 2,
       retryDelay: 3000
@@ -229,7 +229,7 @@ export class CSCUCCSource extends BaseDataSource {
     this.username = process.env.CSC_USERNAME || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey || !this.username) {
       return {
         success: false,
@@ -249,7 +249,7 @@ export class CSCUCCSource extends BaseDataSource {
       const response = await fetch(searchUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'X-CSC-Username': this.username,
           'Content-Type': 'application/json'
         },
@@ -274,18 +274,19 @@ export class CSCUCCSource extends BaseDataSource {
         provider: 'CSC',
         state,
         totalFilings: data.totalResults || filings.length,
-        filings: filings.map((f: any) => ({
-          fileNumber: f.filingNumber,
-          filingDate: f.filingDate,
-          filingType: f.filingType,
-          debtorName: f.debtor?.name,
-          debtorAddress: f.debtor?.address,
-          securedParty: f.securedParty?.name,
-          securedPartyAddress: f.securedParty?.address,
-          collateral: f.collateral?.description,
-          status: f.status,
-          lapseDate: f.lapseDate,
-          amount: f.amount
+        filings: filings.map((filing: Record<string, unknown>) => ({
+          fileNumber: filing.filingNumber,
+          filingDate: filing.filingDate,
+          filingType: filing.filingType,
+          debtorName: (filing.debtor as Record<string, unknown> | undefined)?.name,
+          debtorAddress: (filing.debtor as Record<string, unknown> | undefined)?.address,
+          securedParty: (filing.securedParty as Record<string, unknown> | undefined)?.name,
+          securedPartyAddress: (filing.securedParty as Record<string, unknown> | undefined)
+            ?.address,
+          collateral: (filing.collateral as Record<string, unknown> | undefined)?.description,
+          status: filing.status,
+          lapseDate: filing.lapseDate,
+          amount: filing.amount
         })),
         debtorName,
         fileNumber
@@ -293,7 +294,7 @@ export class CSCUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean((query.debtorName || query.fileNumber) && query.state)
   }
 }
@@ -309,7 +310,7 @@ export class CTCorpUCCSource extends BaseDataSource {
     super({
       name: 'ctcorp-ucc',
       tier: 'professional',
-      cost: 3.00,
+      cost: 3.0,
       timeout: 20000,
       retryAttempts: 2,
       retryDelay: 3000
@@ -318,7 +319,7 @@ export class CTCorpUCCSource extends BaseDataSource {
     this.apiKey = process.env.CTCORP_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -369,7 +370,7 @@ export class CTCorpUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean((query.debtorName || query.fileNumber) && query.state)
   }
 }
@@ -386,7 +387,7 @@ export class LexisNexisUCCSource extends BaseDataSource {
     super({
       name: 'lexisnexis-ucc',
       tier: 'enterprise',
-      cost: 5.00,
+      cost: 5.0,
       timeout: 25000,
       retryAttempts: 2,
       retryDelay: 3000
@@ -396,7 +397,7 @@ export class LexisNexisUCCSource extends BaseDataSource {
     this.customerId = process.env.LEXISNEXIS_CUSTOMER_ID || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey || !this.customerId) {
       return {
         success: false,
@@ -416,7 +417,7 @@ export class LexisNexisUCCSource extends BaseDataSource {
       const response = await fetch(searchUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'X-Customer-ID': this.customerId,
           'Content-Type': 'application/json'
         },
@@ -455,7 +456,7 @@ export class LexisNexisUCCSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName || query.fileNumber)
   }
 }
@@ -496,7 +497,7 @@ export class UCCAggregatorSource extends BaseDataSource {
     }
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
       const { debtorName, state, nationwide } = query
 
@@ -507,7 +508,7 @@ export class UCCAggregatorSource extends BaseDataSource {
       // If state-specific, query only relevant sources
       const sourcesToQuery = nationwide
         ? this.sources
-        : this.sources.filter(s => {
+        : this.sources.filter((s) => {
             const name = s.getConfig().name
             return !state || name.includes('aggregator') || name.includes(state.toLowerCase())
           })
@@ -533,12 +534,12 @@ export class UCCAggregatorSource extends BaseDataSource {
       await Promise.all(promises)
 
       // Aggregate and deduplicate filings
-      const allFilings: any[] = []
+      const allFilings: Array<Record<string, unknown>> = []
       const filingSet = new Set<string>()
 
-      results.forEach(r => {
-        const filings = r.data.filings || []
-        filings.forEach((filing: any) => {
+      results.forEach((r) => {
+        const filings = (r.data.filings || []) as Array<Record<string, unknown>>
+        filings.forEach((filing) => {
           const key = `${filing.fileNumber}-${filing.state || state}`
           if (!filingSet.has(key)) {
             filingSet.add(key)
@@ -551,8 +552,8 @@ export class UCCAggregatorSource extends BaseDataSource {
       })
 
       // Sort by filing date (most recent first)
-      allFilings.sort((a, b) =>
-        new Date(b.filingDate || 0).getTime() - new Date(a.filingDate || 0).getTime()
+      allFilings.sort(
+        (a, b) => new Date(b.filingDate || 0).getTime() - new Date(a.filingDate || 0).getTime()
       )
 
       return {
@@ -569,7 +570,7 @@ export class UCCAggregatorSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
+  protected validateQuery(query: Record<string, unknown>): boolean {
     return Boolean(query.debtorName)
   }
 }

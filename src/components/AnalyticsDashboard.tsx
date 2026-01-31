@@ -9,27 +9,23 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
-import { 
-  ChartBar, 
-  Calendar,
-  Download
-} from '@phosphor-icons/react'
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
+import { ChartBar, Download } from '@phosphor-icons/react'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
   Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts'
 
 interface AnalyticsDashboardProps {
@@ -37,63 +33,75 @@ interface AnalyticsDashboardProps {
   portfolio: PortfolioCompany[]
 }
 
+type DateRangeOption = '7d' | '30d' | '90d' | 'custom'
+
 export function AnalyticsDashboard({ prospects, portfolio }: AnalyticsDashboardProps) {
-  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'custom'>('30d')
+  const [dateRange, setDateRange] = useState<DateRangeOption>('30d')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
   const [industryFilter, setIndustryFilter] = useState<string>('all')
 
-  const getDateRangeFilter = () => {
+  const dateRangeFilter = useMemo(() => {
     const now = new Date()
     let startDate: Date
-    
+
     if (dateRange === 'custom') {
       startDate = customStartDate ? new Date(customStartDate) : new Date(0)
     } else {
       const daysMap = { '7d': 7, '30d': 30, '90d': 90 }
       startDate = new Date(now.getTime() - daysMap[dateRange] * 24 * 60 * 60 * 1000)
     }
-    
-    const endDate = dateRange === 'custom' && customEndDate 
-      ? new Date(customEndDate) 
-      : now
+
+    const endDate = dateRange === 'custom' && customEndDate ? new Date(customEndDate) : now
 
     return { startDate, endDate }
-  }
+  }, [dateRange, customStartDate, customEndDate])
 
   const filteredData = useMemo(() => {
-    const { startDate, endDate } = getDateRangeFilter()
-    
+    const { startDate, endDate } = dateRangeFilter
+
     return {
-      prospects: prospects.filter(p => {
+      prospects: prospects.filter((p) => {
         const matchesIndustry = industryFilter === 'all' || p.industry === industryFilter
         // Filter by growth signal dates within range
-        const hasRecentSignals = p.growthSignals.some(s => {
+        const hasRecentSignals = p.growthSignals.some((s) => {
           const signalDate = new Date(s.detectedDate)
           return signalDate >= startDate && signalDate <= endDate
         })
         return matchesIndustry && (hasRecentSignals || true) // Include all for now
       })
     }
-  }, [prospects, dateRange, customStartDate, customEndDate, industryFilter])
+  }, [prospects, industryFilter, dateRangeFilter])
 
   // Calculate metrics
   const metrics = useMemo(() => {
     const { prospects: filteredProspects } = filteredData
-    
-    const avgPriorityScore = filteredProspects.length > 0
-      ? Math.round(filteredProspects.reduce((sum, p) => sum + p.priorityScore, 0) / filteredProspects.length)
-      : 0
 
-    const avgMLConfidence = filteredProspects.length > 0
-      ? Math.round(filteredProspects.reduce((sum, p) => sum + (p.mlScoring?.confidence || 0), 0) / filteredProspects.length)
-      : 0
+    const avgPriorityScore =
+      filteredProspects.length > 0
+        ? Math.round(
+            filteredProspects.reduce((sum, p) => sum + p.priorityScore, 0) /
+              filteredProspects.length
+          )
+        : 0
 
-    const avgRecoveryLikelihood = filteredProspects.length > 0
-      ? Math.round(filteredProspects.reduce((sum, p) => sum + (p.mlScoring?.recoveryLikelihood || 0), 0) / filteredProspects.length)
-      : 0
+    const avgMLConfidence =
+      filteredProspects.length > 0
+        ? Math.round(
+            filteredProspects.reduce((sum, p) => sum + (p.mlScoring?.confidence || 0), 0) /
+              filteredProspects.length
+          )
+        : 0
 
-    const highValueProspects = filteredProspects.filter(p => p.priorityScore >= 70).length
+    const avgRecoveryLikelihood =
+      filteredProspects.length > 0
+        ? Math.round(
+            filteredProspects.reduce((sum, p) => sum + (p.mlScoring?.recoveryLikelihood || 0), 0) /
+              filteredProspects.length
+          )
+        : 0
+
+    const highValueProspects = filteredProspects.filter((p) => p.priorityScore >= 70).length
     const totalSignals = filteredProspects.reduce((sum, p) => sum + p.growthSignals.length, 0)
 
     return {
@@ -108,10 +116,13 @@ export function AnalyticsDashboard({ prospects, portfolio }: AnalyticsDashboardP
 
   // Industry distribution
   const industryData = useMemo(() => {
-    const distribution = filteredData.prospects.reduce((acc, p) => {
-      acc[p.industry] = (acc[p.industry] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const distribution = filteredData.prospects.reduce(
+      (acc, p) => {
+        acc[p.industry] = (acc[p.industry] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return Object.entries(distribution).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -129,57 +140,59 @@ export function AnalyticsDashboard({ prospects, portfolio }: AnalyticsDashboardP
       { name: '81-100', min: 81, max: 100 }
     ]
 
-    return ranges.map(range => ({
+    return ranges.map((range) => ({
       name: range.name,
-      prospects: filteredData.prospects.filter(p => 
-        p.priorityScore >= range.min && p.priorityScore <= range.max
+      prospects: filteredData.prospects.filter(
+        (p) => p.priorityScore >= range.min && p.priorityScore <= range.max
       ).length
     }))
   }, [filteredData])
 
   // Signal trend over time
   const signalTrend = useMemo(() => {
-    const { startDate, endDate } = getDateRangeFilter()
+    const { startDate, endDate } = dateRangeFilter
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
     const interval = Math.max(1, Math.floor(days / 10)) // Show max 10 data points
 
     const data: { date: string; signals: number }[] = []
-    
+
     for (let i = 0; i <= days; i += interval) {
       const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      
+
       const signalCount = filteredData.prospects.reduce((sum, p) => {
-        return sum + p.growthSignals.filter(s => {
-          const signalDate = new Date(s.detectedDate)
-          return signalDate <= date
-        }).length
+        return (
+          sum +
+          p.growthSignals.filter((s) => {
+            const signalDate = new Date(s.detectedDate)
+            return signalDate <= date
+          }).length
+        )
       }, 0)
-      
+
       data.push({ date: dateStr, signals: signalCount })
     }
-    
+
     return data
-  }, [filteredData, dateRange, customStartDate, customEndDate])
+  }, [filteredData, dateRangeFilter])
 
   // Health grade distribution
   const healthGradeData = useMemo(() => {
     const grades = ['A', 'B', 'C', 'D', 'F']
-    return grades.map(grade => ({
+    return grades.map((grade) => ({
       name: grade,
-      count: filteredData.prospects.filter(p => p.healthScore.grade === grade).length
+      count: filteredData.prospects.filter((p) => p.healthScore.grade === grade).length
     }))
   }, [filteredData])
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
-  const industries = Array.from(new Set(prospects.map(p => p.industry)))
+  const industries = Array.from(new Set(prospects.map((p) => p.industry)))
 
   const exportData = () => {
     const data = {
-      dateRange: dateRange === 'custom' 
-        ? `${customStartDate} to ${customEndDate}`
-        : dateRange,
+      dateRange: dateRange === 'custom' ? `${customStartDate} to ${customEndDate}` : dateRange,
+      portfolioCount: portfolio.length,
       industryFilter,
       metrics,
       industryDistribution: industryData,
@@ -209,7 +222,7 @@ export function AnalyticsDashboard({ prospects, portfolio }: AnalyticsDashboardP
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label className="mb-2 block">Date Range</Label>
-            <Select value={dateRange} onValueChange={(val) => setDateRange(val as any)}>
+            <Select value={dateRange} onValueChange={(val) => setDateRange(val as DateRangeOption)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -251,7 +264,7 @@ export function AnalyticsDashboard({ prospects, portfolio }: AnalyticsDashboardP
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Industries</SelectItem>
-                {industries.map(ind => (
+                {industries.map((ind) => (
                   <SelectItem key={ind} value={ind} className="capitalize">
                     {ind}
                   </SelectItem>

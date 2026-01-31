@@ -15,44 +15,12 @@ import type {
   StateCollector,
   UCCFiling,
   SearchResult,
-  SearchParams,
   CollectionOptions,
   CollectionError,
   CollectionErrorType,
   ValidationResult,
   CollectorStatus
 } from '../types'
-
-/**
- * NY Portal Selectors
- * These selectors target the Oracle PL/SQL frame-based interface
- */
-const NY_SELECTORS = {
-  // Main frame elements
-  searchFrame: 'frame[name="search"]',
-  resultsFrame: 'frame[name="results"]',
-
-  // Search form elements
-  searchTypeSelect: 'select[name="search_type"]',
-  searchInput: 'input[name="search_term"]',
-  submitButton: 'input[type="submit"][value="Search"]',
-
-  // Results table elements
-  resultsTable: 'table.results',
-  resultRow: 'tr.result-row',
-  noResultsMessage: 'td.no-results',
-
-  // Filing detail elements
-  filingNumber: 'td.filing-number, span.filing-num',
-  filingDate: 'td.filing-date, span.file-date',
-  filingType: 'td.filing-type, span.file-type',
-  status: 'td.status, span.status',
-  expirationDate: 'td.expiration, span.exp-date',
-  debtorName: 'td.debtor-name, span.debtor',
-  securedPartyName: 'td.secured-party, span.secured',
-  collateral: 'td.collateral, div.collateral-desc',
-  detailsLink: 'a.details'
-}
 
 /**
  * NY State Collector Configuration
@@ -82,7 +50,8 @@ export class NYStateCollector implements StateCollector {
 
   constructor(config: NYCollectorConfig = {}) {
     this.config = {
-      portalUrl: config.portalUrl || 'https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame',
+      portalUrl:
+        config.portalUrl || 'https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame',
       timeout: config.timeout || 30000,
       retryAttempts: config.retryAttempts || 3,
       retryDelay: config.retryDelay || 2000
@@ -268,13 +237,18 @@ export class NYStateCollector implements StateCollector {
     const rateLimitStats = this.rateLimiter.getStats()
 
     return {
-      isHealthy: this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests < 0.1 : true,
+      isHealthy:
+        this.stats.totalRequests > 0
+          ? this.stats.totalErrors / this.stats.totalRequests < 0.1
+          : true,
       lastCollectionTime: this.stats.lastCollectionTime,
       totalCollected: this.stats.totalCollected,
-      errorRate: this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0,
-      averageLatency: this.stats.latencies.length > 0
-        ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
-        : 0,
+      errorRate:
+        this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0,
+      averageLatency:
+        this.stats.latencies.length > 0
+          ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
+          : 0,
       rateLimitStats: {
         perMinute: rateLimitStats.perMinute,
         perHour: rateLimitStats.perHour,
@@ -326,8 +300,9 @@ export class NYStateCollector implements StateCollector {
   // ============================================
 
   private async mockSearch(query: string, type: 'business' | 'filing'): Promise<UCCFiling[]> {
+    void type
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
+    await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 1000))
 
     // Return mock data
     return [
@@ -362,7 +337,7 @@ export class NYStateCollector implements StateCollector {
   }
 
   private async mockSearchByNumber(filingNumber: string): Promise<UCCFiling | null> {
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000))
+    await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 1000))
 
     if (!filingNumber.startsWith('NY-')) {
       return null
@@ -386,7 +361,7 @@ export class NYStateCollector implements StateCollector {
   }
 
   private async mockCollectNew(options: CollectionOptions): Promise<UCCFiling[]> {
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
+    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
 
     const limit = options.limit || 10
 

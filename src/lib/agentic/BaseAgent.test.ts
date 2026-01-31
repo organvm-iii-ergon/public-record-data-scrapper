@@ -14,9 +14,8 @@ class TestAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
-    const findings = [
-      this.createFinding('data-quality', 'warning', 'Test finding', { test: true })
-    ]
+    void context
+    const findings = [this.createFinding('data-quality', 'warning', 'Test finding', { test: true })]
     const improvements = [
       this.createImprovement(
         'data-quality',
@@ -37,7 +36,7 @@ class TestAgent extends BaseAgent {
     category: ImprovementSuggestion['category'],
     severity: Finding['severity'],
     description: string,
-    evidence: any
+    evidence: unknown
   ): Finding {
     return this.createFinding(category, severity, description, evidence)
   }
@@ -66,7 +65,10 @@ class TestAgent extends BaseAgent {
     )
   }
 
-  public testCreateAnalysis(findings: Finding[], improvements: ImprovementSuggestion[]): AgentAnalysis {
+  public testCreateAnalysis(
+    findings: Finding[],
+    improvements: ImprovementSuggestion[]
+  ): AgentAnalysis {
     return this.createAnalysis(findings, improvements)
   }
 }
@@ -111,12 +113,9 @@ describe('BaseAgent', () => {
 
   describe('createFinding', () => {
     it('should create a finding with all required fields', () => {
-      const finding = agent.testCreateFinding(
-        'security',
-        'critical',
-        'Test security issue',
-        { vulnerability: 'XSS' }
-      )
+      const finding = agent.testCreateFinding('security', 'critical', 'Test security issue', {
+        vulnerability: 'XSS'
+      })
 
       expect(finding).toMatchObject({
         category: 'security',

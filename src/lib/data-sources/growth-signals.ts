@@ -10,6 +10,27 @@
 
 import { BaseDataSource, DataSourceResponse } from './base-source'
 
+type NewsArticle = {
+  title?: string
+  description?: string
+}
+
+type AwardRecord = {
+  Start_Date?: string
+  Award_Amount?: string | number
+}
+
+type PermitRecord = {
+  estimatedValue?: string | number
+  issuedDate?: string
+  type?: string
+}
+
+type JobRecord = {
+  date?: string
+  jobtitle?: string
+}
+
 /**
  * NewsAPI - Company news and press releases
  * Free tier: 100 requests/day
@@ -30,7 +51,7 @@ export class NewsAPISource extends BaseDataSource {
     this.apiKey = process.env.NEWS_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -42,10 +63,12 @@ export class NewsAPISource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, fromDate } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const fromDate = typeof query.fromDate === 'string' ? query.fromDate : undefined
 
       // Calculate date range (last 30 days by default)
-      const from = fromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const from =
+        fromDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       const to = new Date().toISOString().split('T')[0]
 
       // NewsAPI Everything endpoint
@@ -64,19 +87,41 @@ export class NewsAPISource extends BaseDataSource {
       }
 
       // Categorize articles by sentiment/type
-      const articles = data.articles || []
-      const growthKeywords = ['expansion', 'hiring', 'investment', 'funding', 'acquisition', 'growth', 'new location', 'contract win']
-      const riskKeywords = ['lawsuit', 'bankruptcy', 'closure', 'layoff', 'investigation', 'scandal', 'fine', 'violation']
+      const articles = (data.articles || []) as NewsArticle[]
+      const growthKeywords = [
+        'expansion',
+        'hiring',
+        'investment',
+        'funding',
+        'acquisition',
+        'growth',
+        'new location',
+        'contract win'
+      ]
+      const riskKeywords = [
+        'lawsuit',
+        'bankruptcy',
+        'closure',
+        'layoff',
+        'investigation',
+        'scandal',
+        'fine',
+        'violation'
+      ]
 
-      const growthArticles = articles.filter((a: any) =>
-        growthKeywords.some(kw =>
-          a.title?.toLowerCase().includes(kw) || a.description?.toLowerCase().includes(kw)
+      const growthArticles = articles.filter((article) =>
+        growthKeywords.some(
+          (kw) =>
+            (article.title || '').toLowerCase().includes(kw) ||
+            (article.description || '').toLowerCase().includes(kw)
         )
       )
 
-      const riskArticles = articles.filter((a: any) =>
-        riskKeywords.some(kw =>
-          a.title?.toLowerCase().includes(kw) || a.description?.toLowerCase().includes(kw)
+      const riskArticles = articles.filter((article) =>
+        riskKeywords.some(
+          (kw) =>
+            (article.title || '').toLowerCase().includes(kw) ||
+            (article.description || '').toLowerCase().includes(kw)
         )
       )
 
@@ -93,8 +138,8 @@ export class NewsAPISource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.companyName.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' && query.companyName.length > 0
   }
 }
 
@@ -114,9 +159,11 @@ export class USASpendingSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
-      const { companyName, uei } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const uei = typeof query.uei === 'string' ? query.uei : undefined
+      void uei
 
       // USASpending.gov search endpoint
       const searchUrl = 'https://api.usaspending.gov/api/v2/search/spending_by_award/'
@@ -131,12 +178,21 @@ export class USASpendingSource extends BaseDataSource {
             recipient_search_text: [companyName],
             time_period: [
               {
-                start_date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                start_date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split('T')[0],
                 end_date: new Date().toISOString().split('T')[0]
               }
             ]
           },
-          fields: ['Award ID', 'Recipient Name', 'Award Amount', 'Award Type', 'Awarding Agency', 'Start Date'],
+          fields: [
+            'Award ID',
+            'Recipient Name',
+            'Award Amount',
+            'Award Type',
+            'Awarding Agency',
+            'Start Date'
+          ],
           page: 1,
           limit: 100,
           sort: 'Award Amount',
@@ -150,25 +206,28 @@ export class USASpendingSource extends BaseDataSource {
 
       const data = await response.json()
 
-      const results = data.results || []
-      const totalAmount = results.reduce((sum: number, award: any) =>
-        sum + (parseFloat(award.Award_Amount) || 0), 0
+      const results = (data.results || []) as AwardRecord[]
+      const totalAmount = results.reduce(
+        (sum: number, award) => sum + (parseFloat(String(award.Award_Amount ?? 0)) || 0),
+        0
       )
 
       // Calculate growth trend (compare recent 6 months vs previous 6 months)
       const sixMonthsAgo = Date.now() - 180 * 24 * 60 * 60 * 1000
-      const recentAwards = results.filter((a: any) =>
-        new Date(a.Start_Date).getTime() > sixMonthsAgo
+      const recentAwards = results.filter(
+        (award) => new Date(award.Start_Date || '').getTime() > sixMonthsAgo
       )
-      const olderAwards = results.filter((a: any) =>
-        new Date(a.Start_Date).getTime() <= sixMonthsAgo
+      const olderAwards = results.filter(
+        (award) => new Date(award.Start_Date || '').getTime() <= sixMonthsAgo
       )
 
-      const recentTotal = recentAwards.reduce((sum: number, a: any) =>
-        sum + (parseFloat(a.Award_Amount) || 0), 0
+      const recentTotal = recentAwards.reduce(
+        (sum: number, award) => sum + (parseFloat(String(award.Award_Amount ?? 0)) || 0),
+        0
       )
-      const olderTotal = olderAwards.reduce((sum: number, a: any) =>
-        sum + (parseFloat(a.Award_Amount) || 0), 0
+      const olderTotal = olderAwards.reduce(
+        (sum: number, award) => sum + (parseFloat(String(award.Award_Amount ?? 0)) || 0),
+        0
       )
 
       return {
@@ -183,8 +242,8 @@ export class USASpendingSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.companyName.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' && query.companyName.length > 0
   }
 }
 
@@ -199,7 +258,7 @@ export class BuildingPermitsSource extends BaseDataSource {
     super({
       name: 'building-permits',
       tier: 'starter',
-      cost: 0.10,
+      cost: 0.1,
       timeout: 10000,
       retryAttempts: 3,
       retryDelay: 1000
@@ -208,9 +267,13 @@ export class BuildingPermitsSource extends BaseDataSource {
     this.apiKey = process.env.BUILDING_PERMITS_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
-      const { companyName, address, city, state, zipCode } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const address = typeof query.address === 'string' ? query.address : ''
+      const city = typeof query.city === 'string' ? query.city : ''
+      const state = typeof query.state === 'string' ? query.state : ''
+      const zipCode = typeof query.zipCode === 'string' ? query.zipCode : ''
 
       // Example using a hypothetical permit aggregation service
       // In reality, this would need to be implemented per jurisdiction
@@ -219,7 +282,7 @@ export class BuildingPermitsSource extends BaseDataSource {
       const response = await fetch(searchUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -249,15 +312,16 @@ export class BuildingPermitsSource extends BaseDataSource {
 
       const data = await response.json()
 
-      const permits = data.permits || []
-      const totalValue = permits.reduce((sum: number, p: any) =>
-        sum + (parseFloat(p.estimatedValue) || 0), 0
+      const permits = (data.permits || []) as PermitRecord[]
+      const totalValue = permits.reduce(
+        (sum: number, permit) => sum + (parseFloat(String(permit.estimatedValue ?? 0)) || 0),
+        0
       )
 
       // Check for recent activity (last 90 days)
       const recentThreshold = Date.now() - 90 * 24 * 60 * 60 * 1000
-      const recentPermits = permits.filter((p: any) =>
-        new Date(p.issuedDate).getTime() > recentThreshold
+      const recentPermits = permits.filter(
+        (permit) => new Date(permit.issuedDate || '').getTime() > recentThreshold
       )
 
       return {
@@ -266,14 +330,19 @@ export class BuildingPermitsSource extends BaseDataSource {
         totalValue,
         recentPermits: recentPermits.length,
         recentActivity: recentPermits.length > 0,
-        permitTypes: [...new Set(permits.map((p: any) => p.type))],
+        permitTypes: [...new Set(permits.map((permit) => permit.type).filter(Boolean))],
         companyName
       }
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName || (query.address && query.city && query.state))
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    const hasCompanyName = typeof query.companyName === 'string' && query.companyName.length > 0
+    const hasLocation =
+      typeof query.address === 'string' &&
+      typeof query.city === 'string' &&
+      typeof query.state === 'string'
+    return hasCompanyName || hasLocation
   }
 }
 
@@ -297,9 +366,10 @@ export class IndeedJobsSource extends BaseDataSource {
     this.publisherId = process.env.INDEED_PUBLISHER_ID || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
-      const { companyName, location } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const location = typeof query.location === 'string' ? query.location : ''
 
       if (!this.publisherId) {
         // Fallback to web scraping approach or return limited data
@@ -324,12 +394,12 @@ export class IndeedJobsSource extends BaseDataSource {
 
       const data = await response.json()
 
-      const jobs = data.results || []
+      const jobs = (data.results || []) as JobRecord[]
 
       // Analyze job posting dates to determine hiring velocity
-      const dates = jobs.map((j: any) => new Date(j.date))
+      const dates = jobs.map((job) => new Date(job.date || ''))
       const recentThreshold = Date.now() - 30 * 24 * 60 * 60 * 1000
-      const recentJobs = dates.filter(d => d.getTime() > recentThreshold).length
+      const recentJobs = dates.filter((d) => d.getTime() > recentThreshold).length
 
       // Determine growth signal
       let growthSignal = 'low'
@@ -337,7 +407,7 @@ export class IndeedJobsSource extends BaseDataSource {
       else if (recentJobs > 5) growthSignal = 'medium'
 
       // Extract key job categories
-      const jobTitles = jobs.map((j: any) => j.jobtitle)
+      const jobTitles = jobs.map((job) => job.jobtitle || '').filter(Boolean)
       const seniorRoles = jobTitles.filter((title: string) =>
         /senior|lead|manager|director|vp|chief/i.test(title)
       ).length
@@ -349,15 +419,22 @@ export class IndeedJobsSource extends BaseDataSource {
         growthSignal,
         seniorRoles,
         isHiring: jobs.length > 0,
-        jobCategories: [...new Set(jobs.map((j: any) => j.jobtitle).slice(0, 10))],
+        jobCategories: [
+          ...new Set(
+            jobs
+              .map((job) => job.jobtitle)
+              .filter(Boolean)
+              .slice(0, 10)
+          )
+        ],
         companyName,
         location
       }
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.companyName.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' && query.companyName.length > 0
   }
 }
 
@@ -381,7 +458,7 @@ export class LinkedInJobsSource extends BaseDataSource {
     this.apiKey = process.env.LINKEDIN_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -393,14 +470,15 @@ export class LinkedInJobsSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, companyId } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const companyId = typeof query.companyId === 'string' ? query.companyId : ''
 
       // LinkedIn Jobs API (requires partnership)
       const searchUrl = `https://api.linkedin.com/v2/jobs?q=company&company=${companyId || companyName}`
 
       const response = await fetch(searchUrl, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'X-Restli-Protocol-Version': '2.0.0'
         }
       })
@@ -411,7 +489,7 @@ export class LinkedInJobsSource extends BaseDataSource {
 
       const data = await response.json()
 
-      const jobs = data.elements || []
+      const jobs = Array.isArray(data.elements) ? data.elements : []
 
       return {
         totalJobs: data.paging?.total || jobs.length,
@@ -422,7 +500,7 @@ export class LinkedInJobsSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName || query.companyId)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' || typeof query.companyId === 'string'
   }
 }

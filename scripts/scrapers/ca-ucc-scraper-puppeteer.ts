@@ -10,12 +10,12 @@
  * - This is for educational/research purposes
  */
 
-import puppeteer, { Browser, Page } from 'puppeteer'
+import type { Browser, Page } from 'puppeteer'
 import { BaseScraper, ScraperConfig, ScraperResult, UCCFiling } from './base-scraper'
 
-// @ts-ignore - puppeteer-extra not in types
+// @ts-expect-error - puppeteer-extra types are not included
 import puppeteerExtra from 'puppeteer-extra'
-// @ts-ignore
+// @ts-expect-error - puppeteer-extra-plugin-stealth types are not included
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 
 // Enable stealth mode
@@ -132,7 +132,8 @@ export class CaliforniaUCCScraperPuppeteer extends BaseScraper {
       await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
       })
 
       this.log('info', 'Navigating to CA SOS website', { url: this.config.baseUrl })
@@ -149,7 +150,8 @@ export class CaliforniaUCCScraperPuppeteer extends BaseScraper {
       // Try to find search input
       // NOTE: These selectors are PLACEHOLDERS - actual selectors need to be
       // determined by inspecting the live CA SOS website
-      const searchInputSelector = 'input[name="SearchText"], input[type="text"]#search, input.search-input'
+      const searchInputSelector =
+        'input[name="SearchText"], input[type="text"]#search, input.search-input'
 
       try {
         await page.waitForSelector(searchInputSelector, { timeout: 5000 })
@@ -165,7 +167,8 @@ export class CaliforniaUCCScraperPuppeteer extends BaseScraper {
       await this.sleep(500 + Math.random() * 500)
 
       // Submit search
-      const submitButtonSelector = 'button[type="submit"], input[type="submit"], button.search-button'
+      const submitButtonSelector =
+        'button[type="submit"], input[type="submit"], button.search-button'
       await page.click(submitButtonSelector)
 
       // Wait for results
@@ -181,14 +184,18 @@ export class CaliforniaUCCScraperPuppeteer extends BaseScraper {
         // NOTE: These selectors are PLACEHOLDERS - need real inspection
         const rows = document.querySelectorAll('.result-row, tr.filing-row, .filing-result')
 
-        rows.forEach(row => {
+        rows.forEach((row) => {
           try {
             const filing: Partial<UCCFiling> = {
-              filingNumber: row.querySelector('.filing-number, .filing-id')?.textContent?.trim() || '',
+              filingNumber:
+                row.querySelector('.filing-number, .filing-id')?.textContent?.trim() || '',
               debtorName: row.querySelector('.debtor-name, .debtor')?.textContent?.trim() || '',
-              securedParty: row.querySelector('.secured-party, .creditor')?.textContent?.trim() || '',
+              securedParty:
+                row.querySelector('.secured-party, .creditor')?.textContent?.trim() || '',
               filingDate: row.querySelector('.filing-date, .date')?.textContent?.trim() || '',
-              collateral: row.querySelector('.collateral, .description')?.textContent?.trim() || 'Not specified',
+              collateral:
+                row.querySelector('.collateral, .description')?.textContent?.trim() ||
+                'Not specified',
               status: 'lapsed' as const, // Need to parse actual status
               filingType: 'UCC-1' as const // Need to parse actual type
             }
@@ -223,7 +230,6 @@ export class CaliforniaUCCScraperPuppeteer extends BaseScraper {
       })
 
       return validatedFilings
-
     } catch (error) {
       if (page) await page.close().catch(() => {})
       throw error

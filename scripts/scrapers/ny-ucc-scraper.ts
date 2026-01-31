@@ -101,7 +101,8 @@ export class NewYorkUCCScraper extends BaseScraper {
   }
 
   getManualSearchUrl(companyName: string): string {
-    return this.config.baseUrl
+    const encoded = encodeURIComponent(companyName)
+    return `${this.config.baseUrl}?search=${encoded}`
   }
 }
 

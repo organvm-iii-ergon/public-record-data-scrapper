@@ -272,8 +272,12 @@ export interface Hypothesis {
   id: string
   statement: string
   field: string
-  type: 'cross_domain' | 'contradiction_resolution' | 'gap_filling' |
-        'analogical' | 'trend_extrapolation'
+  type:
+    | 'cross_domain'
+    | 'contradiction_resolution'
+    | 'gap_filling'
+    | 'analogical'
+    | 'trend_extrapolation'
 
   // Support
   based_on: string[] // Paper IDs
@@ -359,7 +363,7 @@ export interface Figure {
   type: 'chart' | 'diagram' | 'network' | 'table'
   title: string
   description: string
-  data?: any
+  data?: unknown
   url?: string
 }
 

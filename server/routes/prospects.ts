@@ -22,7 +22,15 @@ const querySchema = z.object({
 const createProspectSchema = z.object({
   company_name: z.string().min(1),
   state: z.string().length(2),
-  industry: z.enum(['restaurant', 'retail', 'construction', 'healthcare', 'manufacturing', 'services', 'technology']),
+  industry: z.enum([
+    'restaurant',
+    'retail',
+    'construction',
+    'healthcare',
+    'manufacturing',
+    'services',
+    'technology'
+  ]),
   lien_amount: z.number().positive().optional(),
   filing_date: z.string().datetime().optional()
 })
@@ -33,13 +41,15 @@ const idParamSchema = z.object({
   id: z.string().uuid()
 })
 
+type ProspectsQuery = z.infer<typeof querySchema>
+
 // GET /api/prospects - List prospects (paginated, filtered, sorted)
 router.get(
   '/',
   validateRequest({ query: querySchema }),
   asyncHandler(async (req, res) => {
     const prospectsService = new ProspectsService()
-    const result = await prospectsService.list(req.query as any)
+    const result = await prospectsService.list(req.query as ProspectsQuery)
 
     res.json({
       prospects: result.prospects,

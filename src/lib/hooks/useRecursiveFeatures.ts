@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type {
   Prospect,
   CompanyGraph,
@@ -10,7 +10,7 @@ import type {
   NetworkRequalification,
   UserProfile,
   RecursiveTraversalConfig,
-  RecursiveSignalConfig,
+  RecursiveSignalConfig
 } from '../types'
 import { RecursiveRelationshipMapper } from '../services/RecursiveRelationshipMapper'
 import { GenerativeNarrativeEngine } from '../services/GenerativeNarrativeEngine'
@@ -42,10 +42,10 @@ export function useRelationshipGraph(prospects: Prospect[]) {
             'parent',
             'subsidiary',
             'affiliate',
-            'common_secured_party',
+            'common_secured_party'
           ],
           includeProspectData: config?.includeProspectData !== false,
-          stopConditions: config?.stopConditions,
+          stopConditions: config?.stopConditions
         })
 
         setGraphs((prev) => new Map(prev).set(prospectId, graph))
@@ -73,7 +73,7 @@ export function useRelationshipGraph(prospects: Prospect[]) {
     buildGraph,
     getGraph,
     loading,
-    error,
+    error
   }
 }
 
@@ -102,7 +102,7 @@ export function usePersonalizedRecommendations(
         )
         const recs = await engine.generateRecommendations(limit, {
           excludeClaimed: true,
-          minScore: 60,
+          minScore: 60
         })
 
         setRecommendations(recs)
@@ -120,15 +120,15 @@ export function usePersonalizedRecommendations(
 
   useEffect(() => {
     if (prospects.length > 0 && userProfile) {
-      generateRecommendations()
+      void generateRecommendations()
     }
-  }, [prospects.length, userProfile.userId])
+  }, [prospects, userProfile, generateRecommendations])
 
   return {
     recommendations,
     generateRecommendations,
     loading,
-    error,
+    error
   }
 }
 
@@ -144,10 +144,10 @@ export function useGenerativeNarrative() {
     async (
       prospect: Prospect,
       context?: {
-        marketData?: any[]
+        marketData?: unknown[]
         relationships?: CompanyGraph
-        historicalSignals?: any[]
-        industryTrends?: any[]
+        historicalSignals?: unknown[]
+        industryTrends?: unknown[]
       }
     ) => {
       setLoading(true)
@@ -157,7 +157,7 @@ export function useGenerativeNarrative() {
         const engine = new GenerativeNarrativeEngine()
         const narrative = await engine.generateNarrative({
           prospect,
-          ...context,
+          ...context
         })
 
         setNarratives((prev) => new Map(prev).set(prospect.id, narrative))
@@ -185,7 +185,7 @@ export function useGenerativeNarrative() {
     generateNarrative,
     getNarrative,
     loading,
-    error,
+    error
   }
 }
 
@@ -212,9 +212,9 @@ export function useSignalChains(prospects: Prospect[]) {
             expansion: ['equipment', 'permit', 'hiring'],
             equipment: ['hiring'],
             permit: ['equipment', 'expansion'],
-            contract: ['hiring', 'expansion'],
+            contract: ['hiring', 'expansion']
           },
-          correlationThreshold: config?.correlationThreshold || 0.6,
+          correlationThreshold: config?.correlationThreshold || 0.6
         })
 
         setChains((prev) => new Map(prev).set(prospectId, signalChains))
@@ -242,7 +242,7 @@ export function useSignalChains(prospects: Prospect[]) {
     detectChains,
     getChains,
     loading,
-    error,
+    error
   }
 }
 
@@ -251,7 +251,7 @@ export function useSignalChains(prospects: Prospect[]) {
  */
 export function useGenerativeReports(
   prospects: Prospect[],
-  competitorData?: any[],
+  competitorData?: unknown[],
   relationshipGraphs?: Map<string, CompanyGraph>
 ) {
   const [reports, setReports] = useState<GenerativeReport[]>([])
@@ -263,7 +263,7 @@ export function useGenerativeReports(
       type: 'portfolio' | 'market' | 'prospect' | 'competitive',
       options: {
         prospectId?: string
-        industry?: any
+        industry?: unknown
         userId?: string
       } = {}
     ) => {
@@ -320,7 +320,7 @@ export function useGenerativeReports(
     reports,
     generateReport,
     loading,
-    error,
+    error
   }
 }
 
@@ -366,7 +366,7 @@ export function useRecursiveEnrichment(prospects: Prospect[]) {
     enrichProspect,
     getResult,
     loading,
-    error,
+    error
   }
 }
 
@@ -413,7 +413,7 @@ export function useNetworkRequalification(prospects: Prospect[]) {
     requalifyLead,
     getResult,
     loading,
-    error,
+    error
   }
 }
 
@@ -421,64 +421,49 @@ export function useNetworkRequalification(prospects: Prospect[]) {
  * Hook for user profile management
  */
 export function useUserProfile(userId: string) {
-  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [manager] = useState(() => new UserProfileManager())
+  const [version, setVersion] = useState(0)
 
-  useEffect(() => {
-    const userProfile = manager.getUserProfile(userId)
-    setProfile(userProfile)
-  }, [userId, manager])
+  const profile = useMemo(() => {
+    void version
+    return manager.getUserProfile(userId)
+  }, [manager, userId, version])
 
-  const updatePreferences = useCallback(
-    (preferences: Partial<UserProfile['preferences']>) => {
-      const updated = manager.updatePreferences(userId, preferences)
-      setProfile(updated)
-      return updated
-    },
-    [userId, manager]
-  )
-
-  const recordAction = useCallback(
-    (action: Parameters<typeof manager.recordAction>[1]) => {
-      const updated = manager.recordAction(userId, action)
-      setProfile(updated)
-      return updated
-    },
-    [userId, manager]
-  )
-
-  const saveFilter = useCallback(
-    (filter: Parameters<typeof manager.saveFilter>[1]) => {
-      const updated = manager.saveFilter(userId, filter)
-      setProfile(updated)
-      return updated
-    },
-    [userId, manager]
-  )
-
-  const updateDashboardLayout = useCallback(
-    (layout: UserProfile['dashboardLayout']) => {
-      const updated = manager.updateDashboardLayout(userId, layout)
-      setProfile(updated)
-      return updated
-    },
-    [userId, manager]
-  )
-
-  const updateNotificationSettings = useCallback(
-    (settings: Partial<UserProfile['notificationSettings']>) => {
-      const updated = manager.updateNotificationSettings(userId, settings)
-      setProfile(updated)
-      return updated
-    },
-    [userId, manager]
-  )
-
-  const learnPreferences = useCallback(() => {
-    const updated = manager.learnPreferences(userId)
-    setProfile(updated)
+  const updatePreferences = (preferences: Partial<UserProfile['preferences']>) => {
+    const updated = manager.updatePreferences(userId, preferences)
+    setVersion((current) => current + 1)
     return updated
-  }, [userId, manager])
+  }
+
+  const recordAction = (action: Parameters<typeof manager.recordAction>[1]) => {
+    const updated = manager.recordAction(userId, action)
+    setVersion((current) => current + 1)
+    return updated
+  }
+
+  const saveFilter = (filter: Parameters<typeof manager.saveFilter>[1]) => {
+    const updated = manager.saveFilter(userId, filter)
+    setVersion((current) => current + 1)
+    return updated
+  }
+
+  const updateDashboardLayout = (layout: UserProfile['dashboardLayout']) => {
+    const updated = manager.updateDashboardLayout(userId, layout)
+    setVersion((current) => current + 1)
+    return updated
+  }
+
+  const updateNotificationSettings = (settings: Partial<UserProfile['notificationSettings']>) => {
+    const updated = manager.updateNotificationSettings(userId, settings)
+    setVersion((current) => current + 1)
+    return updated
+  }
+
+  const learnPreferences = () => {
+    const updated = manager.learnPreferences(userId)
+    setVersion((current) => current + 1)
+    return updated
+  }
 
   return {
     profile,
@@ -488,7 +473,7 @@ export function useUserProfile(userId: string) {
     updateDashboardLayout,
     updateNotificationSettings,
     learnPreferences,
-    manager,
+    manager
   }
 }
 
@@ -533,6 +518,6 @@ export function useRecursiveIntelligence(prospects: Prospect[], userId: string) 
     enrichment,
 
     // Requalification
-    requalification,
+    requalification
   }
 }

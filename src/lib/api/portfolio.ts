@@ -1,6 +1,10 @@
-import { PortfolioCompany } from '@/lib/types'
+import type { DataTier, PortfolioCompany } from '@/lib/types'
 import { apiRequest } from './client'
 
-export async function fetchPortfolio(signal?: AbortSignal): Promise<PortfolioCompany[]> {
-  return apiRequest<PortfolioCompany[]>('/portfolio', { signal })
+export async function fetchPortfolio(
+  signal?: AbortSignal,
+  options: { dataTier?: DataTier } = {}
+): Promise<PortfolioCompany[]> {
+  const headers = options.dataTier ? { 'x-data-tier': options.dataTier } : undefined
+  return apiRequest<PortfolioCompany[]>('/portfolio', { signal, headers })
 }

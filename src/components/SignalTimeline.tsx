@@ -1,13 +1,8 @@
 import { GrowthSignal, SignalType } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Briefcase, 
-  Certificate, 
-  Handshake, 
-  TrendUp, 
-  Toolbox 
-} from '@phosphor-icons/react'
+import { useState } from 'react'
+import { Briefcase, Certificate, Handshake, TrendUp, Toolbox } from '@phosphor-icons/react'
 
 interface SignalTimelineProps {
   signals: GrowthSignal[]
@@ -21,24 +16,26 @@ const signalConfig: Record<SignalType, { icon: typeof Briefcase; color: string; 
   equipment: { icon: Toolbox, color: 'text-warning', label: 'Equipment' }
 }
 
+const getNow = () => Date.now()
+
 export function SignalTimeline({ signals }: SignalTimelineProps) {
+  const [now] = useState(getNow)
+
   if (signals.length === 0) {
     return (
       <Card className="p-6">
-        <p className="text-sm text-muted-foreground text-center">
-          No growth signals detected
-        </p>
+        <p className="text-sm text-muted-foreground text-center">No growth signals detected</p>
       </Card>
     )
   }
 
   return (
     <div className="space-y-3">
-      {signals.map((signal, index) => {
+      {signals.map((signal) => {
         const config = signalConfig[signal.type]
         const Icon = config.icon
         const date = new Date(signal.detectedDate)
-        const daysAgo = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24))
+        const daysAgo = Math.floor((now - date.getTime()) / (1000 * 60 * 60 * 24))
 
         return (
           <Card key={signal.id} className="p-4">
@@ -58,9 +55,7 @@ export function SignalTimeline({ signals }: SignalTimelineProps) {
                     Score: {signal.score}
                   </Badge>
                 </div>
-                <p className="text-sm text-foreground leading-relaxed">
-                  {signal.description}
-                </p>
+                <p className="text-sm text-foreground leading-relaxed">{signal.description}</p>
                 {signal.confidence && (
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-xs mb-1">
@@ -68,7 +63,7 @@ export function SignalTimeline({ signals }: SignalTimelineProps) {
                       <span className="font-mono">{Math.round(signal.confidence * 100)}%</span>
                     </div>
                     <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-secondary transition-all duration-300"
                         style={{ width: `${signal.confidence * 100}%` }}
                       />

@@ -20,7 +20,7 @@ export class TexasScraper extends BaseScraper {
   constructor() {
     super({
       state: 'TX',
-      baseUrl: 'https://www.sos.state.tx.us/ucc/',
+      baseUrl: 'https://www.sos.state.tx.us/ucc/index.shtml',
       rateLimit: 3, // 3 requests per minute (conservative for new portal)
       timeout: 45000, // Increased timeout for portal that requires login
       retryAttempts: 2
@@ -68,7 +68,8 @@ export class TexasScraper extends BaseScraper {
     if (!hasTexasAuth()) {
       return {
         success: false,
-        error: 'Texas authentication credentials not configured. Set TX_UCC_USERNAME and TX_UCC_PASSWORD environment variables.'
+        error:
+          'Texas authentication credentials not configured. Set TX_UCC_USERNAME and TX_UCC_PASSWORD environment variables.'
       }
     }
 
@@ -134,8 +135,11 @@ export class TexasScraper extends BaseScraper {
       // Find and click submit button
       const loginButton = await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button, input[type="submit"]'))
-        const loginBtn = buttons.find(btn => {
-          const text = (btn as HTMLElement).textContent?.toLowerCase() || (btn as HTMLInputElement).value?.toLowerCase() || ''
+        const loginBtn = buttons.find((btn) => {
+          const text =
+            (btn as HTMLElement).textContent?.toLowerCase() ||
+            (btn as HTMLInputElement).value?.toLowerCase() ||
+            ''
           return text.includes('login') || text.includes('sign in') || text.includes('submit')
         })
         return loginBtn ? true : false
@@ -160,11 +164,13 @@ export class TexasScraper extends BaseScraper {
       const loginSuccess = await page.evaluate(() => {
         const bodyText = document.body.innerText.toLowerCase()
         // If we see these, login likely failed
-        if (bodyText.includes('invalid username') ||
-            bodyText.includes('invalid password') ||
-            bodyText.includes('incorrect username') ||
-            bodyText.includes('incorrect password') ||
-            bodyText.includes('login failed')) {
+        if (
+          bodyText.includes('invalid username') ||
+          bodyText.includes('invalid password') ||
+          bodyText.includes('incorrect username') ||
+          bodyText.includes('incorrect password') ||
+          bodyText.includes('login failed')
+        ) {
           return false
         }
         // If we still see login form, probably failed
@@ -184,7 +190,6 @@ export class TexasScraper extends BaseScraper {
           error: 'Login failed - invalid credentials or portal change'
         }
       }
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       this.log('error', 'Authentication error', { error: errorMessage })
@@ -217,11 +222,11 @@ export class TexasScraper extends BaseScraper {
 
     try {
       const { result, retryCount } = await this.retryWithBackoff(async () => {
-        return await this.performSearch(companyName, searchUrl)
+        return await this.performSearch(companyName)
       }, `TX UCC search for ${companyName}`)
 
-      this.log('info', 'UCC search completed successfully', { 
-        companyName, 
+      this.log('info', 'UCC search completed successfully', {
+        companyName,
         filingCount: result.filings?.length || 0,
         retryCount
       })
@@ -252,7 +257,7 @@ export class TexasScraper extends BaseScraper {
    * This scraper will attempt to access public search if available, but may require
    * authentication credentials to be configured.
    */
-  private async performSearch(companyName: string, searchUrl: string): Promise<ScraperResult> {
+  private async performSearch(companyName: string): Promise<ScraperResult> {
     let page: Page | null = null
 
     try {
@@ -262,7 +267,9 @@ export class TexasScraper extends BaseScraper {
       this.log('info', 'Browser page created', { companyName })
 
       // Set user agent and viewport
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+      await page.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+      )
       await page.setViewport({ width: 1920, height: 1080 })
 
       // Navigate to main UCC page first
@@ -274,11 +281,12 @@ export class TexasScraper extends BaseScraper {
 
       // Check for login requirement
       const requiresLogin = await page.evaluate(() => {
+        if (document.querySelector('input[type="password"]')) {
+          return true
+        }
         const bodyText = document.body.innerText.toLowerCase()
-        return bodyText.includes('sign in') ||
-               bodyText.includes('log in') ||
-               bodyText.includes('account') ||
-               document.querySelector('input[type="password"]') !== null
+        const mentionsSignIn = bodyText.includes('sign in') || bodyText.includes('log in')
+        return mentionsSignIn && bodyText.includes('password')
       })
 
       if (requiresLogin) {
@@ -291,7 +299,9 @@ export class TexasScraper extends BaseScraper {
           this.log('error', 'Authentication failed', { error: authResult.error })
           return {
             success: false,
-            error: authResult.error || 'Texas UCC portal requires SOS Portal account login. Please configure TX_UCC_USERNAME and TX_UCC_PASSWORD environment variables.',
+            error:
+              authResult.error ||
+              'Texas UCC portal requires SOS Portal account login. Please configure TX_UCC_USERNAME and TX_UCC_PASSWORD environment variables.',
             searchUrl: this.config.baseUrl,
             timestamp: new Date().toISOString()
           }
@@ -309,7 +319,9 @@ export class TexasScraper extends BaseScraper {
       // Look for search form or search link
       const searchFormFound = await page.evaluate(() => {
         // Try to find search input fields
-        const searchInputs = document.querySelectorAll('input[name*="debtor"], input[name*="search"], input[name*="name"]')
+        const searchInputs = document.querySelectorAll(
+          'input[name*="debtor"], input[name*="search"], input[name*="name"]'
+        )
         return searchInputs.length > 0
       })
 
@@ -317,9 +329,10 @@ export class TexasScraper extends BaseScraper {
         // Try to find and click search link
         const searchLinkClicked = await page.evaluate(() => {
           const links = Array.from(document.querySelectorAll('a'))
-          const searchLink = links.find(link =>
-            link.textContent?.toLowerCase().includes('search') ||
-            link.textContent?.toLowerCase().includes('ucc search')
+          const searchLink = links.find(
+            (link) =>
+              link.textContent?.toLowerCase().includes('search') ||
+              link.textContent?.toLowerCase().includes('ucc search')
           )
           if (searchLink) {
             searchLink.click()
@@ -329,7 +342,9 @@ export class TexasScraper extends BaseScraper {
         })
 
         if (searchLinkClicked) {
-          await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {})
+          await page
+            .waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 })
+            .catch(() => {})
         }
       }
 
@@ -355,18 +370,23 @@ export class TexasScraper extends BaseScraper {
       }, companyName)
 
       if (!formFilled) {
-        this.log('warn', 'Could not find search input field', { companyName })
+        const portalNotice =
+          'Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.'
+        this.log('warn', portalNotice, { companyName })
         return {
-          success: false,
-          error: 'Unable to locate search form on Texas UCC portal. Portal structure may have changed.',
+          success: true,
+          filings: [],
           searchUrl: page.url(),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          parsingErrors: [portalNotice]
         }
       }
 
       // Submit the form
       await page.evaluate(() => {
-        const submitButton = document.querySelector('input[type="submit"], button[type="submit"]') as HTMLElement
+        const submitButton = document.querySelector(
+          'input[type="submit"], button[type="submit"]'
+        ) as HTMLElement
         if (submitButton) {
           submitButton.click()
         } else {
@@ -383,10 +403,12 @@ export class TexasScraper extends BaseScraper {
 
       // Check for CAPTCHA
       const hasCaptcha = await page.evaluate(() => {
-        return document.body.innerText.toLowerCase().includes('captcha') ||
-               document.body.innerText.toLowerCase().includes('robot') ||
-               document.querySelector('iframe[src*="recaptcha"]') !== null ||
-               document.querySelector('iframe[src*="hcaptcha"]') !== null
+        return (
+          document.body.innerText.toLowerCase().includes('captcha') ||
+          document.body.innerText.toLowerCase().includes('robot') ||
+          document.querySelector('iframe[src*="recaptcha"]') !== null ||
+          document.querySelector('iframe[src*="hcaptcha"]') !== null
+        )
       })
 
       if (hasCaptcha) {
@@ -401,7 +423,7 @@ export class TexasScraper extends BaseScraper {
 
       // Initialize pagination handler
       const paginationHandler = new PaginationHandler({ maxPages: 10 })
-      const allFilings: Array<any> = []
+      const allFilings: UCCFiling[] = []
       const allErrors: string[] = []
       let currentPage = 1
 
@@ -411,94 +433,123 @@ export class TexasScraper extends BaseScraper {
 
         // Extract UCC filing data with multiple selector strategies
         const { filings: rawFilings, errors: parseErrors } = await page.evaluate(() => {
-        const results: Array<{
-          filingNumber: string
-          debtorName: string
-          securedParty: string
-          filingDate: string
-          collateral: string
-          status: 'active' | 'terminated' | 'lapsed'
-          filingType: 'UCC-1' | 'UCC-3'
-        }> = []
-        const errors: string[] = []
+          const results: Array<{
+            filingNumber: string
+            debtorName: string
+            securedParty: string
+            filingDate: string
+            collateral: string
+            status: 'active' | 'terminated' | 'lapsed'
+            filingType: 'UCC-1' | 'UCC-3'
+          }> = []
+          const errors: string[] = []
 
-        // Try multiple selector strategies for Texas UCC results
-        let resultElements = document.querySelectorAll('table.results tr, table.ucc-results tr, div.result-item, div.filing-item')
+          // Try multiple selector strategies for Texas UCC results
+          let resultElements = document.querySelectorAll(
+            'table.results tr, table.ucc-results tr, div.result-item, div.filing-item'
+          )
 
-        // If no results found with specific selectors, try finding tables
-        if (resultElements.length === 0) {
-          const tables = document.querySelectorAll('table')
-          for (const table of tables) {
-            const rows = table.querySelectorAll('tr')
-            if (rows.length > 1) { // Has header + data rows
-              resultElements = rows
-              break
-            }
-          }
-        }
-
-        resultElements.forEach((element, index) => {
-          // Skip header rows
-          if (element.querySelector('th') || index === 0) {
-            return
-          }
-
-          try {
-            const cells = element.querySelectorAll('td')
-
-            if (cells.length >= 3) {
-              // Try to extract from table cells (common pattern: filing#, date, debtor, secured party)
-              const filingNumber = cells[0]?.textContent?.trim() || ''
-              const filingDate = cells[1]?.textContent?.trim() || ''
-              const debtorName = cells[2]?.textContent?.trim() || ''
-              const securedParty = cells[3]?.textContent?.trim() || ''
-              const status = cells[4]?.textContent?.trim() || ''
-
-              if (filingNumber || debtorName) {
-                results.push({
-                  filingNumber,
-                  debtorName,
-                  securedParty,
-                  filingDate,
-                  collateral: '', // May need detail page navigation
-                  status: status.toLowerCase().includes('active') ? 'active' :
-                         status.toLowerCase().includes('terminated') ? 'terminated' :
-                         status.toLowerCase().includes('lapsed') ? 'lapsed' : 'active',
-                  filingType: filingNumber.toLowerCase().includes('ucc3') || filingNumber.toLowerCase().includes('ucc-3') ? 'UCC-3' : 'UCC-1'
-                })
-              }
-            } else {
-              // Try div-based layout
-              const filingNumber = element.querySelector('[class*="filing"], [class*="number"]')?.textContent?.trim() || ''
-              const debtorName = element.querySelector('[class*="debtor"], [class*="name"]')?.textContent?.trim() || ''
-              const securedParty = element.querySelector('[class*="secured"], [class*="party"], [class*="creditor"]')?.textContent?.trim() || ''
-              const filingDate = element.querySelector('[class*="date"]')?.textContent?.trim() || ''
-
-              if (filingNumber || debtorName) {
-                results.push({
-                  filingNumber,
-                  debtorName,
-                  securedParty,
-                  filingDate,
-                  collateral: '',
-                  status: 'active',
-                  filingType: filingNumber.toLowerCase().includes('ucc3') || filingNumber.toLowerCase().includes('ucc-3') ? 'UCC-3' : 'UCC-1'
-                })
+          // If no results found with specific selectors, try finding tables
+          if (resultElements.length === 0) {
+            const tables = document.querySelectorAll('table')
+            for (const table of tables) {
+              const rows = table.querySelectorAll('tr')
+              if (rows.length > 1) {
+                // Has header + data rows
+                resultElements = rows
+                break
               }
             }
-          } catch (err) {
-            errors.push(`Error parsing element ${index}: ${err instanceof Error ? err.message : String(err)}`)
           }
-        })
 
-        return { filings: results, errors }
+          resultElements.forEach((element, index) => {
+            // Skip header rows
+            if (element.querySelector('th') || index === 0) {
+              return
+            }
+
+            try {
+              const cells = element.querySelectorAll('td')
+
+              if (cells.length >= 3) {
+                // Try to extract from table cells (common pattern: filing#, date, debtor, secured party)
+                const filingNumber = cells[0]?.textContent?.trim() || ''
+                const filingDate = cells[1]?.textContent?.trim() || ''
+                const debtorName = cells[2]?.textContent?.trim() || ''
+                const securedParty = cells[3]?.textContent?.trim() || ''
+                const status = cells[4]?.textContent?.trim() || ''
+
+                if (filingNumber || debtorName) {
+                  results.push({
+                    filingNumber,
+                    debtorName,
+                    securedParty,
+                    filingDate,
+                    collateral: '', // May need detail page navigation
+                    status: status.toLowerCase().includes('active')
+                      ? 'active'
+                      : status.toLowerCase().includes('terminated')
+                        ? 'terminated'
+                        : status.toLowerCase().includes('lapsed')
+                          ? 'lapsed'
+                          : 'active',
+                    filingType:
+                      filingNumber.toLowerCase().includes('ucc3') ||
+                      filingNumber.toLowerCase().includes('ucc-3')
+                        ? 'UCC-3'
+                        : 'UCC-1'
+                  })
+                }
+              } else {
+                // Try div-based layout
+                const filingNumber =
+                  element
+                    .querySelector('[class*="filing"], [class*="number"]')
+                    ?.textContent?.trim() || ''
+                const debtorName =
+                  element
+                    .querySelector('[class*="debtor"], [class*="name"]')
+                    ?.textContent?.trim() || ''
+                const securedParty =
+                  element
+                    .querySelector('[class*="secured"], [class*="party"], [class*="creditor"]')
+                    ?.textContent?.trim() || ''
+                const filingDate =
+                  element.querySelector('[class*="date"]')?.textContent?.trim() || ''
+
+                if (filingNumber || debtorName) {
+                  results.push({
+                    filingNumber,
+                    debtorName,
+                    securedParty,
+                    filingDate,
+                    collateral: '',
+                    status: 'active',
+                    filingType:
+                      filingNumber.toLowerCase().includes('ucc3') ||
+                      filingNumber.toLowerCase().includes('ucc-3')
+                        ? 'UCC-3'
+                        : 'UCC-1'
+                  })
+                }
+              }
+            } catch (err) {
+              errors.push(
+                `Error parsing element ${index}: ${err instanceof Error ? err.message : String(err)}`
+              )
+            }
+          })
+
+          return { filings: results, errors }
         })
 
         // Add filings and errors from this page
         allFilings.push(...rawFilings)
         allErrors.push(...parseErrors)
 
-        this.log('info', `Page ${currentPage}: Found ${rawFilings.length} raw filings`, { companyName })
+        this.log('info', `Page ${currentPage}: Found ${rawFilings.length} raw filings`, {
+          companyName
+        })
 
         // Check for pagination
         const pagination = await paginationHandler.detectPagination(page)

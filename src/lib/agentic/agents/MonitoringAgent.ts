@@ -1,13 +1,12 @@
 /**
  * Monitoring Agent
- * 
+ *
  * Tracks usage, enforces quotas, and monitors system health
  */
 
 import { BaseAgent } from '../BaseAgent'
 import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult } from '../types'
 import { usageTracker, UsageTracker } from '../../subscription/usage-tracker'
-
 
 export class MonitoringAgent extends BaseAgent {
   constructor() {
@@ -22,44 +21,49 @@ export class MonitoringAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
+    void context
     const findings = []
     const improvements = []
 
     // Check for users approaching quota limits
     const usersAtRisk = usageTracker.getUsersApproachingLimit()
     if (usersAtRisk.length > 0) {
-      findings.push(this.createFinding(
-        'performance',
-        'warning',
-        `${usersAtRisk.length} users are approaching their quota limits (>80% used)`,
-        { users: usersAtRisk }
-      ))
+      findings.push(
+        this.createFinding(
+          'performance',
+          'warning',
+          `${usersAtRisk.length} users are approaching their quota limits (>80% used)`,
+          { users: usersAtRisk }
+        )
+      )
 
-      improvements.push(this.createImprovement(
-        'usability',
-        'medium',
-        'Send quota warning notifications',
-        'Automatically notify users when they reach 80% of their monthly quota',
-        'Detected users approaching quota limits who may not be aware',
-        'Improve user experience and prevent unexpected service interruptions',
-        true,
-        95,
-        {
-          steps: [
-            'Set up email notification system',
-            'Create warning templates',
-            'Implement 80% threshold check',
-            'Add user preferences for notifications'
-          ],
-          risks: ['Email delivery issues', 'User notification fatigue'],
-          rollbackPlan: ['Disable notifications', 'Revert to manual checks'],
-          validationCriteria: [
-            'Notifications sent within 1 minute of threshold',
-            '95%+ delivery rate',
-            'User preferences respected'
-          ]
-        }
-      ))
+      improvements.push(
+        this.createImprovement(
+          'usability',
+          'medium',
+          'Send quota warning notifications',
+          'Automatically notify users when they reach 80% of their monthly quota',
+          'Detected users approaching quota limits who may not be aware',
+          'Improve user experience and prevent unexpected service interruptions',
+          true,
+          95,
+          {
+            steps: [
+              'Set up email notification system',
+              'Create warning templates',
+              'Implement 80% threshold check',
+              'Add user preferences for notifications'
+            ],
+            risks: ['Email delivery issues', 'User notification fatigue'],
+            rollbackPlan: ['Disable notifications', 'Revert to manual checks'],
+            validationCriteria: [
+              'Notifications sent within 1 minute of threshold',
+              '95%+ delivery rate',
+              'User preferences respected'
+            ]
+          }
+        )
+      )
     }
 
     return this.createAnalysis(findings, improvements)
@@ -70,19 +74,49 @@ export class MonitoringAgent extends BaseAgent {
    */
   async executeTask(task: AgentTask): Promise<AgentTaskResult> {
     const { type, payload } = task
+    const data = payload as {
+      userId?: string
+      period?: 'daily' | 'monthly'
+      action?: string
+      source?: string
+      cost?: number
+      success?: boolean
+      metadata?: Record<string, unknown>
+    }
 
     try {
       switch (type) {
         case 'check-quota':
-          return this.checkQuota(payload.userId)
+          if (!data.userId) {
+            return {
+              success: false,
+              error: 'Missing userId',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.checkQuota(data.userId)
         case 'get-usage':
-          return this.getUsage(payload.userId, payload.period)
+          if (!data.userId) {
+            return {
+              success: false,
+              error: 'Missing userId',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.getUsage(data.userId, data.period)
         case 'track-usage':
-          return this.trackUsage(payload)
+          return this.trackUsage(data)
         case 'get-users-at-risk':
           return this.getUsersAtRisk()
         case 'enforce-quota':
-          return this.enforceQuota(payload.userId)
+          if (!data.userId) {
+            return {
+              success: false,
+              error: 'Missing userId',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.enforceQuota(data.userId)
         default:
           return {
             success: false,
@@ -136,7 +170,21 @@ export class MonitoringAgent extends BaseAgent {
   /**
    * Track a usage event
    */
-  private trackUsage(payload: any): AgentTaskResult {
+  private trackUsage(payload: {
+    userId?: string
+    action?: string
+    source?: string
+    cost?: number
+    success?: boolean
+    metadata?: Record<string, unknown>
+  }): AgentTaskResult {
+    if (!payload.userId || !payload.action) {
+      return {
+        success: false,
+        error: 'Missing userId or action',
+        timestamp: new Date().toISOString()
+      }
+    }
     usageTracker.trackUsage({
       userId: payload.userId,
       action: payload.action,
@@ -164,7 +212,7 @@ export class MonitoringAgent extends BaseAgent {
       success: true,
       data: {
         count: users.length,
-        users: users.map(userId => ({
+        users: users.map((userId) => ({
           userId,
           stats: usageTracker.getUsageStats(userId, 'monthly')
         }))

@@ -17,6 +17,8 @@ import { TexasUCCScraper } from './tx-ucc-scraper'
 import { FloridaUCCScraper } from './fl-ucc-scraper'
 import { NewYorkUCCScraper } from './ny-ucc-scraper'
 import { IllinoisUCCScraper } from './il-ucc-scraper'
+import { existsSync } from 'fs'
+import { join } from 'path'
 
 export type ScraperImplementation = 'mock' | 'puppeteer' | 'api'
 export type SupportedState = 'CA' | 'TX' | 'FL' | 'NY' | 'IL'
@@ -219,14 +221,13 @@ export class ScraperFactory {
 
       case 'puppeteer':
         // Check if Puppeteer is installed
-        try {
-          require('puppeteer')
+        if (existsSync(join(process.cwd(), 'node_modules', 'puppeteer', 'package.json'))) {
           return { available: true }
-        } catch {
-          return {
-            available: false,
-            reason: 'Puppeteer not installed. Run: npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth'
-          }
+        }
+        return {
+          available: false,
+          reason:
+            'Puppeteer not installed. Run: npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth'
         }
 
       case 'api':

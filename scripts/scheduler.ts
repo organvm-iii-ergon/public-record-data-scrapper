@@ -15,8 +15,13 @@
  */
 
 import cron from 'node-cron'
-import { createScraper, ScraperFactory, ScraperImplementation, SupportedState } from './scrapers/scraper-factory'
-import { initDatabase, getDatabase, createQueries, closeDatabase } from '../src/lib/database'
+import {
+  createScraper,
+  ScraperFactory,
+  ScraperImplementation,
+  SupportedState
+} from './scrapers/scraper-factory'
+import { initDatabase, createQueries, closeDatabase } from '../src/lib/database'
 import chalk from 'chalk'
 import * as fs from 'fs/promises'
 import * as path from 'path'
@@ -39,7 +44,13 @@ interface SchedulerConfig {
 
 const defaultConfig: SchedulerConfig = {
   schedule: process.env.SCRAPER_SCHEDULE || '0 2 * * *', // Daily at 2 AM
-  states: (process.env.SCRAPER_STATES?.split(',') as SupportedState[]) || ['CA', 'TX', 'FL', 'NY', 'IL'],
+  states: (process.env.SCRAPER_STATES?.split(',') as SupportedState[]) || [
+    'CA',
+    'TX',
+    'FL',
+    'NY',
+    'IL'
+  ],
   implementation: (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) || 'mock',
   companiesPerState: 5,
   enableNotifications: process.env.ENABLE_NOTIFICATIONS === 'true',
@@ -47,7 +58,21 @@ const defaultConfig: SchedulerConfig = {
 }
 
 // State-specific sample companies (expanded list)
-const COMPANY_POOL: Record<SupportedState, Array<{ name: string; industry: 'restaurant' | 'retail' | 'construction' | 'technology' | 'healthcare' | 'services' | 'manufacturing'; estimatedRevenue: number }>> = {
+const COMPANY_POOL: Record<
+  SupportedState,
+  Array<{
+    name: string
+    industry:
+      | 'restaurant'
+      | 'retail'
+      | 'construction'
+      | 'technology'
+      | 'healthcare'
+      | 'services'
+      | 'manufacturing'
+    estimatedRevenue: number
+  }>
+> = {
   CA: [
     { name: 'Golden State Restaurant Group', industry: 'restaurant', estimatedRevenue: 2500000 },
     { name: 'Bay Area Retail Co', industry: 'retail', estimatedRevenue: 1800000 },
@@ -121,7 +146,7 @@ const stats: JobStats = {
 /**
  * Log to file and console
  */
-async function log(level: 'info' | 'warn' | 'error', message: string, data?: any) {
+async function log(level: 'info' | 'warn' | 'error', message: string, data?: unknown) {
   const timestamp = new Date().toISOString()
   const logEntry = {
     timestamp,
@@ -182,8 +207,10 @@ async function runScrapingJob(config: SchedulerConfig): Promise<void> {
 
           // Store prospect and filings
           const filingDate = new Date(result.filings[0].filingDate)
-          const timeSinceDefault = Math.floor((Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24))
-          const priorityScore = Math.min(100, Math.floor((timeSinceDefault / 14) + 50))
+          const timeSinceDefault = Math.floor(
+            (Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24)
+          )
+          const priorityScore = Math.min(100, Math.floor(timeSinceDefault / 14 + 50))
 
           const prospect = await queries.createProspect({
             companyName: company.name,
@@ -237,15 +264,17 @@ async function runScrapingJob(config: SchedulerConfig): Promise<void> {
         }
 
         // Close browser if Puppeteer
-        if (config.implementation === 'puppeteer' && 'close' in scraper) {
-          await (scraper as any).close()
+        if (config.implementation === 'puppeteer') {
+          const maybeClose = (scraper as Partial<{ close: () => Promise<void> | void }>).close
+          if (typeof maybeClose === 'function') {
+            await maybeClose()
+          }
         }
 
         await log('info', `Completed state: ${state}`, {
           prospects: totalProspects,
           filings: totalFilings
         })
-
       } catch (stateError) {
         await log('error', `Failed to scrape state: ${state}`, {
           error: stateError instanceof Error ? stateError.message : stateError
@@ -270,7 +299,6 @@ async function runScrapingJob(config: SchedulerConfig): Promise<void> {
       totalFilings,
       successRate: `${((stats.successfulRuns / stats.totalRuns) * 100).toFixed(1)}%`
     })
-
   } catch (error) {
     stats.failedRuns++
     await log('error', 'Scraping job failed', {
@@ -301,7 +329,9 @@ async function startScheduler(config: SchedulerConfig) {
   // Check implementation availability
   const availability = ScraperFactory.isImplementationAvailable(config.implementation)
   if (!availability.available) {
-    console.log(chalk.red(`\n❌ ${config.implementation.toUpperCase()} implementation not available:`))
+    console.log(
+      chalk.red(`\n❌ ${config.implementation.toUpperCase()} implementation not available:`)
+    )
     console.log(chalk.yellow(`   ${availability.reason}\n`))
     process.exit(1)
   }
@@ -312,13 +342,13 @@ async function startScheduler(config: SchedulerConfig) {
   const task = cron.schedule(config.schedule, async () => {
     try {
       await runScrapingJob(config)
-    } catch (error) {
+    } catch {
       // Error already logged in runScrapingJob
     }
   })
 
   // Calculate next run
-  const nextRun = getNextCronRun(config.schedule)
+  const nextRun = getNextCronRun()
   stats.nextScheduledRun = nextRun
   console.log(chalk.green(`✅ Scheduler started`))
   console.log(chalk.cyan(`⏰ Next run: ${nextRun}\n`))
@@ -352,7 +382,7 @@ async function startScheduler(config: SchedulerConfig) {
 /**
  * Get next cron run time (approximate)
  */
-function getNextCronRun(cronExpression: string): string {
+function getNextCronRun(): string {
   // Simple approximation - for production, use a cron parser library
   const now = new Date()
   const tomorrow2AM = new Date(now)
@@ -372,12 +402,20 @@ async function showStats() {
   if (stats.failedRuns > 0) {
     console.log(chalk.red(`Failed: ${stats.failedRuns}`))
   }
-  console.log(chalk.cyan(`Success Rate: ${stats.totalRuns > 0 ? ((stats.successfulRuns / stats.totalRuns) * 100).toFixed(1) : 0}%`))
+  console.log(
+    chalk.cyan(
+      `Success Rate: ${stats.totalRuns > 0 ? ((stats.successfulRuns / stats.totalRuns) * 100).toFixed(1) : 0}%`
+    )
+  )
 
   if (stats.lastRunTime) {
     console.log(chalk.bold('\n📅 Last Run:'))
     console.log(chalk.cyan(`Time: ${new Date(stats.lastRunTime).toLocaleString()}`))
-    console.log(chalk.cyan(`Duration: ${stats.lastRunDuration ? (stats.lastRunDuration / 1000).toFixed(1) : 0}s`))
+    console.log(
+      chalk.cyan(
+        `Duration: ${stats.lastRunDuration ? (stats.lastRunDuration / 1000).toFixed(1) : 0}s`
+      )
+    )
     console.log(chalk.cyan(`Prospects: ${stats.lastRunProspects}`))
     console.log(chalk.cyan(`Filings: ${stats.lastRunFilings}`))
   }

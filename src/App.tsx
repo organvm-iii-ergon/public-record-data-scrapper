@@ -27,6 +27,7 @@ import { useProspectActions } from '@/hooks/useProspectActions'
 import { useNotesAndReminders } from '@/hooks/useNotesAndReminders'
 import { useAgenticEngine } from '@/hooks/use-agentic-engine'
 import { useSystemContext } from '@/hooks/useSystemContext'
+import { useDataTier } from '@/hooks/useDataTier'
 
 // Utils and types
 import { generateDashboardStats } from '@/lib/mockData'
@@ -41,13 +42,14 @@ function App() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
   const [tourOpen, setTourOpen] = useState(false)
+  const { dataTier } = useDataTier()
 
   const useMockData =
     import.meta.env.DEV &&
     ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
 
   // Data fetching
-  const data = useDataFetching({ useMockData })
+  const data = useDataFetching({ useMockData, dataTier })
 
   // Filtering, sorting, and selection
   const filters = useProspectFilters(data.prospects)
@@ -157,7 +159,7 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} onStartTour={() => setTourOpen(true)} />
+      <Header onRefresh={handleRefreshData} />
       <QuickAccessBanner />
       <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
 

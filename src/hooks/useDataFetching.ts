@@ -5,7 +5,7 @@ import {
   generateCompetitorData,
   generatePortfolioCompanies
 } from '@/lib/mockData'
-import { Prospect, CompetitorData, PortfolioCompany } from '@/lib/types'
+import { Prospect, CompetitorData, PortfolioCompany, DataTier } from '@/lib/types'
 import { UserAction } from '@/lib/agentic/types'
 import { fetchProspects } from '@/lib/api/prospects'
 import { fetchCompetitors } from '@/lib/api/competitors'
@@ -14,6 +14,7 @@ import { fetchUserActions } from '@/lib/api/userActions'
 
 export interface UseDataFetchingOptions {
   useMockData: boolean
+  dataTier?: DataTier
 }
 
 export interface UseDataFetchingResult {
@@ -35,7 +36,10 @@ export interface UseDataFetchingResult {
   fetchData: (options?: { signal?: AbortSignal; silent?: boolean }) => Promise<boolean>
 }
 
-export function useDataFetching({ useMockData }: UseDataFetchingOptions): UseDataFetchingResult {
+export function useDataFetching({
+  useMockData,
+  dataTier = 'oss'
+}: UseDataFetchingOptions): UseDataFetchingResult {
   const [prospects, setProspects] = useKV<Prospect[]>('ucc-prospects', [])
   const [competitors, setCompetitors] = useKV<CompetitorData[]>('competitor-data', [])
   const [portfolio, setPortfolio] = useKV<PortfolioCompany[]>('portfolio-companies', [])
@@ -58,9 +62,9 @@ export function useDataFetching({ useMockData }: UseDataFetchingOptions): UseDat
       try {
         if (useMockData) {
           const [mockProspects, mockCompetitors, mockPortfolio] = [
-            generateProspects(24),
-            generateCompetitorData(),
-            generatePortfolioCompanies(15)
+            generateProspects(24, { dataTier }),
+            generateCompetitorData({ dataTier }),
+            generatePortfolioCompanies(15, { dataTier })
           ]
 
           if (signal?.aborted) {
@@ -75,10 +79,10 @@ export function useDataFetching({ useMockData }: UseDataFetchingOptions): UseDat
         }
 
         const [liveProspects, liveCompetitors, livePortfolio, liveUserActions] = await Promise.all([
-          fetchProspects(signal),
-          fetchCompetitors(signal),
-          fetchPortfolio(signal),
-          fetchUserActions(signal)
+          fetchProspects(signal, { dataTier }),
+          fetchCompetitors(signal, { dataTier }),
+          fetchPortfolio(signal, { dataTier }),
+          fetchUserActions(signal, { dataTier })
         ])
 
         if (signal?.aborted) {
@@ -106,7 +110,15 @@ export function useDataFetching({ useMockData }: UseDataFetchingOptions): UseDat
         }
       }
     },
-    [useMockData, setProspects, setCompetitors, setPortfolio, setUserActions, setLastDataRefresh]
+    [
+      useMockData,
+      dataTier,
+      setProspects,
+      setCompetitors,
+      setPortfolio,
+      setUserActions,
+      setLastDataRefresh
+    ]
   )
 
   useEffect(() => {

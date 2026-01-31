@@ -36,11 +36,13 @@ export const createMockUCCFiling = (overrides?: Partial<UCCFiling>): UCCFiling =
 })
 
 export const createMockUCCFilings = (count: number): UCCFiling[] => {
-  return Array.from({ length: count }, (_, i) => createMockUCCFiling({
-    id: `filing-${i}`,
-    fileNumber: `CA-UCC-${10000 + i}`,
-    amount: 100000 + (i * 50000)
-  }))
+  return Array.from({ length: count }, (_, i) =>
+    createMockUCCFiling({
+      id: `filing-${i}`,
+      fileNumber: `CA-UCC-${10000 + i}`,
+      amount: 100000 + i * 50000
+    })
+  )
 }
 
 /**
@@ -56,13 +58,29 @@ export const createMockGrowthSignal = (overrides?: Partial<GrowthSignal>): Growt
   ...overrides
 })
 
-export const createMockGrowthSignals = (): GrowthSignal[] => ([
+export const createMockGrowthSignals = (): GrowthSignal[] => [
   createMockGrowthSignal({ type: 'hiring', description: 'Posted 15 jobs', confidence: 0.85 }),
-  createMockGrowthSignal({ type: 'permits', description: 'New construction permit for $2M', confidence: 0.9 }),
-  createMockGrowthSignal({ type: 'contracts', description: 'Won $500K federal contract', confidence: 0.95 }),
-  createMockGrowthSignal({ type: 'expansion', description: 'Opened new facility', confidence: 0.8 }),
-  createMockGrowthSignal({ type: 'equipment', description: 'Purchased new machinery', confidence: 0.75 })
-])
+  createMockGrowthSignal({
+    type: 'permits',
+    description: 'New construction permit for $2M',
+    confidence: 0.9
+  }),
+  createMockGrowthSignal({
+    type: 'contracts',
+    description: 'Won $500K federal contract',
+    confidence: 0.95
+  }),
+  createMockGrowthSignal({
+    type: 'expansion',
+    description: 'Opened new facility',
+    confidence: 0.8
+  }),
+  createMockGrowthSignal({
+    type: 'equipment',
+    description: 'Purchased new machinery',
+    confidence: 0.75
+  })
+]
 
 /**
  * Mock Health Score
@@ -107,12 +125,14 @@ export const createMockProspect = (overrides?: Partial<Prospect>): Prospect => (
 })
 
 export const createMockProspects = (count: number): Prospect[] => {
-  return Array.from({ length: count }, (_, i) => createMockProspect({
-    id: `prospect-${i}`,
-    companyName: `Company ${i}`,
-    priorityScore: 50 + (i * 5),
-    estimatedRevenue: 1000000 + (i * 500000)
-  }))
+  return Array.from({ length: count }, (_, i) =>
+    createMockProspect({
+      id: `prospect-${i}`,
+      companyName: `Company ${i}`,
+      priorityScore: 50 + i * 5,
+      estimatedRevenue: 1000000 + i * 500000
+    })
+  )
 }
 
 /**
@@ -127,16 +147,18 @@ export const createMockDataSource = (overrides?: Partial<DataSource>): DataSourc
   ...overrides
 })
 
-export const createMockDataSources = (): DataSource[] => ([
+export const createMockDataSources = (): DataSource[] => [
   createMockDataSource({ id: 'ca-portal', name: 'CA UCC Portal', type: 'state-portal' }),
   createMockDataSource({ id: 'ny-portal', name: 'NY UCC Portal', type: 'state-portal' }),
   createMockDataSource({ id: 'api-provider', name: 'Commercial API', type: 'api' })
-])
+]
 
 /**
  * Mock Enrichment Sources
  */
-export const createMockEnrichmentSource = (overrides?: Partial<EnrichmentSource>): EnrichmentSource => ({
+export const createMockEnrichmentSource = (
+  overrides?: Partial<EnrichmentSource>
+): EnrichmentSource => ({
   id: 'enrichment-1',
   name: 'Growth Signal Detector',
   type: 'api',
@@ -145,7 +167,7 @@ export const createMockEnrichmentSource = (overrides?: Partial<EnrichmentSource>
   ...overrides
 })
 
-export const createMockEnrichmentSources = (): EnrichmentSource[] => ([
+export const createMockEnrichmentSources = (): EnrichmentSource[] => [
   createMockEnrichmentSource({
     id: 'growth-api',
     name: 'Growth Signals API',
@@ -168,12 +190,14 @@ export const createMockEnrichmentSources = (): EnrichmentSource[] => ([
     type: 'ml-inference',
     capabilities: ['industry-classification']
   })
-])
+]
 
 /**
  * Mock Ingestion Config
  */
-export const createMockIngestionConfig = (overrides?: Partial<IngestionConfig>): IngestionConfig => ({
+export const createMockIngestionConfig = (
+  overrides?: Partial<IngestionConfig>
+): IngestionConfig => ({
   sources: createMockDataSources(),
   batchSize: 100,
   retryAttempts: 3,
@@ -185,29 +209,32 @@ export const createMockIngestionConfig = (overrides?: Partial<IngestionConfig>):
 /**
  * Mock Fetch Responses
  */
-export const createMockFetchResponse = (data: any, ok = true): Response => ({
-  ok,
-  status: ok ? 200 : 500,
-  statusText: ok ? 'OK' : 'Internal Server Error',
-  json: async () => data,
-  text: async () => JSON.stringify(data),
-  headers: new Headers(),
-  redirected: false,
-  type: 'basic',
-  url: 'https://api.example.com/test',
-  clone: function() { return this },
-  body: null,
-  bodyUsed: false,
-  arrayBuffer: async () => new ArrayBuffer(0),
-  blob: async () => new Blob(),
-  formData: async () => new FormData()
-} as Response)
+export const createMockFetchResponse = (data: unknown, ok = true): Response =>
+  ({
+    ok,
+    status: ok ? 200 : 500,
+    statusText: ok ? 'OK' : 'Internal Server Error',
+    json: async () => data,
+    text: async () => JSON.stringify(data),
+    headers: new Headers(),
+    redirected: false,
+    type: 'basic',
+    url: 'https://api.example.com/test',
+    clone: function () {
+      return this
+    },
+    body: null,
+    bodyUsed: false,
+    arrayBuffer: async () => new ArrayBuffer(0),
+    blob: async () => new Blob(),
+    formData: async () => new FormData()
+  }) as Response
 
 /**
  * Wait Utility for async tests
  */
 export const wait = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -215,7 +242,7 @@ export const wait = (ms: number): Promise<void> => {
  * Useful for testing async operations
  */
 export const flushPromises = (): Promise<void> => {
-  return new Promise(resolve => setImmediate(resolve))
+  return new Promise((resolve) => setImmediate(resolve))
 }
 
 /**
@@ -240,8 +267,8 @@ export class MockTimer {
 
   advance(ms: number): void {
     this.currentTime += ms
-    const readyTimers = this.timers.filter(t => t.time <= this.currentTime && t.time >= 0)
-    readyTimers.forEach(t => {
+    const readyTimers = this.timers.filter((t) => t.time <= this.currentTime && t.time >= 0)
+    readyTimers.forEach((t) => {
       t.callback()
       t.time = -1
     })
@@ -276,8 +303,11 @@ export const expectDateToBeRecent = (dateString: string, maxAgeMs = 5000) => {
   expect(diff).toBeGreaterThanOrEqual(0)
 }
 
-export const expectArrayToContainObject = (array: any[], partialObject: any) => {
-  const found = array.some(item =>
+export const expectArrayToContainObject = <T extends Record<string, unknown>>(
+  array: T[],
+  partialObject: Partial<T>
+) => {
+  const found = array.some((item) =>
     Object.entries(partialObject).every(([key, value]) => item[key] === value)
   )
   expect(found).toBe(true)

@@ -1,6 +1,6 @@
 /**
  * Security Agent
- * 
+ *
  * Monitors security issues and suggests security improvements.
  */
 
@@ -27,7 +27,7 @@ export class SecurityAgent extends BaseAgent {
     findings.push(...securityChecks)
 
     // Suggest improvements based on findings
-    if (findings.some(f => f.severity === 'critical')) {
+    if (findings.some((f) => f.severity === 'critical')) {
       improvements.push(this.suggestSecurityHardening())
     }
 
@@ -52,9 +52,16 @@ export class SecurityAgent extends BaseAgent {
 
   private checkSensitiveDataHandling(context: SystemContext): Finding | null {
     // Check if financial data is properly handled
-    const prospectsWithFinancialData = context.prospects.filter(
-      p => p.estimatedRevenue || (p.uccFilings && p.uccFilings.some((f: any) => f.lienAmount))
-    )
+    const prospects = context.prospects as Array<Record<string, unknown>>
+    const prospectsWithFinancialData = prospects.filter((prospect) => {
+      const hasEstimatedRevenue = typeof prospect.estimatedRevenue === 'number'
+      const filings = Array.isArray(prospect.uccFilings) ? prospect.uccFilings : []
+      const hasLienAmount = filings.some((filing) => {
+        const record = filing as Record<string, unknown>
+        return typeof record.lienAmount === 'number'
+      })
+      return hasEstimatedRevenue || hasLienAmount
+    })
 
     if (prospectsWithFinancialData.length > 0) {
       return this.createFinding(
@@ -70,13 +77,13 @@ export class SecurityAgent extends BaseAgent {
 
   private analyzeAccessPatterns(context: SystemContext): Finding | null {
     // Check for unusual access patterns
-    const recentActions = context.userActions.filter(a => {
+    const recentActions = context.userActions.filter((a) => {
       const actionTime = new Date(a.timestamp)
       const hoursSince = (Date.now() - actionTime.getTime()) / (1000 * 60 * 60)
       return hoursSince < 24
     })
 
-    const exportActions = recentActions.filter(a => a.type === 'export')
+    const exportActions = recentActions.filter((a) => a.type === 'export')
 
     if (exportActions.length > 50) {
       return this.createFinding(

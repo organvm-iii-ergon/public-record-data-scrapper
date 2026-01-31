@@ -1,11 +1,18 @@
 /**
  * Scraper Agent
- * 
+ *
  * Manages UCC filing scraping from state Secretary of State portals
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, Finding, ImprovementSuggestion } from '../types'
+import {
+  AgentAnalysis,
+  SystemContext,
+  AgentTask,
+  AgentTaskResult,
+  Finding,
+  ImprovementSuggestion
+} from '../types'
 import { CaliforniaScraper } from '../../../../scripts/scrapers/states/california'
 import { TexasScraper } from '../../../../scripts/scrapers/states/texas'
 import { FloridaScraper } from '../../../../scripts/scrapers/states/florida'
@@ -36,20 +43,23 @@ export class ScraperAgent extends BaseAgent {
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
+    void context
     const findings: Finding[] = []
     const improvements: ImprovementSuggestion[] = []
 
     // Check scraper availability
     const states = ['CA', 'TX', 'FL', 'NY']
-    const unavailable = states.filter(state => !this.scrapers.has(state))
-    
+    const unavailable = states.filter((state) => !this.scrapers.has(state))
+
     if (unavailable.length > 0) {
-      findings.push(this.createFinding(
-        'data-quality',
-        'warning',
-        `Scrapers not available for ${unavailable.length} states`,
-        { unavailableStates: unavailable }
-      ))
+      findings.push(
+        this.createFinding(
+          'data-quality',
+          'warning',
+          `Scrapers not available for ${unavailable.length} states`,
+          { unavailableStates: unavailable }
+        )
+      )
     }
 
     return this.createAnalysis(findings, improvements)
@@ -60,15 +70,37 @@ export class ScraperAgent extends BaseAgent {
    */
   async executeTask(task: AgentTask): Promise<AgentTaskResult> {
     const { type, payload } = task
+    const data = payload as { companyName?: string; state?: string }
 
     try {
       switch (type) {
         case 'scrape-ucc':
-          return await this.scrapeUCC(payload.companyName, payload.state)
+          if (!data.companyName || !data.state) {
+            return {
+              success: false,
+              error: 'Missing companyName or state',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return await this.scrapeUCC(data.companyName, data.state)
         case 'get-manual-url':
-          return this.getManualSearchUrl(payload.companyName, payload.state)
+          if (!data.companyName || !data.state) {
+            return {
+              success: false,
+              error: 'Missing companyName or state',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.getManualSearchUrl(data.companyName, data.state)
         case 'check-scraper-status':
-          return this.checkScraperStatus(payload.state)
+          if (!data.state) {
+            return {
+              success: false,
+              error: 'Missing state',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.checkScraperStatus(data.state)
         case 'list-available-states':
           return this.listAvailableStates()
         default:
@@ -160,8 +192,8 @@ export class ScraperAgent extends BaseAgent {
       data: {
         state: state.toUpperCase(),
         available,
-        message: available 
-          ? `Scraper available for ${state}` 
+        message: available
+          ? `Scraper available for ${state}`
           : `Scraper not yet implemented for ${state}`
       },
       timestamp: new Date().toISOString()
@@ -179,7 +211,7 @@ export class ScraperAgent extends BaseAgent {
       data: {
         states,
         count: states.length,
-        supported: states.map(state => ({
+        supported: states.map((state) => ({
           code: state,
           scraper: this.scrapers.get(state)?.getState()
         }))

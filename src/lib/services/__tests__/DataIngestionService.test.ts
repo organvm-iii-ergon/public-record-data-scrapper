@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   DataIngestionService,
   defaultIngestionConfig,
-  type DataSource,
   type IngestionConfig,
   type IngestionResult
 } from '../DataIngestionService'
@@ -109,10 +108,7 @@ describe('DataIngestionService', () => {
       await promise
 
       expect(fetch).toHaveBeenCalledTimes(1) // Only TX
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('state=TX'),
-        expect.any(Object)
-      )
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('state=TX'), expect.any(Object))
     })
 
     it('should handle errors from individual sources gracefully', async () => {
@@ -161,7 +157,7 @@ describe('DataIngestionService', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': 'Bearer test-key'
+            Authorization: 'Bearer test-key'
           })
         })
       )
@@ -339,10 +335,12 @@ describe('DataIngestionService', () => {
     it('should enforce rate limit per source', async () => {
       const limitedConfig: IngestionConfig = {
         ...mockConfig,
-        sources: [{
-          ...mockConfig.sources[0],
-          rateLimit: 2 // Only 2 requests per minute
-        }],
+        sources: [
+          {
+            ...mockConfig.sources[0],
+            rateLimit: 2 // Only 2 requests per minute
+          }
+        ],
         states: ['NY', 'CA', 'TX'] // 3 states
       }
       const limitedService = new DataIngestionService(limitedConfig)
@@ -352,7 +350,6 @@ describe('DataIngestionService', () => {
         json: async () => []
       } as Response)
 
-      const startTime = Date.now()
       const promise = limitedService.ingestData()
 
       // Advance time to simulate rate limiting
@@ -575,13 +572,15 @@ describe('DataIngestionService', () => {
     it('should handle state-portal sources', async () => {
       const portalConfig: IngestionConfig = {
         ...mockConfig,
-        sources: [{
-          id: 'ny-portal',
-          name: 'NY Portal',
-          type: 'state-portal',
-          endpoint: 'https://ny.gov/ucc',
-          rateLimit: 10
-        }]
+        sources: [
+          {
+            id: 'ny-portal',
+            name: 'NY Portal',
+            type: 'state-portal',
+            endpoint: 'https://ny.gov/ucc',
+            rateLimit: 10
+          }
+        ]
       }
       const portalService = new DataIngestionService(portalConfig)
 
@@ -596,13 +595,15 @@ describe('DataIngestionService', () => {
     it('should handle database sources', async () => {
       const dbConfig: IngestionConfig = {
         ...mockConfig,
-        sources: [{
-          id: 'db-source',
-          name: 'Database',
-          type: 'database',
-          endpoint: 'postgresql://localhost:5432/ucc',
-          rateLimit: 100
-        }]
+        sources: [
+          {
+            id: 'db-source',
+            name: 'Database',
+            type: 'database',
+            endpoint: 'postgresql://localhost:5432/ucc',
+            rateLimit: 100
+          }
+        ]
       }
       const dbService = new DataIngestionService(dbConfig)
 
@@ -646,8 +647,8 @@ describe('DataIngestionService', () => {
       const results = await promise
 
       expect(results).toHaveLength(2)
-      expect(results.map(r => r.metadata.source)).toContain('API')
-      expect(results.map(r => r.metadata.source)).toContain('Portal')
+      expect(results.map((r) => r.metadata.source)).toContain('API')
+      expect(results.map((r) => r.metadata.source)).toContain('Portal')
     })
   })
 
@@ -655,7 +656,9 @@ describe('DataIngestionService', () => {
     it('should handle malformed JSON responses', async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
-        json: async () => { throw new Error('Invalid JSON') }
+        json: async () => {
+          throw new Error('Invalid JSON')
+        }
       } as Response)
 
       const promise = service.ingestData(['NY'])
@@ -674,7 +677,7 @@ describe('DataIngestionService', () => {
       const results = await promise
 
       expect(results[0].success).toBe(false)
-      expect(results[0].errors.some(e => e.includes('timeout'))).toBe(true)
+      expect(results[0].errors.some((e) => e.includes('timeout'))).toBe(true)
     })
 
     it('should continue processing other states after one fails', async () => {
@@ -695,7 +698,7 @@ describe('DataIngestionService', () => {
       const results = await promise
 
       expect(results[0].success).toBe(false) // NY failed but CA should succeed
-      expect(results[0].errors.some(e => e.includes('NY'))).toBe(true)
+      expect(results[0].errors.some((e) => e.includes('NY'))).toBe(true)
       // NY will retry (3 attempts) + CA (1 attempt) = 4 calls
       expect(callCount).toBeGreaterThanOrEqual(2) // At least both states attempted
     })

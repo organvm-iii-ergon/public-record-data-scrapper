@@ -104,7 +104,8 @@ async function initMetricsTable(): Promise<void> {
 async function recordMetrics(metrics: MultiverseMetrics): Promise<void> {
   const pool = getPool()
 
-  await pool.query(`
+  await pool.query(
+    `
     INSERT INTO multiverse_metrics (
       timestamp, state, implementation,
       success_rate, avg_response_time, data_accuracy,
@@ -126,22 +127,24 @@ async function recordMetrics(metrics: MultiverseMetrics): Promise<void> {
       total_estimated_cost = multiverse_metrics.total_estimated_cost + EXCLUDED.total_estimated_cost,
       data_completeness = EXCLUDED.data_completeness,
       data_agreement_score = EXCLUDED.data_agreement_score
-  `, [
-    metrics.timestamp,
-    metrics.state,
-    metrics.implementation,
-    metrics.successRate,
-    metrics.avgResponseTime,
-    metrics.dataAccuracy,
-    metrics.totalQueries,
-    metrics.successfulQueries,
-    metrics.failedQueries,
-    metrics.totalFilingsFound,
-    metrics.estimatedCostPerQuery,
-    metrics.totalEstimatedCost,
-    metrics.dataCompleteness,
-    metrics.dataAgreementScore
-  ])
+  `,
+    [
+      metrics.timestamp,
+      metrics.state,
+      metrics.implementation,
+      metrics.successRate,
+      metrics.avgResponseTime,
+      metrics.dataAccuracy,
+      metrics.totalQueries,
+      metrics.successfulQueries,
+      metrics.failedQueries,
+      metrics.totalFilingsFound,
+      metrics.estimatedCostPerQuery,
+      metrics.totalEstimatedCost,
+      metrics.dataCompleteness,
+      metrics.dataAgreementScore
+    ]
+  )
 }
 
 /**
@@ -171,7 +174,7 @@ async function getAllMetrics(days: number = 30): Promise<MultiverseMetrics[]> {
     ORDER BY timestamp DESC
   `)
 
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     ...row,
     timestamp: row.timestamp.toISOString()
   }))
@@ -181,7 +184,7 @@ async function getAllMetrics(days: number = 30): Promise<MultiverseMetrics[]> {
  * Calculate rankings for a state
  */
 function calculateRankings(metrics: MultiverseMetrics[], state: SupportedState): UniverseRanking {
-  const stateMetrics = metrics.filter(m => m.state === state)
+  const stateMetrics = metrics.filter((m) => m.state === state)
 
   if (stateMetrics.length === 0) {
     return {
@@ -201,15 +204,18 @@ function calculateRankings(metrics: MultiverseMetrics[], state: SupportedState):
   }
 
   // Group by implementation and aggregate
-  const implStats = new Map<ScraperImplementation, {
-    successRate: number
-    avgResponseTime: number
-    dataAccuracy: number
-    estimatedCostPerQuery: number
-    dataCompleteness: number
-  }>()
+  const implStats = new Map<
+    ScraperImplementation,
+    {
+      successRate: number
+      avgResponseTime: number
+      dataAccuracy: number
+      estimatedCostPerQuery: number
+      dataCompleteness: number
+    }
+  >()
 
-  stateMetrics.forEach(m => {
+  stateMetrics.forEach((m) => {
     if (!implStats.has(m.implementation)) {
       implStats.set(m.implementation, {
         successRate: m.successRate,
@@ -252,21 +258,21 @@ function calculateRankings(metrics: MultiverseMetrics[], state: SupportedState):
     const bStats = implStats.get(b)!
 
     // Normalize to 0-100 scale
-    const maxSpeed = Math.max(...Array.from(implStats.values()).map(s => s.avgResponseTime))
-    const maxCost = Math.max(...Array.from(implStats.values()).map(s => s.estimatedCostPerQuery))
+    const maxSpeed = Math.max(...Array.from(implStats.values()).map((s) => s.avgResponseTime))
+    const maxCost = Math.max(...Array.from(implStats.values()).map((s) => s.estimatedCostPerQuery))
 
-    const aSpeed = 100 - (aStats.avgResponseTime / maxSpeed * 100)
-    const bSpeed = 100 - (bStats.avgResponseTime / maxSpeed * 100)
+    const aSpeed = 100 - (aStats.avgResponseTime / maxSpeed) * 100
+    const bSpeed = 100 - (bStats.avgResponseTime / maxSpeed) * 100
 
     const aAccuracy = (aStats.dataAccuracy + aStats.dataCompleteness + aStats.successRate) / 3
     const bAccuracy = (bStats.dataAccuracy + bStats.dataCompleteness + bStats.successRate) / 3
 
-    const aCost = 100 - (aStats.estimatedCostPerQuery / maxCost * 100)
-    const bCost = 100 - (bStats.estimatedCostPerQuery / maxCost * 100)
+    const aCost = 100 - (aStats.estimatedCostPerQuery / maxCost) * 100
+    const bCost = 100 - (bStats.estimatedCostPerQuery / maxCost) * 100
 
     // Weighted score: 30% speed, 50% accuracy, 20% cost
-    const aScore = (aSpeed * 0.3) + (aAccuracy * 0.5) + (aCost * 0.2)
-    const bScore = (bSpeed * 0.3) + (bAccuracy * 0.5) + (bCost * 0.2)
+    const aScore = aSpeed * 0.3 + aAccuracy * 0.5 + aCost * 0.2
+    const bScore = bSpeed * 0.3 + bAccuracy * 0.5 + bCost * 0.2
 
     return bScore - aScore
   })
@@ -310,8 +316,8 @@ async function displayDashboard(days: number = 7): Promise<void> {
   // Group metrics by state
   const states: SupportedState[] = ['CA', 'TX', 'FL', 'NY', 'IL']
 
-  states.forEach(state => {
-    const stateMetrics = metrics.filter(m => m.state === state)
+  states.forEach((state) => {
+    const stateMetrics = metrics.filter((m) => m.state === state)
 
     if (stateMetrics.length === 0) {
       console.log(`${state}: No data`)
@@ -324,10 +330,14 @@ async function displayDashboard(days: number = 7): Promise<void> {
     console.log(`${state} - Rankings`)
     console.log(`${'─'.repeat(100)}`)
 
-    console.log(`\nOverall: ${rankings.rankings.overall.map(i => i.toUpperCase()).join(' > ')}`)
-    console.log(`Fastest: ${rankings.rankings.fastest.map(i => i.toUpperCase()).join(' > ')}`)
-    console.log(`Most Accurate: ${rankings.rankings.mostAccurate.map(i => i.toUpperCase()).join(' > ')}`)
-    console.log(`Most Cost-Effective: ${rankings.rankings.mostCostEffective.map(i => i.toUpperCase()).join(' > ')}`)
+    console.log(`\nOverall: ${rankings.rankings.overall.map((i) => i.toUpperCase()).join(' > ')}`)
+    console.log(`Fastest: ${rankings.rankings.fastest.map((i) => i.toUpperCase()).join(' > ')}`)
+    console.log(
+      `Most Accurate: ${rankings.rankings.mostAccurate.map((i) => i.toUpperCase()).join(' > ')}`
+    )
+    console.log(
+      `Most Cost-Effective: ${rankings.rankings.mostCostEffective.map((i) => i.toUpperCase()).join(' > ')}`
+    )
 
     console.log(`\n📌 Recommendations:`)
     console.log(`  Production: ${rankings.recommendations.production.toUpperCase()}`)
@@ -337,11 +347,13 @@ async function displayDashboard(days: number = 7): Promise<void> {
     // Detailed metrics table
     console.log(`Implementation Stats:`)
     console.log(`${'─'.repeat(100)}`)
-    console.log(`Impl       | Queries | Success | Avg Time | Accuracy | Completeness | Cost/Query | Total Cost`)
+    console.log(
+      `Impl       | Queries | Success | Avg Time | Accuracy | Completeness | Cost/Query | Total Cost`
+    )
     console.log(`${'─'.repeat(100)}`)
 
     const implGroups = new Map<ScraperImplementation, MultiverseMetrics[]>()
-    stateMetrics.forEach(m => {
+    stateMetrics.forEach((m) => {
       if (!implGroups.has(m.implementation)) {
         implGroups.set(m.implementation, [])
       }
@@ -357,17 +369,18 @@ async function displayDashboard(days: number = 7): Promise<void> {
       const avgCostPerQuery = ms.reduce((sum, m) => sum + m.estimatedCostPerQuery, 0) / ms.length
       const totalCost = ms.reduce((sum, m) => sum + m.totalEstimatedCost, 0)
 
-      const successRate = totalQueries > 0 ? (successfulQueries / totalQueries * 100).toFixed(1) : '0.0'
+      const successRate =
+        totalQueries > 0 ? ((successfulQueries / totalQueries) * 100).toFixed(1) : '0.0'
 
       console.log(
         `${impl.padEnd(10)} | ` +
-        `${totalQueries.toString().padEnd(7)} | ` +
-        `${successRate}%${' '.repeat(Math.max(0, 3 - successRate.length))} | ` +
-        `${Math.round(avgTime)}ms${' '.repeat(Math.max(0, 6 - Math.round(avgTime).toString().length))} | ` +
-        `${Math.round(avgAccuracy)}%${' '.repeat(Math.max(0, 6 - Math.round(avgAccuracy).toString().length))} | ` +
-        `${Math.round(avgCompleteness)}%${' '.repeat(Math.max(0, 10 - Math.round(avgCompleteness).toString().length))} | ` +
-        `$${avgCostPerQuery.toFixed(4)}${' '.repeat(Math.max(0, 8 - avgCostPerQuery.toFixed(4).length))} | ` +
-        `$${totalCost.toFixed(2)}`
+          `${totalQueries.toString().padEnd(7)} | ` +
+          `${successRate}%${' '.repeat(Math.max(0, 3 - successRate.length))} | ` +
+          `${Math.round(avgTime)}ms${' '.repeat(Math.max(0, 6 - Math.round(avgTime).toString().length))} | ` +
+          `${Math.round(avgAccuracy)}%${' '.repeat(Math.max(0, 6 - Math.round(avgAccuracy).toString().length))} | ` +
+          `${Math.round(avgCompleteness)}%${' '.repeat(Math.max(0, 10 - Math.round(avgCompleteness).toString().length))} | ` +
+          `$${avgCostPerQuery.toFixed(4)}${' '.repeat(Math.max(0, 8 - avgCostPerQuery.toFixed(4).length))} | ` +
+          `$${totalCost.toFixed(2)}`
       )
     })
 
@@ -379,16 +392,18 @@ async function displayDashboard(days: number = 7): Promise<void> {
   // Global recommendations
   console.log(`🎯 GLOBAL MULTIVERSE RECOMMENDATIONS\n`)
 
-  const allRankings = states.map(state => calculateRankings(metrics, state))
+  const allRankings = states.map((state) => calculateRankings(metrics, state))
 
   // Count how many times each implementation is recommended
   const productionVotes = new Map<ScraperImplementation, number>()
-  allRankings.forEach(r => {
-    productionVotes.set(r.recommendations.production, (productionVotes.get(r.recommendations.production) || 0) + 1)
+  allRankings.forEach((r) => {
+    productionVotes.set(
+      r.recommendations.production,
+      (productionVotes.get(r.recommendations.production) || 0) + 1
+    )
   })
 
-  const topProductionChoice = Array.from(productionVotes.entries())
-    .sort((a, b) => b[1] - a[1])[0]
+  const topProductionChoice = Array.from(productionVotes.entries()).sort((a, b) => b[1] - a[1])[0]
 
   if (topProductionChoice) {
     console.log(`✨ Recommended for Production: ${topProductionChoice[0].toUpperCase()}`)
@@ -445,7 +460,7 @@ async function runBenchmarks(): Promise<void> {
       })
 
       // Small delay between tests
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
     }
   }
 
@@ -464,17 +479,19 @@ async function main() {
     await initMetricsTable()
 
     switch (command) {
-      case 'dashboard':
+      case 'dashboard': {
         const days = parseInt(args[1]) || 7
         await displayDashboard(days)
         break
+      }
 
-      case 'benchmark':
+      case 'benchmark': {
         await runBenchmarks()
         await displayDashboard(7)
         break
+      }
 
-      case 'compare':
+      case 'compare': {
         if (args.length < 3) {
           console.error(`Usage: tsx scripts/multiverse-monitor.ts compare <state> <company>`)
           process.exit(1)
@@ -505,6 +522,7 @@ async function main() {
           await recordMetrics(metrics)
         })
         break
+      }
 
       default:
         console.log(`
@@ -521,7 +539,6 @@ Examples:
   tsx scripts/multiverse-monitor.ts compare CA "Acme Corp"
 `)
     }
-
   } catch (error) {
     console.error(`❌ Error:`, error)
     process.exit(1)

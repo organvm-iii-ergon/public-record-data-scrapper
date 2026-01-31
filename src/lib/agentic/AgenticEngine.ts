@@ -1,6 +1,6 @@
 /**
  * Agentic Engine
- * 
+ *
  * Core engine for autonomous decision-making and continuous improvement.
  * Manages feedback loops, autonomous execution, and system evolution.
  */
@@ -112,7 +112,7 @@ export class AgenticEngine {
     // Check daily limit
     const today = new Date().toDateString()
     const todayExecutions = this.executionHistory.filter(
-      e => new Date(e.timestamp).toDateString() === today
+      (e) => new Date(e.timestamp).toDateString() === today
     )
     if (todayExecutions.length >= this.config.maxDailyImprovements) {
       console.log(`⏸️ Daily improvement limit reached (${this.config.maxDailyImprovements})`)
@@ -127,7 +127,9 @@ export class AgenticEngine {
 
     // Check safety score
     if (improvement.suggestion.safetyScore < this.config.safetyThreshold) {
-      console.log(`⚠️ Safety score too low: ${improvement.suggestion.safetyScore} < ${this.config.safetyThreshold}`)
+      console.log(
+        `⚠️ Safety score too low: ${improvement.suggestion.safetyScore} < ${this.config.safetyThreshold}`
+      )
       return false
     }
 
@@ -147,13 +149,13 @@ export class AgenticEngine {
     context: SystemContext
   ): Promise<ImprovementResult> {
     console.log(`🔧 Executing improvement: ${improvement.suggestion.title}`)
-    
+
     improvement.status = 'implementing'
 
     try {
       // Simulate improvement execution
       // In a real system, this would perform actual changes
-        const result = await this.simulateExecution(improvement, context)
+      const result = await this.simulateExecution(improvement, context)
 
       improvement.status = result.success ? 'completed' : 'rejected'
       improvement.completedAt = new Date().toISOString()
@@ -166,7 +168,6 @@ export class AgenticEngine {
       })
 
       return result
-
     } catch (error) {
       console.error(`❌ Execution failed:`, error)
       improvement.status = 'rejected'
@@ -188,9 +189,10 @@ export class AgenticEngine {
     context: SystemContext
   ): Promise<ImprovementResult> {
     // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
-    const { dataFreshnessScore, avgResponseTime, errorRate, userSatisfactionScore } = context.performanceMetrics
+    const { dataFreshnessScore, avgResponseTime, errorRate, userSatisfactionScore } =
+      context.performanceMetrics
 
     const metricsBefore = {
       dataCompleteness: dataFreshnessScore,
@@ -210,7 +212,7 @@ export class AgenticEngine {
       success: true,
       changes: [
         `Applied ${improvement.suggestion.title}`,
-        ...improvement.suggestion.implementation?.steps || []
+        ...(improvement.suggestion.implementation?.steps || [])
       ],
       metrics: {
         before: metricsBefore,
@@ -223,10 +225,7 @@ export class AgenticEngine {
   /**
    * Creates a feedback loop entry
    */
-  createFeedbackLoop(
-    type: FeedbackLoop['type'],
-    data: any
-  ): FeedbackLoop {
+  createFeedbackLoop(type: FeedbackLoop['type'], data: unknown): FeedbackLoop {
     const loop: FeedbackLoop = {
       id: uuidv4(),
       type,
@@ -250,7 +249,7 @@ export class AgenticEngine {
    * Gets improvements by status
    */
   getImprovementsByStatus(status: ImprovementStatus): Improvement[] {
-    return this.getImprovements().filter(i => i.status === status)
+    return this.getImprovements().filter((i) => i.status === status)
   }
 
   /**
@@ -304,7 +303,10 @@ export class AgenticEngine {
   /**
    * Manually approves and executes an improvement
    */
-  async approveAndExecute(improvementId: string, context: SystemContext): Promise<ImprovementResult> {
+  async approveAndExecute(
+    improvementId: string,
+    context: SystemContext
+  ): Promise<ImprovementResult> {
     const improvement = this.improvements.get(improvementId)
     if (!improvement) {
       throw new Error(`Improvement ${improvementId} not found`)
@@ -327,17 +329,19 @@ export class AgenticEngine {
     avgSafetyScore: number
   } {
     const improvements = this.getImprovements()
-    const implemented = improvements.filter(i => i.status === 'completed').length
-    const pending = improvements.filter(i => i.status === 'detected' || i.status === 'approved').length
-    
-    const successful = this.executionHistory.filter(h => h.result.success).length
-    const successRate = this.executionHistory.length > 0 
-      ? (successful / this.executionHistory.length) * 100 
-      : 0
+    const implemented = improvements.filter((i) => i.status === 'completed').length
+    const pending = improvements.filter(
+      (i) => i.status === 'detected' || i.status === 'approved'
+    ).length
 
-    const avgSafetyScore = improvements.length > 0
-      ? improvements.reduce((sum, i) => sum + i.suggestion.safetyScore, 0) / improvements.length
-      : 0
+    const successful = this.executionHistory.filter((h) => h.result.success).length
+    const successRate =
+      this.executionHistory.length > 0 ? (successful / this.executionHistory.length) * 100 : 0
+
+    const avgSafetyScore =
+      improvements.length > 0
+        ? improvements.reduce((sum, i) => sum + i.suggestion.safetyScore, 0) / improvements.length
+        : 0
 
     return {
       totalImprovements: improvements.length,

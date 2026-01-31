@@ -1,6 +1,6 @@
 /**
  * Enrichment Service Hook
- * 
+ *
  * React hook for using the enrichment pipeline in the UI
  */
 
@@ -13,14 +13,14 @@ export interface UseEnrichmentResult {
   loading: boolean
   error: string | null
   result: EnrichmentResult | null
-  progress: any[]
+  progress: unknown[]
 }
 
 export function useEnrichment(): UseEnrichmentResult {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<EnrichmentResult | null>(null)
-  const [progress, setProgress] = useState<any[]>([])
+  const [progress, setProgress] = useState<unknown[]>([])
 
   const enrich = async (request: EnrichmentRequest) => {
     setLoading(true)

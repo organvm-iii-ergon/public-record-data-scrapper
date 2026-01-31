@@ -36,57 +36,6 @@ interface CAAPIConfig {
 }
 
 /**
- * CA API Search Request
- */
-interface CASearchRequest {
-  query: string
-  type: 'business_name' | 'filing_number' | 'debtor_name'
-  limit?: number
-  offset?: number
-  filingDate?: {
-    from: string // ISO date
-    to: string
-  }
-}
-
-/**
- * CA API Filing Response
- */
-interface CAFilingResponse {
-  filingNumber: string
-  filingType: string
-  filingDate: string
-  expirationDate?: string
-  status: 'active' | 'lapsed' | 'terminated'
-  securedParty: {
-    name: string
-    address?: {
-      street?: string
-      city?: string
-      state?: string
-      zip?: string
-    }
-    organizationType?: string
-  }
-  debtor: {
-    name: string
-    address?: {
-      street?: string
-      city?: string
-      state?: string
-      zip?: string
-    }
-    organizationType?: string
-  }
-  collateral: string
-  amendments?: Array<{
-    filingNumber: string
-    date: string
-    type: string
-  }>
-}
-
-/**
  * OAuth2 Token Response
  */
 interface OAuth2Token {
@@ -164,7 +113,7 @@ export class CAStateCollector implements StateCollector {
       accessToken: 'mock-access-token',
       tokenType: 'Bearer',
       expiresIn: 3600,
-      expiresAt: Date.now() + (3600 * 1000)
+      expiresAt: Date.now() + 3600 * 1000
     }
   }
 
@@ -172,7 +121,9 @@ export class CAStateCollector implements StateCollector {
    * Make authenticated API request
    * @private
    */
-  private async apiRequest<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
+  private async apiRequest<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
+    void endpoint
+    void params
     await this.rateLimiter.acquire()
     await this.authenticate()
 
@@ -187,7 +138,7 @@ export class CAStateCollector implements StateCollector {
     this.stats.totalCost += this.config.costPerRequest
 
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300))
+    await new Promise((resolve) => setTimeout(resolve, 200 + Math.random() * 300))
 
     return {} as T
   }
@@ -327,13 +278,18 @@ export class CAStateCollector implements StateCollector {
     const rateLimitStats = this.rateLimiter.getStats()
 
     return {
-      isHealthy: this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests < 0.1 : true,
+      isHealthy:
+        this.stats.totalRequests > 0
+          ? this.stats.totalErrors / this.stats.totalRequests < 0.1
+          : true,
       lastCollectionTime: this.stats.lastCollectionTime,
       totalCollected: this.stats.totalCollected,
-      errorRate: this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0,
-      averageLatency: this.stats.latencies.length > 0
-        ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
-        : 0,
+      errorRate:
+        this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0,
+      averageLatency:
+        this.stats.latencies.length > 0
+          ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
+          : 0,
       rateLimitStats: {
         perMinute: rateLimitStats.perMinute,
         perHour: rateLimitStats.perHour,
@@ -350,9 +306,8 @@ export class CAStateCollector implements StateCollector {
       totalCost: this.stats.totalCost,
       totalRequests: this.stats.totalRequests,
       costPerRequest: this.config.costPerRequest,
-      averageCostPerFiling: this.stats.totalCollected > 0
-        ? this.stats.totalCost / this.stats.totalCollected
-        : 0
+      averageCostPerFiling:
+        this.stats.totalCollected > 0 ? this.stats.totalCost / this.stats.totalCollected : 0
     }
   }
 

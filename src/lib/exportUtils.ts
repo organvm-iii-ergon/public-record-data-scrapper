@@ -6,19 +6,19 @@ export type ExportFormat = 'json' | 'csv'
  * Converts a value to a CSV-safe string
  * Handles commas, quotes, and newlines properly
  */
-function escapeCsvValue(value: any): string {
+function escapeCsvValue(value: unknown): string {
   if (value === null || value === undefined) {
     return ''
   }
-  
+
   const stringValue = String(value)
-  
+
   // If the value contains comma, quote, or newline, wrap it in quotes
   if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
     // Escape existing quotes by doubling them
     return `"${stringValue.replace(/"/g, '""')}"`
   }
-  
+
   return stringValue
 }
 
@@ -53,9 +53,9 @@ function prospectsToCsv(prospects: Prospect[]): string {
   ]
 
   // Build CSV rows
-  const rows = prospects.map(prospect => {
-    const signalTypes = [...new Set(prospect.growthSignals.map(s => s.type))].join('; ')
-    
+  const rows = prospects.map((prospect) => {
+    const signalTypes = [...new Set(prospect.growthSignals.map((s) => s.type))].join('; ')
+
     return [
       prospect.companyName,
       prospect.industry,
@@ -81,7 +81,7 @@ function prospectsToCsv(prospects: Prospect[]): string {
   // Combine headers and rows
   const csvContent = [
     headers.map(escapeCsvValue).join(','),
-    ...rows.map(row => row.join(','))
+    ...rows.map((row) => row.join(','))
   ].join('\n')
 
   return csvContent
@@ -91,7 +91,7 @@ function prospectsToCsv(prospects: Prospect[]): string {
  * Converts prospects to JSON format (existing functionality)
  */
 function prospectsToJson(prospects: Prospect[]): string {
-  const exportData = prospects.map(prospect => ({
+  const exportData = prospects.map((prospect) => ({
     company: prospect.companyName,
     industry: prospect.industry,
     state: prospect.state,
@@ -100,7 +100,7 @@ function prospectsToJson(prospects: Prospect[]): string {
     healthScore: prospect.healthScore.score,
     sentimentTrend: prospect.healthScore.sentimentTrend,
     growthSignals: prospect.growthSignals.length,
-    signalTypes: [...new Set(prospect.growthSignals.map(s => s.type))],
+    signalTypes: [...new Set(prospect.growthSignals.map((s) => s.type))],
     estimatedRevenue: prospect.estimatedRevenue,
     defaultDate: prospect.defaultDate,
     daysSinceDefault: prospect.timeSinceDefault,
@@ -111,7 +111,7 @@ function prospectsToJson(prospects: Prospect[]): string {
     claimedBy: prospect.claimedBy,
     claimedDate: prospect.claimedDate
   }))
-  
+
   return JSON.stringify(exportData, null, 2)
 }
 
@@ -119,7 +119,7 @@ function prospectsToJson(prospects: Prospect[]): string {
  * Exports prospects to the specified format and triggers download
  */
 export function exportProspects(
-  prospects: Prospect[], 
+  prospects: Prospect[],
   format: ExportFormat = 'json',
   filterInfo?: string
 ): void {
@@ -149,16 +149,17 @@ export function exportProspects(
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  
+
   // Generate filename
   // Use ISO string, remove milliseconds and 'Z', replace colons with dashes for filename safety
   const timestamp = new Date().toISOString().split('.')[0].replace(/[:]/g, '-')
   const filterSuffix = filterInfo ? `-${filterInfo}` : ''
-  
-  const filename = prospects.length === 1
-    ? `prospect-${prospects[0].companyName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${timestamp}.${extension}`
-    : `prospects-export${filterSuffix}-${timestamp}.${extension}`
-  
+
+  const filename =
+    prospects.length === 1
+      ? `prospect-${prospects[0].companyName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${timestamp}.${extension}`
+      : `prospects-export${filterSuffix}-${timestamp}.${extension}`
+
   a.download = filename
   document.body.appendChild(a)
   a.click()

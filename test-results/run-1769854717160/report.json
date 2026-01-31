@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-01-31T10:24:29.867Z",
+  "summary": {
+    "total": 3,
+    "successful": 1,
+    "failed": 2,
+    "successRate": 0.3333333333333333
+  },
+  "results": [
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Apple Inc",
+        "description": "California tech giant",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?",
+        "timestamp": "2026-01-31T10:18:58.731Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 21580
+    },
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Intel Corporation",
+        "description": "California semiconductor company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Navigation timeout of 45000 ms exceeded",
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?searchType=debtor&searchCriteria=Intel%20Corporation",
+        "timestamp": "2026-01-31T10:21:44.564Z"
+      },
+      "success": false,
+      "duration": 150821,
+      "error": "Navigation timeout of 45000 ms exceeded"
+    },
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Sample Business Inc",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Navigation timeout of 45000 ms exceeded",
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?searchType=debtor&searchCriteria=Sample%20Business%20Inc",
+        "timestamp": "2026-01-31T10:24:29.773Z"
+      },
+      "success": false,
+      "duration": 150208,
+      "error": "Navigation timeout of 45000 ms exceeded"
+    }
+  ]
+}

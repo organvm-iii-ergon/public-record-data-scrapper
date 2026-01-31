@@ -5,6 +5,7 @@
  * Seeds the database with sample data for development
  */
 
+import { createInterface } from 'node:readline'
 import { initDatabase, closeDatabase, createQueries } from '../src/lib/database'
 
 const sampleProspects = [
@@ -67,12 +68,12 @@ async function main() {
     const existingStats = await queries.getProspectStats()
     if (existingStats.total > 0) {
       console.log(`⚠️  Database already contains ${existingStats.total} prospect(s)`)
-      const readline = require('readline').createInterface({
+      const readline = createInterface({
         input: process.stdin,
         output: process.stdout
       })
 
-      const answer = await new Promise<string>(resolve => {
+      const answer = await new Promise<string>((resolve) => {
         readline.question('Continue seeding? (y/N): ', resolve)
       })
       readline.close()
@@ -139,7 +140,6 @@ async function main() {
         }
 
         console.log(`   - Added ${signals.length} growth signals\n`)
-
       } catch (error) {
         console.error(`❌ Failed to create ${prospectData.companyName}:`, error)
       }
@@ -156,7 +156,6 @@ async function main() {
 
     await closeDatabase()
     console.log('🎉 Database seeded successfully!')
-
   } catch (error) {
     console.error('❌ Seeding failed:', error)
     await closeDatabase()

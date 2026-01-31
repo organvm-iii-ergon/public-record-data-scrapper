@@ -6,7 +6,25 @@
  */
 
 import cron from 'node-cron'
-import { AUDIENCES, MultiAudienceContentGenerator, MultiAudienceDistributor, type Content } from './multi-audience-builder'
+import {
+  AUDIENCES,
+  MultiAudienceContentGenerator,
+  MultiAudienceDistributor
+} from './multi-audience-builder'
+
+interface ResearchInsight {
+  type: string
+  finding: string
+  evidence: string
+  novelty: number
+}
+
+interface ResearchFinding extends ResearchInsight {
+  id: string
+  category: string
+  publishedTo: string[]
+  createdAt: string
+}
 
 interface PublishingSchedule {
   // How often to publish to each audience
@@ -44,7 +62,7 @@ class AutonomousPublisher {
   private schedule: PublishingSchedule
   private generator: MultiAudienceContentGenerator
   private distributor: MultiAudienceDistributor
-  private researchFindings: any[] = []
+  private researchFindings: ResearchFinding[] = []
 
   constructor(schedule: PublishingSchedule = DEFAULT_SCHEDULE) {
     this.schedule = schedule
@@ -124,7 +142,6 @@ class AutonomousPublisher {
 
       console.log(`✅ Generated ${findings.length} new research findings`)
       console.log(`   Total findings in queue: ${this.researchFindings.length}\n`)
-
     } catch (error) {
       console.error(`❌ Error generating research findings: ${error}`)
     }
@@ -147,7 +164,7 @@ class AutonomousPublisher {
 
       // Generate content for this audience
       const contents = this.generator.generateMultiAudienceContent(finding)
-      const audienceContent = contents.filter(c => c.audience.includes(audienceId))
+      const audienceContent = contents.filter((c) => c.audience.includes(audienceId))
 
       if (audienceContent.length === 0) {
         console.log(`⚠️  No content generated for ${audienceId}`)
@@ -164,7 +181,6 @@ class AutonomousPublisher {
       console.log(`✅ Published to ${audienceId} audience`)
       console.log(`   Title: ${audienceContent[0].title}`)
       console.log(`   Platforms: ${audienceContent[0].platforms.join(', ')}\n`)
-
     } catch (error) {
       console.error(`❌ Error publishing to ${audienceId}: ${error}`)
     }
@@ -173,9 +189,9 @@ class AutonomousPublisher {
   /**
    * Get next finding to publish for audience
    */
-  private getNextFinding(audienceId: string): any {
+  private getNextFinding(audienceId: string): ResearchFinding | undefined {
     // Find first unpublished finding for this audience
-    return this.researchFindings.find(f => {
+    return this.researchFindings.find((f) => {
       const publishedTo = f.publishedTo || []
       return !publishedTo.includes(audienceId)
     })
@@ -184,7 +200,7 @@ class AutonomousPublisher {
   /**
    * Analyze repository code
    */
-  private async analyzeCode(): Promise<any[]> {
+  private async analyzeCode(): Promise<ResearchInsight[]> {
     // Stub - would analyze actual code
     return [
       {
@@ -205,7 +221,7 @@ class AutonomousPublisher {
   /**
    * Analyze collected data
    */
-  private async analyzeData(): Promise<any[]> {
+  private async analyzeData(): Promise<ResearchInsight[]> {
     // Stub - would analyze actual data
     return [
       {
@@ -226,7 +242,7 @@ class AutonomousPublisher {
   /**
    * Analyze system performance
    */
-  private async analyzePerformance(): Promise<any[]> {
+  private async analyzePerformance(): Promise<ResearchInsight[]> {
     // Stub - would analyze actual metrics
     return [
       {
@@ -241,8 +257,8 @@ class AutonomousPublisher {
   /**
    * Convert insights to research findings
    */
-  private insightsToFindings(insights: any[], category: string): any[] {
-    return insights.map(insight => ({
+  private insightsToFindings(insights: ResearchInsight[], category: string): ResearchFinding[] {
+    return insights.map((insight) => ({
       id: `${category}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       category,
       ...insight,
@@ -254,18 +270,26 @@ class AutonomousPublisher {
   /**
    * Get publishing statistics
    */
-  getStats(): any {
+  getStats(): {
+    totalFindings: number
+    publishedFindings: number
+    unpublishedFindings: number
+    byAudience: Record<string, { published: number; pending: number }>
+  } {
+    const byAudience: Record<string, { published: number; pending: number }> = {}
     const stats = {
       totalFindings: this.researchFindings.length,
-      publishedFindings: this.researchFindings.filter(f => f.publishedTo?.length > 0).length,
-      unpublishedFindings: this.researchFindings.filter(f => !f.publishedTo || f.publishedTo.length === 0).length,
-      byAudience: {} as any
+      publishedFindings: this.researchFindings.filter((f) => f.publishedTo?.length > 0).length,
+      unpublishedFindings: this.researchFindings.filter(
+        (f) => !f.publishedTo || f.publishedTo.length === 0
+      ).length,
+      byAudience
     }
 
-    AUDIENCES.forEach(audience => {
+    AUDIENCES.forEach((audience) => {
       stats.byAudience[audience.id] = {
-        published: this.researchFindings.filter(f => f.publishedTo?.includes(audience.id)).length,
-        pending: this.researchFindings.filter(f => !f.publishedTo?.includes(audience.id)).length
+        published: this.researchFindings.filter((f) => f.publishedTo?.includes(audience.id)).length,
+        pending: this.researchFindings.filter((f) => !f.publishedTo?.includes(audience.id)).length
       }
     })
 
@@ -283,28 +307,33 @@ async function main() {
   const publisher = new AutonomousPublisher()
 
   switch (command) {
-    case 'start':
+    case 'start': {
       publisher.start()
       break
+    }
 
-    case 'stats':
+    case 'stats': {
       const stats = publisher.getStats()
       console.log('\n📊 Publishing Statistics\n')
       console.log(`Total Findings: ${stats.totalFindings}`)
       console.log(`Published: ${stats.publishedFindings}`)
       console.log(`Unpublished: ${stats.unpublishedFindings}\n`)
       console.log('By Audience:')
-      Object.entries(stats.byAudience).forEach(([audience, data]: [string, any]) => {
-        console.log(`  ${audience.padEnd(12)} Published: ${data.published}, Pending: ${data.pending}`)
+      Object.entries(stats.byAudience).forEach(([audience, data]) => {
+        console.log(
+          `  ${audience.padEnd(12)} Published: ${data.published}, Pending: ${data.pending}`
+        )
       })
       console.log()
       break
+    }
 
-    case 'test':
+    case 'test': {
       // Generate and publish once for testing
       await publisher['generateResearchFindings']()
       await publisher['publishToAudience']('casual')
       break
+    }
 
     default:
       console.log(`

@@ -8,21 +8,18 @@
  * - Industry classification
  */
 
-import {
-  Prospect,
-  GrowthSignal,
-  HealthScore,
-  SignalType,
-  HealthGrade,
-  IndustryType,
-  UCCFiling
-} from '../types'
+import { Prospect, GrowthSignal, HealthScore, HealthGrade, IndustryType, UCCFiling } from '../types'
 
 export interface EnrichmentSource {
   id: string
   name: string
   type: 'web-scraping' | 'api' | 'ml-inference'
-  capabilities: ('growth-signals' | 'health-score' | 'revenue-estimate' | 'industry-classification')[]
+  capabilities: (
+    | 'growth-signals'
+    | 'health-score'
+    | 'revenue-estimate'
+    | 'industry-classification'
+  )[]
   endpoint?: string
   apiKey?: string
 }
@@ -50,7 +47,6 @@ export class DataEnrichmentService {
     filing: UCCFiling,
     existingData?: Partial<Prospect>
   ): Promise<{ prospect: Prospect; result: EnrichmentResult }> {
-    const startTime = Date.now()
     const enrichedFields: string[] = []
     const errors: string[] = []
     let totalConfidence = 0
@@ -60,7 +56,7 @@ export class DataEnrichmentService {
     const prospect: Prospect = {
       id: existingData?.id || `prospect-${Date.now()}`,
       companyName: filing.debtorName,
-      industry: existingData?.industry || await this.inferIndustry(filing.debtorName),
+      industry: existingData?.industry || (await this.inferIndustry(filing.debtorName)),
       state: filing.state,
       status: existingData?.status || 'new',
       priorityScore: 0, // Will be calculated later
@@ -141,10 +137,7 @@ export class DataEnrichmentService {
   /**
    * Detect growth signals for a company
    */
-  private async detectGrowthSignals(
-    companyName: string,
-    state: string
-  ): Promise<GrowthSignal[]> {
+  private async detectGrowthSignals(companyName: string, state: string): Promise<GrowthSignal[]> {
     const signals: GrowthSignal[] = []
 
     // Check hiring signals (job postings)
@@ -167,42 +160,49 @@ export class DataEnrichmentService {
     const equipmentSignals = await this.detectEquipmentSignals(companyName)
     signals.push(...equipmentSignals)
 
-    return signals.sort((a, b) => new Date(b.detectedDate).getTime() - new Date(a.detectedDate).getTime())
+    return signals.sort(
+      (a, b) => new Date(b.detectedDate).getTime() - new Date(a.detectedDate).getTime()
+    )
   }
 
   private async detectHiringSignals(companyName: string): Promise<GrowthSignal[]> {
     // In a real implementation, this would scrape job boards (Indeed, LinkedIn, etc.)
     // For now, return empty array or simulated data
+    void companyName
     return []
   }
 
   private async detectPermitSignals(companyName: string, state: string): Promise<GrowthSignal[]> {
     // In a real implementation, this would scrape municipal permit databases
+    void companyName
+    void state
     return []
   }
 
   private async detectContractSignals(companyName: string): Promise<GrowthSignal[]> {
     // In a real implementation, this would check government contract databases (USASpending.gov, etc.)
+    void companyName
     return []
   }
 
   private async detectExpansionSignals(companyName: string): Promise<GrowthSignal[]> {
     // In a real implementation, this would scrape news, press releases, business journals
+    void companyName
     return []
   }
 
   private async detectEquipmentSignals(companyName: string): Promise<GrowthSignal[]> {
     // In a real implementation, this would check equipment financing databases
+    void companyName
     return []
   }
 
   /**
    * Calculate health score for a company
    */
-  private async calculateHealthScore(
-    companyName: string,
-    state: string
-  ): Promise<HealthScore> {
+  private async calculateHealthScore(companyName: string, state: string): Promise<HealthScore> {
+    void companyName
+    void state
     // In a real implementation, this would:
     // 1. Scrape online reviews (Google, Yelp, BBB)
     // 2. Check violation databases (OSHA, health dept, etc.)
@@ -222,6 +222,8 @@ export class DataEnrichmentService {
     state: string,
     lienAmount?: number
   ): Promise<number> {
+    void companyName
+    void state
     // ML-based revenue estimation
     // Factors: industry, location, lien amount, employee count, etc.
 
@@ -253,22 +255,42 @@ export class DataEnrichmentService {
     const nameLower = companyName.toLowerCase()
 
     // Simple keyword-based classification
-    if (nameLower.includes('restaurant') || nameLower.includes('cafe') || nameLower.includes('food')) {
+    if (
+      nameLower.includes('restaurant') ||
+      nameLower.includes('cafe') ||
+      nameLower.includes('food')
+    ) {
       return 'restaurant'
     }
     if (nameLower.includes('retail') || nameLower.includes('store') || nameLower.includes('shop')) {
       return 'retail'
     }
-    if (nameLower.includes('construction') || nameLower.includes('builder') || nameLower.includes('contractor')) {
+    if (
+      nameLower.includes('construction') ||
+      nameLower.includes('builder') ||
+      nameLower.includes('contractor')
+    ) {
       return 'construction'
     }
-    if (nameLower.includes('health') || nameLower.includes('medical') || nameLower.includes('care')) {
+    if (
+      nameLower.includes('health') ||
+      nameLower.includes('medical') ||
+      nameLower.includes('care')
+    ) {
       return 'healthcare'
     }
-    if (nameLower.includes('manufacturing') || nameLower.includes('factory') || nameLower.includes('industrial')) {
+    if (
+      nameLower.includes('manufacturing') ||
+      nameLower.includes('factory') ||
+      nameLower.includes('industrial')
+    ) {
       return 'manufacturing'
     }
-    if (nameLower.includes('tech') || nameLower.includes('software') || nameLower.includes('digital')) {
+    if (
+      nameLower.includes('tech') ||
+      nameLower.includes('software') ||
+      nameLower.includes('digital')
+    ) {
       return 'technology'
     }
 
@@ -281,7 +303,7 @@ export class DataEnrichmentService {
    */
   private generateDefaultHealthScore(): HealthScore {
     const grades: HealthGrade[] = ['A', 'B', 'C', 'D', 'F']
-    const weights = [0.15, 0.30, 0.35, 0.15, 0.05]
+    const weights = [0.15, 0.3, 0.35, 0.15, 0.05]
     const rand = Math.random()
     let cumulative = 0
     let grade: HealthGrade = 'C'
@@ -295,11 +317,11 @@ export class DataEnrichmentService {
     }
 
     const scoreMap: Record<HealthGrade, [number, number]> = {
-      'A': [85, 100],
-      'B': [70, 84],
-      'C': [55, 69],
-      'D': [40, 54],
-      'F': [0, 39]
+      A: [85, 100],
+      B: [70, 84],
+      C: [55, 69],
+      D: [40, 54],
+      F: [0, 39]
     }
 
     const [min, max] = scoreMap[grade]
@@ -308,10 +330,16 @@ export class DataEnrichmentService {
     return {
       grade,
       score,
-      sentimentTrend: Math.random() > 0.5 ? 'stable' : Math.random() > 0.5 ? 'improving' : 'declining',
+      sentimentTrend:
+        Math.random() > 0.5 ? 'stable' : Math.random() > 0.5 ? 'improving' : 'declining',
       reviewCount: Math.round(50 + Math.random() * 450),
       avgSentiment: 0.3 + (score / 100) * 0.6,
-      violationCount: grade === 'A' ? 0 : grade === 'B' ? Math.round(Math.random() * 2) : Math.round(1 + Math.random() * 5),
+      violationCount:
+        grade === 'A'
+          ? 0
+          : grade === 'B'
+            ? Math.round(Math.random() * 2)
+            : Math.round(1 + Math.random() * 5),
       lastUpdated: new Date().toISOString().split('T')[0]
     }
   }
@@ -329,7 +357,7 @@ export class DataEnrichmentService {
     // - Growth signals (more signals = higher priority)
     // - Health score (healthier = higher priority)
 
-    const defaultScore = Math.min(50, (timeSinceDefault / 14)) // Max 50 points
+    const defaultScore = Math.min(50, timeSinceDefault / 14) // Max 50 points
     const growthScore = Math.min(30, signalScore) // Max 30 points
     const healthPoints = healthScore * 0.2 // Max 20 points
 
@@ -345,16 +373,20 @@ export class DataEnrichmentService {
     // Default info
     const years = Math.floor(prospect.timeSinceDefault / 365)
     if (years > 0) {
-      parts.push(`Defaulted ${years} year${years > 1 ? 's' : ''} ago on ${prospect.uccFilings[0].filingType} filing`)
+      parts.push(
+        `Defaulted ${years} year${years > 1 ? 's' : ''} ago on ${prospect.uccFilings[0].filingType} filing`
+      )
     }
 
     // Growth signals
     if (prospect.growthSignals.length > 0) {
       const topSignals = prospect.growthSignals
         .slice(0, 2)
-        .map(s => s.type)
+        .map((s) => s.type)
         .join(', ')
-      parts.push(`showing ${prospect.growthSignals.length} growth signal${prospect.growthSignals.length > 1 ? 's' : ''} (${topSignals})`)
+      parts.push(
+        `showing ${prospect.growthSignals.length} growth signal${prospect.growthSignals.length > 1 ? 's' : ''} (${topSignals})`
+      )
     }
 
     // Health grade
@@ -392,7 +424,7 @@ export class DataEnrichmentService {
     // Process in batches to avoid overwhelming external services
     for (let i = 0; i < filings.length; i += concurrency) {
       const batch = filings.slice(i, i + concurrency)
-      const batchPromises = batch.map(filing => this.enrichProspect(filing))
+      const batchPromises = batch.map((filing) => this.enrichProspect(filing))
 
       const batchResults = await Promise.all(batchPromises)
 
@@ -429,7 +461,9 @@ export class DataEnrichmentService {
         updatedProspect.growthSignals = signals
         enrichedFields.push('growthSignals')
       } catch (error) {
-        errors.push(`Growth signals refresh: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        errors.push(
+          `Growth signals refresh: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
       }
     }
 
@@ -439,7 +473,9 @@ export class DataEnrichmentService {
         updatedProspect.healthScore = healthScore
         enrichedFields.push('healthScore')
       } catch (error) {
-        errors.push(`Health score refresh: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        errors.push(
+          `Health score refresh: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
       }
     }
 
@@ -476,7 +512,7 @@ export class DataEnrichmentService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 

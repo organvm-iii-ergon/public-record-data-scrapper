@@ -37,7 +37,7 @@ export function usePersistentState<T>(
     } catch (error) {
       console.warn(`[usePersistentState] Failed to persist key "${key}" to localStorage`, error)
     }
-  }, [key, state])
+  }, [isBrowser, key, state])
 
   return [state, setState]
 }

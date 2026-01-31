@@ -50,6 +50,10 @@ vi.mock('@/lib/services', () => ({
   }
 }))
 
+vi.mock('@/hooks/useDataTier', () => ({
+  useDataTier: () => ({ dataTier: 'oss', setDataTier: vi.fn() })
+}))
+
 // Mock feature flags as useMockData: true by default for simpler tests
 vi.mock('@/lib/config/dataPipeline', () => ({
   getDataPipelineConfig: vi.fn().mockReturnValue({}),

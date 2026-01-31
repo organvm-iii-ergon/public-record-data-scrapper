@@ -31,14 +31,26 @@ export function ThemeToggle() {
 
   const currentTheme = themes.find((t) => t.id === theme) || themes[0]
   const Icon = currentTheme.icon
+  const handleToggle = () => {
+    const nextTheme = theme === 'light-clean' ? 'dark-professional' : 'light-clean'
+    setTheme(nextTheme)
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement
+      themes.forEach(({ id }) => root.classList.remove(id))
+      root.classList.add(nextTheme)
+    }
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          aria-label="Toggle theme"
+          data-testid="theme-toggle"
           variant="outline"
           size="sm"
           className="glass-effect border-white/30 text-white hover:bg-white/10"
+          onPointerDown={handleToggle}
         >
           <Icon size={16} weight="bold" />
           <span className="sr-only">Toggle theme</span>

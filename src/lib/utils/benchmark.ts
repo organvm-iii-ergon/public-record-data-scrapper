@@ -11,7 +11,7 @@ export interface BenchmarkResult {
   operationsPerSecond: number
   memoryUsed: number // bytes
   timestamp: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface BenchmarkSummary {
@@ -40,7 +40,7 @@ export class Benchmark {
     options: {
       operations?: number
       warmup?: boolean
-      metadata?: Record<string, any>
+      metadata?: Record<string, unknown>
     } = {}
   ): Promise<BenchmarkResult> {
     const operations = options.operations || 1
@@ -88,7 +88,7 @@ export class Benchmark {
   async suite(
     benchmarks: Array<{
       name: string
-      fn: () => Promise<any>
+      fn: () => Promise<unknown>
       operations?: number
     }>
   ): Promise<BenchmarkSummary> {
@@ -128,7 +128,7 @@ export class Benchmark {
 
     const totalDuration = this.results.reduce((sum, r) => sum + r.duration, 0)
     const totalOperations = this.results.reduce((sum, r) => sum + r.operations, 0)
-    const durations = this.results.map(r => r.duration)
+    const durations = this.results.map((r) => r.duration)
 
     return {
       totalTests: this.results.length,
@@ -137,8 +137,7 @@ export class Benchmark {
       minDuration: Math.min(...durations),
       maxDuration: Math.max(...durations),
       totalOperations,
-      avgOperationsPerSecond:
-        (totalOperations / totalDuration) * 1000,
+      avgOperationsPerSecond: (totalOperations / totalDuration) * 1000,
       results: [...this.results]
     }
   }
@@ -146,7 +145,10 @@ export class Benchmark {
   /**
    * Compare two benchmark results
    */
-  static compare(baseline: BenchmarkResult, current: BenchmarkResult): {
+  static compare(
+    baseline: BenchmarkResult,
+    current: BenchmarkResult
+  ): {
     durationDiff: number
     durationDiffPercent: number
     opsDiff: number
@@ -249,7 +251,7 @@ export class Profiler {
     console.log('\nPerformance Profile:')
     console.log('='.repeat(60))
 
-    this.measures.forEach(measure => {
+    this.measures.forEach((measure) => {
       console.log(`${measure.name}: ${measure.duration.toFixed(2)}ms`)
     })
 
@@ -289,14 +291,17 @@ export class MemoryProfiler {
   /**
    * Compare two snapshots
    */
-  compare(startName: string, endName: string): {
+  compare(
+    startName: string,
+    endName: string
+  ): {
     heapUsedDiff: number
     heapTotalDiff: number
     externalDiff: number
     arrayBuffersDiff: number
   } | null {
-    const start = this.snapshots.find(s => s.name === startName)
-    const end = this.snapshots.find(s => s.name === endName)
+    const start = this.snapshots.find((s) => s.name === startName)
+    const end = this.snapshots.find((s) => s.name === endName)
 
     if (!start || !end) {
       return null
@@ -331,7 +336,7 @@ export class MemoryProfiler {
     console.log('\nMemory Profile:')
     console.log('='.repeat(60))
 
-    this.snapshots.forEach(snapshot => {
+    this.snapshots.forEach((snapshot) => {
       console.log(`\n${snapshot.name}:`)
       console.log(`  Heap Used: ${(snapshot.heapUsed / 1024 / 1024).toFixed(2)}MB`)
       console.log(`  Heap Total: ${(snapshot.heapTotal / 1024 / 1024).toFixed(2)}MB`)
@@ -407,7 +412,7 @@ export class BenchmarkStats {
 
   static standardDeviation(values: number[]): number {
     const avg = values.reduce((sum, v) => sum + v, 0) / values.length
-    const squareDiffs = values.map(v => Math.pow(v - avg, 2))
+    const squareDiffs = values.map((v) => Math.pow(v - avg, 2))
     const avgSquareDiff = squareDiffs.reduce((sum, v) => sum + v, 0) / values.length
     return Math.sqrt(avgSquareDiff)
   }
@@ -423,7 +428,7 @@ export class BenchmarkStats {
     p95: number
     p99: number
   } {
-    const durations = results.map(r => r.duration)
+    const durations = results.map((r) => r.duration)
 
     return {
       count: durations.length,

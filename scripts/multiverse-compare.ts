@@ -77,11 +77,11 @@ async function runImplementation(
     // Calculate quality metrics
     const filings = result.filings || []
     const dataCompleteness = calculateDataCompleteness(filings)
-    const hasValidDates = filings.every(f => isValidDate(f.filingDate))
-    const hasValidFilingNumbers = filings.every(f => f.filingNumber && f.filingNumber.length > 0)
+    const hasValidDates = filings.every((f) => isValidDate(f.filingDate))
+    const hasValidFilingNumbers = filings.every((f) => f.filingNumber && f.filingNumber.length > 0)
 
     // Estimate cost
-    const estimatedCost = estimateCost(implementation, state)
+    const estimatedCost = estimateCost(implementation)
 
     const implResult: ImplementationResult = {
       implementation,
@@ -100,13 +100,14 @@ async function runImplementation(
     }
 
     if (result.success) {
-      console.log(`  ✅ ${implementation.toUpperCase()}: ${filings.length} filings in ${Math.round(duration)}ms ($${estimatedCost.toFixed(4)})`)
+      console.log(
+        `  ✅ ${implementation.toUpperCase()}: ${filings.length} filings in ${Math.round(duration)}ms ($${estimatedCost.toFixed(4)})`
+      )
     } else {
       console.log(`  ❌ ${implementation.toUpperCase()}: Failed - ${result.error}`)
     }
 
     return implResult
-
   } catch (error) {
     const duration = performance.now() - startTime
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -125,7 +126,7 @@ async function runImplementation(
       dataCompleteness: 0,
       hasValidDates: false,
       hasValidFilingNumbers: false,
-      estimatedCost: estimateCost(implementation, state)
+      estimatedCost: estimateCost(implementation)
     }
   }
 }
@@ -136,14 +137,21 @@ async function runImplementation(
 function calculateDataCompleteness(filings: UCCFiling[]): number {
   if (filings.length === 0) return 0
 
-  const fields = ['filingNumber', 'debtorName', 'securedParty', 'filingDate', 'collateral', 'status']
+  const fields: Array<keyof UCCFiling> = [
+    'filingNumber',
+    'debtorName',
+    'securedParty',
+    'filingDate',
+    'collateral',
+    'status'
+  ]
 
   let totalCompleteness = 0
 
-  filings.forEach(filing => {
+  filings.forEach((filing) => {
     let filledFields = 0
-    fields.forEach(field => {
-      const value = (filing as any)[field]
+    fields.forEach((field) => {
+      const value = filing[field]
       if (value && value !== 'Not specified' && value !== 'Unknown' && value !== '') {
         filledFields++
       }
@@ -166,7 +174,7 @@ function isValidDate(dateStr: string): boolean {
 /**
  * Estimate cost per query for each implementation
  */
-function estimateCost(implementation: ScraperImplementation, state: SupportedState): number {
+function estimateCost(implementation: ScraperImplementation): number {
   switch (implementation) {
     case 'mock':
       return 0 // Free
@@ -192,21 +200,22 @@ function estimateCost(implementation: ScraperImplementation, state: SupportedSta
  * Calculate data agreement score between implementations
  */
 function calculateDataAgreement(results: ImplementationResult[]): number {
-  const successfulResults = results.filter(r => r.success)
+  const successfulResults = results.filter((r) => r.success)
 
   if (successfulResults.length < 2) {
     return 0 // Can't compare
   }
 
   // Compare filing counts
-  const filingCounts = successfulResults.map(r => r.filingsCount)
+  const filingCounts = successfulResults.map((r) => r.filingsCount)
   const avgCount = filingCounts.reduce((a, b) => a + b, 0) / filingCounts.length
-  const countVariance = filingCounts.reduce((sum, count) => sum + Math.abs(count - avgCount), 0) / filingCounts.length
-  const countAgreement = Math.max(0, 100 - (countVariance / avgCount * 100))
+  const countVariance =
+    filingCounts.reduce((sum, count) => sum + Math.abs(count - avgCount), 0) / filingCounts.length
+  const countAgreement = Math.max(0, 100 - (countVariance / avgCount) * 100)
 
   // Compare filing numbers (check if same filings found)
-  const allFilingNumbers = successfulResults.map(r =>
-    new Set(r.filings.map(f => f.filingNumber))
+  const allFilingNumbers = successfulResults.map(
+    (r) => new Set(r.filings.map((f) => f.filingNumber))
   )
 
   if (allFilingNumbers.length < 2) {
@@ -216,7 +225,7 @@ function calculateDataAgreement(results: ImplementationResult[]): number {
   // Calculate Jaccard similarity between first two sets
   const set1 = allFilingNumbers[0]
   const set2 = allFilingNumbers[1]
-  const intersection = new Set([...set1].filter(x => set2.has(x)))
+  const intersection = new Set([...set1].filter((x) => set2.has(x)))
   const union = new Set([...set1, ...set2])
   const jaccardSimilarity = union.size > 0 ? (intersection.size / union.size) * 100 : 0
 
@@ -228,14 +237,14 @@ function calculateDataAgreement(results: ImplementationResult[]): number {
  * Determine consensus filing count (most common)
  */
 function getConsensusFilingCount(results: ImplementationResult[]): number {
-  const successfulResults = results.filter(r => r.success)
+  const successfulResults = results.filter((r) => r.success)
 
   if (successfulResults.length === 0) return 0
 
-  const counts = successfulResults.map(r => r.filingsCount)
+  const counts = successfulResults.map((r) => r.filingsCount)
   const countFrequency = new Map<number, number>()
 
-  counts.forEach(count => {
+  counts.forEach((count) => {
     countFrequency.set(count, (countFrequency.get(count) || 0) + 1)
   })
 
@@ -256,7 +265,7 @@ function getConsensusFilingCount(results: ImplementationResult[]): number {
  * Pick winners based on different criteria
  */
 function determineWinners(results: ImplementationResult[]): ComparisonResult['winner'] {
-  const successfulResults = results.filter(r => r.success)
+  const successfulResults = results.filter((r) => r.success)
 
   if (successfulResults.length === 0) {
     return {
@@ -268,14 +277,12 @@ function determineWinners(results: ImplementationResult[]): ComparisonResult['wi
   }
 
   // Fastest
-  const fastest = successfulResults.reduce((min, r) =>
-    r.duration < min.duration ? r : min
-  )
+  const fastest = successfulResults.reduce((min, r) => (r.duration < min.duration ? r : min))
 
   // Most accurate (highest data completeness + most filings)
   const mostAccurate = successfulResults.reduce((best, r) => {
-    const rScore = r.dataCompleteness + (r.filingsCount * 10)
-    const bestScore = best.dataCompleteness + (best.filingsCount * 10)
+    const rScore = r.dataCompleteness + r.filingsCount * 10
+    const bestScore = best.dataCompleteness + best.filingsCount * 10
     return rScore > bestScore ? r : best
   })
 
@@ -287,21 +294,21 @@ function determineWinners(results: ImplementationResult[]): ComparisonResult['wi
   // Recommended (balanced score: speed + accuracy - cost)
   const recommended = successfulResults.reduce((best, r) => {
     // Normalize metrics to 0-100 scale
-    const maxDuration = Math.max(...successfulResults.map(x => x.duration))
-    const maxCost = Math.max(...successfulResults.map(x => x.estimatedCost))
+    const maxDuration = Math.max(...successfulResults.map((x) => x.duration))
+    const maxCost = Math.max(...successfulResults.map((x) => x.estimatedCost))
 
-    const speedScore = 100 - (r.duration / maxDuration * 100)
+    const speedScore = 100 - (r.duration / maxDuration) * 100
     const accuracyScore = r.dataCompleteness
-    const costScore = 100 - (r.estimatedCost / maxCost * 100)
+    const costScore = 100 - (r.estimatedCost / maxCost) * 100
 
-    const rScore = (speedScore * 0.3) + (accuracyScore * 0.5) + (costScore * 0.2)
+    const rScore = speedScore * 0.3 + accuracyScore * 0.5 + costScore * 0.2
 
-    const maxBestDuration = Math.max(...successfulResults.map(x => x.duration))
-    const maxBestCost = Math.max(...successfulResults.map(x => x.estimatedCost))
-    const bestSpeedScore = 100 - (best.duration / maxBestDuration * 100)
+    const maxBestDuration = Math.max(...successfulResults.map((x) => x.duration))
+    const maxBestCost = Math.max(...successfulResults.map((x) => x.estimatedCost))
+    const bestSpeedScore = 100 - (best.duration / maxBestDuration) * 100
     const bestAccuracyScore = best.dataCompleteness
-    const bestCostScore = 100 - (best.estimatedCost / maxBestCost * 100)
-    const bestScore = (bestSpeedScore * 0.3) + (bestAccuracyScore * 0.5) + (bestCostScore * 0.2)
+    const bestCostScore = 100 - (best.estimatedCost / maxBestCost) * 100
+    const bestScore = bestSpeedScore * 0.3 + bestAccuracyScore * 0.5 + bestCostScore * 0.2
 
     return rScore > bestScore ? r : best
   })
@@ -331,15 +338,16 @@ export async function compareImplementations(
 
   // Run all implementations in parallel
   const results = await Promise.all(
-    implementations.map(impl => runImplementation(state, impl, companyName))
+    implementations.map((impl) => runImplementation(state, impl, companyName))
   )
 
   const totalDuration = performance.now() - overallStart
 
   // Calculate summary statistics
-  const successfulImplementations = results.filter(r => r.success).length
-  const failedImplementations = results.filter(r => !r.success).length
-  const averageFilingsPerImplementation = results.reduce((sum, r) => sum + r.filingsCount, 0) / results.length
+  const successfulImplementations = results.filter((r) => r.success).length
+  const failedImplementations = results.filter((r) => !r.success).length
+  const averageFilingsPerImplementation =
+    results.reduce((sum, r) => sum + r.filingsCount, 0) / results.length
   const consensusFilingCount = getConsensusFilingCount(results)
   const dataAgreementScore = calculateDataAgreement(results)
 
@@ -387,7 +395,7 @@ function printComparisonSummary(comparison: ComparisonResult): void {
   console.log(`Implementation  | Success | Filings | Duration | Cost      | Quality`)
   console.log(`${'─'.repeat(80)}`)
 
-  comparison.results.forEach(r => {
+  comparison.results.forEach((r) => {
     const impl = r.implementation.padEnd(15)
     const success = r.success ? '✅' : '❌'
     const filings = r.filingsCount.toString().padEnd(7)
@@ -402,10 +410,14 @@ function printComparisonSummary(comparison: ComparisonResult): void {
 
   // Summary statistics
   console.log(`Summary:`)
-  console.log(`  Successful: ${comparison.summary.successfulImplementations}/${comparison.results.length}`)
+  console.log(
+    `  Successful: ${comparison.summary.successfulImplementations}/${comparison.results.length}`
+  )
   console.log(`  Consensus Filing Count: ${comparison.summary.consensusFilingCount}`)
   console.log(`  Data Agreement Score: ${Math.round(comparison.summary.dataAgreementScore)}%`)
-  console.log(`  Average Filings: ${comparison.summary.averageFilingsPerImplementation.toFixed(1)}\n`)
+  console.log(
+    `  Average Filings: ${comparison.summary.averageFilingsPerImplementation.toFixed(1)}\n`
+  )
 
   // Winners
   console.log(`🏆 Winners:`)
@@ -437,7 +449,7 @@ export async function runMultiCompanyComparison(
     results.push(comparison)
 
     // Small delay between companies
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   printAggregateAnalysis(results)
@@ -461,41 +473,51 @@ function printAggregateAnalysis(comparisons: ComparisonResult[]): void {
     recommended: new Map<ScraperImplementation, number>()
   }
 
-  comparisons.forEach(c => {
+  comparisons.forEach((c) => {
     wins.fastest.set(c.winner.fastest, (wins.fastest.get(c.winner.fastest) || 0) + 1)
-    wins.mostAccurate.set(c.winner.mostAccurate, (wins.mostAccurate.get(c.winner.mostAccurate) || 0) + 1)
-    wins.mostCostEffective.set(c.winner.mostCostEffective, (wins.mostCostEffective.get(c.winner.mostCostEffective) || 0) + 1)
-    wins.recommended.set(c.winner.recommended, (wins.recommended.get(c.winner.recommended) || 0) + 1)
+    wins.mostAccurate.set(
+      c.winner.mostAccurate,
+      (wins.mostAccurate.get(c.winner.mostAccurate) || 0) + 1
+    )
+    wins.mostCostEffective.set(
+      c.winner.mostCostEffective,
+      (wins.mostCostEffective.get(c.winner.mostCostEffective) || 0) + 1
+    )
+    wins.recommended.set(
+      c.winner.recommended,
+      (wins.recommended.get(c.winner.recommended) || 0) + 1
+    )
   })
 
   console.log(`Win Rates Across ${comparisons.length} Comparisons:\n`)
 
   console.log(`Fastest:`)
   wins.fastest.forEach((count, impl) => {
-    const percentage = (count / comparisons.length * 100).toFixed(1)
+    const percentage = ((count / comparisons.length) * 100).toFixed(1)
     console.log(`  ${impl.toUpperCase()}: ${count}/${comparisons.length} (${percentage}%)`)
   })
 
   console.log(`\nMost Accurate:`)
   wins.mostAccurate.forEach((count, impl) => {
-    const percentage = (count / comparisons.length * 100).toFixed(1)
+    const percentage = ((count / comparisons.length) * 100).toFixed(1)
     console.log(`  ${impl.toUpperCase()}: ${count}/${comparisons.length} (${percentage}%)`)
   })
 
   console.log(`\nMost Cost-Effective:`)
   wins.mostCostEffective.forEach((count, impl) => {
-    const percentage = (count / comparisons.length * 100).toFixed(1)
+    const percentage = ((count / comparisons.length) * 100).toFixed(1)
     console.log(`  ${impl.toUpperCase()}: ${count}/${comparisons.length} (${percentage}%)`)
   })
 
   console.log(`\n⭐ Recommended:`)
   wins.recommended.forEach((count, impl) => {
-    const percentage = (count / comparisons.length * 100).toFixed(1)
+    const percentage = ((count / comparisons.length) * 100).toFixed(1)
     console.log(`  ${impl.toUpperCase()}: ${count}/${comparisons.length} (${percentage}%)`)
   })
 
   // Average data agreement
-  const avgAgreement = comparisons.reduce((sum, c) => sum + c.summary.dataAgreementScore, 0) / comparisons.length
+  const avgAgreement =
+    comparisons.reduce((sum, c) => sum + c.summary.dataAgreementScore, 0) / comparisons.length
   console.log(`\nAverage Data Agreement: ${Math.round(avgAgreement)}%`)
 
   console.log(`\n${'='.repeat(80)}\n`)
@@ -546,7 +568,6 @@ Available implementations: mock, puppeteer, api
     } else {
       await runMultiCompanyComparison(state, companies)
     }
-
   } catch (error) {
     console.error(`❌ Error:`, error)
     process.exit(1)

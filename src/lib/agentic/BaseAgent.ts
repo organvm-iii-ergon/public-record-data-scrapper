@@ -1,10 +1,17 @@
 /**
  * Base Agent Implementation
- * 
+ *
  * Provides the foundation for all autonomous agents in the system.
  */
 
-import { Agent, AgentRole, AgentAnalysis, SystemContext, Finding, ImprovementSuggestion } from './types'
+import {
+  Agent,
+  AgentRole,
+  AgentAnalysis,
+  SystemContext,
+  Finding,
+  ImprovementSuggestion
+} from './types'
 import { v4 as uuidv4 } from 'uuid'
 
 export abstract class BaseAgent implements Agent {
@@ -22,7 +29,10 @@ export abstract class BaseAgent implements Agent {
 
   abstract analyze(context: SystemContext): Promise<AgentAnalysis>
 
-  protected createAnalysis(findings: Finding[], improvements: ImprovementSuggestion[]): AgentAnalysis {
+  protected createAnalysis(
+    findings: Finding[],
+    improvements: ImprovementSuggestion[]
+  ): AgentAnalysis {
     return {
       agentId: this.id,
       agentRole: this.role,
@@ -36,7 +46,7 @@ export abstract class BaseAgent implements Agent {
     category: ImprovementSuggestion['category'],
     severity: Finding['severity'],
     description: string,
-    evidence: any
+    evidence: unknown
   ): Finding {
     return {
       id: uuidv4(),

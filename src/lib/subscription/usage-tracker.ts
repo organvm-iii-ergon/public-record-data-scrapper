@@ -1,6 +1,6 @@
 /**
  * Usage Tracking System
- * 
+ *
  * Tracks API usage, costs, and quota consumption for subscription tiers
  */
 
@@ -14,7 +14,7 @@ export interface UsageRecord {
   cost: number
   timestamp: string
   success: boolean
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface UsageStats {
@@ -65,12 +65,12 @@ export class UsageTracker {
   getUsageStats(userId: string, period: 'daily' | 'monthly' = 'monthly'): UsageStats {
     const tier = this.getUserTier(userId)
     const records = this.getUserRecords(userId, period)
-    
+
     const totalCalls = records.length
-    const successfulCalls = records.filter(r => r.success).length
+    const successfulCalls = records.filter((r) => r.success).length
     const failedCalls = totalCalls - successfulCalls
     const totalCost = records.reduce((sum, r) => sum + r.cost, 0)
-    
+
     const quotaLimit = TierManager.getMonthlyQuota(tier)
     const quotaUsed = successfulCalls
     const quotaRemaining = quotaLimit === -1 ? Infinity : Math.max(0, quotaLimit - quotaUsed)
@@ -122,7 +122,7 @@ export class UsageTracker {
       cutoffDate.setHours(0, 0, 0, 0)
     }
 
-    return allRecords.filter(r => new Date(r.timestamp) >= cutoffDate)
+    return allRecords.filter((r) => new Date(r.timestamp) >= cutoffDate)
   }
 
   /**
@@ -131,16 +131,16 @@ export class UsageTracker {
   static getSourceCost(sourceName: string): number {
     const costs: Record<string, number> = {
       'sec-edgar': 0,
-      'osha': 0,
-      'uspto': 0,
-      'census': 0,
+      osha: 0,
+      uspto: 0,
+      census: 0,
       'sam-gov': 0,
-      'dnb': 0.50,
+      dnb: 0.5,
       'google-places': 0.02,
-      'clearbit': 1.00,
-      'experian': 3.00,
-      'zoominfo': 2.50,
-      'newsapi': 0.10
+      clearbit: 1.0,
+      experian: 3.0,
+      zoominfo: 2.5,
+      newsapi: 0.1
     }
     return costs[sourceName] || 0
   }
@@ -153,9 +153,7 @@ export class UsageTracker {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
 
     this.usageData.forEach((records, userId) => {
-      const filteredRecords = records.filter(
-        r => new Date(r.timestamp) >= cutoffDate
-      )
+      const filteredRecords = records.filter((r) => new Date(r.timestamp) >= cutoffDate)
       this.usageData.set(userId, filteredRecords)
     })
   }

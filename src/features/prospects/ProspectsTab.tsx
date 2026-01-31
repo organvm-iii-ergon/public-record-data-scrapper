@@ -18,7 +18,8 @@ import {
   SheetDescription
 } from '@/components/ui/sheet'
 import { ProspectCard } from '@/components/ProspectCard'
-import { AdvancedFilters, AdvancedFilterState } from '@/components/AdvancedFilters'
+import { AdvancedFilters } from '@/components/AdvancedFilters'
+import { AdvancedFilterState } from '@/components/advanced-filters'
 import { BatchOperations } from '@/components/BatchOperations'
 import { SortControls, SortField, SortDirection } from '@/components/SortControls'
 import { Prospect, IndustryType } from '@/lib/types'
@@ -255,8 +256,11 @@ export function ProspectsTab({
           onClick={() => setFilterSheetOpen(true)}
           className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg touch-target"
           size="icon"
+          aria-label="Open filters"
+          title="Open filters"
         >
           <Faders size={24} weight="bold" />
+          <span className="sr-only">Open filters</span>
           {totalActiveFilters > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-accent">
               {totalActiveFilters}

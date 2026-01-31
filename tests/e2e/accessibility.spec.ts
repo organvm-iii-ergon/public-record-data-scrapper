@@ -34,7 +34,7 @@ test.describe('Accessibility', () => {
     expect(tabCount).toBeGreaterThan(0)
 
     // Active tab should have aria-selected="true"
-    const activeTab = tabs.filter({ has: page.locator('[data-state="active"]') })
+    const activeTab = page.getByRole('tab', { selected: true })
     await expect(activeTab.first()).toHaveAttribute('aria-selected', 'true')
   })
 

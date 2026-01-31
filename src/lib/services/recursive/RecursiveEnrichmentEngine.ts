@@ -9,17 +9,26 @@ import type {
   EnrichmentResult,
   EnrichmentOpportunity,
   EnrichmentTree,
-  EnrichmentStrategy,
-} from '@/types/recursive';
-import type { Prospect } from '@/lib/types';
+  EnrichmentStrategy
+} from '@/types/recursive'
+
+type EnrichmentData = {
+  confidence?: number
+  emails?: string[]
+  linkedinProfiles?: string[]
+  subsidiaries?: string[]
+  estimatedRevenue?: number
+  profitMargin?: number
+  [key: string]: unknown
+}
 
 export class RecursiveEnrichmentEngine {
-  private trees: Map<string, EnrichmentTree> = new Map();
-  private strategies: Map<EnrichmentStrategy, StrategyHandler> = new Map();
-  private learningData: Map<EnrichmentStrategy, StrategyPerformance> = new Map();
+  private trees: Map<string, EnrichmentTree> = new Map()
+  private strategies: Map<EnrichmentStrategy, StrategyHandler> = new Map()
+  private learningData: Map<EnrichmentStrategy, StrategyPerformance> = new Map()
 
   constructor() {
-    this.initializeStrategies();
+    this.initializeStrategies()
   }
 
   /**
@@ -29,7 +38,7 @@ export class RecursiveEnrichmentEngine {
     prospectId: string,
     config: RecursiveEnrichmentConfig
   ): Promise<EnrichmentTree> {
-    const treeId = `tree_${prospectId}_${Date.now()}`;
+    const treeId = `tree_${prospectId}_${Date.now()}`
 
     // Create root node
     const rootNode: EnrichmentNode = {
@@ -48,9 +57,9 @@ export class RecursiveEnrichmentEngine {
         dataQuality: 1.0,
         freshness: new Date(),
         reliability: 1.0,
-        verificationStatus: 'unverified',
-      },
-    };
+        verificationStatus: 'unverified'
+      }
+    }
 
     // Create tree
     const tree: EnrichmentTree = {
@@ -61,18 +70,18 @@ export class RecursiveEnrichmentEngine {
       totalCost: 0,
       totalValue: 0,
       startedAt: new Date(),
-      status: 'running',
-    };
+      status: 'running'
+    }
 
-    this.trees.set(treeId, tree);
+    this.trees.set(treeId, tree)
 
     // Start recursive expansion
-    await this.expandNodeRecursively(tree, rootNode, config);
+    await this.expandNodeRecursively(tree, rootNode, config)
 
-    tree.status = 'completed';
-    tree.completedAt = new Date();
+    tree.status = 'completed'
+    tree.completedAt = new Date()
 
-    return tree;
+    return tree
   }
 
   /**
@@ -85,35 +94,35 @@ export class RecursiveEnrichmentEngine {
   ): Promise<void> {
     // Check depth limit
     if (node.depth >= config.maxDepth) {
-      return;
+      return
     }
 
     // Check cost limit
     if (tree.totalCost >= config.costLimit) {
-      console.warn('Cost limit reached, stopping enrichment');
-      return;
+      console.warn('Cost limit reached, stopping enrichment')
+      return
     }
 
     // Check time limit (if needed, implement timeout logic)
 
     // Evaluate enrichment opportunities
-    const opportunities = await this.evaluateOpportunities(node, config);
+    const opportunities = await this.evaluateOpportunities(node, config)
 
     // Filter by confidence threshold
     const viable = opportunities.filter(
       (opp) => opp.estimatedConfidence >= config.confidenceThreshold
-    );
+    )
 
     // Sort by priority
-    viable.sort((a, b) => b.priority - a.priority);
+    viable.sort((a, b) => b.priority - a.priority)
 
     // Expand nodes in parallel up to parallelization limit
-    const toExpand = viable.slice(0, config.parallelization);
+    const toExpand = viable.slice(0, config.parallelization)
 
     await Promise.all(
       toExpand.map(async (opportunity) => {
         try {
-          const result = await this.expandNode(node, opportunity.strategy);
+          const result = await this.expandNode(node, opportunity.strategy)
 
           if (result.success) {
             // Create child node
@@ -134,49 +143,46 @@ export class RecursiveEnrichmentEngine {
                 dataQuality: result.confidence,
                 freshness: new Date(),
                 reliability: result.confidence,
-                verificationStatus: 'unverified',
-              },
-            };
+                verificationStatus: 'unverified'
+              }
+            }
 
-            node.childNodes.push(childNode);
-            tree.totalNodes++;
-            tree.totalCost += result.cost;
-            tree.maxDepth = Math.max(tree.maxDepth, childNode.depth);
+            node.childNodes.push(childNode)
+            tree.totalNodes++
+            tree.totalCost += result.cost
+            tree.maxDepth = Math.max(tree.maxDepth, childNode.depth)
 
             // Recursively expand child node
             if (config.learningEnabled) {
-              await this.expandNodeRecursively(tree, childNode, config);
+              await this.expandNodeRecursively(tree, childNode, config)
             }
           }
         } catch (error) {
-          console.error(`Failed to expand node with strategy ${opportunity.strategy}:`, error);
+          console.error(`Failed to expand node with strategy ${opportunity.strategy}:`, error)
         }
       })
-    );
+    )
   }
 
   /**
    * Expand a single node with a strategy
    */
-  async expandNode(
-    node: EnrichmentNode,
-    strategy: EnrichmentStrategy
-  ): Promise<EnrichmentResult> {
-    const handler = this.strategies.get(strategy);
+  async expandNode(node: EnrichmentNode, strategy: EnrichmentStrategy): Promise<EnrichmentResult> {
+    const handler = this.strategies.get(strategy)
 
     if (!handler) {
-      throw new Error(`No handler for strategy: ${strategy}`);
+      throw new Error(`No handler for strategy: ${strategy}`)
     }
 
-    const startTime = Date.now();
+    const startTime = Date.now()
 
     try {
-      const data = await handler.execute(node);
-      const timeMs = Date.now() - startTime;
-      const cost = this.calculateCost(strategy, timeMs);
+      const data = await handler.execute(node)
+      const timeMs = Date.now() - startTime
+      const cost = this.calculateCost(strategy, timeMs)
 
       // Evaluate child opportunities
-      const childOpportunities = await this.evaluateChildOpportunities(data, strategy);
+      const childOpportunities = await this.evaluateChildOpportunities(data, strategy)
 
       return {
         nodeId: `node_${Date.now()}_${node.depth + 1}`,
@@ -185,10 +191,10 @@ export class RecursiveEnrichmentEngine {
         confidence: data.confidence || 0.7,
         childOpportunities,
         cost,
-        timeMs,
-      };
+        timeMs
+      }
     } catch (error) {
-      console.error(`Strategy ${strategy} failed:`, error);
+      console.error(`Strategy ${strategy} failed:`, error)
       return {
         nodeId: `node_${Date.now()}_${node.depth + 1}`,
         success: false,
@@ -196,8 +202,8 @@ export class RecursiveEnrichmentEngine {
         confidence: 0,
         childOpportunities: [],
         cost: 0,
-        timeMs: Date.now() - startTime,
-      };
+        timeMs: Date.now() - startTime
+      }
     }
   }
 
@@ -208,18 +214,16 @@ export class RecursiveEnrichmentEngine {
     node: EnrichmentNode,
     config: RecursiveEnrichmentConfig
   ): Promise<EnrichmentOpportunity[]> {
-    const opportunities: EnrichmentOpportunity[] = [];
+    const opportunities: EnrichmentOpportunity[] = []
 
     for (const strategy of config.expansionStrategies) {
-      const performance = this.learningData.get(strategy);
+      const performance = this.learningData.get(strategy)
 
       // Estimate value based on historical performance
-      const estimatedValue = performance
-        ? performance.averageValue * performance.successRate
-        : 0.5;
+      const estimatedValue = performance ? performance.averageValue * performance.successRate : 0.5
 
-      const estimatedCost = performance ? performance.averageCost : 10;
-      const estimatedConfidence = performance ? performance.averageConfidence : 0.6;
+      const estimatedCost = performance ? performance.averageCost : 10
+      const estimatedConfidence = performance ? performance.averageConfidence : 0.6
 
       opportunities.push({
         strategy,
@@ -227,11 +231,11 @@ export class RecursiveEnrichmentEngine {
         estimatedCost,
         estimatedConfidence,
         priority: estimatedValue / Math.max(estimatedCost, 1), // Value/cost ratio
-        reasoning: this.generateReasoning(strategy, node, performance),
-      });
+        reasoning: this.generateReasoning(strategy, node, performance)
+      })
     }
 
-    return opportunities;
+    return opportunities
   }
 
   /**
@@ -242,30 +246,30 @@ export class RecursiveEnrichmentEngine {
     outcome: 'success' | 'failure',
     value: number
   ): Promise<void> {
-    const tree = this.trees.get(treeId);
-    if (!tree) return;
+    const tree = this.trees.get(treeId)
+    if (!tree) return
 
     // Update value scores throughout the tree
-    this.updateValueScores(tree.rootNode, outcome === 'success' ? value : 0);
+    this.updateValueScores(tree.rootNode, outcome === 'success' ? value : 0)
 
     // Update strategy performance
-    this.updateStrategyPerformance(tree.rootNode);
+    this.updateStrategyPerformance(tree.rootNode)
   }
 
   /**
    * Get enrichment tree status
    */
   getTreeStatus(treeId: string): EnrichmentTree | undefined {
-    return this.trees.get(treeId);
+    return this.trees.get(treeId)
   }
 
   /**
    * Pause enrichment
    */
   pauseEnrichment(treeId: string): void {
-    const tree = this.trees.get(treeId);
+    const tree = this.trees.get(treeId)
     if (tree) {
-      tree.status = 'paused';
+      tree.status = 'paused'
     }
   }
 
@@ -273,22 +277,22 @@ export class RecursiveEnrichmentEngine {
    * Resume enrichment
    */
   async resumeEnrichment(treeId: string, config: RecursiveEnrichmentConfig): Promise<void> {
-    const tree = this.trees.get(treeId);
-    if (!tree || tree.status !== 'paused') return;
+    const tree = this.trees.get(treeId)
+    if (!tree || tree.status !== 'paused') return
 
-    tree.status = 'running';
+    tree.status = 'running'
 
     // Find leaf nodes and continue expansion
-    const leafNodes = this.findLeafNodes(tree.rootNode);
+    const leafNodes = this.findLeafNodes(tree.rootNode)
 
     for (const leaf of leafNodes) {
       if (leaf.depth < config.maxDepth && tree.totalCost < config.costLimit) {
-        await this.expandNodeRecursively(tree, leaf, config);
+        await this.expandNodeRecursively(tree, leaf, config)
       }
     }
 
-    tree.status = 'completed';
-    tree.completedAt = new Date();
+    tree.status = 'completed'
+    tree.completedAt = new Date()
   }
 
   // ==================== PRIVATE METHODS ====================
@@ -305,10 +309,10 @@ export class RecursiveEnrichmentEngine {
           emails: [`contact@${node.prospectId}.com`, `info@${node.prospectId}.com`],
           phones: ['+1-555-0100', '+1-555-0101'],
           linkedinProfiles: [`linkedin.com/company/${node.prospectId}`],
-          confidence: 0.75,
-        };
-      },
-    });
+          confidence: 0.75
+        }
+      }
+    })
 
     // Network Expansion
     this.strategies.set('network_expansion', {
@@ -318,10 +322,10 @@ export class RecursiveEnrichmentEngine {
           subsidiaries: [`${node.prospectId}-sub1`, `${node.prospectId}-sub2`],
           parentCompany: node.depth > 0 ? null : `${node.prospectId}-parent`,
           affiliates: [`${node.prospectId}-affiliate1`],
-          confidence: 0.65,
-        };
-      },
-    });
+          confidence: 0.65
+        }
+      }
+    })
 
     // Signal Amplification
     this.strategies.set('signal_amplification', {
@@ -332,72 +336,76 @@ export class RecursiveEnrichmentEngine {
             hiringDetails: {
               positions: ['Senior Developer', 'Sales Manager'],
               locations: ['New York', 'San Francisco'],
-              salaryRanges: ['$100k-$150k', '$80k-$120k'],
+              salaryRanges: ['$100k-$150k', '$80k-$120k']
             },
             permitDetails: {
               type: 'Building Permit',
               value: 500000,
-              purpose: 'Office Expansion',
+              purpose: 'Office Expansion'
             },
-            confidence: 0.8,
-          };
+            confidence: 0.8
+          }
         }
-        return { confidence: 0.5 };
-      },
-    });
+        return { confidence: 0.5 }
+      }
+    })
 
     // Relationship Mapping
     this.strategies.set('relationship_mapping', {
       execute: async (node) => {
+        void node
         // Mock: Map business relationships
         return {
           customers: [`customer1`, `customer2`],
           suppliers: [`supplier1`, `supplier2`],
           partners: [`partner1`],
           competitors: [`competitor1`, `competitor2`],
-          confidence: 0.7,
-        };
-      },
-    });
+          confidence: 0.7
+        }
+      }
+    })
 
     // Historical Analysis
     this.strategies.set('historical_analysis', {
       execute: async (node) => {
+        void node
         // Mock: Analyze historical data
         return {
           previousFilings: [
             { date: new Date('2023-01-15'), amount: 100000, lender: 'Bank A' },
-            { date: new Date('2022-06-20'), amount: 75000, lender: 'Bank B' },
+            { date: new Date('2022-06-20'), amount: 75000, lender: 'Bank B' }
           ],
           paymentHistory: {
             onTimePayments: 18,
             latePayments: 2,
-            defaults: 0,
+            defaults: 0
           },
-          confidence: 0.85,
-        };
-      },
-    });
+          confidence: 0.85
+        }
+      }
+    })
 
     // Social Graph
     this.strategies.set('social_graph', {
       execute: async (node) => {
+        void node
         // Mock: Build social network graph
         return {
           executives: [
             { name: 'John Doe', title: 'CEO', linkedin: 'linkedin.com/in/johndoe' },
-            { name: 'Jane Smith', title: 'CFO', linkedin: 'linkedin.com/in/janesmith' },
+            { name: 'Jane Smith', title: 'CFO', linkedin: 'linkedin.com/in/janesmith' }
           ],
           connections: 250,
           influence: 'medium',
-          confidence: 0.65,
-        };
-      },
-    });
+          confidence: 0.65
+        }
+      }
+    })
 
     // Financial Deep Dive
     this.strategies.set('financial_deep_dive', {
       execute: async (node) => {
+        void node
         // Mock: Deep financial analysis
         return {
           estimatedRevenue: 5000000,
@@ -405,37 +413,39 @@ export class RecursiveEnrichmentEngine {
           profitMargin: 0.12,
           cashFlow: 'positive',
           debtToEquity: 1.5,
-          confidence: 0.7,
-        };
-      },
-    });
+          confidence: 0.7
+        }
+      }
+    })
 
     // Regulatory Research
     this.strategies.set('regulatory_research', {
       execute: async (node) => {
+        void node
         // Mock: Research regulatory compliance
         return {
           licenses: ['Business License', 'Health Permit'],
           violations: [],
           inspections: [
             { date: new Date('2024-01-15'), result: 'passed' },
-            { date: new Date('2023-07-20'), result: 'passed' },
+            { date: new Date('2023-07-20'), result: 'passed' }
           ],
           complianceScore: 0.95,
-          confidence: 0.8,
-        };
-      },
-    });
+          confidence: 0.8
+        }
+      }
+    })
   }
 
   /**
    * Evaluate child opportunities based on discovered data
    */
   private async evaluateChildOpportunities(
-    data: any,
+    data: EnrichmentData,
     parentStrategy: EnrichmentStrategy
   ): Promise<EnrichmentOpportunity[]> {
-    const opportunities: EnrichmentOpportunity[] = [];
+    void parentStrategy
+    const opportunities: EnrichmentOpportunity[] = []
 
     // If we found contacts, we can do social graph analysis
     if (data.emails || data.linkedinProfiles) {
@@ -445,8 +455,8 @@ export class RecursiveEnrichmentEngine {
         estimatedCost: 5,
         estimatedConfidence: 0.7,
         priority: 0.12,
-        reasoning: 'Contact information discovered, enabling social network analysis',
-      });
+        reasoning: 'Contact information discovered, enabling social network analysis'
+      })
     }
 
     // If we found subsidiaries, we can expand network
@@ -457,8 +467,8 @@ export class RecursiveEnrichmentEngine {
         estimatedCost: 8,
         estimatedConfidence: 0.75,
         priority: 0.0875,
-        reasoning: 'Subsidiaries discovered, enabling network expansion',
-      });
+        reasoning: 'Subsidiaries discovered, enabling network expansion'
+      })
     }
 
     // If we found financial data, we can do historical analysis
@@ -469,11 +479,11 @@ export class RecursiveEnrichmentEngine {
         estimatedCost: 10,
         estimatedConfidence: 0.8,
         priority: 0.08,
-        reasoning: 'Financial data discovered, enabling historical trend analysis',
-      });
+        reasoning: 'Financial data discovered, enabling historical trend analysis'
+      })
     }
 
-    return opportunities;
+    return opportunities
   }
 
   /**
@@ -484,34 +494,32 @@ export class RecursiveEnrichmentEngine {
     node: EnrichmentNode,
     performance?: StrategyPerformance
   ): string {
-    const reasons: string[] = [];
+    const reasons: string[] = []
 
     if (performance) {
-      reasons.push(
-        `Historical success rate: ${(performance.successRate * 100).toFixed(0)}%`
-      );
-      reasons.push(`Average value: ${performance.averageValue.toFixed(2)}`);
+      reasons.push(`Historical success rate: ${(performance.successRate * 100).toFixed(0)}%`)
+      reasons.push(`Average value: ${performance.averageValue.toFixed(2)}`)
     }
 
     switch (strategy) {
       case 'contact_discovery':
-        reasons.push('Essential for outreach and communication');
-        break;
+        reasons.push('Essential for outreach and communication')
+        break
       case 'network_expansion':
-        reasons.push('Reveals business relationships and structure');
-        break;
+        reasons.push('Reveals business relationships and structure')
+        break
       case 'signal_amplification':
-        reasons.push('Deepens understanding of growth signals');
-        break;
+        reasons.push('Deepens understanding of growth signals')
+        break
       case 'relationship_mapping':
-        reasons.push('Maps ecosystem and market position');
-        break;
+        reasons.push('Maps ecosystem and market position')
+        break
       case 'historical_analysis':
-        reasons.push('Predicts future behavior from past patterns');
-        break;
+        reasons.push('Predicts future behavior from past patterns')
+        break
     }
 
-    return reasons.join('. ');
+    return reasons.join('. ')
   }
 
   /**
@@ -527,15 +535,15 @@ export class RecursiveEnrichmentEngine {
       historical_analysis: 12,
       social_graph: 7,
       financial_deep_dive: 15,
-      regulatory_research: 10,
-    };
+      regulatory_research: 10
+    }
 
-    const baseCost = baseCosts[strategy] || 5;
+    const baseCost = baseCosts[strategy] || 5
 
     // Add time-based cost (longer = more expensive)
-    const timeCost = timeMs / 1000; // $1 per second
+    const timeCost = timeMs / 1000 // $1 per second
 
-    return baseCost + timeCost;
+    return baseCost + timeCost
   }
 
   /**
@@ -543,12 +551,12 @@ export class RecursiveEnrichmentEngine {
    */
   private updateValueScores(node: EnrichmentNode, totalValue: number): void {
     // Distribute value across the tree based on depth (deeper nodes get less)
-    const depthFactor = 1 / (node.depth + 1);
-    node.valueScore = totalValue * depthFactor;
+    const depthFactor = 1 / (node.depth + 1)
+    node.valueScore = totalValue * depthFactor
 
     // Recursively update children
     for (const child of node.childNodes) {
-      this.updateValueScores(child, totalValue);
+      this.updateValueScores(child, totalValue)
     }
   }
 
@@ -559,12 +567,12 @@ export class RecursiveEnrichmentEngine {
     if (node.enrichmentType === 'root') {
       // Skip root
       for (const child of node.childNodes) {
-        this.updateStrategyPerformance(child);
+        this.updateStrategyPerformance(child)
       }
-      return;
+      return
     }
 
-    const strategy = node.enrichmentType as EnrichmentStrategy;
+    const strategy = node.enrichmentType as EnrichmentStrategy
     const existing = this.learningData.get(strategy) || {
       totalExecutions: 0,
       successfulExecutions: 0,
@@ -574,25 +582,25 @@ export class RecursiveEnrichmentEngine {
       successRate: 0,
       averageValue: 0,
       averageCost: 0,
-      averageConfidence: 0,
-    };
+      averageConfidence: 0
+    }
 
-    existing.totalExecutions++;
-    existing.successfulExecutions += node.confidence > 0.5 ? 1 : 0;
-    existing.totalValue += node.valueScore;
-    existing.totalCost += node.cost;
-    existing.totalConfidence += node.confidence;
+    existing.totalExecutions++
+    existing.successfulExecutions += node.confidence > 0.5 ? 1 : 0
+    existing.totalValue += node.valueScore
+    existing.totalCost += node.cost
+    existing.totalConfidence += node.confidence
 
-    existing.successRate = existing.successfulExecutions / existing.totalExecutions;
-    existing.averageValue = existing.totalValue / existing.totalExecutions;
-    existing.averageCost = existing.totalCost / existing.totalExecutions;
-    existing.averageConfidence = existing.totalConfidence / existing.totalExecutions;
+    existing.successRate = existing.successfulExecutions / existing.totalExecutions
+    existing.averageValue = existing.totalValue / existing.totalExecutions
+    existing.averageCost = existing.totalCost / existing.totalExecutions
+    existing.averageConfidence = existing.totalConfidence / existing.totalExecutions
 
-    this.learningData.set(strategy, existing);
+    this.learningData.set(strategy, existing)
 
     // Recursively update children
     for (const child of node.childNodes) {
-      this.updateStrategyPerformance(child);
+      this.updateStrategyPerformance(child)
     }
   }
 
@@ -601,34 +609,34 @@ export class RecursiveEnrichmentEngine {
    */
   private findLeafNodes(node: EnrichmentNode): EnrichmentNode[] {
     if (node.childNodes.length === 0) {
-      return [node];
+      return [node]
     }
 
-    const leaves: EnrichmentNode[] = [];
+    const leaves: EnrichmentNode[] = []
     for (const child of node.childNodes) {
-      leaves.push(...this.findLeafNodes(child));
+      leaves.push(...this.findLeafNodes(child))
     }
 
-    return leaves;
+    return leaves
   }
 }
 
 // ==================== TYPES ====================
 
 interface StrategyHandler {
-  execute: (node: EnrichmentNode) => Promise<any>;
+  execute: (node: EnrichmentNode) => Promise<EnrichmentData>
 }
 
 interface StrategyPerformance {
-  totalExecutions: number;
-  successfulExecutions: number;
-  totalValue: number;
-  totalCost: number;
-  totalConfidence: number;
-  successRate: number;
-  averageValue: number;
-  averageCost: number;
-  averageConfidence: number;
+  totalExecutions: number
+  successfulExecutions: number
+  totalValue: number
+  totalCost: number
+  totalConfidence: number
+  successRate: number
+  averageValue: number
+  averageCost: number
+  averageConfidence: number
 }
 
-export default RecursiveEnrichmentEngine;
+export default RecursiveEnrichmentEngine

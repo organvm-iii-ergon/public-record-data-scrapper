@@ -13,23 +13,40 @@
  */
 
 import { createScraper, ScraperFactory, ScraperImplementation } from './scrapers/scraper-factory'
-import { initDatabase, getDatabase, createQueries, closeDatabase } from '../src/lib/database'
+import { initDatabase, createQueries, closeDatabase } from '../src/lib/database'
 import chalk from 'chalk'
 
 // Sample companies to scrape
 const SAMPLE_COMPANIES = [
-  { name: 'Golden State Restaurant Group', industry: 'restaurant' as const, estimatedRevenue: 2500000 },
+  {
+    name: 'Golden State Restaurant Group',
+    industry: 'restaurant' as const,
+    estimatedRevenue: 2500000
+  },
   { name: 'Bay Area Retail Co', industry: 'retail' as const, estimatedRevenue: 1800000 },
-  { name: 'Pacific Construction LLC', industry: 'construction' as const, estimatedRevenue: 3200000 },
-  { name: 'Silicon Valley Tech Services', industry: 'technology' as const, estimatedRevenue: 1500000 },
-  { name: 'California Healthcare Partners', industry: 'healthcare' as const, estimatedRevenue: 4500000 }
+  {
+    name: 'Pacific Construction LLC',
+    industry: 'construction' as const,
+    estimatedRevenue: 3200000
+  },
+  {
+    name: 'Silicon Valley Tech Services',
+    industry: 'technology' as const,
+    estimatedRevenue: 1500000
+  },
+  {
+    name: 'California Healthcare Partners',
+    industry: 'healthcare' as const,
+    estimatedRevenue: 4500000
+  }
 ]
 
 async function main() {
   console.log(chalk.bold.blue('\n🔍 UCC Filing Scraper - California\n'))
 
   // Determine scraper implementation
-  const implementation = (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) ||
+  const implementation =
+    (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) ||
     ScraperFactory.getRecommendedImplementation()
 
   // Check if implementation is available
@@ -81,8 +98,10 @@ async function main() {
       // Calculate priority score based on filings
       const mostRecentFiling = filings[0]
       const filingDate = new Date(mostRecentFiling.filingDate)
-      const timeSinceDefault = Math.floor((Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24))
-      const priorityScore = Math.min(100, Math.floor((timeSinceDefault / 14) + 50))
+      const timeSinceDefault = Math.floor(
+        (Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      const priorityScore = Math.min(100, Math.floor(timeSinceDefault / 14 + 50))
 
       // Create prospect in database
       console.log(chalk.cyan('   💾 Storing in database...'))
@@ -134,9 +153,10 @@ async function main() {
         })
 
         console.log(chalk.green('   ✅ Added growth signal'))
-
       } catch (dbError) {
-        console.log(chalk.red(`   ❌ Database error: ${dbError instanceof Error ? dbError.message : dbError}`))
+        console.log(
+          chalk.red(`   ❌ Database error: ${dbError instanceof Error ? dbError.message : dbError}`)
+        )
       }
     }
 
@@ -156,14 +176,16 @@ async function main() {
     await closeDatabase()
 
     // Close browser if using Puppeteer
-    if (implementation === 'puppeteer' && 'close' in scraper) {
+    if (implementation === 'puppeteer') {
       console.log(chalk.cyan('\n🔒 Closing browser...'))
-      await (scraper as any).close()
+      const maybeClose = (scraper as Partial<{ close: () => Promise<void> | void }>).close
+      if (typeof maybeClose === 'function') {
+        await maybeClose()
+      }
     }
 
     console.log(chalk.green('\n✅ Complete! Data is ready to view in the UI.\n'))
     console.log(chalk.gray('💡 Tip: Set VITE_USE_MOCK_DATA=false in .env to use database data\n'))
-
   } catch (error) {
     console.error(chalk.red('\n❌ Error:'), error)
     await closeDatabase()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ComponentProps } from 'react'
 import { ProspectNote, FollowUpReminder } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,17 +11,13 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select'
-import { 
-  Note, 
-  Bell, 
-  Plus, 
-  Check, 
-  Trash,
-  Calendar as CalendarIcon
-} from '@phosphor-icons/react'
+import { Note, Bell, Plus, Check, Trash, Calendar as CalendarIcon } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+
+type ReminderPriority = FollowUpReminder['priority']
+type BadgeVariant = ComponentProps<typeof Badge>['variant']
 
 interface NotesAndRemindersProps {
   prospectId: string
@@ -30,7 +26,9 @@ interface NotesAndRemindersProps {
   reminders: FollowUpReminder[]
   onAddNote: (note: Omit<ProspectNote, 'id' | 'createdAt' | 'createdBy'>) => void
   onDeleteNote: (noteId: string) => void
-  onAddReminder: (reminder: Omit<FollowUpReminder, 'id' | 'createdAt' | 'createdBy' | 'completed'>) => void
+  onAddReminder: (
+    reminder: Omit<FollowUpReminder, 'id' | 'createdAt' | 'createdBy' | 'completed'>
+  ) => void
   onCompleteReminder: (reminderId: string) => void
   onDeleteReminder: (reminderId: string) => void
 }
@@ -49,7 +47,7 @@ export function NotesAndReminders({
   const [newNote, setNewNote] = useState('')
   const [newReminderDescription, setNewReminderDescription] = useState('')
   const [newReminderDate, setNewReminderDate] = useState('')
-  const [newReminderPriority, setNewReminderPriority] = useState<'low' | 'medium' | 'high'>('medium')
+  const [newReminderPriority, setNewReminderPriority] = useState<ReminderPriority>('medium')
 
   const handleAddNote = () => {
     if (!newNote.trim()) {
@@ -61,7 +59,7 @@ export function NotesAndReminders({
       prospectId,
       content: newNote.trim()
     })
-    
+
     setNewNote('')
     toast.success('Note added successfully')
   }
@@ -71,7 +69,7 @@ export function NotesAndReminders({
       toast.error('Reminder description cannot be empty')
       return
     }
-    
+
     if (!newReminderDate) {
       toast.error('Please select a due date')
       return
@@ -83,7 +81,7 @@ export function NotesAndReminders({
       dueDate: newReminderDate,
       priority: newReminderPriority
     })
-    
+
     setNewReminderDescription('')
     setNewReminderDate('')
     setNewReminderPriority('medium')
@@ -92,10 +90,10 @@ export function NotesAndReminders({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     })
   }
 
@@ -104,12 +102,16 @@ export function NotesAndReminders({
     return new Date(dueDate) < new Date()
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: ReminderPriority): BadgeVariant => {
     switch (priority) {
-      case 'high': return 'destructive'
-      case 'medium': return 'default'
-      case 'low': return 'secondary'
-      default: return 'default'
+      case 'high':
+        return 'destructive'
+      case 'medium':
+        return 'default'
+      case 'low':
+        return 'secondary'
+      default:
+        return 'default'
     }
   }
 
@@ -194,7 +196,7 @@ export function NotesAndReminders({
           <Bell size={20} weight="fill" className="text-accent" />
           <h3 className="font-semibold text-lg">Follow-up Reminders</h3>
           <Badge variant="outline" className="ml-auto">
-            {reminders.filter(r => !r.completed).length} active
+            {reminders.filter((r) => !r.completed).length} active
           </Badge>
         </div>
 
@@ -215,7 +217,10 @@ export function NotesAndReminders({
                   className="w-full"
                 />
               </div>
-              <Select value={newReminderPriority} onValueChange={(val) => setNewReminderPriority(val as any)}>
+              <Select
+                value={newReminderPriority}
+                onValueChange={(val) => setNewReminderPriority(val as ReminderPriority)}
+              >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
@@ -240,8 +245,8 @@ export function NotesAndReminders({
             </Card>
           ) : (
             sortedReminders.map((reminder) => (
-              <Card 
-                key={reminder.id} 
+              <Card
+                key={reminder.id}
                 className={`p-4 ${reminder.completed ? 'opacity-60' : ''} ${
                   isOverdue(reminder.dueDate, reminder.completed) ? 'border-destructive' : ''
                 }`}
@@ -253,22 +258,29 @@ export function NotesAndReminders({
                       size="sm"
                       onClick={() => {
                         onCompleteReminder(reminder.id)
-                        toast.success(reminder.completed ? 'Reminder reopened' : 'Reminder completed')
+                        toast.success(
+                          reminder.completed ? 'Reminder reopened' : 'Reminder completed'
+                        )
                       }}
                       className="p-1 h-auto"
                     >
-                      <Check 
-                        size={20} 
+                      <Check
+                        size={20}
                         weight={reminder.completed ? 'fill' : 'bold'}
                         className={reminder.completed ? 'text-success' : 'text-muted-foreground'}
                       />
                     </Button>
                     <div className="flex-1">
-                      <p className={`text-sm leading-relaxed mb-2 ${reminder.completed ? 'line-through' : ''}`}>
+                      <p
+                        className={`text-sm leading-relaxed mb-2 ${reminder.completed ? 'line-through' : ''}`}
+                      >
                         {reminder.description}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={getPriorityColor(reminder.priority) as any} className="text-xs capitalize">
+                        <Badge
+                          variant={getPriorityColor(reminder.priority)}
+                          className="text-xs capitalize"
+                        >
                           {reminder.priority}
                         </Badge>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">

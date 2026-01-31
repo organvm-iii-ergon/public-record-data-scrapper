@@ -17,7 +17,10 @@ import type {
   ImprovementSuggestion,
   Finding
 } from '../../types'
-import { getCollectorForState, hasCollectorForState } from '../../../collectors/StateCollectorFactory'
+import {
+  getCollectorForState,
+  hasCollectorForState
+} from '../../../collectors/StateCollectorFactory'
 import type { StateCollector, UCCFiling } from '../../../collectors/types'
 
 export interface StateConfig {
@@ -69,7 +72,7 @@ export class StateAgent extends BaseAgent implements Agent {
       'Track state-specific trends'
     ]
 
-    super('state-collector' as any, agentName, capabilities)
+    super('state-collector', agentName, capabilities)
     this.customId = customId
 
     this.stateConfig = config
@@ -195,19 +198,18 @@ export class StateAgent extends BaseAgent implements Agent {
   }
 
   private analyzeStateTrends(context: SystemContext): {
-    findings: Finding[],
+    findings: Finding[]
     improvements: ImprovementSuggestion[]
   } {
     const findings: Finding[] = []
     const improvements: ImprovementSuggestion[] = []
 
     // Analyze filings from this state
-    const stateProspects = context.prospects.filter(
-      p => p.state === this.stateConfig.stateCode
-    )
+    const stateProspects = context.prospects.filter((p) => p.state === this.stateConfig.stateCode)
 
     if (stateProspects.length > 0) {
-      const avgPriorityScore = stateProspects.reduce((sum, p) => sum + p.priorityScore, 0) / stateProspects.length
+      const avgPriorityScore =
+        stateProspects.reduce((sum, p) => sum + p.priorityScore, 0) / stateProspects.length
 
       findings.push({
         id: `${this.customId}-trend`,
@@ -242,8 +244,8 @@ export class StateAgent extends BaseAgent implements Agent {
 
   // Public methods for state-specific operations
   async collectFilings(options?: {
-    since?: Date,
-    limit?: number,
+    since?: Date
+    limit?: number
     filingTypes?: string[]
   }): Promise<UCCFiling[]> {
     console.log(`[${this.customId}] Collecting filings from ${this.stateConfig.stateName}`, options)
@@ -288,6 +290,7 @@ export class StateAgent extends BaseAgent implements Agent {
   }
 
   async validateFiling(filingId: string): Promise<boolean> {
+    void filingId
     // Implementation would validate against state-specific rules
     return true
   }

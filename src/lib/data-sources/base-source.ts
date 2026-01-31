@@ -1,6 +1,6 @@
 /**
  * Base Data Source
- * 
+ *
  * Abstract base class for all data sources with common functionality
  */
 
@@ -16,7 +16,7 @@ export interface DataSourceConfig {
   retryDelay: number
 }
 
-export interface DataSourceResponse<T = any> {
+export interface DataSourceResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -35,19 +35,19 @@ export abstract class BaseDataSource {
   /**
    * Fetch data from the source
    */
-  abstract fetchData(query: Record<string, any>): Promise<DataSourceResponse>
+  abstract fetchData(query: Record<string, unknown>): Promise<DataSourceResponse>
 
   /**
    * Validate the query parameters
    */
-  protected abstract validateQuery(query: Record<string, any>): boolean
+  protected abstract validateQuery(query: Record<string, unknown>): boolean
 
   /**
    * Execute fetch with rate limiting, retries, and timeout
    */
   protected async executeFetch(
-    fetchFn: () => Promise<any>,
-    query: Record<string, any>
+    fetchFn: () => Promise<unknown>,
+    query: Record<string, unknown>
   ): Promise<DataSourceResponse> {
     const startTime = Date.now()
 
@@ -87,7 +87,7 @@ export abstract class BaseDataSource {
         }
       } catch (error) {
         lastError = error as Error
-        
+
         // Don't retry on validation errors
         if (error instanceof Error && error.message.includes('Invalid')) {
           break
@@ -126,7 +126,7 @@ export abstract class BaseDataSource {
    * Sleep helper
    */
   protected sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   /**

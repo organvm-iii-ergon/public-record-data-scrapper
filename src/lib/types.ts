@@ -1,7 +1,15 @@
 export type HealthGrade = 'A' | 'B' | 'C' | 'D' | 'F'
 export type SignalType = 'hiring' | 'permit' | 'contract' | 'expansion' | 'equipment'
 export type ProspectStatus = 'new' | 'claimed' | 'contacted' | 'qualified' | 'dead'
-export type IndustryType = 'restaurant' | 'retail' | 'construction' | 'healthcare' | 'manufacturing' | 'services' | 'technology'
+export type IndustryType =
+  | 'restaurant'
+  | 'retail'
+  | 'construction'
+  | 'healthcare'
+  | 'manufacturing'
+  | 'services'
+  | 'technology'
+export type DataTier = 'oss' | 'paid'
 
 export interface UCCFiling {
   id: string

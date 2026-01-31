@@ -1,11 +1,20 @@
 /**
  * Enrichment Orchestrator Agent
- * 
+ *
  * Coordinates the enrichment workflow across all agents
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest, EnrichmentResult, Finding, ImprovementSuggestion } from '../types'
+import {
+  AgentAnalysis,
+  SystemContext,
+  AgentTask,
+  AgentTaskResult,
+  EnrichmentRequest,
+  EnrichmentResult,
+  Finding,
+  ImprovementSuggestion
+} from '../types'
 import { DataAcquisitionAgent } from './DataAcquisitionAgent'
 import { ScraperAgent } from './ScraperAgent'
 import { DataNormalizationAgent } from './DataNormalizationAgent'
@@ -15,7 +24,7 @@ export interface EnrichmentProgress {
   stage: string
   status: 'pending' | 'in-progress' | 'completed' | 'failed'
   timestamp: string
-  data?: any
+  data?: unknown
   error?: string
 }
 
@@ -55,7 +64,7 @@ export class EnrichmentOrchestratorAgent extends BaseAgent {
     ])
 
     // Collect all findings and improvements
-    analyses.forEach(analysis => {
+    analyses.forEach((analysis) => {
       findings.push(...analysis.findings)
       improvements.push(...analysis.improvements)
     })
@@ -68,13 +77,21 @@ export class EnrichmentOrchestratorAgent extends BaseAgent {
    */
   async executeTask(task: AgentTask): Promise<AgentTaskResult> {
     const { type, payload } = task
+    const payloadData = payload as { enrichmentId?: string }
 
     try {
       switch (type) {
         case 'enrich-prospect':
           return await this.enrichProspect(payload as EnrichmentRequest)
         case 'get-enrichment-status':
-          return this.getEnrichmentStatus(payload.enrichmentId)
+          if (!payloadData.enrichmentId) {
+            return {
+              success: false,
+              error: 'Missing enrichmentId',
+              timestamp: new Date().toISOString()
+            }
+          }
+          return this.getEnrichmentStatus(payloadData.enrichmentId)
         default:
           return {
             success: false,
@@ -252,11 +269,10 @@ export class EnrichmentOrchestratorAgent extends BaseAgent {
           ...enrichmentResult,
           progress,
           responseTime,
-          stages: progress.filter(p => p.status === 'completed').length
+          stages: progress.filter((p) => p.status === 'completed').length
         },
         timestamp: new Date().toISOString()
       }
-
     } catch (error) {
       return {
         success: false,

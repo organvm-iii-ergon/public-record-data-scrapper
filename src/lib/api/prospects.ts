@@ -1,11 +1,19 @@
-import { Prospect } from '@/lib/types'
+import type { DataTier, Prospect } from '@/lib/types'
 import { apiRequest } from './client'
 
-export async function fetchProspects(signal?: AbortSignal): Promise<Prospect[]> {
-  return apiRequest<Prospect[]>('/prospects', { signal })
+export async function fetchProspects(
+  signal?: AbortSignal,
+  options: { dataTier?: DataTier } = {}
+): Promise<Prospect[]> {
+  const headers = options.dataTier ? { 'x-data-tier': options.dataTier } : undefined
+  return apiRequest<Prospect[]>('/prospects', { signal, headers })
 }
 
-export async function claimProspect(prospectId: string, user: string, signal?: AbortSignal): Promise<Prospect> {
+export async function claimProspect(
+  prospectId: string,
+  user: string,
+  signal?: AbortSignal
+): Promise<Prospect> {
   return apiRequest<Prospect>(`/prospects/${encodeURIComponent(prospectId)}/claim`, {
     method: 'POST',
     body: { user },
@@ -20,7 +28,11 @@ export async function unclaimProspect(prospectId: string, signal?: AbortSignal):
   })
 }
 
-export async function batchClaimProspects(ids: string[], user: string, signal?: AbortSignal): Promise<Prospect[]> {
+export async function batchClaimProspects(
+  ids: string[],
+  user: string,
+  signal?: AbortSignal
+): Promise<Prospect[]> {
   return apiRequest<Prospect[]>('/prospects/batch/claim', {
     method: 'POST',
     body: { ids, user },

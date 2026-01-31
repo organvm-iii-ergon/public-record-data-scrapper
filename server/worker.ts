@@ -6,8 +6,12 @@ import { createHealthWorker } from './queue/workers/healthWorker'
 import { redisConnection } from './queue/connection'
 import { config } from './config'
 
+type ClosableWorker = {
+  close: () => Promise<unknown>
+}
+
 class WorkerProcess {
-  private workers: any[] = []
+  private workers: ClosableWorker[] = []
 
   async start() {
     console.log('')
@@ -48,7 +52,7 @@ class WorkerProcess {
 
     // Close workers
     console.log('Closing workers...')
-    await Promise.all(this.workers.map(worker => worker.close()))
+    await Promise.all(this.workers.map((worker) => worker.close()))
 
     // Close queues
     await closeQueues()

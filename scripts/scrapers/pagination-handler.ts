@@ -43,103 +43,166 @@ export class PaginationHandler {
    * Detect pagination on current page
    */
   async detectPagination(page: Page): Promise<PaginationResult> {
-    const result = await page.evaluate(() => {
-      // Check for numbered pagination
-      const numberedLinks = document.querySelectorAll(
-        'a[class*="page"], a[class*="pagination"], ' +
-        '.pagination a, .pager a, ' +
-        'a[href*="page="], a[href*="pageNumber="], a[href*="pageNum="]'
-      )
+    try {
+      const result = await page.evaluate(() => {
+        // Check for numbered pagination
+        const numberedLinks = document.querySelectorAll(
+          'a[class*="page"], a[class*="pagination"], ' +
+            '.pagination a, .pager a, ' +
+            'a[href*="page="], a[href*="pageNumber="], a[href*="pageNum="]'
+        )
 
-      if (numberedLinks.length > 0) {
-        // Try to extract current page and total pages
-        let currentPage = 1
-        let totalPages: number | undefined
+        if (numberedLinks.length > 0) {
+          // Try to extract current page and total pages
+          let currentPage = 1
+          let totalPages: number | undefined
 
-        numberedLinks.forEach((link) => {
-          const text = link.textContent?.trim() || ''
-          const href = (link as HTMLAnchorElement).href || ''
-
-          // Check if this link is active/current
-          if (link.classList.contains('active') ||
+          numberedLinks.forEach((link) => {
+            const text = link.textContent?.trim() || ''
+            // Check if this link is active/current
+            if (
+              link.classList.contains('active') ||
               link.classList.contains('current') ||
-              link.getAttribute('aria-current') === 'page') {
-            const pageNum = parseInt(text)
-            if (!isNaN(pageNum)) {
-              currentPage = pageNum
+              link.getAttribute('aria-current') === 'page'
+            ) {
+              const pageNum = parseInt(text)
+              if (!isNaN(pageNum)) {
+                currentPage = pageNum
+              }
+            }
+
+            // Try to find total pages
+            const pageMatch = text.match(/\d+/)
+            if (pageMatch) {
+              const num = parseInt(pageMatch[0])
+              if (!totalPages || num > totalPages) {
+                totalPages = num
+              }
+            }
+          })
+
+          return {
+            currentPage,
+            totalPages,
+            hasNextPage: currentPage < (totalPages || Infinity),
+            paginationType: 'numbered' as const
+          }
+        }
+
+        // Check for Next/Previous buttons
+        const nextLabels = ['next', '›', '→', '»']
+        let nextButton = document.querySelector('.next, .next-page, [aria-label*="next" i]')
+
+        if (!nextButton) {
+          const elements = document.querySelectorAll('a, button')
+          for (let i = 0; i < elements.length; i++) {
+            const element = elements[i]
+            const text = element.textContent?.trim().toLowerCase() || ''
+            let matches = false
+
+            for (let j = 0; j < nextLabels.length; j++) {
+              const label = nextLabels[j]
+              if (text === label) {
+                matches = true
+                break
+              }
+
+              const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
+              const title = element.getAttribute('title')?.toLowerCase() || ''
+              if (ariaLabel.includes(label) || title.includes(label)) {
+                matches = true
+                break
+              }
+            }
+
+            if (matches) {
+              nextButton = element
+              break
             }
           }
+        }
 
-          // Try to find total pages
-          const pageMatch = text.match(/\d+/)
-          if (pageMatch) {
-            const num = parseInt(pageMatch[0])
-            if (!totalPages || num > totalPages) {
-              totalPages = num
+        if (nextButton) {
+          return {
+            currentPage: 1,
+            hasNextPage: !!nextButton && !nextButton.hasAttribute('disabled'),
+            paginationType: 'next-prev' as const
+          }
+        }
+
+        // Check for "Load More" button
+        const loadMoreLabels = ['load more', 'show more']
+        let loadMoreButton = document.querySelector('.load-more, .show-more')
+
+        if (!loadMoreButton) {
+          const elements = document.querySelectorAll('a, button')
+          for (let i = 0; i < elements.length; i++) {
+            const element = elements[i]
+            const text = element.textContent?.trim().toLowerCase() || ''
+            let matches = false
+
+            for (let j = 0; j < loadMoreLabels.length; j++) {
+              const label = loadMoreLabels[j]
+              if (text === label) {
+                matches = true
+                break
+              }
+
+              const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
+              const title = element.getAttribute('title')?.toLowerCase() || ''
+              if (ariaLabel.includes(label) || title.includes(label)) {
+                matches = true
+                break
+              }
+            }
+
+            if (matches) {
+              loadMoreButton = element
+              break
             }
           }
-        })
-
-        return {
-          currentPage,
-          totalPages,
-          hasNextPage: currentPage < (totalPages || Infinity),
-          paginationType: 'numbered' as const
         }
-      }
 
-      // Check for Next/Previous buttons
-      const nextButton = document.querySelector(
-        'a:has-text("Next"), button:has-text("Next"), ' +
-        'a:has-text("›"), a:has-text("→"), a:has-text("»"), ' +
-        '.next, .next-page, [aria-label*="next" i]'
-      )
-
-      if (nextButton) {
-        return {
-          currentPage: 1,
-          hasNextPage: !!nextButton && !nextButton.hasAttribute('disabled'),
-          paginationType: 'next-prev' as const
+        if (loadMoreButton) {
+          return {
+            currentPage: 1,
+            hasNextPage: !!loadMoreButton && !loadMoreButton.hasAttribute('disabled'),
+            paginationType: 'load-more' as const
+          }
         }
-      }
 
-      // Check for "Load More" button
-      const loadMoreButton = document.querySelector(
-        'button:has-text("Load More"), button:has-text("Show More"), ' +
-        'a:has-text("Load More"), .load-more, .show-more'
-      )
+        // Check URL for pagination parameters
+        const url = new URL(window.location.href)
+        const pageParam =
+          url.searchParams.get('page') ||
+          url.searchParams.get('pageNum') ||
+          url.searchParams.get('pageNumber')
 
-      if (loadMoreButton) {
+        if (pageParam) {
+          return {
+            currentPage: parseInt(pageParam) || 1,
+            hasNextPage: true, // Assume more pages exist
+            paginationType: 'url-param' as const
+          }
+        }
+
+        // No pagination detected
         return {
           currentPage: 1,
-          hasNextPage: !!loadMoreButton && !loadMoreButton.hasAttribute('disabled'),
-          paginationType: 'load-more' as const
+          hasNextPage: false,
+          paginationType: 'none' as const
         }
-      }
+      })
 
-      // Check URL for pagination parameters
-      const url = new URL(window.location.href)
-      const pageParam = url.searchParams.get('page') ||
-                       url.searchParams.get('pageNum') ||
-                       url.searchParams.get('pageNumber')
-
-      if (pageParam) {
-        return {
-          currentPage: parseInt(pageParam) || 1,
-          hasNextPage: true, // Assume more pages exist
-          paginationType: 'url-param' as const
-        }
-      }
-
-      // No pagination detected
+      return result
+    } catch (error) {
+      console.warn('Pagination detection failed, falling back to single-page results.', error)
       return {
         currentPage: 1,
         hasNextPage: false,
-        paginationType: 'none' as const
+        paginationType: 'none'
       }
-    })
-
-    return result
+    }
   }
 
   /**
@@ -179,19 +242,24 @@ export class PaginationHandler {
   /**
    * Handle numbered pagination (1, 2, 3, ...)
    */
-  private async handleNumberedPagination(page: Page, pagination: PaginationResult): Promise<boolean> {
+  private async handleNumberedPagination(
+    page: Page,
+    pagination: PaginationResult
+  ): Promise<boolean> {
     const nextPage = pagination.currentPage + 1
 
     // Try to click the next page number
     const clicked = await page.evaluate((pageNum) => {
-      const links = Array.from(document.querySelectorAll('a[class*="page"], .pagination a, .pager a'))
-      const nextLink = links.find(link => {
+      const links = Array.from(
+        document.querySelectorAll('a[class*="page"], .pagination a, .pager a')
+      )
+      const nextLink = links.find((link) => {
         const text = link.textContent?.trim() || ''
         return text === String(pageNum)
       })
 
       if (nextLink) {
-        (nextLink as HTMLElement).click()
+        ;(nextLink as HTMLElement).click()
         return true
       }
       return false
@@ -211,23 +279,55 @@ export class PaginationHandler {
    */
   private async handleNextPrevPagination(page: Page): Promise<boolean> {
     const clicked = await page.evaluate(() => {
-      const selectors = [
-        'a:has-text("Next")',
-        'button:has-text("Next")',
-        '.next',
-        '.next-page',
-        '[aria-label*="next" i]',
-        'a:has-text("›")',
-        'a:has-text("→")',
-        'a:has-text("»")'
-      ]
+      const directSelector = document.querySelector(
+        '.next, .next-page, [aria-label*="next" i]'
+      ) as HTMLElement | null
+      const directVisible =
+        !!directSelector &&
+        (directSelector.offsetWidth ||
+          directSelector.offsetHeight ||
+          directSelector.getClientRects().length)
+      if (directSelector && !directSelector.hasAttribute('disabled') && directVisible) {
+        directSelector.click()
+        return true
+      }
 
-      for (const selector of selectors) {
-        const element = document.querySelector(selector) as HTMLElement
-        if (element && !element.hasAttribute('disabled') && element.offsetParent !== null) {
-          element.click()
-          return true
+      const candidates = Array.from(document.querySelectorAll('a, button')) as HTMLElement[]
+      const labels = ['next', '›', '→', '»']
+      let nextButton: HTMLElement | null = null
+
+      for (let i = 0; i < candidates.length; i++) {
+        const element = candidates[i]
+        const text = element.textContent?.trim().toLowerCase() || ''
+        let matches = false
+
+        for (let j = 0; j < labels.length; j++) {
+          const label = labels[j]
+          if (text === label) {
+            matches = true
+            break
+          }
+
+          const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
+          const title = element.getAttribute('title')?.toLowerCase() || ''
+          if (ariaLabel.includes(label) || title.includes(label)) {
+            matches = true
+            break
+          }
         }
+
+        if (matches) {
+          nextButton = element
+          break
+        }
+      }
+
+      const nextVisible =
+        !!nextButton &&
+        (nextButton.offsetWidth || nextButton.offsetHeight || nextButton.getClientRects().length)
+      if (nextButton && !nextButton.hasAttribute('disabled') && nextVisible) {
+        nextButton.click()
+        return true
       }
       return false
     })
@@ -246,20 +346,55 @@ export class PaginationHandler {
    */
   private async handleLoadMorePagination(page: Page): Promise<boolean> {
     const clicked = await page.evaluate(() => {
-      const selectors = [
-        'button:has-text("Load More")',
-        'button:has-text("Show More")',
-        'a:has-text("Load More")',
-        '.load-more',
-        '.show-more'
-      ]
+      const directSelector = document.querySelector('.load-more, .show-more') as HTMLElement | null
+      const directVisible =
+        !!directSelector &&
+        (directSelector.offsetWidth ||
+          directSelector.offsetHeight ||
+          directSelector.getClientRects().length)
+      if (directSelector && !directSelector.hasAttribute('disabled') && directVisible) {
+        directSelector.click()
+        return true
+      }
 
-      for (const selector of selectors) {
-        const element = document.querySelector(selector) as HTMLElement
-        if (element && !element.hasAttribute('disabled') && element.offsetParent !== null) {
-          element.click()
-          return true
+      const candidates = Array.from(document.querySelectorAll('a, button')) as HTMLElement[]
+      const labels = ['load more', 'show more']
+      let loadMoreButton: HTMLElement | null = null
+
+      for (let i = 0; i < candidates.length; i++) {
+        const element = candidates[i]
+        const text = element.textContent?.trim().toLowerCase() || ''
+        let matches = false
+
+        for (let j = 0; j < labels.length; j++) {
+          const label = labels[j]
+          if (text === label) {
+            matches = true
+            break
+          }
+
+          const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
+          const title = element.getAttribute('title')?.toLowerCase() || ''
+          if (ariaLabel.includes(label) || title.includes(label)) {
+            matches = true
+            break
+          }
         }
+
+        if (matches) {
+          loadMoreButton = element
+          break
+        }
+      }
+
+      const loadMoreVisible =
+        !!loadMoreButton &&
+        (loadMoreButton.offsetWidth ||
+          loadMoreButton.offsetHeight ||
+          loadMoreButton.getClientRects().length)
+      if (loadMoreButton && !loadMoreButton.hasAttribute('disabled') && loadMoreVisible) {
+        loadMoreButton.click()
+        return true
       }
       return false
     })
@@ -275,7 +410,10 @@ export class PaginationHandler {
   /**
    * Handle URL parameter-based pagination
    */
-  private async handleUrlParamPagination(page: Page, pagination: PaginationResult): Promise<boolean> {
+  private async handleUrlParamPagination(
+    page: Page,
+    pagination: PaginationResult
+  ): Promise<boolean> {
     const currentUrl = new URL(page.url())
     const nextPage = pagination.currentPage + 1
 
@@ -339,6 +477,6 @@ export class PaginationHandler {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }

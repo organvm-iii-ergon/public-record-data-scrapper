@@ -40,7 +40,7 @@ export class RateLimiter {
     this.cleanup(now)
 
     // Check if we can make a request now
-    if (this.canMakeRequest(now)) {
+    if (this.canMakeRequest()) {
       this.recordRequest(now)
       return
     }
@@ -113,13 +113,15 @@ export class RateLimiter {
   /**
    * Check if we can make a request given current rate limits
    */
-  private canMakeRequest(now: number): boolean {
+  private canMakeRequest(): boolean {
     const stats = this.getStats()
 
-    return stats.perSecond.available > 0 &&
-           stats.perMinute.available > 0 &&
-           stats.perHour.available > 0 &&
-           stats.perDay.available > 0
+    return (
+      stats.perSecond.available > 0 &&
+      stats.perMinute.available > 0 &&
+      stats.perHour.available > 0 &&
+      stats.perDay.available > 0
+    )
   }
 
   /**
@@ -179,8 +181,8 @@ export class RateLimiter {
    * Clean up old timestamps outside the day window
    */
   private cleanup(now: number): void {
-    const dayAgo = now - (24 * 60 * 60 * 1000)
-    this.requestQueue = this.requestQueue.filter(req => req.timestamp > dayAgo)
+    const dayAgo = now - 24 * 60 * 60 * 1000
+    this.requestQueue = this.requestQueue.filter((req) => req.timestamp > dayAgo)
   }
 
   /**
@@ -188,7 +190,7 @@ export class RateLimiter {
    */
   private countRequests(now: number, windowMs: number): number {
     const cutoff = now - windowMs
-    return this.requestQueue.filter(req => req.timestamp > cutoff).length
+    return this.requestQueue.filter((req) => req.timestamp > cutoff).length
   }
 
   /**
@@ -196,7 +198,7 @@ export class RateLimiter {
    */
   private getOldestTimestamp(now: number, windowMs: number): RequestTimestamp | undefined {
     const cutoff = now - windowMs
-    const requestsInWindow = this.requestQueue.filter(req => req.timestamp > cutoff)
+    const requestsInWindow = this.requestQueue.filter((req) => req.timestamp > cutoff)
     return requestsInWindow[0]
   }
 }
@@ -204,7 +206,9 @@ export class RateLimiter {
 /**
  * Create a rate limiter with common presets
  */
-export function createRateLimiter(preset: 'conservative' | 'moderate' | 'aggressive' | RateLimitConfig): RateLimiter {
+export function createRateLimiter(
+  preset: 'conservative' | 'moderate' | 'aggressive' | RateLimitConfig
+): RateLimiter {
   if (typeof preset === 'object') {
     return new RateLimiter(preset)
   }

@@ -7,7 +7,8 @@ import {
   DashboardStats,
   IndustryType,
   HealthGrade,
-  SignalType
+  SignalType,
+  DataTier
 } from './types'
 import { calculateMLScoring, addMLConfidenceToSignal } from './mlScoring'
 
@@ -34,6 +35,58 @@ const MCA_INDUSTRY_WEIGHTS: Record<IndustryType, number> = {
 
 const STATES = ['NY', 'CA', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI']
 const SIGNAL_TYPES: SignalType[] = ['hiring', 'permit', 'contract', 'expansion', 'equipment']
+
+export interface MockDataOptions {
+  dataTier?: DataTier
+}
+
+const DATA_TIER_CONFIG: Record<
+  DataTier,
+  {
+    signalMin: number
+    signalMax: number
+    revenueMax: number
+    lienAmountMin: number
+    lienAmountMax: number
+    competitorFilingMin: number
+    competitorFilingMax: number
+    competitorDealMin: number
+    competitorDealMax: number
+    portfolioFundingMin: number
+    portfolioFundingMax: number
+  }
+> = {
+  oss: {
+    signalMin: 0,
+    signalMax: 3,
+    revenueMax: 2000000,
+    lienAmountMin: 25000,
+    lienAmountMax: 150000,
+    competitorFilingMin: 40,
+    competitorFilingMax: 250,
+    competitorDealMin: 60000,
+    competitorDealMax: 180000,
+    portfolioFundingMin: 75000,
+    portfolioFundingMax: 300000
+  },
+  paid: {
+    signalMin: 1,
+    signalMax: 6,
+    revenueMax: 3000000,
+    lienAmountMin: 25000,
+    lienAmountMax: 250000,
+    competitorFilingMin: 80,
+    competitorFilingMax: 500,
+    competitorDealMin: 75000,
+    competitorDealMax: 350000,
+    portfolioFundingMin: 100000,
+    portfolioFundingMax: 750000
+  }
+}
+
+function resolveDataTier(options?: MockDataOptions): DataTier {
+  return options?.dataTier ?? 'oss'
+}
 
 function randomElement<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
@@ -189,8 +242,10 @@ export function generateGrowthSignals(
   )
 }
 
-export function generateProspects(count: number): Prospect[] {
+export function generateProspects(count: number, options: MockDataOptions = {}): Prospect[] {
   const prospects: Prospect[] = []
+  const tier = resolveDataTier(options)
+  const tierConfig = DATA_TIER_CONFIG[tier]
 
   // Small business names - NO corporate/bank names
   // MCA targets: local restaurants, retail shops, small service businesses
@@ -269,7 +324,7 @@ export function generateProspects(count: number): Prospect[] {
     const timeSinceDefault = Math.floor(
       (Date.now() - new Date(defaultDate).getTime()) / (1000 * 60 * 60 * 24)
     )
-    const signalCount = randomInt(0, 5)
+    const signalCount = randomInt(tierConfig.signalMin, tierConfig.signalMax)
     // First 3 prospects with signals get today's date for demo impact
     const includeTodaySignals = i < 3 && signalCount > 0
     const growthSignals = generateGrowthSignals(signalCount, includeTodaySignals)
@@ -325,7 +380,7 @@ export function generateProspects(count: number): Prospect[] {
 
     // MCA-appropriate revenue range: $100K - $3M (small businesses only)
     // Exclude large corporations with >$5M revenue
-    const estimatedRevenue = randomInt(100000, 3000000)
+    const estimatedRevenue = randomInt(100000, tierConfig.revenueMax)
 
     const prospect: Prospect = {
       id: `prospect-${1000 + i}`,
@@ -350,7 +405,7 @@ export function generateProspects(count: number): Prospect[] {
           ]),
           state,
           // MCA-appropriate lien amounts: $25K - $250K (small business ranges)
-          lienAmount: randomInt(25000, 250000),
+          lienAmount: randomInt(tierConfig.lienAmountMin, tierConfig.lienAmountMax),
           status: 'lapsed',
           filingType: 'UCC-1'
         }
@@ -372,7 +427,9 @@ export function generateProspects(count: number): Prospect[] {
   return prospects.sort((a, b) => b.priorityScore - a.priorityScore)
 }
 
-export function generateCompetitorData(): CompetitorData[] {
+export function generateCompetitorData(options: MockDataOptions = {}): CompetitorData[] {
+  const tier = resolveDataTier(options)
+  const tierConfig = DATA_TIER_CONFIG[tier]
   const lenders = [
     'Capital Finance Corp',
     'Business Lending LLC',
@@ -388,8 +445,8 @@ export function generateCompetitorData(): CompetitorData[] {
 
   return lenders
     .map((lenderName) => {
-      const filingCount = randomInt(50, 500)
-      const avgDealSize = randomInt(75000, 350000)
+      const filingCount = randomInt(tierConfig.competitorFilingMin, tierConfig.competitorFilingMax)
+      const avgDealSize = randomInt(tierConfig.competitorDealMin, tierConfig.competitorDealMax)
       const marketShare = Math.round((filingCount / 2000) * 100 * 10) / 10
 
       return {
@@ -405,8 +462,13 @@ export function generateCompetitorData(): CompetitorData[] {
     .sort((a, b) => b.filingCount - a.filingCount)
 }
 
-export function generatePortfolioCompanies(count: number): PortfolioCompany[] {
+export function generatePortfolioCompanies(
+  count: number,
+  options: MockDataOptions = {}
+): PortfolioCompany[] {
   const companies: PortfolioCompany[] = []
+  const tier = resolveDataTier(options)
+  const tierConfig = DATA_TIER_CONFIG[tier]
   const companyPrefixes = ['Metro', 'Central', 'Regional', 'United', 'Superior', 'Quality']
   const companySuffixes = ['Builders', 'Services', 'Enterprises', 'Industries', 'Group']
 
@@ -425,7 +487,7 @@ export function generatePortfolioCompanies(count: number): PortfolioCompany[] {
       id: `portfolio-${i}`,
       companyName: `${randomElement(companyPrefixes)} ${randomElement(companySuffixes)}`,
       fundingDate: randomDate(randomInt(90, 730)),
-      fundingAmount: randomInt(100000, 750000),
+      fundingAmount: randomInt(tierConfig.portfolioFundingMin, tierConfig.portfolioFundingMax),
       currentStatus,
       healthScore,
       lastAlertDate: currentStatus === 'at-risk' ? randomDate(randomInt(1, 7)) : undefined

@@ -11,12 +11,24 @@
  *   SCRAPER_IMPLEMENTATION=api npm run scrape:multi  # Use API instead of mock
  */
 
-import { createScraper, ScraperFactory, ScraperImplementation, SupportedState } from './scrapers/scraper-factory'
-import { initDatabase, getDatabase, createQueries, closeDatabase } from '../src/lib/database'
+import {
+  createScraper,
+  ScraperFactory,
+  ScraperImplementation,
+  SupportedState
+} from './scrapers/scraper-factory'
+import { initDatabase, createQueries, closeDatabase } from '../src/lib/database'
 import chalk from 'chalk'
 
 // State-specific sample companies
-const COMPANIES_BY_STATE: Record<SupportedState, Array<{ name: string; industry: 'restaurant' | 'retail' | 'construction' | 'technology' | 'healthcare' | 'services'; estimatedRevenue: number }>> = {
+const COMPANIES_BY_STATE: Record<
+  SupportedState,
+  Array<{
+    name: string
+    industry: 'restaurant' | 'retail' | 'construction' | 'technology' | 'healthcare' | 'services'
+    estimatedRevenue: number
+  }>
+> = {
   CA: [
     { name: 'Golden State Restaurant Group', industry: 'restaurant', estimatedRevenue: 2500000 },
     { name: 'Bay Area Retail Co', industry: 'retail', estimatedRevenue: 1800000 }
@@ -88,8 +100,10 @@ async function scrapeState(
       // Calculate priority score
       const mostRecentFiling = filings[0]
       const filingDate = new Date(mostRecentFiling.filingDate)
-      const timeSinceDefault = Math.floor((Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24))
-      const priorityScore = Math.min(100, Math.floor((timeSinceDefault / 14) + 50))
+      const timeSinceDefault = Math.floor(
+        (Date.now() - filingDate.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      const priorityScore = Math.min(100, Math.floor(timeSinceDefault / 14 + 50))
 
       // Create prospect
       const prospect = await queries.createProspect({
@@ -129,18 +143,25 @@ async function scrapeState(
         source: 'automated',
         description: 'Identified through automated screening',
         detectedDate: new Date(),
-        confidence: 0.80,
+        confidence: 0.8,
         metadata: { state, implementation }
       })
     }
 
     // Close browser if using Puppeteer
-    if (implementation === 'puppeteer' && 'close' in scraper) {
-      await (scraper as any).close()
+    if (implementation === 'puppeteer') {
+      const maybeClose = (scraper as Partial<{ close: () => Promise<void> | void }>).close
+      if (typeof maybeClose === 'function') {
+        await maybeClose()
+      }
     }
 
     const duration = Date.now() - startTime
-    console.log(chalk.green(`✅ ${state} complete: ${prospectsCreated} prospects, ${filingsStored} filings (${(duration / 1000).toFixed(1)}s)`))
+    console.log(
+      chalk.green(
+        `✅ ${state} complete: ${prospectsCreated} prospects, ${filingsStored} filings (${(duration / 1000).toFixed(1)}s)`
+      )
+    )
 
     return {
       state,
@@ -149,7 +170,6 @@ async function scrapeState(
       filingsStored,
       duration
     }
-
   } catch (error) {
     const duration = Date.now() - startTime
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -171,9 +191,10 @@ async function main() {
 
   // Parse command line arguments for specific states
   const args = process.argv.slice(2)
-  const requestedStates = args.length > 0
-    ? args.filter(arg => ALL_STATES.includes(arg as SupportedState)) as SupportedState[]
-    : ALL_STATES
+  const requestedStates =
+    args.length > 0
+      ? (args.filter((arg) => ALL_STATES.includes(arg as SupportedState)) as SupportedState[])
+      : ALL_STATES
 
   if (requestedStates.length === 0) {
     console.log(chalk.red('❌ No valid states specified'))
@@ -182,7 +203,8 @@ async function main() {
   }
 
   // Determine scraper implementation
-  const implementation = (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) ||
+  const implementation =
+    (process.env.SCRAPER_IMPLEMENTATION as ScraperImplementation) ||
     ScraperFactory.getRecommendedImplementation()
 
   // Check availability
@@ -194,7 +216,11 @@ async function main() {
   }
 
   console.log(chalk.cyan(`📌 Using ${implementation.toUpperCase()} implementation`))
-  console.log(chalk.cyan(`📊 Collecting from ${requestedStates.length} state(s): ${requestedStates.join(', ')}\n`))
+  console.log(
+    chalk.cyan(
+      `📊 Collecting from ${requestedStates.length} state(s): ${requestedStates.join(', ')}\n`
+    )
+  )
 
   try {
     // Initialize database
@@ -207,7 +233,7 @@ async function main() {
 
     // Scrape all states concurrently
     const results = await Promise.all(
-      requestedStates.map(state => scrapeState(state, implementation, queries))
+      requestedStates.map((state) => scrapeState(state, implementation, queries))
     )
 
     const overallDuration = Date.now() - overallStartTime
@@ -215,8 +241,8 @@ async function main() {
     // Summary
     console.log(chalk.bold.blue('\n\n📊 Collection Summary\n'))
 
-    const successfulStates = results.filter(r => r.success)
-    const failedStates = results.filter(r => !r.success)
+    const successfulStates = results.filter((r) => r.success)
+    const failedStates = results.filter((r) => !r.success)
 
     console.log(chalk.cyan(`   States Processed: ${results.length}`))
     console.log(chalk.green(`   Successful: ${successfulStates.length}`))
@@ -227,9 +253,13 @@ async function main() {
 
     // Per-state results
     console.log(chalk.bold('📍 By State:\n'))
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.success) {
-        console.log(chalk.green(`   ✅ ${result.state}: ${result.prospectsCreated} prospects, ${result.filingsStored} filings (${(result.duration / 1000).toFixed(1)}s)`))
+        console.log(
+          chalk.green(
+            `   ✅ ${result.state}: ${result.prospectsCreated} prospects, ${result.filingsStored} filings (${(result.duration / 1000).toFixed(1)}s)`
+          )
+        )
       } else {
         console.log(chalk.red(`   ❌ ${result.state}: ${result.error}`))
       }
@@ -256,7 +286,6 @@ async function main() {
 
     console.log(chalk.green('\n✅ Multi-state collection complete!\n'))
     console.log(chalk.gray('💡 Tip: Set VITE_USE_MOCK_DATA=false in .env to view data in UI\n'))
-
   } catch (error) {
     console.error(chalk.red('\n❌ Error:'), error)
     await closeDatabase()

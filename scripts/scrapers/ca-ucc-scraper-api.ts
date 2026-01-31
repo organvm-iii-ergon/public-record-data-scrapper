@@ -43,7 +43,7 @@ export class CaliforniaUCCScraperAPI extends BaseScraper {
     this.apiConfig = {
       apiKey: apiConfig?.apiKey || process.env.UCC_API_KEY || '',
       endpoint: apiConfig?.endpoint || process.env.UCC_API_ENDPOINT || 'https://api.uccplus.com/v1',
-      provider: (apiConfig?.provider as any) || 'uccplus'
+      provider: apiConfig?.provider ?? 'uccplus'
     }
 
     if (!this.apiConfig.apiKey) {
@@ -71,7 +71,10 @@ export class CaliforniaUCCScraperAPI extends BaseScraper {
       }
     }
 
-    this.log('info', 'Starting CA UCC search (API)', { companyName, provider: this.apiConfig.provider })
+    this.log('info', 'Starting CA UCC search (API)', {
+      companyName,
+      provider: this.apiConfig.provider
+    })
 
     try {
       const { result: filings, retryCount } = await this.retryWithBackoff(
@@ -127,7 +130,7 @@ export class CaliforniaUCCScraperAPI extends BaseScraper {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiConfig.apiKey}`,
+        Authorization: `Bearer ${this.apiConfig.apiKey}`,
         'User-Agent': 'UCC-Intelligence-Platform/1.0'
       },
       body: JSON.stringify(requestBody),
@@ -170,38 +173,55 @@ export class CaliforniaUCCScraperAPI extends BaseScraper {
    * Map API response to UCCFiling format
    * NOTE: This is provider-specific and needs customization
    */
-  private mapAPIResponse(data: any): Partial<UCCFiling>[] {
+  private mapAPIResponse(data: unknown): Partial<UCCFiling>[] {
     // Example mapping for generic API response
-    const filings = data.results || data.filings || []
+    const response = data as { results?: unknown; filings?: unknown }
+    const filings = Array.isArray(response?.results)
+      ? response.results
+      : Array.isArray(response?.filings)
+        ? response.filings
+        : []
 
-    return filings.map((item: any) => {
+    const toStringValue = (value: unknown): string => {
+      if (typeof value === 'string') return value
+      if (typeof value === 'number') return String(value)
+      return ''
+    }
+
+    return filings.map((item) => {
+      const record = (typeof item === 'object' && item !== null ? item : {}) as Record<
+        string,
+        unknown
+      >
       // Parse filing date
       let filingDate = ''
-      if (item.filing_date || item.filingDate) {
-        const date = new Date(item.filing_date || item.filingDate)
+      const filingDateValue = record.filing_date ?? record.filingDate
+      if (filingDateValue) {
+        const date = new Date(toStringValue(filingDateValue))
         filingDate = date.toISOString().split('T')[0]
       }
 
       // Map status
       let status: 'active' | 'terminated' | 'lapsed' = 'lapsed'
-      const apiStatus = (item.status || '').toLowerCase()
+      const apiStatus = toStringValue(record.status).toLowerCase()
       if (apiStatus.includes('active')) status = 'active'
       else if (apiStatus.includes('terminated')) status = 'terminated'
       else status = 'lapsed'
 
       // Map filing type
       let filingType: 'UCC-1' | 'UCC-3' = 'UCC-1'
-      const apiType = (item.filing_type || item.type || '').toUpperCase()
+      const apiType = toStringValue(record.filing_type ?? record.type).toUpperCase()
       if (apiType.includes('UCC-3') || apiType.includes('UCC3')) {
         filingType = 'UCC-3'
       }
 
       return {
-        filingNumber: item.filing_number || item.filingNumber || item.id || '',
-        debtorName: item.debtor_name || item.debtorName || item.debtor || '',
-        securedParty: item.secured_party || item.securedParty || item.creditor || '',
+        filingNumber: toStringValue(record.filing_number ?? record.filingNumber ?? record.id),
+        debtorName: toStringValue(record.debtor_name ?? record.debtorName ?? record.debtor),
+        securedParty: toStringValue(record.secured_party ?? record.securedParty ?? record.creditor),
         filingDate,
-        collateral: item.collateral || item.collateral_description || 'Not specified',
+        collateral:
+          toStringValue(record.collateral ?? record.collateral_description) || 'Not specified',
         status,
         filingType
       }

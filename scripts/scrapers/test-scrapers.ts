@@ -20,7 +20,8 @@ import { FloridaScraper } from './states/florida'
 import { CaliforniaScraper } from './states/california'
 import type { BaseScraper, ScraperResult } from './base-scraper'
 import { writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join } from 'path'
+import { join, resolve } from 'path'
+import { fileURLToPath } from 'node:url'
 
 // Test configuration
 interface TestCase {
@@ -43,17 +44,33 @@ interface TestResult {
 const TEST_CASES: Record<string, TestCase[]> = {
   TX: [
     { companyName: 'Tesla Inc', description: 'Large public company', expectedMinResults: 0 },
-    { companyName: 'Dell Technologies', description: 'Texas-based tech company', expectedMinResults: 0 },
+    {
+      companyName: 'Dell Technologies',
+      description: 'Texas-based tech company',
+      expectedMinResults: 0
+    },
     { companyName: 'ACME Corporation', description: 'Generic test name', expectedMinResults: 0 }
   ],
   FL: [
-    { companyName: 'Publix Super Markets', description: 'Florida-based grocery chain', expectedMinResults: 0 },
-    { companyName: 'NextEra Energy', description: 'Large Florida utility company', expectedMinResults: 0 },
+    {
+      companyName: 'Publix Super Markets',
+      description: 'Florida-based grocery chain',
+      expectedMinResults: 0
+    },
+    {
+      companyName: 'NextEra Energy',
+      description: 'Large Florida utility company',
+      expectedMinResults: 0
+    },
     { companyName: 'Test Company LLC', description: 'Generic test name', expectedMinResults: 0 }
   ],
   CA: [
     { companyName: 'Apple Inc', description: 'California tech giant', expectedMinResults: 0 },
-    { companyName: 'Intel Corporation', description: 'California semiconductor company', expectedMinResults: 0 },
+    {
+      companyName: 'Intel Corporation',
+      description: 'California semiconductor company',
+      expectedMinResults: 0
+    },
     { companyName: 'Sample Business Inc', description: 'Generic test name', expectedMinResults: 0 }
   ]
 }
@@ -106,10 +123,14 @@ class ScraperTestRunner {
 
         // Analyze result
         if (scraperResult.success) {
-          console.log(`✅ Success - Found ${scraperResult.filings?.length || 0} filings in ${duration}ms`)
+          console.log(
+            `✅ Success - Found ${scraperResult.filings?.length || 0} filings in ${duration}ms`
+          )
 
           if (scraperResult.filings && scraperResult.filings.length > 0) {
-            console.log(`   First filing: ${scraperResult.filings[0].filingNumber} - ${scraperResult.filings[0].debtorName}`)
+            console.log(
+              `   First filing: ${scraperResult.filings[0].filingNumber} - ${scraperResult.filings[0].debtorName}`
+            )
           } else {
             console.log(`   No filings found (this may be expected)`)
           }
@@ -121,7 +142,6 @@ class ScraperTestRunner {
           console.log(`❌ Failed - ${scraperResult.error}`)
           result.error = scraperResult.error
         }
-
       } catch (error) {
         const duration = Date.now() - startTime
         const errorMessage = error instanceof Error ? error.message : String(error)
@@ -160,7 +180,9 @@ class ScraperTestRunner {
   /**
    * Get scraper instance for a state
    */
-  private getScraper(state: 'TX' | 'FL' | 'CA'): BaseScraper & { closeBrowser?: () => Promise<void> } {
+  private getScraper(
+    state: 'TX' | 'FL' | 'CA'
+  ): BaseScraper & { closeBrowser?: () => Promise<void> } {
     switch (state) {
       case 'TX':
         return new TexasScraper()
@@ -192,20 +214,24 @@ class ScraperTestRunner {
 
     // Summary by state
     for (const [state, results] of Object.entries(byState)) {
-      const successful = results.filter(r => r.success).length
-      const failed = results.filter(r => !r.success).length
-      const withResults = results.filter(r => r.result.filings && r.result.filings.length > 0).length
+      const successful = results.filter((r) => r.success).length
+      const failed = results.filter((r) => !r.success).length
+      const withResults = results.filter(
+        (r) => r.result.filings && r.result.filings.length > 0
+      ).length
       const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length
 
       console.log(`\n${state}:`)
       console.log(`  Total tests: ${results.length}`)
-      console.log(`  Successful: ${successful} (${(successful / results.length * 100).toFixed(1)}%)`)
+      console.log(
+        `  Successful: ${successful} (${((successful / results.length) * 100).toFixed(1)}%)`
+      )
       console.log(`  Failed: ${failed}`)
       console.log(`  Tests with results: ${withResults}`)
       console.log(`  Avg duration: ${avgDuration.toFixed(0)}ms`)
 
       // Show failures
-      const failures = results.filter(r => !r.success)
+      const failures = results.filter((r) => !r.success)
       if (failures.length > 0) {
         console.log(`  Failures:`)
         for (const failure of failures) {
@@ -216,31 +242,40 @@ class ScraperTestRunner {
 
     // Overall stats
     const totalTests = this.results.length
-    const totalSuccessful = this.results.filter(r => r.success).length
-    const totalFailed = this.results.filter(r => !r.success).length
+    const totalSuccessful = this.results.filter((r) => r.success).length
+    const totalFailed = this.results.filter((r) => !r.success).length
 
     console.log(`\n${'='.repeat(60)}`)
-    console.log(`Overall: ${totalSuccessful}/${totalTests} tests passed (${(totalSuccessful / totalTests * 100).toFixed(1)}%)`)
+    console.log(
+      `Overall: ${totalSuccessful}/${totalTests} tests passed (${((totalSuccessful / totalTests) * 100).toFixed(1)}%)`
+    )
     console.log('='.repeat(60))
 
     // Write detailed JSON report
     const reportPath = join(this.resultsDir, 'report.json')
-    writeFileSync(reportPath, JSON.stringify({
-      timestamp: new Date().toISOString(),
-      summary: {
-        total: totalTests,
-        successful: totalSuccessful,
-        failed: totalFailed,
-        successRate: totalSuccessful / totalTests
-      },
-      results: this.results
-    }, null, 2))
+    writeFileSync(
+      reportPath,
+      JSON.stringify(
+        {
+          timestamp: new Date().toISOString(),
+          summary: {
+            total: totalTests,
+            successful: totalSuccessful,
+            failed: totalFailed,
+            successRate: totalSuccessful / totalTests
+          },
+          results: this.results
+        },
+        null,
+        2
+      )
+    )
 
     console.log(`\nDetailed report saved to: ${reportPath}`)
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 
@@ -249,7 +284,7 @@ class ScraperTestRunner {
  */
 async function main() {
   const args = process.argv.slice(2)
-  const stateArg = args.find(arg => ['TX', 'FL', 'CA'].includes(arg.toUpperCase()))
+  const stateArg = args.find((arg) => ['TX', 'FL', 'CA'].includes(arg.toUpperCase()))
   const isHeaded = args.includes('--headed')
 
   const runner = new ScraperTestRunner(isHeaded)
@@ -280,9 +315,11 @@ async function main() {
   }
 }
 
+const isMain = process.argv[1] ? fileURLToPath(import.meta.url) === resolve(process.argv[1]) : false
+
 // Run tests
-if (require.main === module) {
-  main().catch(error => {
+if (isMain) {
+  main().catch((error) => {
     console.error('Fatal error:', error)
     process.exit(1)
   })

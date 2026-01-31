@@ -6,13 +6,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Prospect } from '@/lib/types'
-import {
-  DataRefreshScheduler,
-  SchedulerEvent,
-  SchedulerStatus
-} from '@/lib/services'
-import { getDataPipelineConfig, featureFlags } from '@/lib/config/dataPipeline'
+import { DataRefreshScheduler, SchedulerStatus } from '@/lib/services'
+import { featureFlags } from '@/lib/config/dataPipeline'
 import { generateProspects } from '@/lib/mockData'
+import { useDataTier } from '@/hooks/useDataTier'
 import {
   initDatabaseService,
   fetchProspects,
@@ -41,6 +38,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
   const [error, setError] = useState<string | null>(null)
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null)
   const [lastUpdate, setLastUpdate] = useState<string | null>(null)
+  const { dataTier } = useDataTier()
 
   const schedulerRef = useRef<DataRefreshScheduler | null>(null)
 
@@ -56,7 +54,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
         if (featureFlags.useMockData) {
           // Use mock data
           console.log('Using mock data (VITE_USE_MOCK_DATA=true)')
-          const mockProspects = generateProspects(100)
+          const mockProspects = generateProspects(100, { dataTier })
           setProspects(mockProspects)
           setLastUpdate(new Date().toISOString())
         } else {
@@ -89,7 +87,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
 
         // Fallback to mock data on error
         console.log('Falling back to mock data due to error')
-        const mockProspects = generateProspects(100)
+        const mockProspects = generateProspects(100, { dataTier })
         setProspects(mockProspects)
       }
     }
@@ -97,35 +95,11 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
     initialize()
 
     // Cleanup
+    const scheduler = schedulerRef.current
     return () => {
-      if (schedulerRef.current) {
-        schedulerRef.current.stop()
-      }
+      scheduler?.stop()
     }
-  }, [])
-
-  /**
-   * Handle scheduler events
-   */
-  const handleSchedulerEvent = useCallback((event: SchedulerEvent) => {
-    console.log('Scheduler event:', event)
-
-    switch (event.type) {
-      case 'ingestion-completed':
-      case 'enrichment-completed':
-      case 'refresh-completed':
-        if (schedulerRef.current) {
-          setProspects(schedulerRef.current.getProspects())
-          setSchedulerStatus(schedulerRef.current.getStatus())
-          setLastUpdate(new Date().toISOString())
-        }
-        break
-
-      case 'error':
-        setError(event.error || 'Unknown scheduler error')
-        break
-    }
-  }, [])
+  }, [dataTier])
 
   /**
    * Manually refresh all data
@@ -137,7 +111,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
 
       if (featureFlags.useMockData) {
         // Regenerate mock data
-        const mockProspects = generateProspects(100)
+        const mockProspects = generateProspects(100, { dataTier })
         setProspects(mockProspects)
         setLastUpdate(new Date().toISOString())
       } else {
@@ -154,7 +128,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
       setError(err instanceof Error ? err.message : 'Failed to refresh data')
       setLoading(false)
     }
-  }, [])
+  }, [dataTier])
 
   /**
    * Start the scheduler
@@ -184,9 +158,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
       if (!featureFlags.useMockData && schedulerRef.current) {
         const refreshed = await schedulerRef.current.refreshProspect(prospectId)
         if (refreshed) {
-          setProspects(prev =>
-            prev.map(p => (p.id === prospectId ? refreshed : p))
-          )
+          setProspects((prev) => prev.map((p) => (p.id === prospectId ? refreshed : p)))
           setLastUpdate(new Date().toISOString())
         }
       }

@@ -1,24 +1,29 @@
 /**
  * Data Acquisition Agent
- * 
+ *
  * Manages data source integration and routing based on subscription tiers
  */
 
 import { BaseAgent } from '../BaseAgent'
-import { AgentAnalysis, SystemContext, AgentTask, AgentTaskResult, EnrichmentRequest, Finding, ImprovementSuggestion } from '../types'
-import { usageTracker } from '../../subscription/usage-tracker'
-import { 
-  SECEdgarSource, 
-  OSHASource, 
-  USPTOSource, 
-  CensusSource,
-  SAMGovSource 
-} from '../../data-sources/free-tier'
 import {
-  DnBSource,
-  GooglePlacesSource,
-  ClearbitSource
-} from '../../data-sources/starter-tier'
+  AgentAnalysis,
+  SystemContext,
+  AgentTask,
+  AgentTaskResult,
+  EnrichmentRequest,
+  Finding,
+  ImprovementSuggestion,
+  SubscriptionTier
+} from '../types'
+import { usageTracker } from '../../subscription/usage-tracker'
+import {
+  SECEdgarSource,
+  OSHASource,
+  USPTOSource,
+  CensusSource,
+  SAMGovSource
+} from '../../data-sources/free-tier'
+import { DnBSource, GooglePlacesSource, ClearbitSource } from '../../data-sources/starter-tier'
 import { BaseDataSource } from '../../data-sources/base-source'
 
 export class DataAcquisitionAgent extends BaseAgent {
@@ -57,23 +62,27 @@ export class DataAcquisitionAgent extends BaseAgent {
     // Check data source availability
     const unavailableSources = this.checkSourceAvailability()
     if (unavailableSources.length > 0) {
-      findings.push(this.createFinding(
-        'data-quality',
-        'warning',
-        `${unavailableSources.length} data sources are unavailable or misconfigured`,
-        { unavailableSources }
-      ))
+      findings.push(
+        this.createFinding(
+          'data-quality',
+          'warning',
+          `${unavailableSources.length} data sources are unavailable or misconfigured`,
+          { unavailableSources }
+        )
+      )
     }
 
     // Analyze data freshness
     const staleSources = this.checkDataFreshness(context)
     if (staleSources.length > 0) {
-      findings.push(this.createFinding(
-        'data-quality',
-        'info',
-        `${staleSources.length} data sources have stale data`,
-        { staleSources }
-      ))
+      findings.push(
+        this.createFinding(
+          'data-quality',
+          'info',
+          `${staleSources.length} data sources have stale data`,
+          { staleSources }
+        )
+      )
     }
 
     return this.createAnalysis(findings, improvements)
@@ -84,15 +93,16 @@ export class DataAcquisitionAgent extends BaseAgent {
    */
   async executeTask(task: AgentTask): Promise<AgentTaskResult> {
     const { type, payload } = task
+    const sourcePayload = payload as { source?: string; query?: Record<string, unknown> }
 
     try {
       switch (type) {
         case 'fetch-data':
           return await this.fetchData(payload as EnrichmentRequest)
         case 'fetch-from-source':
-          return await this.fetchFromSource(payload.source, payload.query)
+          return await this.fetchFromSource(sourcePayload.source, sourcePayload.query)
         case 'check-source-status':
-          return this.checkSourceStatus(payload.source)
+          return this.checkSourceStatus(sourcePayload.source)
         default:
           return {
             success: false,
@@ -114,7 +124,7 @@ export class DataAcquisitionAgent extends BaseAgent {
    */
   private async fetchData(request: EnrichmentRequest): Promise<AgentTaskResult> {
     const { companyName, state, tier, userId } = request
-    const results: Record<string, any> = {}
+    const results: Record<string, unknown> = {}
     const errors: string[] = []
     let totalCost = 0
 
@@ -176,9 +186,19 @@ export class DataAcquisitionAgent extends BaseAgent {
   /**
    * Fetch from a specific source
    */
-  private async fetchFromSource(sourceName: string, query: Record<string, any>): Promise<AgentTaskResult> {
+  private async fetchFromSource(
+    sourceName?: string,
+    query?: Record<string, unknown>
+  ): Promise<AgentTaskResult> {
+    if (!sourceName) {
+      return {
+        success: false,
+        error: 'Source name is required',
+        timestamp: new Date().toISOString()
+      }
+    }
     const source = this.sources.get(sourceName)
-    
+
     if (!source) {
       return {
         success: false,
@@ -187,7 +207,7 @@ export class DataAcquisitionAgent extends BaseAgent {
       }
     }
 
-    const response = await source.fetchData(query)
+    const response = await source.fetchData(query || {})
 
     return {
       success: response.success,
@@ -202,7 +222,7 @@ export class DataAcquisitionAgent extends BaseAgent {
    */
   private checkSourceStatus(sourceName: string): AgentTaskResult {
     const source = this.sources.get(sourceName)
-    
+
     if (!source) {
       return {
         success: false,
@@ -228,11 +248,11 @@ export class DataAcquisitionAgent extends BaseAgent {
   /**
    * Get available sources for a tier
    */
-  private getAvailableSourcesForTier(tier: string): string[] {
+  private getAvailableSourcesForTier(tier: SubscriptionTier): string[] {
     const sources: string[] = []
 
     this.sources.forEach((source, name) => {
-      if (source.isAvailableForTier(tier as any)) {
+      if (source.isAvailableForTier(tier)) {
         sources.push(name)
       }
     })
@@ -258,6 +278,7 @@ export class DataAcquisitionAgent extends BaseAgent {
    * Check data freshness
    */
   private checkDataFreshness(context: SystemContext): string[] {
+    void context
     // This is a placeholder - in production, you'd check actual data freshness
     return []
   }

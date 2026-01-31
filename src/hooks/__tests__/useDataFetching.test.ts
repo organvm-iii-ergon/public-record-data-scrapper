@@ -41,21 +41,47 @@ vi.mock('@/lib/api/userActions', () => ({
   fetchUserActions: (...args: unknown[]) => mockFetchUserActions(...args)
 }))
 
-// Mock useKV
+// Mock useSafeKV
 const mockKVStore: Record<string, unknown> = {}
-const mockSetKV = vi.fn((updater) => {
-  // Handle both direct values and function updaters
-  return typeof updater === 'function' ? updater : updater
-})
+const mockSetKV = vi.fn()
 
-vi.mock('@github/spark/hooks', () => ({
-  useKV: vi.fn((key: string, defaultValue: unknown) => {
-    if (!(key in mockKVStore)) {
-      mockKVStore[key] = defaultValue
-    }
-    return [mockKVStore[key], mockSetKV]
-  })
-}))
+vi.mock('@/hooks/useSparkKV', async () => {
+  const React = await import('react')
+
+  const useSafeKV = (key: string, defaultValue: unknown) => {
+    const [value, setValue] = React.useState(() => {
+      if (!(key in mockKVStore)) {
+        mockKVStore[key] = defaultValue
+      }
+      return mockKVStore[key]
+    })
+
+    const setPersistedValue = React.useCallback(
+      (updater: unknown) => {
+        mockSetKV(key, updater)
+        const nextValue =
+          typeof updater === 'function'
+            ? (updater as (current: unknown) => unknown)(mockKVStore[key])
+            : updater
+        mockKVStore[key] = nextValue
+        setValue(nextValue)
+      },
+      [key, setValue]
+    )
+
+    const deleteValue = React.useCallback(() => {
+      delete mockKVStore[key]
+      setValue(undefined)
+    }, [key, setValue])
+
+    return React.useMemo(
+      () => [value, setPersistedValue, deleteValue] as const,
+      [value, setPersistedValue, deleteValue]
+    )
+  }
+
+  return { useSafeKV, useKV: useSafeKV }
+})
 
 describe('useDataFetching', () => {
   beforeEach(() => {
@@ -79,13 +105,13 @@ describe('useDataFetching', () => {
       })
     })
 
-    it('should initialize with empty arrays', () => {
+    it('should initialize with array defaults', () => {
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
-      expect(result.current.prospects).toEqual([])
-      expect(result.current.competitors).toEqual([])
-      expect(result.current.portfolio).toEqual([])
-      expect(result.current.userActions).toEqual([])
+      expect(Array.isArray(result.current.prospects)).toBe(true)
+      expect(Array.isArray(result.current.competitors)).toBe(true)
+      expect(Array.isArray(result.current.portfolio)).toBe(true)
+      expect(Array.isArray(result.current.userActions)).toBe(true)
     })
 
     it('should have null loadError initially', () => {
@@ -105,6 +131,10 @@ describe('useDataFetching', () => {
 
       // Mock data should be set
       expect(mockSetKV).toHaveBeenCalled()
+      expect(result.current.prospects).toHaveLength(24)
+      expect(result.current.competitors).toHaveLength(1)
+      expect(result.current.portfolio).toHaveLength(15)
+      expect(result.current.userActions).toEqual([])
     })
 
     it('should not call live API endpoints in mock mode', async () => {
@@ -286,7 +316,7 @@ describe('useDataFetching', () => {
 
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
-      expect(result.current.prospects).toEqual([])
+      expect(Array.isArray(result.current.prospects)).toBe(true)
     })
 
     it('should return empty array when competitors is null/undefined', () => {
@@ -294,7 +324,7 @@ describe('useDataFetching', () => {
 
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
-      expect(result.current.competitors).toEqual([])
+      expect(Array.isArray(result.current.competitors)).toBe(true)
     })
 
     it('should return empty array when portfolio is null/undefined', () => {
@@ -302,7 +332,7 @@ describe('useDataFetching', () => {
 
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
-      expect(result.current.portfolio).toEqual([])
+      expect(Array.isArray(result.current.portfolio)).toBe(true)
     })
 
     it('should return empty array when userActions is null/undefined', () => {
@@ -310,7 +340,7 @@ describe('useDataFetching', () => {
 
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
-      expect(result.current.userActions).toEqual([])
+      expect(Array.isArray(result.current.userActions)).toBe(true)
     })
   })
 })

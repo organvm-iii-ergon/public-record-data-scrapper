@@ -19,13 +19,15 @@ const idParamSchema = z.object({
   id: z.string().uuid()
 })
 
+type PortfolioQuery = z.infer<typeof querySchema>
+
 // GET /api/portfolio - List portfolio companies
 router.get(
   '/',
   validateRequest({ query: querySchema }),
   asyncHandler(async (req, res) => {
     const portfolioService = new PortfolioService()
-    const result = await portfolioService.list(req.query as any)
+    const result = await portfolioService.list(req.query as PortfolioQuery)
 
     res.json({
       companies: result.companies,

@@ -1,11 +1,11 @@
 /**
  * Data Enrichment Pipeline Demo
- * 
+ *
  * This demo shows how to use the new enrichment agents to fetch
  * and enrich prospect data from multiple sources.
  */
 
-import { 
+import {
   EnrichmentOrchestratorAgent,
   DataAcquisitionAgent,
   MonitoringAgent,
@@ -49,7 +49,7 @@ async function demoEnrichment() {
     console.log('   Total cost: $' + enrichmentResult.data?.cost)
     console.log('   Response time:', enrichmentResult.data?.responseTime + 'ms')
     console.log('\n   Progress stages:')
-    enrichmentResult.data?.progress?.forEach((stage: any) => {
+    enrichmentResult.data?.progress?.forEach((stage: { stage: string; status: string }) => {
       console.log(`   - ${stage.stage}: ${stage.status}`)
     })
   } else {
@@ -64,7 +64,7 @@ async function demoEnrichment() {
   console.log('   Usage stats:', JSON.stringify(usageStats.data, null, 2))
 
   console.log('\n4. Testing individual agents...')
-  
+
   // Test data acquisition
   console.log('\n   a) Data Acquisition Agent:')
   const dataAgent = new DataAcquisitionAgent()

@@ -14,7 +14,7 @@ class Database {
       connectionString: config.database.url,
       max: config.database.maxConnections,
       idleTimeoutMillis: config.database.idleTimeoutMillis,
-      connectionTimeoutMillis: config.database.connectionTimeoutMillis,
+      connectionTimeoutMillis: config.database.connectionTimeoutMillis
     })
 
     // Test connection
@@ -52,7 +52,7 @@ class Database {
     return this.pool
   }
 
-  async query<T = any>(text: string, params?: any[]): Promise<T[]> {
+  async query<T = Record<string, unknown>>(text: string, params?: Array<unknown>): Promise<T[]> {
     const pool = this.getPool()
     const result = await pool.query(text, params)
     return result.rows

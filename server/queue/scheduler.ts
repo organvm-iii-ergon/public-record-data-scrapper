@@ -82,7 +82,7 @@ export class JobScheduler {
     })
 
     // Then schedule recurring
-    const timeout = setInterval(async () => {
+    const timeout: NodeJS.Timeout = setInterval(async () => {
       console.log(`[Scheduler] Running scheduled job: ${name}`)
       try {
         await callback()
@@ -91,11 +91,9 @@ export class JobScheduler {
       }
     }, intervalMs)
 
-    this.scheduledJobs.set(name, timeout as any)
+    this.scheduledJobs.set(name, timeout)
 
-    console.log(
-      `  ✓ Scheduled ${name} to run every ${Math.round(intervalMs / 1000 / 60)} minutes`
-    )
+    console.log(`  ✓ Scheduled ${name} to run every ${Math.round(intervalMs / 1000 / 60)} minutes`)
   }
 
   private async scheduleUCCIngestion() {
@@ -145,7 +143,7 @@ export class JobScheduler {
     const batchSize = 50
     const batches = []
     for (let i = 0; i < prospects.length; i += batchSize) {
-      batches.push(prospects.slice(i, i + batchSize).map(p => p.id))
+      batches.push(prospects.slice(i, i + batchSize).map((p) => p.id))
     }
 
     console.log(

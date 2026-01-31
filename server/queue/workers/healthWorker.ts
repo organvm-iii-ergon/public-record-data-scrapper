@@ -89,9 +89,13 @@ async function processHealthScore(job: Job<HealthScoreJobData>): Promise<void> {
   }
 }
 
+type GrowthSignalRow = { count: string; type: string }
+type ViolationsRow = { count: string }
+type HealthScoreRow = { score: number | string }
+
 async function calculateHealthScore(companyId: string) {
   // Get growth signals
-  const growthSignals = await database.query(
+  const growthSignals = await database.query<GrowthSignalRow>(
     `SELECT COUNT(*) as count, type
      FROM growth_signals
      WHERE portfolio_company_id = $1
@@ -101,7 +105,7 @@ async function calculateHealthScore(companyId: string) {
   )
 
   // Get recent violations
-  const violations = await database.query(
+  const violations = await database.query<ViolationsRow>(
     `SELECT COUNT(*) as count
      FROM health_scores
      WHERE portfolio_company_id = $1
@@ -112,8 +116,8 @@ async function calculateHealthScore(companyId: string) {
 
   // Calculate score based on signals
   let score = 70 // Base score
-  const signalsCount = growthSignals.reduce((sum: number, s: any) => sum + parseInt(s.count), 0)
-  const violationsCount = violations[0]?.count || 0
+  const signalsCount = growthSignals.reduce((sum, s) => sum + Number.parseInt(s.count, 10), 0)
+  const violationsCount = Number(violations[0]?.count ?? 0)
 
   // Add points for growth signals
   score += Math.min(signalsCount * 2, 20)
@@ -132,7 +136,7 @@ async function calculateHealthScore(companyId: string) {
   else if (score >= 60) grade = 'D'
 
   // Determine trend (compare to previous scores)
-  const previousScores = await database.query(
+  const previousScores = await database.query<HealthScoreRow>(
     `SELECT score
      FROM health_scores
      WHERE portfolio_company_id = $1
@@ -143,7 +147,8 @@ async function calculateHealthScore(companyId: string) {
 
   let trend = 'stable'
   if (previousScores.length >= 2) {
-    const avgPrevious = previousScores.reduce((sum: number, s: any) => sum + s.score, 0) / previousScores.length
+    const avgPrevious =
+      previousScores.reduce((sum, s) => sum + Number(s.score), 0) / previousScores.length
     if (score > avgPrevious + 5) trend = 'improving'
     else if (score < avgPrevious - 5) trend = 'declining'
   }

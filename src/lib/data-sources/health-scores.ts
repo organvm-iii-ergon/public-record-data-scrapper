@@ -10,6 +10,15 @@
 
 import { BaseDataSource, DataSourceResponse } from './base-source'
 
+type ReviewRecord = {
+  rating?: number
+  text?: string
+}
+
+type CategoryRecord = {
+  title?: string
+}
+
 /**
  * Yelp Fusion API - Business reviews and ratings
  * Free tier: 5000 requests/day
@@ -30,7 +39,7 @@ export class YelpSource extends BaseDataSource {
     this.apiKey = process.env.YELP_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -42,7 +51,10 @@ export class YelpSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, location, city, state } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const location = typeof query.location === 'string' ? query.location : ''
+      const city = typeof query.city === 'string' ? query.city : ''
+      const state = typeof query.state === 'string' ? query.state : ''
 
       // Construct location string
       const locationStr = location || `${city}, ${state}`
@@ -52,7 +64,7 @@ export class YelpSource extends BaseDataSource {
 
       const response = await fetch(searchUrl, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`
         }
       })
 
@@ -62,7 +74,16 @@ export class YelpSource extends BaseDataSource {
 
       const data = await response.json()
 
-      const business = data.businesses?.[0]
+      const business = (data.businesses?.[0] ?? null) as {
+        id?: string
+        name?: string
+        rating?: number
+        review_count?: number
+        categories?: CategoryRecord[]
+        phone?: string
+        location?: { display_address?: string[] }
+        is_closed?: boolean
+      } | null
 
       if (!business) {
         return {
@@ -77,24 +98,28 @@ export class YelpSource extends BaseDataSource {
 
       const reviewsResponse = await fetch(reviewsUrl, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`
         }
       })
 
-      let reviews = []
+      let reviews: ReviewRecord[] = []
       if (reviewsResponse.ok) {
         const reviewsData = await reviewsResponse.json()
-        reviews = reviewsData.reviews || []
+        reviews = (reviewsData.reviews || []) as ReviewRecord[]
       }
 
       // Calculate sentiment metrics
       const recentReviews = reviews.slice(0, 10)
-      const avgRating = recentReviews.reduce((sum: number, r: any) =>
-        sum + (r.rating || 0), 0
-      ) / (recentReviews.length || 1)
+      const avgRating =
+        recentReviews.reduce((sum: number, review) => sum + (review.rating || 0), 0) /
+        (recentReviews.length || 1)
 
       // Calculate health score (0-100)
-      const healthScore = this.calculateHealthScore(business.rating, business.review_count, avgRating)
+      const healthScore = this.calculateHealthScore(
+        business.rating,
+        business.review_count,
+        avgRating
+      )
 
       return {
         found: true,
@@ -102,7 +127,7 @@ export class YelpSource extends BaseDataSource {
         name: business.name,
         rating: business.rating,
         reviewCount: business.review_count,
-        categories: business.categories?.map((c: any) => c.title) || [],
+        categories: business.categories?.map((category) => category.title).filter(Boolean) || [],
         phone: business.phone,
         address: business.location?.display_address?.join(', '),
         isOpen: !business.is_closed,
@@ -115,7 +140,11 @@ export class YelpSource extends BaseDataSource {
     }, query)
   }
 
-  private calculateHealthScore(overallRating: number, reviewCount: number, recentAvgRating: number): number {
+  private calculateHealthScore(
+    overallRating: number,
+    reviewCount: number,
+    recentAvgRating: number
+  ): number {
     // Weight: 40% overall rating, 30% recent rating, 30% review volume
     const ratingScore = (overallRating / 5) * 40
     const recentScore = (recentAvgRating / 5) * 30
@@ -124,11 +153,11 @@ export class YelpSource extends BaseDataSource {
     return Math.round(ratingScore + recentScore + volumeScore)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(
-      query.companyName &&
-      (query.location || (query.city && query.state))
-    )
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    const hasCompanyName = typeof query.companyName === 'string' && query.companyName.length > 0
+    const hasLocation = typeof query.location === 'string'
+    const hasCityState = typeof query.city === 'string' && typeof query.state === 'string'
+    return hasCompanyName && (hasLocation || hasCityState)
   }
 }
 
@@ -148,9 +177,11 @@ export class BBBSource extends BaseDataSource {
     })
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     return this.executeFetch(async () => {
-      const { companyName, city, state } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const city = typeof query.city === 'string' ? query.city : ''
+      const state = typeof query.state === 'string' ? query.state : ''
 
       // BBB search URL
       const searchUrl = `https://www.bbb.org/search?find_text=${encodeURIComponent(companyName)}&find_loc=${encodeURIComponent(`${city}, ${state}`)}&find_type=Business`
@@ -177,11 +208,19 @@ export class BBBSource extends BaseDataSource {
 
       // Convert letter grade to numeric score
       const letterGrades: Record<string, number> = {
-        'A+': 97, 'A': 93, 'A-': 90,
-        'B+': 87, 'B': 83, 'B-': 80,
-        'C+': 77, 'C': 73, 'C-': 70,
-        'D+': 67, 'D': 63, 'D-': 60,
-        'F': 50
+        'A+': 97,
+        A: 93,
+        'A-': 90,
+        'B+': 87,
+        B: 83,
+        'B-': 80,
+        'C+': 77,
+        C: 73,
+        'C-': 70,
+        'D+': 67,
+        D: 63,
+        'D-': 60,
+        F: 50
       }
 
       const numericScore = rating ? letterGrades[rating] || 50 : null
@@ -200,8 +239,12 @@ export class BBBSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName && query.city && query.state)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return (
+      typeof query.companyName === 'string' &&
+      typeof query.city === 'string' &&
+      typeof query.state === 'string'
+    )
   }
 }
 
@@ -225,7 +268,7 @@ export class GoogleReviewsSource extends BaseDataSource {
     this.apiKey = process.env.GOOGLE_PLACES_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -237,7 +280,10 @@ export class GoogleReviewsSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, placeId, city, state } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const placeId = typeof query.placeId === 'string' ? query.placeId : ''
+      const city = typeof query.city === 'string' ? query.city : ''
+      const state = typeof query.state === 'string' ? query.state : ''
 
       let actualPlaceId = placeId
 
@@ -277,26 +323,48 @@ export class GoogleReviewsSource extends BaseDataSource {
         throw new Error(`Google Places API error: ${data.status}`)
       }
 
-      const place = data.result
+      const place = data.result as {
+        name?: string
+        rating?: number
+        user_ratings_total?: number
+        reviews?: ReviewRecord[]
+        opening_hours?: { open_now?: boolean }
+      }
 
       // Analyze reviews
       const reviews = place.reviews || []
       const recentReviews = reviews.slice(0, 5)
 
-      const avgRating = recentReviews.reduce((sum: number, r: any) =>
-        sum + (r.rating || 0), 0
-      ) / (recentReviews.length || 1)
+      const avgRating =
+        recentReviews.reduce((sum: number, review) => sum + (review.rating || 0), 0) /
+        (recentReviews.length || 1)
 
       // Calculate sentiment from review text
-      const positiveWords = ['great', 'excellent', 'amazing', 'professional', 'recommend', 'best', 'outstanding']
-      const negativeWords = ['terrible', 'awful', 'poor', 'worst', 'disappointed', 'unprofessional', 'avoid']
+      const positiveWords = [
+        'great',
+        'excellent',
+        'amazing',
+        'professional',
+        'recommend',
+        'best',
+        'outstanding'
+      ]
+      const negativeWords = [
+        'terrible',
+        'awful',
+        'poor',
+        'worst',
+        'disappointed',
+        'unprofessional',
+        'avoid'
+      ]
 
       let sentimentScore = 0
-      reviews.forEach((review: any) => {
+      reviews.forEach((review) => {
         const text = review.text?.toLowerCase() || ''
-        const positiveCount = positiveWords.filter(w => text.includes(w)).length
-        const negativeCount = negativeWords.filter(w => text.includes(w)).length
-        sentimentScore += (positiveCount - negativeCount)
+        const positiveCount = positiveWords.filter((w) => text.includes(w)).length
+        const negativeCount = negativeWords.filter((w) => text.includes(w)).length
+        sentimentScore += positiveCount - negativeCount
       })
 
       // Calculate health score (0-100)
@@ -339,11 +407,11 @@ export class GoogleReviewsSource extends BaseDataSource {
     return Math.round(ratingScore + recentScore + volumeScore + sentimentScore)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(
-      query.companyName &&
-      ((query.city && query.state) || query.placeId)
-    )
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    const hasCompanyName = typeof query.companyName === 'string' && query.companyName.length > 0
+    const hasCityState = typeof query.city === 'string' && typeof query.state === 'string'
+    const hasPlaceId = typeof query.placeId === 'string'
+    return hasCompanyName && (hasCityState || hasPlaceId)
   }
 }
 
@@ -366,12 +434,13 @@ export class SentimentAnalysisSource extends BaseDataSource {
     })
 
     this.provider = provider
-    this.apiKey = provider === 'google'
-      ? (process.env.GOOGLE_NLP_API_KEY || '')
-      : (process.env.AWS_COMPREHEND_KEY || '')
+    this.apiKey =
+      provider === 'google'
+        ? process.env.GOOGLE_NLP_API_KEY || ''
+        : process.env.AWS_COMPREHEND_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey && this.provider === 'google') {
       return {
         success: false,
@@ -383,7 +452,7 @@ export class SentimentAnalysisSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { texts } = query
+      const texts = Array.isArray(query.texts) ? query.texts : []
 
       if (!Array.isArray(texts) || texts.length === 0) {
         throw new Error('Invalid input: texts array required')
@@ -397,12 +466,13 @@ export class SentimentAnalysisSource extends BaseDataSource {
     }, query)
   }
 
-  private async analyzeWithGoogle(texts: string[]): Promise<any> {
+  private async analyzeWithGoogle(texts: string[]): Promise<Record<string, unknown>> {
     const url = `https://language.googleapis.com/v1/documents:analyzeSentiment?key=${this.apiKey}`
 
     const results = []
 
-    for (const text of texts.slice(0, 10)) { // Limit to 10 texts
+    for (const text of texts.slice(0, 10)) {
+      // Limit to 10 texts
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -444,7 +514,7 @@ export class SentimentAnalysisSource extends BaseDataSource {
     }
   }
 
-  private async analyzeWithAWS(texts: string[]): Promise<any> {
+  private async analyzeWithAWS(texts: string[]): Promise<Record<string, unknown>> {
     // Note: AWS Comprehend requires AWS SDK, this is a simplified example
     // In production, use AWS SDK with proper credentials
     return {
@@ -469,8 +539,8 @@ export class SentimentAnalysisSource extends BaseDataSource {
     return Math.round(score * magnitude * 50)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.texts && Array.isArray(query.texts) && query.texts.length > 0)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return Array.isArray(query.texts) && query.texts.length > 0
   }
 }
 
@@ -494,7 +564,7 @@ export class TrustpilotSource extends BaseDataSource {
     this.apiKey = process.env.TRUSTPILOT_API_KEY || ''
   }
 
-  async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
+  async fetchData(query: Record<string, unknown>): Promise<DataSourceResponse> {
     if (!this.apiKey) {
       return {
         success: false,
@@ -506,14 +576,16 @@ export class TrustpilotSource extends BaseDataSource {
     }
 
     return this.executeFetch(async () => {
-      const { companyName, domain } = query
+      const companyName = typeof query.companyName === 'string' ? query.companyName : ''
+      const domain = typeof query.domain === 'string' ? query.domain : ''
+      void domain
 
       // Search for business
       const searchUrl = `https://api.trustpilot.com/v1/business-units/search?name=${encodeURIComponent(companyName)}`
 
       const response = await fetch(searchUrl, {
         headers: {
-          'apikey': this.apiKey
+          apikey: this.apiKey
         }
       })
 
@@ -537,7 +609,7 @@ export class TrustpilotSource extends BaseDataSource {
 
       const reviewsResponse = await fetch(reviewsUrl, {
         headers: {
-          'apikey': this.apiKey
+          apikey: this.apiKey
         }
       })
 
@@ -560,7 +632,7 @@ export class TrustpilotSource extends BaseDataSource {
     }, query)
   }
 
-  protected validateQuery(query: Record<string, any>): boolean {
-    return Boolean(query.companyName || query.domain)
+  protected validateQuery(query: Record<string, unknown>): boolean {
+    return typeof query.companyName === 'string' || typeof query.domain === 'string'
   }
 }

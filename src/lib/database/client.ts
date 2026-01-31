@@ -19,27 +19,29 @@ export interface DatabaseConfig extends PoolConfig {
   user: string
   password: string
   // Connection pooling
-  max?: number  // Maximum pool size
-  min?: number  // Minimum pool size
+  max?: number // Maximum pool size
+  min?: number // Minimum pool size
   idleTimeoutMillis?: number
   connectionTimeoutMillis?: number
   // Query settings
-  statement_timeout?: number  // Query timeout in ms
+  statement_timeout?: number // Query timeout in ms
   query_timeout?: number
   // SSL settings
-  ssl?: boolean | {
-    rejectUnauthorized?: boolean
-    ca?: string
-    key?: string
-    cert?: string
-  }
+  ssl?:
+    | boolean
+    | {
+        rejectUnauthorized?: boolean
+        ca?: string
+        key?: string
+        cert?: string
+      }
 }
 
 export interface QueryOptions {
   timeout?: number
   retries?: number
   logQuery?: boolean
-  name?: string  // For prepared statements
+  name?: string // For prepared statements
 }
 
 export interface QueryMetrics {
@@ -53,7 +55,7 @@ export interface QueryMetrics {
 export class DatabaseClient {
   private pool: Pool
   private metrics: QueryMetrics[] = []
-  private maxMetricsSize = 1000  // Keep last 1000 queries
+  private maxMetricsSize = 1000 // Keep last 1000 queries
 
   constructor(config: DatabaseConfig) {
     const poolConfig: PoolConfig = {
@@ -62,11 +64,11 @@ export class DatabaseClient {
       database: config.database || process.env.DB_NAME || 'ucc_mca_db',
       user: config.user || process.env.DB_USER || 'postgres',
       password: config.password || process.env.DB_PASSWORD || '',
-      max: config.max || 20,  // Default: 20 connections
-      min: config.min || 2,   // Default: 2 idle connections
+      max: config.max || 20, // Default: 20 connections
+      min: config.min || 2, // Default: 2 idle connections
       idleTimeoutMillis: config.idleTimeoutMillis || 30000,
       connectionTimeoutMillis: config.connectionTimeoutMillis || 10000,
-      statement_timeout: config.statement_timeout || 30000,  // 30 second timeout
+      statement_timeout: config.statement_timeout || 30000, // 30 second timeout
       query_timeout: config.query_timeout || 30000,
       ssl: config.ssl || false,
       // Logging
@@ -82,6 +84,7 @@ export class DatabaseClient {
 
     // Handle pool connection
     this.pool.on('connect', (client) => {
+      void client
       logger.debug('New client connected to database')
     })
 
@@ -100,9 +103,9 @@ export class DatabaseClient {
   /**
    * Execute a query
    */
-  async query<T extends QueryResultRow = any>(
+  async query<T extends QueryResultRow = QueryResultRow>(
     text: string,
-    params?: any[],
+    params?: Array<unknown>,
     options?: QueryOptions
   ): Promise<QueryResult<T>> {
     const startTime = Date.now()
@@ -137,7 +140,6 @@ export class DatabaseClient {
         })
 
         return result
-
       } catch (error) {
         lastError = error as Error
         const duration = Date.now() - startTime
@@ -165,7 +167,7 @@ export class DatabaseClient {
 
         // Wait before retry
         if (attempt < retries - 1) {
-          await this.sleep(Math.pow(2, attempt) * 100)  // Exponential backoff
+          await this.sleep(Math.pow(2, attempt) * 100) // Exponential backoff
         }
       }
     }
@@ -176,9 +178,7 @@ export class DatabaseClient {
   /**
    * Execute a transaction
    */
-  async transaction<T>(
-    callback: (client: PoolClient) => Promise<T>
-  ): Promise<T> {
+  async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect()
 
     try {
@@ -191,12 +191,10 @@ export class DatabaseClient {
       logger.debug('Transaction committed')
 
       return result
-
     } catch (error) {
       await client.query('ROLLBACK')
       logger.error('Transaction rolled back', { error })
       throw error
-
     } finally {
       client.release()
     }
@@ -254,7 +252,7 @@ export class DatabaseClient {
    * Get slow queries (above threshold)
    */
   getSlowQueries(thresholdMs: number = 1000): QueryMetrics[] {
-    return this.metrics.filter(m => m.duration > thresholdMs)
+    return this.metrics.filter((m) => m.duration > thresholdMs)
   }
 
   /**
@@ -299,16 +297,14 @@ export class DatabaseClient {
       'invalid input syntax'
     ]
 
-    return nonRetryableErrors.some(msg =>
-      error.message.toLowerCase().includes(msg)
-    )
+    return nonRetryableErrors.some((msg) => error.message.toLowerCase().includes(msg))
   }
 
   /**
    * Sleep helper
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 

@@ -39,17 +39,15 @@ class MigrationRunner {
   }
 
   async getAppliedMigrations(): Promise<number[]> {
-    const result = await this.client.query(
-      'SELECT version FROM schema_migrations ORDER BY version'
-    )
-    return result.rows.map(row => row.version)
+    const result = await this.client.query('SELECT version FROM schema_migrations ORDER BY version')
+    return result.rows.map((row) => row.version)
   }
 
   async getPendingMigrations(): Promise<Migration[]> {
     const appliedVersions = await this.getAppliedMigrations()
     const allMigrations = this.loadMigrations()
 
-    return allMigrations.filter(m => !appliedVersions.includes(m.version))
+    return allMigrations.filter((m) => !appliedVersions.includes(m.version))
   }
 
   private loadMigrations(): Migration[] {
@@ -60,11 +58,12 @@ class MigrationRunner {
       return []
     }
 
-    const files = fs.readdirSync(migrationsDir)
-      .filter(f => f.endsWith('.sql'))
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter((f) => f.endsWith('.sql'))
       .sort()
 
-    return files.map(file => {
+    return files.map((file) => {
       const match = file.match(/^(\d+)_(.+)\.sql$/)
       if (!match) {
         throw new Error(`Invalid migration filename: ${file}`)
@@ -94,14 +93,13 @@ class MigrationRunner {
       try {
         await this.client.query('BEGIN')
         await this.client.query(migration.sql)
-        await this.client.query(
-          'INSERT INTO schema_migrations (version, name) VALUES ($1, $2)',
-          [migration.version, migration.name]
-        )
+        await this.client.query('INSERT INTO schema_migrations (version, name) VALUES ($1, $2)', [
+          migration.version,
+          migration.name
+        ])
         await this.client.query('COMMIT')
 
         console.log(`✓ Migration ${migration.version} applied successfully\n`)
-
       } catch (error) {
         await this.client.query('ROLLBACK')
         console.error(`✗ Migration ${migration.version} failed:`, error)
@@ -140,14 +138,10 @@ class MigrationRunner {
       try {
         await this.client.query('BEGIN')
         await this.client.query(sql)
-        await this.client.query(
-          'DELETE FROM schema_migrations WHERE version = $1',
-          [version]
-        )
+        await this.client.query('DELETE FROM schema_migrations WHERE version = $1', [version])
         await this.client.query('COMMIT')
 
         console.log(`✓ Migration ${version} rolled back successfully\n`)
-
       } catch (error) {
         await this.client.query('ROLLBACK')
         console.error(`✗ Rollback of migration ${version} failed:`, error)
@@ -181,7 +175,7 @@ class MigrationRunner {
     if (applied.length > 0) {
       console.log('✓ Applied Migrations:')
       for (const version of applied) {
-        const migration = all.find(m => m.version === version)
+        const migration = all.find((m) => m.version === version)
         console.log(`  ${version}: ${migration?.name || 'unknown'}`)
       }
       console.log('')
@@ -221,10 +215,11 @@ const runner = new MigrationRunner(connectionString)
         await runner.runMigrations()
         break
 
-      case 'down':
+      case 'down': {
         const steps = parseInt(process.argv[3] || '1')
         await runner.rollback(steps)
         break
+      }
 
       case 'status':
         await runner.status()
@@ -239,7 +234,6 @@ const runner = new MigrationRunner(connectionString)
         console.log('  status         Show migration status')
         process.exit(1)
     }
-
   } catch (error) {
     console.error('\n✗ Migration failed:', error)
     process.exit(1)

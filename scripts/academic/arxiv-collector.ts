@@ -7,13 +7,7 @@
  * Rate limit: 1 request every 3 seconds recommended
  */
 
-import type {
-  Paper,
-  Author,
-  SearchQuery,
-  CollectorResult,
-  ArXivPaper
-} from './types'
+import type { Paper, Author, SearchQuery, CollectorResult, ArXivPaper } from './types'
 
 const BASE_URL = 'http://export.arxiv.org/api/query'
 
@@ -84,7 +78,7 @@ export class ArXivCollector {
     const remaining = this.requestDelay - elapsed
 
     if (remaining > 0) {
-      await new Promise(resolve => setTimeout(resolve, remaining))
+      await new Promise((resolve) => setTimeout(resolve, remaining))
     }
 
     this.lastRequest = Date.now()
@@ -103,13 +97,13 @@ export class ArXivCollector {
 
     // Field/category filter
     if (query.fields && query.fields.length > 0) {
-      const cats = query.fields.map(f => `cat:${f}`).join(' OR ')
+      const cats = query.fields.map((f) => `cat:${f}`).join(' OR ')
       parts.push(`(${cats})`)
     }
 
     // Author filter
     if (query.authors && query.authors.length > 0) {
-      const authors = query.authors.map(a => `au:"${a}"`).join(' OR ')
+      const authors = query.authors.map((a) => `au:"${a}"`).join(' OR ')
       parts.push(`(${authors})`)
     }
 
@@ -195,7 +189,7 @@ export class ArXivCollector {
     // Extract arXiv ID from URL
     const arxivId = arxivPaper.id.split('/abs/').pop() || arxivPaper.id
 
-    const authors: Author[] = arxivPaper.authors.map(a => ({
+    const authors: Author[] = arxivPaper.authors.map((a) => ({
       id: a.name.toLowerCase().replace(/\s+/g, '-'),
       name: a.name,
       affiliations: []
@@ -213,7 +207,9 @@ export class ArXivCollector {
       doi: arxivPaper.doi,
       urls: [arxivPaper.pdf_url, arxivPaper.id],
       fields: arxivPaper.categories,
-      topics: arxivPaper.categories.map(c => ARXIV_CATEGORIES[c as keyof typeof ARXIV_CATEGORIES] || c),
+      topics: arxivPaper.categories.map(
+        (c) => ARXIV_CATEGORIES[c as keyof typeof ARXIV_CATEGORIES] || c
+      ),
       keywords: [],
       citationCount: 0, // arXiv doesn't provide citation counts
       references: [],
@@ -253,7 +249,7 @@ export class ArXivCollector {
     const total = totalMatch ? parseInt(totalMatch[1]) : 0
 
     const arxivPapers = this.parseXML(xml)
-    const papers = arxivPapers.map(p => this.convertPaper(p))
+    const papers = arxivPapers.map((p) => this.convertPaper(p))
 
     console.log(`✅ Found ${papers.length} papers (total: ${total})`)
 
@@ -329,7 +325,9 @@ export class ArXivCollector {
     batchSize: number = 100
   ): Promise<Paper[]> {
     console.log(`\n📦 Bulk collecting arXiv papers in "${category}"`)
-    console.log(`   Category: ${ARXIV_CATEGORIES[category as keyof typeof ARXIV_CATEGORIES] || category}`)
+    console.log(
+      `   Category: ${ARXIV_CATEGORIES[category as keyof typeof ARXIV_CATEGORIES] || category}`
+    )
     console.log(`   Target: ${totalLimit} papers in batches of ${batchSize}`)
 
     const allPapers: Paper[] = []
@@ -358,7 +356,6 @@ export class ArXivCollector {
         offset += limit
 
         console.log(`   Progress: ${allPapers.length}/${totalLimit}`)
-
       } catch (error) {
         console.error(`   Error: ${error}`)
         break
@@ -374,9 +371,8 @@ export class ArXivCollector {
    * Track daily new submissions in categories
    */
   async getDailyNewSubmissions(categories: string[]): Promise<Map<string, Paper[]>> {
-    console.log(`\n📅 Getting today's new submissions`)
-
     const today = new Date().toISOString().split('T')[0]
+    console.log(`\n📅 Getting ${today}'s new submissions`)
     const submissions = new Map<string, Paper[]>()
 
     for (const category of categories) {
@@ -387,7 +383,6 @@ export class ArXivCollector {
         submissions.set(category, papers)
 
         console.log(`     ✅ ${papers.length} new papers`)
-
       } catch (error) {
         console.error(`     ❌ Error: ${error}`)
         submissions.set(category, [])
@@ -414,8 +409,8 @@ export class ArXivCollector {
     })
 
     // Filter for papers that have BOTH categories
-    const crossDomain = result.papers.filter(paper =>
-      paper.fields.includes(category1) && paper.fields.includes(category2)
+    const crossDomain = result.papers.filter(
+      (paper) => paper.fields.includes(category1) && paper.fields.includes(category2)
     )
 
     console.log(`✅ Found ${crossDomain.length} cross-domain papers`)
@@ -426,10 +421,7 @@ export class ArXivCollector {
   /**
    * Monitor trending topics (most papers submitted recently)
    */
-  async getTrendingTopics(
-    mainCategory: string,
-    days: number = 30
-  ): Promise<Map<string, number>> {
+  async getTrendingTopics(mainCategory: string, days: number = 30): Promise<Map<string, number>> {
     console.log(`\n📈 Finding trending topics in ${mainCategory} (last ${days} days)`)
 
     const papers = await this.getRecentPapers(mainCategory, days, 1000)
@@ -437,8 +429,8 @@ export class ArXivCollector {
     // Count papers by subcategory
     const topicCounts = new Map<string, number>()
 
-    papers.forEach(paper => {
-      paper.fields.forEach(field => {
+    papers.forEach((paper) => {
+      paper.fields.forEach((field) => {
         topicCounts.set(field, (topicCounts.get(field) || 0) + 1)
       })
     })
@@ -471,9 +463,9 @@ export async function exampleUsage() {
   })
 
   console.log(`\nFound ${result.papers.length} papers:`)
-  result.papers.forEach(p => {
+  result.papers.forEach((p) => {
     console.log(`- ${p.title}`)
-    console.log(`  Authors: ${p.authors.map(a => a.name).join(', ')}`)
+    console.log(`  Authors: ${p.authors.map((a) => a.name).join(', ')}`)
     console.log(`  Categories: ${p.fields.join(', ')}`)
   })
 

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Prospect, IndustryType } from '@/lib/types'
-import { AdvancedFilterState, initialFilters } from '@/components/AdvancedFilters'
+import { AdvancedFilterState, initialFilters } from '@/components/advanced-filters'
 
 export interface ProspectFiltersState {
   searchQuery: string

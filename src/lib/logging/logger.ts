@@ -21,7 +21,7 @@ export interface LogMetadata {
   service?: string
   duration?: number
   statusCode?: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
@@ -158,12 +158,15 @@ export class Logger {
   /**
    * Log HTTP request
    */
-  logRequest(req: {
-    method: string
-    url: string
-    headers?: any
-    body?: any
-  }, metadata?: LogMetadata): void {
+  logRequest(
+    req: {
+      method: string
+      url: string
+      headers?: unknown
+      body?: unknown
+    },
+    metadata?: LogMetadata
+  ): void {
     this.info('HTTP Request', {
       method: req.method,
       url: req.url,
@@ -177,10 +180,13 @@ export class Logger {
   /**
    * Log HTTP response
    */
-  logResponse(res: {
-    statusCode: number
-    duration: number
-  }, metadata?: LogMetadata): void {
+  logResponse(
+    res: {
+      statusCode: number
+      duration: number
+    },
+    metadata?: LogMetadata
+  ): void {
     this.info('HTTP Response', {
       statusCode: res.statusCode,
       duration: `${res.duration}ms`,
@@ -217,7 +223,13 @@ export class Logger {
   /**
    * Log external API call
    */
-  logAPICall(api: string, endpoint: string, duration: number, statusCode?: number, metadata?: LogMetadata): void {
+  logAPICall(
+    api: string,
+    endpoint: string,
+    duration: number,
+    statusCode?: number,
+    metadata?: LogMetadata
+  ): void {
     this.info('External API Call', {
       api,
       endpoint,
@@ -231,7 +243,11 @@ export class Logger {
   /**
    * Log cache operation
    */
-  logCacheOperation(operation: 'hit' | 'miss' | 'set' | 'del', key: string, metadata?: LogMetadata): void {
+  logCacheOperation(
+    operation: 'hit' | 'miss' | 'set' | 'del',
+    key: string,
+    metadata?: LogMetadata
+  ): void {
     this.debug('Cache Operation', {
       operation,
       key,
@@ -270,11 +286,7 @@ export class Logger {
   /**
    * Measure and log synchronous operation duration
    */
-  measure<T>(
-    operation: string,
-    fn: () => T,
-    metadata?: LogMetadata
-  ): T {
+  measure<T>(operation: string, fn: () => T, metadata?: LogMetadata): T {
     const startTime = Date.now()
 
     try {
@@ -344,30 +356,47 @@ export function setServiceName(serviceName: string): void {
  * Create middleware for Express to add correlation IDs
  */
 export function correlationMiddleware(
-  req: any,
-  res: any,
+  req: {
+    method: string
+    url: string
+    headers: Record<string, string | string[] | undefined>
+    correlationId?: string
+  },
+  res: {
+    statusCode: number
+    setHeader: (name: string, value: string) => void
+    on: (event: 'finish', listener: () => void) => void
+  },
   next: () => void
 ): void {
-  const correlationId = req.headers['x-correlation-id'] || generateCorrelationId()
+  const headerValue = req.headers['x-correlation-id']
+  const correlationId =
+    (Array.isArray(headerValue) ? headerValue[0] : headerValue) || generateCorrelationId()
   req.correlationId = correlationId
   res.setHeader('X-Correlation-ID', correlationId)
 
   // Log request
-  logger.logRequest({
-    method: req.method,
-    url: req.url,
-    headers: req.headers
-  }, { correlationId })
+  logger.logRequest(
+    {
+      method: req.method,
+      url: req.url,
+      headers: req.headers
+    },
+    { correlationId }
+  )
 
   // Track response time
   const startTime = Date.now()
 
   res.on('finish', () => {
     const duration = Date.now() - startTime
-    logger.logResponse({
-      statusCode: res.statusCode,
-      duration
-    }, { correlationId })
+    logger.logResponse(
+      {
+        statusCode: res.statusCode,
+        duration
+      },
+      { correlationId }
+    )
   })
 
   next()
@@ -380,7 +409,7 @@ export function auditLog(
   action: string,
   userId: string,
   resource: string,
-  details?: any
+  details?: unknown
 ): void {
   logger.info('Audit Log', {
     audit: true,

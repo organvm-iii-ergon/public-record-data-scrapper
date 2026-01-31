@@ -2,16 +2,7 @@ import { CompetitorData } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { motion } from 'framer-motion'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Cell
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { TrendUp, TrendDown } from '@phosphor-icons/react'
 
 interface CompetitorChartProps {
@@ -21,7 +12,7 @@ interface CompetitorChartProps {
 export function CompetitorChart({ data }: CompetitorChartProps) {
   const top10 = data.slice(0, 10)
 
-  const chartData = top10.map(item => ({
+  const chartData = top10.map((item) => ({
     name: item.lenderName.length > 20 ? item.lenderName.substring(0, 20) + '...' : item.lenderName,
     filings: item.filingCount,
     avgDeal: Math.round(item.avgDealSize / 1000),
@@ -31,12 +22,14 @@ export function CompetitorChart({ data }: CompetitorChartProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <Card className="glass-effect p-4 sm:p-6">
-        <h3 className="font-semibold text-base sm:text-lg mb-4 text-white">Top Lenders by Filing Volume</h3>
+        <h3 className="font-semibold text-base sm:text-lg mb-4 text-white">
+          Top Lenders by Filing Volume
+        </h3>
         <ResponsiveContainer width="100%" height={300} className="sm:h-[400px]">
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-white/20" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               angle={-45}
               textAnchor="end"
               height={100}
@@ -44,8 +37,8 @@ export function CompetitorChart({ data }: CompetitorChartProps) {
               stroke="oklch(1 0 0 / 0.7)"
             />
             <YAxis className="text-xs" stroke="oklch(1 0 0 / 0.7)" />
-            <Tooltip 
-              contentStyle={{ 
+            <Tooltip
+              contentStyle={{
                 backgroundColor: 'oklch(1 0 0 / 0.95)',
                 border: '1px solid oklch(1 0 0 / 0.2)',
                 borderRadius: '0.75rem',
@@ -73,11 +66,11 @@ export function CompetitorChart({ data }: CompetitorChartProps) {
                     <Badge variant="outline" className="font-mono text-xs border-white/30">
                       #{index + 1}
                     </Badge>
-                    <h4 className="font-semibold text-xs sm:text-sm truncate">{competitor.lenderName}</h4>
+                    <h4 className="font-semibold text-xs sm:text-sm truncate">
+                      {competitor.lenderName}
+                    </h4>
                   </div>
-                  <div className="text-xs text-white/70">
-                    Top State: {competitor.topState}
-                  </div>
+                  <div className="text-xs text-white/70">Top State: {competitor.topState}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="font-mono text-lg sm:text-xl font-semibold">
@@ -105,8 +98,12 @@ export function CompetitorChart({ data }: CompetitorChartProps) {
               <div className="mb-3">
                 <div className="text-xs text-white/70 mb-1">Industries</div>
                 <div className="flex flex-wrap gap-1">
-                  {competitor.industries.map(ind => (
-                    <Badge key={ind} variant="secondary" className="text-xs capitalize glass-effect border-white/30">
+                  {competitor.industries.map((ind) => (
+                    <Badge
+                      key={ind}
+                      variant="secondary"
+                      className="text-xs capitalize glass-effect border-white/30"
+                    >
                       {ind}
                     </Badge>
                   ))}
@@ -125,7 +122,11 @@ export function CompetitorChart({ data }: CompetitorChartProps) {
                     </>
                   ) : (
                     <>
-                      <TrendDown size={12} weight="bold" className="text-destructive sm:w-3.5 sm:h-3.5" />
+                      <TrendDown
+                        size={12}
+                        weight="bold"
+                        className="text-destructive sm:w-3.5 sm:h-3.5"
+                      />
                       <span className="font-mono text-xs sm:text-sm text-destructive">
                         {competitor.monthlyTrend.toFixed(1)}%
                       </span>

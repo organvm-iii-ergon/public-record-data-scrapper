@@ -7,17 +7,6 @@
 import { SemanticScholarCollector } from './semantic-scholar-collector'
 import { ArXivCollector, ARXIV_CATEGORIES } from './arxiv-collector'
 import { NetworkAnalyzer, exampleAnalysis } from './network-analyzer'
-import type { SearchQuery } from './types'
-
-const COMMANDS = {
-  search: 'Search for papers across all sources',
-  network: 'Build and analyze citation network',
-  trends: 'Identify trending topics in a field',
-  collab: 'Analyze collaboration networks',
-  author: 'Get papers by author',
-  recent: 'Get recent papers in a category',
-  help: 'Show this help message'
-}
 
 async function searchPapers(args: string[]) {
   const query = args.join(' ')
@@ -37,7 +26,7 @@ async function searchPapers(args: string[]) {
 
   ssResults.papers.forEach((paper, i) => {
     console.log(`${i + 1}. ${paper.title}`)
-    console.log(`   Authors: ${paper.authors.map(a => a.name).join(', ')}`)
+    console.log(`   Authors: ${paper.authors.map((a) => a.name).join(', ')}`)
     console.log(`   Year: ${paper.publicationDate}`)
     console.log(`   Citations: ${paper.citationCount}`)
     console.log(`   URL: ${paper.urls[0]}`)
@@ -51,7 +40,7 @@ async function searchPapers(args: string[]) {
 
   arxivResults.papers.forEach((paper, i) => {
     console.log(`${i + 1}. ${paper.title}`)
-    console.log(`   Authors: ${paper.authors.map(a => a.name).join(', ')}`)
+    console.log(`   Authors: ${paper.authors.map((a) => a.name).join(', ')}`)
     console.log(`   Year: ${paper.publicationDate.split('-')[0]}`)
     console.log(`   Categories: ${paper.fields.join(', ')}`)
     console.log(`   URL: ${paper.urls[0]}`)
@@ -75,7 +64,6 @@ async function buildNetwork(args: string[]) {
   const collector = new SemanticScholarCollector()
   const network = await collector.buildCitationNetwork(topic, 50)
 
-  const analyzer = new NetworkAnalyzer()
   await exampleAnalysis(network)
 }
 
@@ -121,7 +109,7 @@ async function analyzeCollaboration(args: string[]) {
   console.log(`Found ${result.papers.length} papers\n`)
 
   const analyzer = new NetworkAnalyzer()
-  const papers = new Map(result.papers.map(p => [p.id, p]))
+  const papers = new Map(result.papers.map((p) => [p.id, p]))
   const network = analyzer.buildCollaborationNetwork(papers)
 
   console.log(`👥 Collaboration Network Statistics:`)
@@ -208,7 +196,12 @@ async function getRecentPapers(args: string[]) {
 
   papers.forEach((paper, i) => {
     console.log(`${i + 1}. ${paper.title}`)
-    console.log(`   Authors: ${paper.authors.slice(0, 3).map(a => a.name).join(', ')}${paper.authors.length > 3 ? '...' : ''}`)
+    console.log(
+      `   Authors: ${paper.authors
+        .slice(0, 3)
+        .map((a) => a.name)
+        .join(', ')}${paper.authors.length > 3 ? '...' : ''}`
+    )
     console.log(`   Date: ${paper.publicationDate}`)
     console.log(`   URL: ${paper.urls[0]}`)
     console.log()

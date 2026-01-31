@@ -19,13 +19,15 @@ const idParamSchema = z.object({
   id: z.string().uuid()
 })
 
+type CompetitorsQuery = z.infer<typeof querySchema>
+
 // GET /api/competitors - List competitors (secured parties)
 router.get(
   '/',
   validateRequest({ query: querySchema }),
   asyncHandler(async (req, res) => {
     const competitorsService = new CompetitorsService()
-    const result = await competitorsService.list(req.query as any)
+    const result = await competitorsService.list(req.query as CompetitorsQuery)
 
     res.json({
       competitors: result.competitors,

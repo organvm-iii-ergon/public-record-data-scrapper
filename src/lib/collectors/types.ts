@@ -25,7 +25,7 @@ export interface UCCFiling {
   // Metadata
   pages?: number
   amendments?: Amendment[]
-  rawData?: Record<string, any>
+  rawData?: Record<string, unknown>
 }
 
 export interface Party {

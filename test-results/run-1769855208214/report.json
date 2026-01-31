@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-01-31T10:28:07.662Z",
+  "summary": {
+    "total": 3,
+    "successful": 1,
+    "failed": 2,
+    "successRate": 0.3333333333333333
+  },
+  "results": [
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Apple Inc",
+        "description": "California tech giant",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?",
+        "timestamp": "2026-01-31T10:27:08.734Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 20532
+    },
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Intel Corporation",
+        "description": "California semiconductor company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Unable to locate debtor name search field on California UCC portal. Portal structure may have changed or requires login.",
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?searchType=debtor&searchCriteria=Intel%20Corporation",
+        "timestamp": "2026-01-31T10:27:38.104Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 14364,
+      "error": "Unable to locate debtor name search field on California UCC portal. Portal structure may have changed or requires login."
+    },
+    {
+      "state": "CA",
+      "testCase": {
+        "companyName": "Sample Business Inc",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Unable to locate debtor name search field on California UCC portal. Portal structure may have changed or requires login.",
+        "searchUrl": "https://bizfileonline.sos.ca.gov/search/ucc?searchType=debtor&searchCriteria=Sample%20Business%20Inc",
+        "timestamp": "2026-01-31T10:28:07.473Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 14367,
+      "error": "Unable to locate debtor name search field on California UCC portal. Portal structure may have changed or requires login."
+    }
+  ]
+}

@@ -9,7 +9,6 @@
 import type {
   Paper,
   Author,
-  CollectorConfig,
   SearchQuery,
   CollectorResult,
   SemanticScholarPaper,
@@ -18,6 +17,37 @@ import type {
 } from './types'
 
 const BASE_URL = 'https://api.semanticscholar.org/graph/v1'
+
+type RequestParams = Record<string, string | number | boolean | undefined>
+
+type SemanticScholarSearchResponse = {
+  data: SemanticScholarPaper[]
+  total: number
+}
+
+type SemanticScholarCitationItem = {
+  citingPaper?: { paperId?: string }
+  citedPaper?: { paperId?: string }
+  contexts?: string[]
+  intents?: string[]
+}
+
+type SemanticScholarCitationsResponse = {
+  data?: SemanticScholarCitationItem[]
+}
+
+type SemanticScholarAuthorResponse = {
+  papers?: SemanticScholarPaper[]
+}
+
+type SemanticScholarRecommendationsResponse = {
+  recommendedPapers?: SemanticScholarPaper[]
+}
+
+type SemanticScholarPaperDetailsResponse = SemanticScholarPaper & {
+  citations?: SemanticScholarCitationItem[]
+  references?: SemanticScholarCitationItem[]
+}
 
 export class SemanticScholarCollector {
   private apiKey?: string
@@ -46,7 +76,7 @@ export class SemanticScholarCollector {
     if (this.requestCount >= this.rateLimit) {
       const waitTime = fiveMinutes - (now - this.lastRequest)
       console.log(`Rate limit reached. Waiting ${Math.round(waitTime / 1000)}s...`)
-      await new Promise(resolve => setTimeout(resolve, waitTime))
+      await new Promise((resolve) => setTimeout(resolve, waitTime))
       this.requestCount = 0
       this.lastRequest = Date.now()
     }
@@ -57,7 +87,7 @@ export class SemanticScholarCollector {
   /**
    * Make API request
    */
-  private async request(endpoint: string, params: Record<string, any> = {}): Promise<any> {
+  private async request(endpoint: string, params: RequestParams = {}): Promise<unknown> {
     await this.waitForRateLimit()
 
     const url = new URL(`${BASE_URL}${endpoint}`)
@@ -68,7 +98,7 @@ export class SemanticScholarCollector {
     })
 
     const headers: Record<string, string> = {
-      'Accept': 'application/json'
+      Accept: 'application/json'
     }
 
     if (this.apiKey) {
@@ -88,7 +118,7 @@ export class SemanticScholarCollector {
    * Convert Semantic Scholar format to our format
    */
   private convertPaper(ssPaper: SemanticScholarPaper): Paper {
-    const authors: Author[] = ssPaper.authors.map(a => ({
+    const authors: Author[] = ssPaper.authors.map((a) => ({
       id: a.authorId,
       name: a.name,
       affiliations: [],
@@ -124,11 +154,12 @@ export class SemanticScholarCollector {
   async searchPapers(query: SearchQuery): Promise<CollectorResult> {
     console.log(`🔍 Searching Semantic Scholar: "${query.query}"`)
 
-    const params: Record<string, any> = {
+    const params: RequestParams = {
       query: query.query,
       limit: query.limit || 100,
       offset: query.offset || 0,
-      fields: 'paperId,title,abstract,year,authors,venue,citationCount,referenceCount,influentialCitationCount,fieldsOfStudy,publicationTypes,url,externalIds'
+      fields:
+        'paperId,title,abstract,year,authors,venue,citationCount,referenceCount,influentialCitationCount,fieldsOfStudy,publicationTypes,url,externalIds'
     }
 
     if (query.fields && query.fields.length > 0) {
@@ -139,15 +170,16 @@ export class SemanticScholarCollector {
       params.year = `${query.start_date.slice(0, 4)}-`
     }
 
-    const result = await this.request('/paper/search', params)
+    const result = (await this.request('/paper/search', params)) as SemanticScholarSearchResponse
+    const data = result.data ?? []
 
-    const papers = result.data.map((p: SemanticScholarPaper) => this.convertPaper(p))
+    const papers = data.map((p: SemanticScholarPaper) => this.convertPaper(p))
 
-    console.log(`✅ Found ${papers.length} papers (total: ${result.total})`)
+    console.log(`✅ Found ${papers.length} papers (total: ${result.total || papers.length})`)
 
     return {
       papers,
-      total: result.total,
+      total: result.total || papers.length,
       query,
       source: 'semantic_scholar',
       collected_at: new Date().toISOString()
@@ -159,20 +191,28 @@ export class SemanticScholarCollector {
    */
   async getPaperDetails(paperId: string): Promise<Paper> {
     const params = {
-      fields: 'paperId,title,abstract,year,authors,venue,citationCount,referenceCount,influentialCitationCount,fieldsOfStudy,publicationTypes,url,externalIds,citations,references'
+      fields:
+        'paperId,title,abstract,year,authors,venue,citationCount,referenceCount,influentialCitationCount,fieldsOfStudy,publicationTypes,url,externalIds,citations,references'
     }
 
-    const result = await this.request(`/paper/${paperId}`, params)
+    const result = (await this.request(
+      `/paper/${paperId}`,
+      params
+    )) as SemanticScholarPaperDetailsResponse
 
-    const paper = this.convertPaper(result)
+    const paper = this.convertPaper(result as SemanticScholarPaper)
 
     // Add citations and references
     if (result.citations) {
-      paper.citedBy = result.citations.map((c: any) => c.paperId)
+      paper.citedBy = result.citations
+        .map((c) => c.citingPaper?.paperId)
+        .filter((id): id is string => Boolean(id))
     }
 
     if (result.references) {
-      paper.references = result.references.map((r: any) => r.paperId)
+      paper.references = result.references
+        .map((r) => r.citedPaper?.paperId)
+        .filter((id): id is string => Boolean(id))
     }
 
     return paper
@@ -183,17 +223,19 @@ export class SemanticScholarCollector {
    */
   async getAuthorPapers(authorId: string, limit: number = 100): Promise<Paper[]> {
     const params = {
-      fields: 'papers.paperId,papers.title,papers.abstract,papers.year,papers.authors,papers.venue,papers.citationCount,papers.influentialCitationCount',
+      fields:
+        'papers.paperId,papers.title,papers.abstract,papers.year,papers.authors,papers.venue,papers.citationCount,papers.influentialCitationCount',
       limit
     }
 
-    const result = await this.request(`/author/${authorId}`, params)
+    const result = (await this.request(
+      `/author/${authorId}`,
+      params
+    )) as SemanticScholarAuthorResponse
 
-    if (!result.papers) {
-      return []
-    }
+    const papers = result.papers ?? []
 
-    return result.papers.map((p: SemanticScholarPaper) => this.convertPaper(p))
+    return papers.map((p: SemanticScholarPaper) => this.convertPaper(p))
   }
 
   /**
@@ -205,13 +247,14 @@ export class SemanticScholarCollector {
       limit
     }
 
-    const result = await this.request(`/recommendations/v1/papers/forpaper/${paperId}`, params)
+    const result = (await this.request(
+      `/recommendations/v1/papers/forpaper/${paperId}`,
+      params
+    )) as SemanticScholarRecommendationsResponse
 
-    if (!result.recommendedPapers) {
-      return []
-    }
+    const papers = result.recommendedPapers ?? []
 
-    return result.recommendedPapers.map((p: SemanticScholarPaper) => this.convertPaper(p))
+    return papers.map((p: SemanticScholarPaper) => this.convertPaper(p))
   }
 
   /**
@@ -223,19 +266,20 @@ export class SemanticScholarCollector {
       limit
     }
 
-    const result = await this.request(`/paper/${paperId}/citations`, params)
+    const result = (await this.request(
+      `/paper/${paperId}/citations`,
+      params
+    )) as SemanticScholarCitationsResponse
 
-    if (!result.data) {
-      return []
-    }
-
-    const citations: Citation[] = result.data.map((c: any) => ({
-      from: c.citingPaper.paperId,
-      to: paperId,
-      context: c.contexts?.[0],
-      intent: c.intents?.[0] as any,
-      sentiment: undefined
-    }))
+    const citations: Citation[] = (result.data ?? [])
+      .map((c) => ({
+        from: c.citingPaper?.paperId,
+        to: paperId,
+        context: c.contexts?.[0],
+        intent: c.intents?.[0] as Citation['intent'],
+        sentiment: undefined
+      }))
+      .filter((citation): citation is Citation => Boolean(citation.from))
 
     return citations
   }
@@ -249,19 +293,20 @@ export class SemanticScholarCollector {
       limit
     }
 
-    const result = await this.request(`/paper/${paperId}/references`, params)
+    const result = (await this.request(
+      `/paper/${paperId}/references`,
+      params
+    )) as SemanticScholarCitationsResponse
 
-    if (!result.data) {
-      return []
-    }
-
-    const citations: Citation[] = result.data.map((c: any) => ({
-      from: paperId,
-      to: c.citedPaper.paperId,
-      context: c.contexts?.[0],
-      intent: c.intents?.[0] as any,
-      sentiment: undefined
-    }))
+    const citations: Citation[] = (result.data ?? [])
+      .map((c) => ({
+        from: paperId,
+        to: c.citedPaper?.paperId,
+        context: c.contexts?.[0],
+        intent: c.intents?.[0] as Citation['intent'],
+        sentiment: undefined
+      }))
+      .filter((citation): citation is Citation => Boolean(citation.to))
 
     return citations
   }
@@ -296,8 +341,7 @@ export class SemanticScholarCollector {
         citations.push(...paperCitations)
 
         // Small delay to be respectful
-        await new Promise(resolve => setTimeout(resolve, 100))
-
+        await new Promise((resolve) => setTimeout(resolve, 100))
       } catch (error) {
         console.log(`    ⚠️  Error: ${error}`)
       }
@@ -334,8 +378,8 @@ export class SemanticScholarCollector {
     })
 
     // Count topic frequencies
-    result.papers.forEach(paper => {
-      paper.fields.forEach(topic => {
+    result.papers.forEach((paper) => {
+      paper.fields.forEach((topic) => {
         topics.set(topic, (topics.get(topic) || 0) + 1)
       })
     })
@@ -353,8 +397,8 @@ export class SemanticScholarCollector {
     })
 
     // Sort by influential citations
-    const sortedPapers = result.papers.sort((a, b) =>
-      (b.influentialCitationCount || 0) - (a.influentialCitationCount || 0)
+    const sortedPapers = result.papers.sort(
+      (a, b) => (b.influentialCitationCount || 0) - (a.influentialCitationCount || 0)
     )
 
     return sortedPapers.slice(0, limit)
@@ -364,16 +408,14 @@ export class SemanticScholarCollector {
    * Find papers by multiple authors (potential collaboration)
    */
   async findCollaborations(authorIds: string[]): Promise<Paper[]> {
-    const authorPapers = await Promise.all(
-      authorIds.map(id => this.getAuthorPapers(id))
-    )
+    const authorPapers = await Promise.all(authorIds.map((id) => this.getAuthorPapers(id)))
 
     // Find papers with multiple authors from the list
     const collaborations: Paper[] = []
 
-    authorPapers[0].forEach(paper => {
-      const paperAuthorIds = new Set(paper.authors.map(a => a.id))
-      const matchCount = authorIds.filter(id => paperAuthorIds.has(id)).length
+    authorPapers[0].forEach((paper) => {
+      const paperAuthorIds = new Set(paper.authors.map((a) => a.id))
+      const matchCount = authorIds.filter((id) => paperAuthorIds.has(id)).length
 
       if (matchCount >= 2) {
         collaborations.push(paper)
@@ -421,8 +463,7 @@ export class SemanticScholarCollector {
         console.log(`   Progress: ${allPapers.length}/${totalLimit}`)
 
         // Rate limiting delay
-        await new Promise(resolve => setTimeout(resolve, 500))
-
+        await new Promise((resolve) => setTimeout(resolve, 500))
       } catch (error) {
         console.error(`   Error: ${error}`)
         break
@@ -448,7 +489,7 @@ export async function exampleUsage() {
   })
 
   console.log(`\nFound ${searchResult.papers.length} papers:`)
-  searchResult.papers.forEach(p => {
+  searchResult.papers.forEach((p) => {
     console.log(`- ${p.title} (${p.citationCount} citations)`)
   })
 

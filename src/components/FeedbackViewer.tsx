@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -67,11 +67,12 @@ export function FeedbackViewer() {
     }
   }
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (nextOpen) {
       loadFeedback()
     }
-  }, [open])
+  }
 
   const handleExport = () => {
     const exportData = feedback.map((entry, index) => ({
@@ -109,20 +110,29 @@ export function FeedbackViewer() {
   }
 
   const getSummary = () => {
-    const byComponent = feedback.reduce((acc, entry) => {
-      acc[entry.component] = (acc[entry.component] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byComponent = feedback.reduce(
+      (acc, entry) => {
+        acc[entry.component] = (acc[entry.component] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
-    const byType = feedback.reduce((acc, entry) => {
-      acc[entry.feedbackType] = (acc[entry.feedbackType] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byType = feedback.reduce(
+      (acc, entry) => {
+        acc[entry.feedbackType] = (acc[entry.feedbackType] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
-    const byPriority = feedback.reduce((acc, entry) => {
-      acc[entry.priority] = (acc[entry.priority] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byPriority = feedback.reduce(
+      (acc, entry) => {
+        acc[entry.priority] = (acc[entry.priority] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return { byComponent, byType, byPriority }
   }
@@ -130,7 +140,7 @@ export function FeedbackViewer() {
   const summary = getSummary()
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
@@ -219,9 +229,7 @@ export function FeedbackViewer() {
 
           <ScrollArea className="h-[400px] pr-4">
             {feedback.length === 0 ? (
-              <div className="text-center py-12 text-white/70">
-                No feedback collected yet
-              </div>
+              <div className="text-center py-12 text-white/70">No feedback collected yet</div>
             ) : (
               <div className="space-y-4">
                 {feedback.map((entry, index) => (
@@ -234,28 +242,26 @@ export function FeedbackViewer() {
                         <Badge variant="outline">
                           {feedbackTypeLabels[entry.feedbackType] || entry.feedbackType}
                         </Badge>
-                        <Badge className={priorityColors[entry.priority]}>
-                          {entry.priority}
-                        </Badge>
+                        <Badge className={priorityColors[entry.priority]}>{entry.priority}</Badge>
                       </div>
                       <span className="text-xs text-white/50">
                         {new Date(entry.timestamp).toLocaleString()}
                       </span>
                     </div>
-                    
+
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-semibold text-white">Description:</span>
                         <p className="text-white/80 mt-1">{entry.description}</p>
                       </div>
-                      
+
                       {entry.suggestion && (
                         <div>
                           <span className="font-semibold text-white">Suggestion:</span>
                           <p className="text-white/80 mt-1">{entry.suggestion}</p>
                         </div>
                       )}
-                      
+
                       <div className="flex gap-4 text-xs text-white/60">
                         <span>Device: {entry.deviceType}</span>
                       </div>
