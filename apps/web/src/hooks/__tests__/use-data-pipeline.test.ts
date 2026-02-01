@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 
 // Mock prospect factory
 function createMockProspect(overrides: Partial<Prospect> = {}): Prospect {

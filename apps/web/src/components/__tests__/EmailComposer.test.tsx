@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { EmailComposer } from '../EmailComposer'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -14,7 +14,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -33,7 +33,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/input', () => ({
+vi.mock('@public-records/ui/input', () => ({
   Input: ({
     id,
     value,
@@ -66,7 +66,7 @@ vi.mock('@/components/ui/input', () => ({
   )
 }))
 
-vi.mock('@/components/ui/textarea', () => ({
+vi.mock('@public-records/ui/textarea', () => ({
   Textarea: ({
     id,
     value,
@@ -91,7 +91,7 @@ vi.mock('@/components/ui/textarea', () => ({
   )
 }))
 
-vi.mock('@/components/ui/label', () => ({
+vi.mock('@public-records/ui/label', () => ({
   Label: ({
     children,
     htmlFor,
@@ -107,7 +107,7 @@ vi.mock('@/components/ui/label', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({ children, className }: { children: ReactNode; className?: string }) => (
     <span data-testid="badge" className={className}>
       {children}
@@ -115,7 +115,7 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     value,
@@ -146,7 +146,7 @@ vi.mock('@/components/ui/select', () => ({
   SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>
 }))
 
-vi.mock('@/components/ui/dialog', () => ({
+vi.mock('@public-records/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -170,7 +170,7 @@ vi.mock('@/components/ui/dialog', () => ({
   )
 }))
 
-vi.mock('@/components/ui/separator', () => ({
+vi.mock('@public-records/ui/separator', () => ({
   Separator: () => <hr data-testid="separator" />
 }))
 

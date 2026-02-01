@@ -7,7 +7,7 @@ import type {
   RecursiveEnrichmentResult,
   GrowthSignal,
   HealthScore
-} from '../types'
+} from '@public-records/core'
 
 /**
  * RecursiveEnrichmentEngine - Adaptive data enrichment with recursive strategies

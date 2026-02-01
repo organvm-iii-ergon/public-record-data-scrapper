@@ -7,7 +7,7 @@
  * - External data providers
  */
 
-import { UCCFiling } from '../types'
+import { UCCFiling } from '@public-records/core'
 import { retry, CircuitBreaker } from '../utils/retry'
 
 export interface DataSource {

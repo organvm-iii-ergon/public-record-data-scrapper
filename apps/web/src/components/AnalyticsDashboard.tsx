@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react'
-import { Prospect, PortfolioCompany } from '@/lib/types'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Prospect, PortfolioCompany } from '@public-records/core'
+import { Card } from '@public-records/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Input } from '@public-records/ui/input'
+import { Label } from '@public-records/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import { ChartBar, Download } from '@phosphor-icons/react'
 import {
   LineChart,

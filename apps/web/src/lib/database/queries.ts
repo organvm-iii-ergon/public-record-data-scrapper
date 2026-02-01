@@ -5,7 +5,7 @@
  */
 
 import { DatabaseClient } from './client'
-import { UCCFiling, Prospect, GrowthSignal, HealthScore } from '../types'
+import { UCCFiling, Prospect, GrowthSignal, HealthScore } from '@public-records/core'
 
 export interface CompetitorRow {
   id: string

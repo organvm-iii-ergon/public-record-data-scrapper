@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { ProspectDetailDialog } from '../ProspectDetailDialog'
-import type { Prospect, ProspectNote, FollowUpReminder } from '@/lib/types'
+import type { Prospect, ProspectNote, FollowUpReminder } from '@public-records/core'
 
 // Mock all nested components
 vi.mock('../HealthGradeBadge', () => ({
@@ -28,7 +28,7 @@ vi.mock('../EmailComposer', () => ({
 }))
 
 // Mock UI components
-vi.mock('@/components/ui/dialog', () => ({
+vi.mock('@public-records/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -51,7 +51,7 @@ vi.mock('@/components/ui/dialog', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -67,7 +67,7 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -95,13 +95,13 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/separator', () => ({
+vi.mock('@public-records/ui/separator', () => ({
   Separator: ({ className }: { className?: string }) => (
     <hr data-testid="separator" className={className} />
   )
 }))
 
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -109,13 +109,13 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+vi.mock('@public-records/ui/progress', () => ({
   Progress: ({ value, className }: { value: number; className?: string }) => (
     <div data-testid="progress" data-value={value} className={className} />
   )
 }))
 
-vi.mock('@/components/ui/tabs', () => ({
+vi.mock('@public-records/ui/tabs', () => ({
   Tabs: ({ children, defaultValue }: { children: ReactNode; defaultValue?: string }) => (
     <div data-testid="tabs" data-default-value={defaultValue}>
       {children}

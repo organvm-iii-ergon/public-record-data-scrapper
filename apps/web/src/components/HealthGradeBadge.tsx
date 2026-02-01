@@ -1,6 +1,6 @@
-import { HealthGrade } from '@/lib/types'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { HealthGrade } from '@public-records/core'
+import { Badge } from '@public-records/ui/badge'
+import { cn } from '@public-records/ui/utils'
 
 interface HealthGradeBadgeProps {
   grade: HealthGrade

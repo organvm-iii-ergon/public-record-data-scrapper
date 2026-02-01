@@ -7,7 +7,7 @@ import type {
   SentimentTrend,
   ProspectStatus,
   GrowthSignalType
-} from '@/lib/types'
+} from '@public-records/core'
 
 // Helper to create mock prospects
 function createMockProspect(overrides: Partial<Prospect> = {}): Prospect {

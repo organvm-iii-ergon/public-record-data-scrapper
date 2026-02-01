@@ -1,5 +1,5 @@
 import { PortfolioMonitor } from '@/components/PortfolioMonitor'
-import { PortfolioCompany } from '@/lib/types'
+import { PortfolioCompany } from '@public-records/core'
 
 interface PortfolioTabProps {
   portfolio: PortfolioCompany[]

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { calculateMLScoring, addMLConfidenceToSignal } from '../mlScoring'
-import type { Prospect, IndustryType, UCCFiling } from '../types'
+import type { Prospect, IndustryType, UCCFiling } from '@public-records/core'
 
 describe('mlScoring', () => {
   const createMockUCCFiling = (overrides: Partial<UCCFiling> = {}): UCCFiling => ({

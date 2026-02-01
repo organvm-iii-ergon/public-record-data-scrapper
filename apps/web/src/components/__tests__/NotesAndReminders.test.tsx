@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { NotesAndReminders } from '../NotesAndReminders'
-import type { ProspectNote, FollowUpReminder } from '@/lib/types'
+import type { ProspectNote, FollowUpReminder } from '@public-records/core'
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -14,7 +14,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -41,7 +41,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/textarea', () => ({
+vi.mock('@public-records/ui/textarea', () => ({
   Textarea: ({
     id,
     value,
@@ -66,7 +66,7 @@ vi.mock('@/components/ui/textarea', () => ({
   )
 }))
 
-vi.mock('@/components/ui/input', () => ({
+vi.mock('@public-records/ui/input', () => ({
   Input: ({
     type,
     value,
@@ -88,7 +88,7 @@ vi.mock('@/components/ui/input', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -104,11 +104,11 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/separator', () => ({
+vi.mock('@public-records/ui/separator', () => ({
   Separator: () => <hr data-testid="separator" />
 }))
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     value,

@@ -18,8 +18,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@/*": ["./apps/web/src/*"]
+      "@/*": ["./apps/web/src/*"],
+      "@public-records/core": ["./packages/core/src/index.ts"],
+      "@public-records/core/*": ["./packages/core/src/*"],
+      "@public-records/ui": ["./packages/ui/src/index.ts"],
+      "@public-records/ui/*": ["./packages/ui/src/*"]
     }
   },
-  "include": ["apps/web/src"]
+  "include": ["apps/web/src", "packages/core/src", "packages/ui/src"]
 }

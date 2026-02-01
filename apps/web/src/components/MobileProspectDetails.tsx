@@ -1,18 +1,18 @@
-import { Prospect, ProspectNote, FollowUpReminder } from '@/lib/types'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Progress } from '@/components/ui/progress'
+import { Prospect, ProspectNote, FollowUpReminder } from '@public-records/core'
+import { Badge } from '@public-records/ui/badge'
+import { Button } from '@public-records/ui/button'
+import { Separator } from '@public-records/ui/separator'
+import { Progress } from '@public-records/ui/progress'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger
-} from '@/components/ui/accordion'
+} from '@public-records/ui/accordion'
 import { HealthGradeBadge } from './HealthGradeBadge'
 import { SignalTimeline } from './SignalTimeline'
 import { NotesAndReminders } from './NotesAndReminders'
-import { Card } from '@/components/ui/card'
+import { Card } from '@public-records/ui/card'
 import {
   Buildings,
   Export,

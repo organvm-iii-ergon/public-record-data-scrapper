@@ -1,10 +1,10 @@
 import { useState, type ElementType } from 'react'
-import { DashboardStats } from '@/lib/types'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { DashboardStats } from '@public-records/core'
+import { Card } from '@public-records/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@public-records/ui/collapsible'
 import { motion } from 'framer-motion'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@public-records/ui/use-mobile'
 import {
   TrendUp,
   Target,

@@ -1,12 +1,12 @@
 import { Moon, Sun, Palette, Leaf, Terminal } from '@phosphor-icons/react'
 import { useTheme } from 'next-themes'
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+} from '@public-records/ui/dropdown-menu'
 
 const themes = [
   {

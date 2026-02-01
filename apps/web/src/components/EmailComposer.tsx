@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { Prospect, EmailTemplate, OutreachEmail } from '@/lib/types'
+import { Prospect, EmailTemplate, OutreachEmail } from '@public-records/core'
 import { DEFAULT_EMAIL_TEMPLATES, populateTemplate } from '@/lib/emailTemplates'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Card } from '@public-records/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Input } from '@public-records/ui/input'
+import { Textarea } from '@public-records/ui/textarea'
+import { Label } from '@public-records/ui/label'
+import { Badge } from '@public-records/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter
-} from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
+} from '@public-records/ui/dialog'
+import { Separator } from '@public-records/ui/separator'
 import { Envelope, PaperPlaneRight, Calendar, Eye } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 

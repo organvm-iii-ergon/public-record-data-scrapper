@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
+import { Button } from '@public-records/ui/button'
+import { Label } from '@public-records/ui/label'
+import { Slider } from '@public-records/ui/slider'
 import {
   Sheet,
   SheetContent,
@@ -9,9 +9,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger
-} from '@/components/ui/sheet'
+} from '@public-records/ui/sheet'
 import { Funnel } from '@phosphor-icons/react'
-import { HealthGrade, SignalType, ProspectStatus } from '@/lib/types'
+import { HealthGrade, SignalType, ProspectStatus } from '@public-records/core'
 import { AdvancedFilterState, initialFilters } from '@/components/advanced-filters'
 
 interface AdvancedFiltersProps {

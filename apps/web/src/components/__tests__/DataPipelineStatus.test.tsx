@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { DataPipelineStatus, DataPipelineStatusProps } from '../DataPipelineStatus'
 
 // Mock UI components
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -21,7 +21,7 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -49,7 +49,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -73,7 +73,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+vi.mock('@public-records/ui/progress', () => ({
   Progress: ({ value, className }: { value: number; className?: string }) => (
     <div data-testid="progress" data-value={value} className={className} />
   )

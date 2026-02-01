@@ -2,9 +2,9 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { BatchOperations } from '../BatchOperations'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({ children, onClick }: { children: ReactNode; onClick?: () => void }) => (
     <button data-testid="button" onClick={onClick}>
       {children}
@@ -12,11 +12,11 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({ children }: { children: ReactNode }) => <span data-testid="badge">{children}</span>
 }))
 
-vi.mock('@/components/ui/checkbox', () => ({
+vi.mock('@public-records/ui/checkbox', () => ({
   Checkbox: ({
     checked,
     onCheckedChange
@@ -34,7 +34,7 @@ vi.mock('@/components/ui/checkbox', () => ({
   )
 }))
 
-vi.mock('@/components/ui/dropdown-menu', () => ({
+vi.mock('@public-records/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: ReactNode }) => (
     <div data-testid="dropdown">{children}</div>
   ),

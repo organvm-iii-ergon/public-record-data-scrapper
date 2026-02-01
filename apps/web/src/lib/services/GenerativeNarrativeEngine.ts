@@ -9,7 +9,7 @@ import type {
   CompetitorData,
   GrowthSignal,
   IndustryTrend
-} from '../types'
+} from '@public-records/core'
 
 /**
  * GenerativeNarrativeEngine - AI-powered narrative and insight generation

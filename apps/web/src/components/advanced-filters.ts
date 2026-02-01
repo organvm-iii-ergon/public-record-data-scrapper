@@ -1,4 +1,4 @@
-import type { HealthGrade, SignalType, ProspectStatus } from '@/lib/types'
+import type { HealthGrade, SignalType, ProspectStatus } from '@public-records/core'
 
 export interface AdvancedFilterState {
   healthGrades: HealthGrade[]

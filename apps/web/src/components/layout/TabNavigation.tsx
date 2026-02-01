@@ -1,4 +1,4 @@
-import { TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TabsList, TabsTrigger } from '@public-records/ui/tabs'
 import { Target, ChartBar, Heart, ArrowClockwise, Robot, ChartLineUp } from '@phosphor-icons/react'
 
 export function TabNavigation() {

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { AgenticDashboard } from '../AgenticDashboard'
-import type { CompetitorData } from '@/lib/types'
+import type { CompetitorData } from '@public-records/core'
 import type { Improvement, SystemHealth } from '@/lib/agentic/types'
 import type { UseAgenticEngineResult } from '@/hooks/use-agentic-engine'
 
@@ -16,7 +16,7 @@ vi.mock('../CompetitorAnalysis', () => ({
 }))
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -24,7 +24,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -42,7 +42,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -58,13 +58,13 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+vi.mock('@public-records/ui/progress', () => ({
   Progress: ({ value, className }: { value: number; className?: string }) => (
     <div data-testid="progress" data-value={value} className={className} />
   )
 }))
 
-vi.mock('@/components/ui/tabs', () => ({
+vi.mock('@public-records/ui/tabs', () => ({
   Tabs: ({ children, value }: { children: ReactNode; value?: string }) => (
     <div data-testid="tabs" data-value={value}>
       {children}

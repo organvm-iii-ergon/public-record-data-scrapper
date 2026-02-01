@@ -328,7 +328,7 @@ describe('ProspectsService', () => {
       const result = await service.update('test-id', {
         company_name: 'Updated Name',
         priority_score: 85
-      } as Partial<import('../../apps/web/src/lib/types').Prospect>)
+      } as Partial<import('@public-records/core').Prospect>)
 
       expect(result).toBeDefined()
       expect(result.company_name).toBe('Updated Name')
@@ -339,7 +339,7 @@ describe('ProspectsService', () => {
 
       await expect(
         service.update('non-existent', { company_name: 'Test' } as Partial<
-          import('../../apps/web/src/lib/types').Prospect
+          import('@public-records/core').Prospect
         >)
       ).rejects.toThrow(NotFoundError)
     })
@@ -359,7 +359,7 @@ describe('ProspectsService', () => {
 
       await expect(
         service.update('test-id', { company_name: 'Test' } as Partial<
-          import('../../apps/web/src/lib/types').Prospect
+          import('@public-records/core').Prospect
         >)
       ).rejects.toThrow(DatabaseError)
     })

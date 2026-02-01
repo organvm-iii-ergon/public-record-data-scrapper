@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { StatsOverview } from './StatsOverview'
-import type { DashboardStats } from '@/lib/types'
+import type { DashboardStats } from '@public-records/core'
 
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children }: { children: ReactNode }) => <div>{children}</div>
 }))
 

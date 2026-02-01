@@ -1,6 +1,6 @@
-import { GrowthSignal, SignalType } from '@/lib/types'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { GrowthSignal, SignalType } from '@public-records/core'
+import { Card } from '@public-records/ui/card'
+import { Badge } from '@public-records/ui/badge'
 import { useState } from 'react'
 import { Briefcase, Certificate, Handshake, TrendUp, Toolbox } from '@phosphor-icons/react'
 

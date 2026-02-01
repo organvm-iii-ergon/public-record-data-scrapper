@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import { ArrowClockwise } from '@phosphor-icons/react'
 
 export function RequalificationTab() {

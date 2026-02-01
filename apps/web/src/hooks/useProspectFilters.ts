@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Prospect, IndustryType } from '@/lib/types'
+import { Prospect, IndustryType } from '@public-records/core'
 import { AdvancedFilterState, initialFilters } from '@/components/advanced-filters'
 
 export interface ProspectFiltersState {

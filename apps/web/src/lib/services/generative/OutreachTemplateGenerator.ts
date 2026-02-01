@@ -13,7 +13,7 @@ import type {
   ABTestResult,
   TemplatePerformance
 } from '@/types/generative'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 import type LLMService from '../integration/LLMService'
 
 export class OutreachTemplateGenerator {

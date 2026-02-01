@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,16 +7,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from '@/components/ui/dialog'
+} from '@public-records/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+} from '@public-records/ui/select'
+import { Label } from '@public-records/ui/label'
+import { Textarea } from '@public-records/ui/textarea'
 import { ChatCircleDots } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 

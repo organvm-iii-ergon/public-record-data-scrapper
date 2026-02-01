@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useProspectActions } from '../useProspectActions'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 
 // Mock toast
 vi.mock('sonner', () => ({

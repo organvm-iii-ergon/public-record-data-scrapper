@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { exportProspects } from '../exportUtils'
-import type { Prospect } from '../types'
+import type { Prospect } from '@public-records/core'
 
 // Mock DOM methods
 const mockCreateElement = vi.fn()

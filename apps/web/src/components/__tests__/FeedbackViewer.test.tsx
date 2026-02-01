@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { FeedbackViewer } from '../FeedbackViewer'
 
 // Mock UI components
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -35,7 +35,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/dialog', () => {
+vi.mock('@public-records/ui/dialog', () => {
   const DialogContext = createContext<{
     setOpen: (open: boolean) => void
   } | null>(null)
@@ -79,7 +79,7 @@ vi.mock('@/components/ui/dialog', () => {
   }
 })
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -95,7 +95,7 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -103,7 +103,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/scroll-area', () => ({
+vi.mock('@public-records/ui/scroll-area', () => ({
   ScrollArea: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="scroll-area" className={className}>
       {children}

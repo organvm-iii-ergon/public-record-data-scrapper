@@ -1,4 +1,4 @@
-import type { DataTier, Prospect } from '@/lib/types'
+import type { DataTier, Prospect } from '@public-records/core'
 import { apiRequest } from './client'
 
 export async function fetchProspects(

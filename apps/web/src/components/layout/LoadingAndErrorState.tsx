@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 
 interface LoadingAndErrorStateProps {
   isLoading: boolean

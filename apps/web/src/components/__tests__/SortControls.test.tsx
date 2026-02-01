@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { SortControls, SortField, SortDirection } from '../SortControls'
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     value,
@@ -38,7 +38,7 @@ vi.mock('@/components/ui/select', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,

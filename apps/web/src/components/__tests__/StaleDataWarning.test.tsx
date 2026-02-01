@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { StaleDataWarning } from '../StaleDataWarning'
 
-vi.mock('@/components/ui/alert', () => ({
+vi.mock('@public-records/ui/alert', () => ({
   Alert: ({ children, variant }: { children: ReactNode; variant?: string }) => (
     <div data-testid="alert" data-variant={variant}>
       {children}
@@ -14,7 +14,7 @@ vi.mock('@/components/ui/alert', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,

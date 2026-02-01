@@ -1,4 +1,4 @@
-import { EmailTemplate } from './types'
+import { EmailTemplate } from '@public-records/core'
 
 export const DEFAULT_EMAIL_TEMPLATES: EmailTemplate[] = [
   {

@@ -5,7 +5,7 @@ import type {
   ChainedSignal,
   RecursiveSignalConfig,
   SignalType
-} from '../types'
+} from '@public-records/core'
 
 /**
  * RecursiveSignalDetector - Detects signal chains and correlated growth patterns

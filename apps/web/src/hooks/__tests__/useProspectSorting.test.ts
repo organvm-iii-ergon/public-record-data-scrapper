@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useProspectSorting } from '../useProspectSorting'
-import type { Prospect, HealthGrade, SentimentTrend, GrowthSignalType } from '@/lib/types'
+import type { Prospect, HealthGrade, SentimentTrend, GrowthSignalType } from '@public-records/core'
 
 // Helper to create mock prospects
 function createMockProspect(overrides: Partial<Prospect> = {}): Prospect {

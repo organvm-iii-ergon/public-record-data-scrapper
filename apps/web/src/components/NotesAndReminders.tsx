@@ -1,18 +1,18 @@
 import { useState, type ComponentProps } from 'react'
-import { ProspectNote, FollowUpReminder } from '@/lib/types'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { ProspectNote, FollowUpReminder } from '@public-records/core'
+import { Card } from '@public-records/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Textarea } from '@public-records/ui/textarea'
+import { Input } from '@public-records/ui/input'
+import { Badge } from '@public-records/ui/badge'
+import { Separator } from '@public-records/ui/separator'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import { Note, Bell, Plus, Check, Trash, Calendar as CalendarIcon } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 

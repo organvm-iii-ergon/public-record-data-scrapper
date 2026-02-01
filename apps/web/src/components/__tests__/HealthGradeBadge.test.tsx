@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { HealthGradeBadge } from '../HealthGradeBadge'
-import type { HealthGrade } from '@/lib/types'
+import type { HealthGrade } from '@public-records/core'
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({ children, className }: { children: ReactNode; className?: string }) => (
     <span data-testid="badge" className={className}>
       {children}

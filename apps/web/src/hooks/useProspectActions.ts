@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Prospect } from '@/lib/types'
+import { Prospect } from '@public-records/core'
 import { ExportFormat, exportProspects } from '@/lib/exportUtils'
 import {
   claimProspect,

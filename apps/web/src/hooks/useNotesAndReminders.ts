@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useSafeKV as useKV } from '@/hooks/useSparkKV'
-import { ProspectNote, FollowUpReminder, OutreachEmail } from '@/lib/types'
+import { ProspectNote, FollowUpReminder, OutreachEmail } from '@public-records/core'
 
 // Simple UUID generator using crypto API
 function generateId(): string {

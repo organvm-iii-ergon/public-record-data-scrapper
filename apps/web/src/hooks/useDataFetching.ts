@@ -5,7 +5,7 @@ import {
   generateCompetitorData,
   generatePortfolioCompanies
 } from '@/lib/mockData'
-import { Prospect, CompetitorData, PortfolioCompany, DataTier } from '@/lib/types'
+import { Prospect, CompetitorData, PortfolioCompany, DataTier } from '@public-records/core'
 import { UserAction } from '@/lib/agentic/types'
 import { fetchProspects } from '@/lib/api/prospects'
 import { fetchCompetitors } from '@/lib/api/competitors'

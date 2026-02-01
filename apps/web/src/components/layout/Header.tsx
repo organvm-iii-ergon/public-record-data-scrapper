@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SettingsMenu } from '@/components/SettingsMenu'
 import { ArrowClockwise, Info } from '@phosphor-icons/react'

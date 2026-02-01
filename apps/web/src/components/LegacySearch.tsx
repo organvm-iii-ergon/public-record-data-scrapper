@@ -1,13 +1,13 @@
 import { FormEvent, useMemo, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@public-records/ui/button'
+import { Input } from '@public-records/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import {
   Table,
   TableBody,
@@ -15,8 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+} from '@public-records/ui/table'
+import { cn } from '@public-records/ui/utils'
 
 interface SearchResult {
   source: string

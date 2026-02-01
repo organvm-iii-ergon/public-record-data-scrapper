@@ -4,10 +4,10 @@
  * Displays the status of the data ingestion and enrichment pipeline
  */
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Badge } from '@public-records/ui/badge'
+import { Button } from '@public-records/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@public-records/ui/card'
+import { Progress } from '@public-records/ui/progress'
 import {
   Database,
   CheckCircle,

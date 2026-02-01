@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -7,10 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from '@public-records/ui/dialog'
+import { Badge } from '@public-records/ui/badge'
+import { Card } from '@public-records/ui/card'
+import { ScrollArea } from '@public-records/ui/scroll-area'
 import { ClipboardText, Export, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 

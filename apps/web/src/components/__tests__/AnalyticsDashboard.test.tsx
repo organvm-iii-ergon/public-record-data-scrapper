@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { AnalyticsDashboard } from '../AnalyticsDashboard'
-import type { Prospect, PortfolioCompany } from '@/lib/types'
+import type { Prospect, PortfolioCompany } from '@public-records/core'
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -14,7 +14,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -34,7 +34,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/input', () => ({
+vi.mock('@public-records/ui/input', () => ({
   Input: ({
     type,
     value,
@@ -56,13 +56,13 @@ vi.mock('@/components/ui/input', () => ({
   )
 }))
 
-vi.mock('@/components/ui/label', () => ({
+vi.mock('@public-records/ui/label', () => ({
   Label: ({ children, className }: { children: ReactNode; className?: string }) => (
     <label className={className}>{children}</label>
   )
 }))
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     value,

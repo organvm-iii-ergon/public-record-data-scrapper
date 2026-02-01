@@ -8,7 +8,7 @@ import type {
   RelationshipType,
   RecursiveTraversalConfig,
   UCCFiling
-} from '../types'
+} from '@public-records/core'
 
 /**
  * RecursiveRelationshipMapper - Maps company relationships recursively

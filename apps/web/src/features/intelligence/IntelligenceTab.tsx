@@ -1,6 +1,6 @@
 import { CompetitorChart } from '@/components/CompetitorChart'
 import { LegacySearch } from '@/components/LegacySearch'
-import { CompetitorData } from '@/lib/types'
+import { CompetitorData } from '@public-records/core'
 
 interface IntelligenceTabProps {
   competitors: CompetitorData[]

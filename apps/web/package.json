@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "dependencies": {
+    "@public-records/core": "file:../../packages/core",
+    "@public-records/ui": "file:../../packages/ui"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b --noCheck ../../tsconfig.json && vite build",

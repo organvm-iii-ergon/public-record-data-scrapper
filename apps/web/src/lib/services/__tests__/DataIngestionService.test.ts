@@ -9,7 +9,7 @@ import {
   type IngestionConfig,
   type IngestionResult
 } from '../DataIngestionService'
-import type { UCCFiling } from '../../types'
+import type { UCCFiling } from '@public-records/core'
 
 // Mock fetch globally
 global.fetch = vi.fn()

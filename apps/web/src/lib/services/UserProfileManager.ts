@@ -9,7 +9,7 @@ import type {
   HealthGrade,
   SignalType,
   ProspectStatus
-} from '../types'
+} from '@public-records/core'
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**

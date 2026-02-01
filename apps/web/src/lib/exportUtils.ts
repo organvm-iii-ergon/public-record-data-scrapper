@@ -1,4 +1,4 @@
-import { Prospect } from './types'
+import { Prospect } from '@public-records/core'
 
 export type ExportFormat = 'json' | 'csv'
 

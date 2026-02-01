@@ -9,7 +9,7 @@ import type {
   CompanyGraph,
   Visualization,
   IndustryType
-} from '../types'
+} from '@public-records/core'
 import { GenerativeNarrativeEngine } from './GenerativeNarrativeEngine'
 
 /**

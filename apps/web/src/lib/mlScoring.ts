@@ -1,4 +1,4 @@
-import { Prospect, MLScoring, IndustryType } from './types'
+import { Prospect, MLScoring, IndustryType } from '@public-records/core'
 
 /**
  * Calculate ML confidence score and recovery likelihood for a prospect

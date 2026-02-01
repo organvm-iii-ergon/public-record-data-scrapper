@@ -9,7 +9,7 @@ import type {
   ClaimPattern,
   IndustryType,
   SignalType
-} from '../types'
+} from '@public-records/core'
 
 /**
  * PersonalizedRecommendationEngine - ML-powered personalized prospect recommendations

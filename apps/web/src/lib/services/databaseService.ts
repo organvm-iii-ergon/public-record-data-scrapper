@@ -14,7 +14,7 @@ import type {
   SignalType,
   IndustryType,
   ProspectStatus
-} from '@/lib/types'
+} from '@public-records/core'
 import type {
   ProspectRow,
   UCCFilingRow,

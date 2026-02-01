@@ -12,7 +12,7 @@ import {
   SignalType,
   HealthGrade,
   IndustryType
-} from '../../types'
+} from '@public-records/core'
 import { DataSource, IngestionConfig } from '../DataIngestionService'
 import { EnrichmentSource } from '../DataEnrichmentService'
 

@@ -10,7 +10,7 @@
 
 import { DataIngestionService, IngestionConfig } from './DataIngestionService'
 import { DataEnrichmentService, EnrichmentSource } from './DataEnrichmentService'
-import { Prospect } from '../types'
+import { Prospect } from '@public-records/core'
 
 export interface ScheduleConfig {
   enabled: boolean

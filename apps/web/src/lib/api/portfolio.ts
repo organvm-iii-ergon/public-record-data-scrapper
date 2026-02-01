@@ -1,4 +1,4 @@
-import type { DataTier, PortfolioCompany } from '@/lib/types'
+import type { DataTier, PortfolioCompany } from '@public-records/core'
 import { apiRequest } from './client'
 
 export async function fetchPortfolio(

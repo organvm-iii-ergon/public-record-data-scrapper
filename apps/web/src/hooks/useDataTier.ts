@@ -1,5 +1,5 @@
 import { useSafeKV as useKV } from '@/hooks/useSparkKV'
-import type { DataTier } from '@/lib/types'
+import type { DataTier } from '@public-records/core'
 
 const DEFAULT_DATA_TIER: DataTier = 'oss'
 

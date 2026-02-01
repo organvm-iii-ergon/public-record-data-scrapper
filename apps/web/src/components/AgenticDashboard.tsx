@@ -5,11 +5,11 @@
  */
 
 import { type ReactNode, useState } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card } from '@public-records/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Badge } from '@public-records/ui/badge'
+import { Progress } from '@public-records/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@public-records/ui/tabs'
 import {
   Robot,
   Brain,
@@ -24,7 +24,7 @@ import {
 import { Improvement, ImprovementPriority, ImprovementCategory } from '@/lib/agentic/types'
 import { UseAgenticEngineResult } from '@/hooks/use-agentic-engine'
 import CompetitorAnalysis from './CompetitorAnalysis'
-import { CompetitorData } from '@/lib/types'
+import { CompetitorData } from '@public-records/core'
 
 interface AgenticDashboardProps {
   agentic: UseAgenticEngineResult

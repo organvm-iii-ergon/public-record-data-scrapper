@@ -16,7 +16,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import type { UCCFiling } from '../types'
+import type { UCCFiling } from '@public-records/core'
 
 export interface ScraperConfig {
   headless: boolean

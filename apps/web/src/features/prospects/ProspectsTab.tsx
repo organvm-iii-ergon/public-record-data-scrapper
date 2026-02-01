@@ -1,31 +1,31 @@
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@public-records/ui/input'
+import { Checkbox } from '@public-records/ui/checkbox'
+import { Button } from '@public-records/ui/button'
+import { Badge } from '@public-records/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription
-} from '@/components/ui/sheet'
+} from '@public-records/ui/sheet'
 import { ProspectCard } from '@/components/ProspectCard'
 import { AdvancedFilters } from '@/components/AdvancedFilters'
 import { AdvancedFilterState } from '@/components/advanced-filters'
 import { BatchOperations } from '@/components/BatchOperations'
 import { SortControls, SortField, SortDirection } from '@/components/SortControls'
-import { Prospect, IndustryType } from '@/lib/types'
+import { Prospect, IndustryType } from '@public-records/core'
 import { ExportFormat } from '@/lib/exportUtils'
 import { MagnifyingGlass, Faders } from '@phosphor-icons/react'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@public-records/ui/use-mobile'
 
 interface ProspectsTabProps {
   // Data

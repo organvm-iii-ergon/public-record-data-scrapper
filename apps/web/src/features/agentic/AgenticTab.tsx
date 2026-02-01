@@ -1,5 +1,5 @@
 import { AgenticDashboard } from '@/components/AgenticDashboard'
-import { CompetitorData } from '@/lib/types'
+import { CompetitorData } from '@public-records/core'
 import { UseAgenticEngineReturn } from '@/hooks/use-agentic-engine'
 
 interface AgenticTabProps {

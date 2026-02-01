@@ -1,5 +1,5 @@
 import type { UserAction } from '@/lib/agentic/types'
-import type { DataTier } from '@/lib/types'
+import type { DataTier } from '@public-records/core'
 import { apiRequest } from './client'
 
 export async function fetchUserActions(

@@ -1,4 +1,4 @@
-import type { CompetitorData, DataTier } from '@/lib/types'
+import type { CompetitorData, DataTier } from '@public-records/core'
 import { apiRequest } from './client'
 
 export async function fetchCompetitors(

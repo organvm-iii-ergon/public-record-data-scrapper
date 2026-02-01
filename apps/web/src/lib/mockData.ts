@@ -9,7 +9,7 @@ import {
   HealthGrade,
   SignalType,
   DataTier
-} from './types'
+} from '@public-records/core'
 import { calculateMLScoring, addMLConfidenceToSignal } from './mlScoring'
 
 // MCA-focused industries: high credit card volume businesses

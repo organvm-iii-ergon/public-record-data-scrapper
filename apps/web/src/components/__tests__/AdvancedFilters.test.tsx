@@ -6,7 +6,7 @@ import { AdvancedFilters } from '../AdvancedFilters'
 import { AdvancedFilterState, initialFilters } from '../advanced-filters'
 
 // Mock UI components
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -33,13 +33,13 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/label', () => ({
+vi.mock('@public-records/ui/label', () => ({
   Label: ({ children, className }: { children: ReactNode; className?: string }) => (
     <label className={className}>{children}</label>
   )
 }))
 
-vi.mock('@/components/ui/slider', () => ({
+vi.mock('@public-records/ui/slider', () => ({
   Slider: ({
     value,
     onValueChange,
@@ -68,7 +68,7 @@ vi.mock('@/components/ui/slider', () => ({
   )
 }))
 
-vi.mock('@/components/ui/sheet', () => ({
+vi.mock('@public-records/ui/sheet', () => ({
   Sheet: ({ children, open }: { children: ReactNode; open: boolean }) => (
     <div data-testid="sheet" data-open={open}>
       {children}

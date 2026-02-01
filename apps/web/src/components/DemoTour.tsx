@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@public-records/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@public-records/ui/card'
 import { X, ArrowRight, ArrowLeft, Sparkle } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@public-records/ui/utils'
 
 interface TourStep {
   target: string

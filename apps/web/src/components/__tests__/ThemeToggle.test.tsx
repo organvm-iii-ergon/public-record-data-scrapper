@@ -13,7 +13,7 @@ vi.mock('next-themes', () => ({
   })
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -29,7 +29,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/dropdown-menu', () => ({
+vi.mock('@public-records/ui/dropdown-menu', () => ({
   DropdownMenu: ({ children }: { children: ReactNode }) => (
     <div data-testid="dropdown">{children}</div>
   ),

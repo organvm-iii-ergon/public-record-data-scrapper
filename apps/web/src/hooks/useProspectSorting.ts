@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Prospect } from '@/lib/types'
+import { Prospect } from '@public-records/core'
 import { SortField, SortDirection } from '@/components/SortControls'
 
 export function useProspectSorting(prospects: Prospect[]) {

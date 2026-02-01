@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { FeedbackButton } from '../FeedbackButton'
 
 // Mock UI components
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -24,7 +24,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/dialog', () => ({
+vi.mock('@public-records/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children }: { children: ReactNode }) => (
@@ -44,7 +44,7 @@ vi.mock('@/components/ui/dialog', () => ({
   )
 }))
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     onValueChange,
@@ -77,13 +77,13 @@ vi.mock('@/components/ui/select', () => ({
   SelectValue: ({ placeholder }: { placeholder?: string }) => <span>{placeholder}</span>
 }))
 
-vi.mock('@/components/ui/label', () => ({
+vi.mock('@public-records/ui/label', () => ({
   Label: ({ children, htmlFor }: { children: ReactNode; htmlFor?: string }) => (
     <label htmlFor={htmlFor}>{children}</label>
   )
 }))
 
-vi.mock('@/components/ui/textarea', () => ({
+vi.mock('@public-records/ui/textarea', () => ({
   Textarea: ({
     id,
     value,

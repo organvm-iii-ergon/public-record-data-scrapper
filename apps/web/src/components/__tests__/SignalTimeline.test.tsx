@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { SignalTimeline } from '../SignalTimeline'
-import type { GrowthSignal, SignalType } from '@/lib/types'
+import type { GrowthSignal, SignalType } from '@public-records/core'
 
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -12,7 +12,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({ children, variant }: { children: ReactNode; variant?: string }) => (
     <span data-testid="badge" data-variant={variant}>
       {children}

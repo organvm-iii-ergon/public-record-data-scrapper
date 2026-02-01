@@ -28,7 +28,10 @@ export const config = {
     host: process.env.HOST || '0.0.0.0'
   },
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/ucc_intelligence',
+    url:
+      process.env.DATABASE_URL ||
+      process.env.TEST_DATABASE_URL ||
+      'postgresql://localhost:5432/ucc_intelligence',
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000

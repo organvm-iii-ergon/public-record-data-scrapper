@@ -23,23 +23,34 @@ beforeAll(async () => {
 afterEach(async () => {
   // Clean up test data after each test
   // This ensures tests don't interfere with each other
-  try {
-    await database.query('BEGIN')
+  const tables = [
+    'audit_logs',
+    'usage_tracking',
+    'enrichment_logs',
+    'ingestion_logs',
+    'data_ingestion_logs',
+    'portfolio_health_scores',
+    'growth_signals',
+    'health_scores',
+    'prospect_ucc_filings',
+    'prospects',
+    'portfolio_companies',
+    'competitors',
+    'ucc_filings',
+    'users',
+    'data_sources'
+  ]
 
-    // Delete in reverse order of foreign key dependencies
-    await database.query('DELETE FROM audit_logs')
-    await database.query('DELETE FROM usage_tracking')
-    await database.query('DELETE FROM growth_signals')
-    await database.query('DELETE FROM health_scores')
-    await database.query('DELETE FROM prospects')
-    await database.query('DELETE FROM portfolio_companies')
-    await database.query('DELETE FROM ucc_filings')
-    await database.query('DELETE FROM data_ingestion_logs')
-
-    await database.query('COMMIT')
-  } catch (error) {
-    await database.query('ROLLBACK')
-    console.error('Failed to clean up test data:', error)
+  for (const table of tables) {
+    try {
+      await database.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`)
+    } catch (error) {
+      const code = (error as { code?: string }).code
+      if (code === '42P01') {
+        continue
+      }
+      console.error('Failed to clean up test data:', error)
+    }
   }
 })
 

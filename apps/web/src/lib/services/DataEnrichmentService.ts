@@ -8,7 +8,14 @@
  * - Industry classification
  */
 
-import { Prospect, GrowthSignal, HealthScore, HealthGrade, IndustryType, UCCFiling } from '../types'
+import {
+  Prospect,
+  GrowthSignal,
+  HealthScore,
+  HealthGrade,
+  IndustryType,
+  UCCFiling
+} from '@public-records/core'
 
 export interface EnrichmentSource {
   id: string

@@ -12,7 +12,7 @@ import { OutreachTemplateGenerator } from './generative/OutreachTemplateGenerato
 import { ConversationAI } from './generative/ConversationAI'
 import { PersonalizationEngine } from './personalization/PersonalizationEngine'
 
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 import type { GenerativeConfig } from '@/types/generative'
 import type { RecursiveEnrichmentConfig } from '@/types/recursive'
 

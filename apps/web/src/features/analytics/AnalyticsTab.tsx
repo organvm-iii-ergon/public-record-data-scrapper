@@ -1,5 +1,5 @@
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard'
-import { Prospect, PortfolioCompany } from '@/lib/types'
+import { Prospect, PortfolioCompany } from '@public-records/core'
 
 interface AnalyticsTabProps {
   prospects: Prospect[]

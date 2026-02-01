@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import { ProspectCard } from '../ProspectCard'
-import type { Prospect } from '@/lib/types'
+import type { Prospect } from '@public-records/core'
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({
     children,
     className,
@@ -22,7 +22,7 @@ vi.mock('@/components/ui/card', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -38,7 +38,7 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -59,7 +59,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -107,7 +107,7 @@ vi.mock('@phosphor-icons/react', () => ({
   )
 }))
 
-vi.mock('@/lib/utils', () => ({
+vi.mock('@public-records/ui/utils', () => ({
   cn: (...classes: (string | boolean | undefined)[]) => classes.filter(Boolean).join(' ')
 }))
 

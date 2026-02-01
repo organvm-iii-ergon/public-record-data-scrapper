@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { GearSix } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,9 +9,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
+} from '@public-records/ui/dropdown-menu'
 import { useDataTier } from '@/hooks/useDataTier'
-import type { DataTier } from '@/lib/types'
+import type { DataTier } from '@public-records/core'
 
 const DATA_TIER_LABELS: Record<DataTier, { title: string; description: string }> = {
   oss: {

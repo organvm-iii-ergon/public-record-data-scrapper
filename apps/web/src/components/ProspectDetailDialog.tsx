@@ -1,21 +1,21 @@
-import { Prospect } from '@/lib/types'
+import { Prospect } from '@public-records/core'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription
-} from '@/components/ui/dialog'
+} from '@public-records/ui/dialog'
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerDescription
-} from '@/components/ui/drawer'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+} from '@public-records/ui/drawer'
+import { Badge } from '@public-records/ui/badge'
+import { Button } from '@public-records/ui/button'
+import { Separator } from '@public-records/ui/separator'
 import { HealthGradeBadge } from './HealthGradeBadge'
 import { SignalTimeline } from './SignalTimeline'
 import { NotesAndReminders } from './NotesAndReminders'
@@ -31,12 +31,12 @@ import {
   Brain,
   Envelope
 } from '@phosphor-icons/react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import type { ProspectNote, FollowUpReminder, OutreachEmail } from '@/lib/types'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@public-records/ui/tabs'
+import { Card } from '@public-records/ui/card'
+import { Progress } from '@public-records/ui/progress'
+import type { ProspectNote, FollowUpReminder, OutreachEmail } from '@public-records/core'
 import { useState } from 'react'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@public-records/ui/use-mobile'
 
 interface ProspectDetailDialogProps {
   prospect: Prospect | null

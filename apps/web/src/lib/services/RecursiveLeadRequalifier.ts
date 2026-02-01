@@ -7,7 +7,7 @@ import type {
   NetworkRecommendation,
   CompanyGraph,
   GrowthSignal
-} from '../types'
+} from '@public-records/core'
 import { RecursiveRelationshipMapper } from './RecursiveRelationshipMapper'
 
 /**

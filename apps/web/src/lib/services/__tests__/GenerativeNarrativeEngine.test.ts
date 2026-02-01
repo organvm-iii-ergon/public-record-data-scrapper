@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GenerativeNarrativeEngine } from '../GenerativeNarrativeEngine'
-import { Prospect, GenerativeContext } from '../../types'
+import { Prospect, GenerativeContext } from '@public-records/core'
 
 describe('GenerativeNarrativeEngine', () => {
   let engine: GenerativeNarrativeEngine

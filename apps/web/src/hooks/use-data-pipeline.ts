@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Prospect } from '@/lib/types'
+import { Prospect } from '@public-records/core'
 import { DataRefreshScheduler, SchedulerStatus } from '@/lib/services'
 import { featureFlags } from '@/lib/config/dataPipeline'
 import { generateProspects } from '@/lib/mockData'

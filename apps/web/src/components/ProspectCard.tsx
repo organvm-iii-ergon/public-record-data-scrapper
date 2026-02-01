@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Prospect } from '@/lib/types'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Prospect } from '@public-records/core'
+import { Card } from '@public-records/ui/card'
+import { Badge } from '@public-records/ui/badge'
+import { Button } from '@public-records/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@public-records/ui/collapsible'
 import { HealthGradeBadge } from './HealthGradeBadge'
 import { Buildings, TrendUp, MapPin, Brain, CaretDown } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@public-records/ui/utils'
 import { motion } from 'framer-motion'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@public-records/ui/use-mobile'
 
 interface ProspectCardProps {
   prospect: Prospect

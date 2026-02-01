@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { LegacySearch } from '../LegacySearch'
 
 // Mock UI components
-vi.mock('@/components/ui/button', () => ({
+vi.mock('@public-records/ui/button', () => ({
   Button: ({
     children,
     onClick,
@@ -33,7 +33,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/input', () => ({
+vi.mock('@public-records/ui/input', () => ({
   Input: ({
     value,
     onChange,
@@ -58,7 +58,7 @@ vi.mock('@/components/ui/input', () => ({
   )
 }))
 
-vi.mock('@/components/ui/select', () => ({
+vi.mock('@public-records/ui/select', () => ({
   Select: ({
     children,
     value,
@@ -89,7 +89,7 @@ vi.mock('@/components/ui/select', () => ({
   SelectValue: () => null
 }))
 
-vi.mock('@/components/ui/table', () => ({
+vi.mock('@public-records/ui/table', () => ({
   Table: ({ children, className }: { children: ReactNode; className?: string }) => (
     <table data-testid="results-table" className={className}>
       {children}
@@ -108,7 +108,7 @@ vi.mock('@/components/ui/table', () => ({
   )
 }))
 
-vi.mock('@/lib/utils', () => ({
+vi.mock('@public-records/ui/utils', () => ({
   cn: (...classes: (string | undefined | false)[]) => classes.filter(Boolean).join(' ')
 }))
 

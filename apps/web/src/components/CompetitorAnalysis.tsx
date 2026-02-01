@@ -5,13 +5,20 @@
  * forward into actionable insights for the user.
  */
 import { useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Badge } from './ui/badge'
-import { Progress } from './ui/progress'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { ScrollArea } from './ui/scroll-area'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@public-records/ui/card'
+import { Badge } from '@public-records/ui/badge'
+import { Progress } from '@public-records/ui/progress'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@public-records/ui/table'
+import { ScrollArea } from '@public-records/ui/scroll-area'
 import { TrendUp, ArrowUp, ArrowDown, Users, Target } from '@phosphor-icons/react'
-import { CompetitorData } from '@/lib/types'
+import { CompetitorData } from '@public-records/core'
 import { Improvement, ImprovementPriority } from '@/lib/agentic/types'
 
 interface CompetitorAnalysisProps {

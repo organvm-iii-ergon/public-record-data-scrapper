@@ -1,16 +1,16 @@
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@public-records/ui/button'
+import { Badge } from '@public-records/ui/badge'
+import { Checkbox } from '@public-records/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu'
+} from '@public-records/ui/dropdown-menu'
 import { CaretDown, Export, Trash, UserPlus } from '@phosphor-icons/react'
-import { Prospect } from '@/lib/types'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { Prospect } from '@public-records/core'
+import { useIsMobile } from '@public-records/ui/use-mobile'
 
 interface BatchOperationsProps {
   prospects: Prospect[]

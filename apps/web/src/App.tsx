@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSafeKV as useKV } from '@/hooks/useSparkKV'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@public-records/ui/tabs'
 import { StatsOverview } from '@/components/StatsOverview'
 import { ProspectDetailDialog } from '@/components/ProspectDetailDialog'
 import { StaleDataWarning } from '@/components/StaleDataWarning'
@@ -31,7 +31,7 @@ import { useDataTier } from '@/hooks/useDataTier'
 
 // Utils and types
 import { generateDashboardStats } from '@/lib/mockData'
-import { Prospect } from '@/lib/types'
+import { Prospect } from '@public-records/core'
 import { ExportFormat } from '@/lib/exportUtils'
 import { UserAction } from '@/lib/agentic/types'
 import { logUserAction } from '@/lib/api/userActions'

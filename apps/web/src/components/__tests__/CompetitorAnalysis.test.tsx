@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import CompetitorAnalysis from '../CompetitorAnalysis'
-import type { CompetitorData } from '@/lib/types'
+import type { CompetitorData } from '@public-records/core'
 import type { Improvement } from '@/lib/agentic/types'
 
 // Mock UI components
-vi.mock('@/components/ui/card', () => ({
+vi.mock('@public-records/ui/card', () => ({
   Card: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="card" className={className}>
       {children}
@@ -26,7 +26,7 @@ vi.mock('@/components/ui/card', () => ({
   CardTitle: ({ children }: { children: ReactNode }) => <h2 data-testid="card-title">{children}</h2>
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+vi.mock('@public-records/ui/badge', () => ({
   Badge: ({
     children,
     variant,
@@ -42,13 +42,13 @@ vi.mock('@/components/ui/badge', () => ({
   )
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+vi.mock('@public-records/ui/progress', () => ({
   Progress: ({ value, className }: { value: number; className?: string }) => (
     <div data-testid="progress" data-value={value} className={className} />
   )
 }))
 
-vi.mock('@/components/ui/table', () => ({
+vi.mock('@public-records/ui/table', () => ({
   Table: ({ children }: { children: ReactNode }) => <table data-testid="table">{children}</table>,
   TableBody: ({ children }: { children: ReactNode }) => <tbody>{children}</tbody>,
   TableCell: ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -61,7 +61,7 @@ vi.mock('@/components/ui/table', () => ({
   TableRow: ({ children }: { children: ReactNode }) => <tr>{children}</tr>
 }))
 
-vi.mock('@/components/ui/scroll-area', () => ({
+vi.mock('@public-records/ui/scroll-area', () => ({
   ScrollArea: ({ children, className }: { children: ReactNode; className?: string }) => (
     <div data-testid="scroll-area" className={className}>
       {children}

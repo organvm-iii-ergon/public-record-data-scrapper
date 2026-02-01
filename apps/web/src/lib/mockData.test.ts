@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateDashboardStats } from './mockData'
-import type { Prospect, PortfolioCompany } from './types'
+import type { Prospect, PortfolioCompany } from '@public-records/core'
 
 describe('generateDashboardStats', () => {
   it('returns default values when datasets are empty', () => {

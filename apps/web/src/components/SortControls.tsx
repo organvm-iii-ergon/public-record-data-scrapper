@@ -4,9 +4,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
+} from '@public-records/ui/select'
 import { ArrowUp, ArrowDown, ListNumbers } from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@public-records/ui/button'
 
 export type SortField =
   | 'priorityScore'

@@ -1,5 +1,5 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@public-records/ui/alert'
+import { Button } from '@public-records/ui/button'
 import { ClockCounterClockwise, ArrowClockwise } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'

@@ -11,7 +11,7 @@ import type {
   UserProfile,
   RecursiveTraversalConfig,
   RecursiveSignalConfig
-} from '../types'
+} from '@public-records/core'
 import { RecursiveRelationshipMapper } from '../services/RecursiveRelationshipMapper'
 import { GenerativeNarrativeEngine } from '../services/GenerativeNarrativeEngine'
 import { PersonalizedRecommendationEngine } from '../services/PersonalizedRecommendationEngine'

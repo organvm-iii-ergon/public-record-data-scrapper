@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useSystemContext } from '../useSystemContext'
-import type { Prospect, Competitor, PortfolioCompany, UserAction } from '@/lib/types'
+import type { Prospect, Competitor, PortfolioCompany, UserAction } from '@public-records/core'
 
 // Helper function to create mock prospect
 function createMockProspect(overrides: Partial<Prospect> = {}): Prospect {
