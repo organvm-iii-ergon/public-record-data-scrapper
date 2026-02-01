@@ -34,7 +34,11 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
     fs: {
-      allow: [resolve(appRoot, '../../packages')]
+      allow: [
+        appRoot,
+        resolve(appRoot, '../../packages'),
+        resolve(appRoot, '../../node_modules')
+      ]
     }
   }
 })
