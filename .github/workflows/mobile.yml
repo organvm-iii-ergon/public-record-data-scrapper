@@ -18,6 +18,8 @@ jobs:
   build:
     if: ${{ vars.MOBILE_CI_ENABLED == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,15 +29,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Set up Expo
-        if: ${{ secrets.EAS_TOKEN != '' }}
+        if: ${{ env.EAS_TOKEN != '' }}
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
-          token: ${{ secrets.EAS_TOKEN }}
+          token: ${{ env.EAS_TOKEN }}
       - name: Build (EAS)
-        if: ${{ secrets.EAS_TOKEN != '' }}
+        if: ${{ env.EAS_TOKEN != '' }}
         run: npx eas build --platform all --non-interactive
         working-directory: apps/mobile
       - name: Skip EAS build (missing token)
-        if: ${{ secrets.EAS_TOKEN == '' }}
+        if: ${{ env.EAS_TOKEN == '' }}
         run: echo "EAS_TOKEN not set; skipping build."
