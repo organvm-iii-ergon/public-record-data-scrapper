@@ -18,7 +18,9 @@ describe('ProspectsService', () => {
   let service: ProspectsService
 
   beforeEach(() => {
+    vi.resetAllMocks()
     vi.clearAllMocks()
+    mockQuery.mockReset()
     service = new ProspectsService()
   })
 
@@ -275,10 +277,10 @@ describe('ProspectsService', () => {
       mockQuery.mockResolvedValueOnce([mockCreated])
 
       const result = await service.create({
-        company_name: 'New Test Company',
+        companyName: 'New Test Company',
         state: 'CA',
         industry: 'Technology',
-        lien_amount: 750000
+        lienAmount: 750000
       })
 
       expect(result).toBeDefined()
@@ -291,26 +293,26 @@ describe('ProspectsService', () => {
       await expect(service.create({ state: 'CA' })).rejects.toThrow(ValidationError)
     })
 
-    it('should set default status to unclaimed', async () => {
+    it('should set default status to new', async () => {
       const mockCreated = {
         id: 'new-id',
-        company_name: 'Test',
-        status: 'unclaimed'
+        companyName: 'Test',
+        status: 'new'
       }
 
       mockQuery.mockResolvedValueOnce([mockCreated])
 
-      await service.create({ company_name: 'Test' })
+      await service.create({ companyName: 'Test' })
 
-      // Verify status was set to unclaimed in the query
+      // Verify status was set to 'new' in the query
       const queryCall = mockQuery.mock.calls[0]
-      expect(queryCall[1]).toContain('unclaimed')
+      expect(queryCall[1]).toContain('new')
     })
 
     it('should handle database errors', async () => {
       mockQuery.mockRejectedValueOnce(new Error('Insert failed'))
 
-      await expect(service.create({ company_name: 'Test' })).rejects.toThrow(DatabaseError)
+      await expect(service.create({ companyName: 'Test' })).rejects.toThrow(DatabaseError)
     })
   })
 
@@ -338,14 +340,14 @@ describe('ProspectsService', () => {
       mockQuery.mockResolvedValueOnce([])
 
       await expect(
-        service.update('non-existent', { company_name: 'Test' } as Partial<
+        service.update('non-existent', { companyName: 'Test' } as Partial<
           import('@public-records/core').Prospect
         >)
       ).rejects.toThrow(NotFoundError)
     })
 
     it('should return current prospect when no fields to update', async () => {
-      const mockProspect = { id: 'test-id', company_name: 'Test' }
+      const mockProspect = { id: 'test-id', companyName: 'Test' }
       mockQuery.mockResolvedValueOnce([mockProspect])
 
       const result = await service.update('test-id', {})
@@ -358,7 +360,7 @@ describe('ProspectsService', () => {
       mockQuery.mockRejectedValueOnce(new Error('Update failed'))
 
       await expect(
-        service.update('test-id', { company_name: 'Test' } as Partial<
+        service.update('test-id', { companyName: 'Test' } as Partial<
           import('@public-records/core').Prospect
         >)
       ).rejects.toThrow(DatabaseError)

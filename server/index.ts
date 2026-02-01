@@ -1,7 +1,11 @@
-import express, { Express } from 'express'
+import express, { Express, Request, Response } from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
+import path from 'path'
+import fs from 'fs'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs'
 import { config, validateConfig } from './config'
 import { database } from './database/connection'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
@@ -10,6 +14,7 @@ import { createRateLimiter, closeRateLimiterConnection } from './middleware/rate
 import { authMiddleware } from './middleware/authMiddleware'
 import { httpsRedirect } from './middleware/httpsRedirect'
 import { dataTierRouter } from './middleware/dataTier'
+import { auditMiddleware } from './middleware/auditMiddleware'
 
 // Import routes
 import prospectsRouter from './routes/prospects'
@@ -18,6 +23,9 @@ import portfolioRouter from './routes/portfolio'
 import enrichmentRouter from './routes/enrichment'
 import healthRouter from './routes/health'
 import jobsRouter from './routes/jobs'
+import contactsRouter from './routes/contacts'
+import dealsRouter from './routes/deals'
+import webhooksRouter from './routes/webhooks'
 
 // Import queue infrastructure
 import { initializeQueues, closeQueues } from './queue/queues'
@@ -47,7 +55,24 @@ export class Server {
       })
     )
 
-    // Parsing
+    // Raw body middleware for webhooks (must be before JSON parser)
+    // This preserves the raw body for signature verification
+    this.app.use(
+      '/api/webhooks',
+      express.raw({
+        type: 'application/json',
+        limit: '1mb',
+        verify: (req: Request, res: Response, buf: Buffer) => {
+          // Store raw body for signature verification
+          ;(req as Request & { rawBody?: Buffer }).rawBody = buf
+        }
+      })
+    )
+
+    // Parsing for webhook form data (Twilio sends as x-www-form-urlencoded)
+    this.app.use('/api/webhooks', express.urlencoded({ extended: true, limit: '1mb' }))
+
+    // Parsing (for all other routes)
     this.app.use(express.json({ limit: '10mb' }))
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
@@ -62,11 +87,20 @@ export class Server {
 
     // Rate limiting (Redis-based in production, in-memory in development)
     this.app.use(createRateLimiter())
+
+    // Audit logging for compliance tracking
+    this.app.use(auditMiddleware)
   }
 
   private setupRoutes(): void {
+    // Swagger UI documentation
+    this.setupSwaggerDocs()
+
     // Public routes (no authentication required)
     this.app.use('/api/health', healthRouter)
+
+    // Webhook routes (signature verification, no JWT auth)
+    this.app.use('/api/webhooks', webhooksRouter)
 
     // Protected API routes (authentication required)
     this.app.use('/api/prospects', authMiddleware, prospectsRouter)
@@ -74,6 +108,8 @@ export class Server {
     this.app.use('/api/portfolio', authMiddleware, portfolioRouter)
     this.app.use('/api/enrichment', authMiddleware, enrichmentRouter)
     this.app.use('/api/jobs', authMiddleware, jobsRouter)
+    this.app.use('/api/contacts', authMiddleware, contactsRouter)
+    this.app.use('/api/deals', authMiddleware, dealsRouter)
 
     // Root endpoint
     this.app.get('/', (req, res) => {
@@ -88,10 +124,72 @@ export class Server {
           portfolio: '/api/portfolio',
           enrichment: '/api/enrichment',
           health: '/api/health',
-          jobs: '/api/jobs'
+          jobs: '/api/jobs',
+          contacts: '/api/contacts',
+          deals: '/api/deals',
+          webhooks: '/api/webhooks'
         }
       })
     })
+  }
+
+  private setupSwaggerDocs(): void {
+    try {
+      // Load OpenAPI spec from YAML file
+      const openApiPath = path.join(__dirname, 'openapi.yaml')
+
+      if (fs.existsSync(openApiPath)) {
+        const openApiSpec = YAML.load(openApiPath)
+
+        // Swagger UI options
+        const swaggerOptions: swaggerUi.SwaggerUiOptions = {
+          customCss: '.swagger-ui .topbar { display: none }',
+          customSiteTitle: 'UCC-MCA Intelligence API Docs',
+          swaggerOptions: {
+            persistAuthorization: true,
+            displayRequestDuration: true,
+            filter: true,
+            showExtensions: true,
+            showCommonExtensions: true
+          }
+        }
+
+        // Serve Swagger UI at /api/docs
+        this.app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerOptions))
+
+        // Serve raw OpenAPI spec as JSON
+        this.app.get('/api/docs/openapi.json', (req, res) => {
+          res.json(openApiSpec)
+        })
+
+        // Serve raw OpenAPI spec as YAML
+        this.app.get('/api/docs/openapi.yaml', (req, res) => {
+          res.type('text/yaml').sendFile(openApiPath)
+        })
+
+        console.log('[Server] Swagger UI enabled at /api/docs')
+      } else {
+        console.warn('[Server] OpenAPI spec not found at', openApiPath)
+
+        // Serve placeholder when spec is missing
+        this.app.get('/api/docs', (req, res) => {
+          res.status(503).json({
+            error: 'API documentation not available',
+            message: 'OpenAPI specification file not found'
+          })
+        })
+      }
+    } catch (error) {
+      console.error('[Server] Failed to load OpenAPI spec:', error)
+
+      // Serve error message when spec fails to load
+      this.app.get('/api/docs', (req, res) => {
+        res.status(503).json({
+          error: 'API documentation not available',
+          message: 'Failed to load OpenAPI specification'
+        })
+      })
+    }
   }
 
   private setupErrorHandling(): void {
@@ -149,6 +247,7 @@ export class Server {
       console.log(`  Jobs:        http://${host}:${port}/api/jobs`)
       console.log(`  Database:    ${this.maskConnectionString(config.database.url)}`)
       console.log(`  Redis:       ${config.redis.host}:${config.redis.port}`)
+      console.log(`  Docs:        http://${host}:${port}/api/docs`)
       console.log('─────────────────────────────────────')
       console.log('')
     })

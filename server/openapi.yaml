@@ -1,0 +1,2829 @@
+openapi: 3.0.3
+info:
+  title: UCC-MCA Intelligence API
+  description: |
+    AI-powered lead generation system for Merchant Cash Advance providers.
+    Analyzes Uniform Commercial Code (UCC) filings to identify businesses
+    with active financing and predict MCA likelihood.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Proprietary
+    url: https://example.com/license
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Health
+    description: Health check endpoints for monitoring
+  - name: Prospects
+    description: UCC prospect management
+  - name: Competitors
+    description: Competitor analysis (secured parties)
+  - name: Portfolio
+    description: Funded portfolio management
+  - name: Enrichment
+    description: Data enrichment pipeline
+  - name: Jobs
+    description: Background job management
+  - name: Contacts
+    description: Contact relationship management
+  - name: Deals
+    description: Deal pipeline management
+  - name: Webhooks
+    description: External service webhooks
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ===========================================
+  # Health Endpoints
+  # ===========================================
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Basic health check
+      description: Returns basic health status of the API
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/health/detailed:
+    get:
+      tags:
+        - Health
+      summary: Detailed health check
+      description: Returns detailed health status including service dependencies
+      security: []
+      responses:
+        '200':
+          description: Detailed health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+
+  /api/health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness probe
+      description: Kubernetes readiness probe - checks if service is ready to accept traffic
+      security: []
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotReadyResponse'
+
+  /api/health/live:
+    get:
+      tags:
+        - Health
+      summary: Liveness probe
+      description: Kubernetes liveness probe - checks if service is alive
+      security: []
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveResponse'
+
+  # ===========================================
+  # Prospects Endpoints
+  # ===========================================
+  /api/prospects:
+    get:
+      tags:
+        - Prospects
+      summary: List prospects
+      description: Returns paginated, filtered, and sorted list of UCC prospects
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: state
+          in: query
+          description: Filter by US state code (2 characters)
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+            example: CA
+        - name: industry
+          in: query
+          description: Filter by industry
+          schema:
+            $ref: '#/components/schemas/Industry'
+        - name: min_score
+          in: query
+          description: Minimum priority score filter
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+        - name: max_score
+          in: query
+          description: Maximum priority score filter
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+        - name: status
+          in: query
+          description: Filter by prospect status
+          schema:
+            type: string
+            enum: [all, unclaimed, claimed, contacted]
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [priority_score, created_at, company_name]
+            default: priority_score
+        - name: sort_order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of prospects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProspectListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      tags:
+        - Prospects
+      summary: Create prospect
+      description: Create a new UCC prospect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProspectRequest'
+      responses:
+        '201':
+          description: Prospect created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prospect'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/prospects/{id}:
+    get:
+      tags:
+        - Prospects
+      summary: Get prospect details
+      description: Returns detailed information about a specific prospect
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Prospect details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prospect'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - Prospects
+      summary: Update prospect
+      description: Update an existing prospect
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProspectRequest'
+      responses:
+        '200':
+          description: Updated prospect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prospect'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - Prospects
+      summary: Delete prospect
+      description: Delete a prospect
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Prospect deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Competitors Endpoints
+  # ===========================================
+  /api/competitors:
+    get:
+      tags:
+        - Competitors
+      summary: List competitors
+      description: Returns list of competitor secured parties
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: state
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [filing_count, total_amount, name]
+            default: filing_count
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of competitors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitorListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/competitors/{id}:
+    get:
+      tags:
+        - Competitors
+      summary: Get competitor details
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Competitor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competitor'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/competitors/{id}/analysis:
+    get:
+      tags:
+        - Competitors
+      summary: Get competitor SWOT analysis
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: SWOT analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitorAnalysis'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/competitors/stats/summary:
+    get:
+      tags:
+        - Competitors
+      summary: Get competitor statistics
+      responses:
+        '200':
+          description: Competitor statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitorStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Portfolio Endpoints
+  # ===========================================
+  /api/portfolio:
+    get:
+      tags:
+        - Portfolio
+      summary: List portfolio companies
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: health_grade
+          in: query
+          schema:
+            type: string
+            enum: [A, B, C, D, F]
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [funded_date, health_score, company_name]
+            default: funded_date
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of portfolio companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/portfolio/{id}:
+    get:
+      tags:
+        - Portfolio
+      summary: Get portfolio company details
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Portfolio company details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioCompany'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/portfolio/{id}/health-history:
+    get:
+      tags:
+        - Portfolio
+      summary: Get health score history
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Health score history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/portfolio/stats/summary:
+    get:
+      tags:
+        - Portfolio
+      summary: Get portfolio statistics
+      responses:
+        '200':
+          description: Portfolio statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Enrichment Endpoints
+  # ===========================================
+  /api/enrichment/prospect:
+    post:
+      tags:
+        - Enrichment
+      summary: Enrich single prospect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospect_id
+              properties:
+                prospect_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Enrichment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/enrichment/batch:
+    post:
+      tags:
+        - Enrichment
+      summary: Batch enrich prospects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospect_ids
+              properties:
+                prospect_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 100
+      responses:
+        '200':
+          description: Batch enrichment results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchEnrichmentResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/enrichment/refresh:
+    post:
+      tags:
+        - Enrichment
+      summary: Trigger data refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Refresh triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/enrichment/status:
+    get:
+      tags:
+        - Enrichment
+      summary: Get enrichment pipeline status
+      responses:
+        '200':
+          description: Pipeline status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrichmentStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/enrichment/queue:
+    get:
+      tags:
+        - Enrichment
+      summary: Get enrichment queue status
+      responses:
+        '200':
+          description: Queue status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Jobs Endpoints
+  # ===========================================
+  /api/jobs/ingestion:
+    post:
+      tags:
+        - Jobs
+      summary: Trigger UCC ingestion job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - state
+              properties:
+                state:
+                  type: string
+                  minLength: 2
+                  maxLength: 2
+                  description: US state code
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                batchSize:
+                  type: integer
+                  minimum: 100
+                  maximum: 10000
+                  default: 1000
+      responses:
+        '201':
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/jobs/enrichment:
+    post:
+      tags:
+        - Jobs
+      summary: Trigger enrichment job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prospectIds
+              properties:
+                prospectIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 100
+                force:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/jobs/health-scores:
+    post:
+      tags:
+        - Jobs
+      summary: Trigger health score calculation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                portfolioCompanyId:
+                  type: string
+                  format: uuid
+                batchSize:
+                  type: integer
+                  minimum: 10
+                  maximum: 200
+                  default: 50
+      responses:
+        '201':
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/jobs/{jobId}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - Jobs
+      summary: Remove a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  jobId:
+                    type: string
+                  queueName:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/jobs/queues/stats:
+    get:
+      tags:
+        - Jobs
+      summary: Get queue statistics
+      responses:
+        '200':
+          description: Queue statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/jobs/queues/{queueName}:
+    get:
+      tags:
+        - Jobs
+      summary: Get jobs in a specific queue
+      parameters:
+        - name: queueName
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [ucc-ingestion, data-enrichment, health-scores]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [waiting, active, completed, failed, delayed]
+            default: waiting
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Jobs in queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueJobsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Contacts Endpoints
+  # ===========================================
+  /api/contacts:
+    get:
+      tags:
+        - Contacts
+      summary: List contacts
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContactRole'
+        - name: tags
+          in: query
+          schema:
+            type: string
+            description: Comma-separated list of tags
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [first_name, last_name, created_at, last_contacted_at]
+            default: last_name
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Contacts
+      summary: Create contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactRequest'
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/contacts/{id}:
+    get:
+      tags:
+        - Contacts
+      summary: Get contact with activity timeline
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contact with activities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactWithActivities'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Contacts
+      summary: Update contact
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactRequest'
+      responses:
+        '200':
+          description: Updated contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/contacts/{id}/link/{prospectId}:
+    post:
+      tags:
+        - Contacts
+      summary: Link contact to prospect
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: prospectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_primary:
+                  type: boolean
+                  default: false
+                relationship:
+                  $ref: '#/components/schemas/ContactRelationship'
+      responses:
+        '201':
+          description: Link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactProspectLink'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - Contacts
+      summary: Unlink contact from prospect
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: prospectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Link removed
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/contacts/{id}/activities:
+    get:
+      tags:
+        - Contacts
+      summary: Get activity timeline for contact
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Activity timeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Activity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Contacts
+      summary: Log activity for contact
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogActivityRequest'
+      responses:
+        '201':
+          description: Activity logged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/contacts/by-prospect/{prospectId}:
+    get:
+      tags:
+        - Contacts
+      summary: Get contacts for a prospect
+      parameters:
+        - name: prospectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contacts for prospect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Deals Endpoints
+  # ===========================================
+  /api/deals:
+    get:
+      tags:
+        - Deals
+      summary: List deals
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: stage_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: prospect_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/DealPriority'
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at, amount_requested, expected_close_date]
+            default: created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of deals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Deals
+      summary: Create deal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDealRequest'
+      responses:
+        '201':
+          description: Deal created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/pipeline:
+    get:
+      tags:
+        - Deals
+      summary: Get pipeline view
+      description: Returns deals grouped by stage for Kanban view
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pipeline view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/stages:
+    get:
+      tags:
+        - Deals
+      summary: Get all stages
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of stages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/stats:
+    get:
+      tags:
+        - Deals
+      summary: Get pipeline statistics
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pipeline statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}:
+    get:
+      tags:
+        - Deals
+      summary: Get deal details
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deal details with documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealWithDocuments'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Deals
+      summary: Update deal
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDealRequest'
+      responses:
+        '200':
+          description: Updated deal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}/stage:
+    patch:
+      tags:
+        - Deals
+      summary: Move deal to a new stage
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stage_id
+              properties:
+                stage_id:
+                  type: string
+                  format: uuid
+                notes:
+                  type: string
+                changed_by:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Deal moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}/documents:
+    get:
+      tags:
+        - Deals
+      summary: Get documents for a deal
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Deals
+      summary: Upload document to deal
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadDocumentRequest'
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}/documents/checklist:
+    get:
+      tags:
+        - Deals
+      summary: Get document checklist for a deal
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Document checklist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checklist:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentChecklistItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}/documents/{documentId}/verify:
+    patch:
+      tags:
+        - Deals
+      summary: Verify a document
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - verified_by
+              properties:
+                verified_by:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Document verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/deals/{id}/documents/{documentId}:
+    delete:
+      tags:
+        - Deals
+      summary: Delete a document
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Document deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ===========================================
+  # Webhooks Endpoints
+  # ===========================================
+  /api/webhooks/twilio/sms/status:
+    post:
+      tags:
+        - Webhooks
+      summary: Twilio SMS delivery status
+      description: Receives SMS delivery status updates from Twilio
+      security:
+        - twilioSignature: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - MessageSid
+                - MessageStatus
+              properties:
+                MessageSid:
+                  type: string
+                MessageStatus:
+                  type: string
+                  enum: [queued, failed, sent, delivered, undelivered, receiving, received, accepted]
+                To:
+                  type: string
+                From:
+                  type: string
+                ErrorCode:
+                  type: string
+                ErrorMessage:
+                  type: string
+      responses:
+        '200':
+          description: Status acknowledged
+        '401':
+          description: Invalid signature
+
+  /api/webhooks/twilio/sms/inbound:
+    post:
+      tags:
+        - Webhooks
+      summary: Twilio inbound SMS
+      description: Receives inbound SMS messages from Twilio
+      security:
+        - twilioSignature: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - MessageSid
+                - AccountSid
+                - From
+                - To
+                - Body
+              properties:
+                MessageSid:
+                  type: string
+                AccountSid:
+                  type: string
+                From:
+                  type: string
+                To:
+                  type: string
+                Body:
+                  type: string
+                NumMedia:
+                  type: integer
+      responses:
+        '200':
+          description: TwiML response
+          content:
+            text/xml:
+              schema:
+                type: string
+        '401':
+          description: Invalid signature
+
+  /api/webhooks/twilio/voice/status:
+    post:
+      tags:
+        - Webhooks
+      summary: Twilio voice call status
+      description: Receives voice call status updates from Twilio
+      security:
+        - twilioSignature: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - CallSid
+                - AccountSid
+                - CallStatus
+              properties:
+                CallSid:
+                  type: string
+                AccountSid:
+                  type: string
+                CallStatus:
+                  type: string
+                  enum: [queued, ringing, in-progress, completed, busy, no-answer, canceled, failed]
+                CallDuration:
+                  type: integer
+                RecordingUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Status acknowledged
+        '401':
+          description: Invalid signature
+
+  /api/webhooks/sendgrid/events:
+    post:
+      tags:
+        - Webhooks
+      summary: SendGrid email events
+      description: Receives email event notifications from SendGrid
+      security:
+        - sendgridSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  timestamp:
+                    type: integer
+                  event:
+                    type: string
+                    enum: [processed, dropped, delivered, deferred, bounce, open, click, spam_report, unsubscribe]
+                  sg_event_id:
+                    type: string
+                  sg_message_id:
+                    type: string
+      responses:
+        '200':
+          description: Events acknowledged
+        '401':
+          description: Invalid signature
+
+  /api/webhooks/plaid/transactions:
+    post:
+      tags:
+        - Webhooks
+      summary: Plaid transaction updates
+      description: Receives transaction update notifications from Plaid
+      security:
+        - plaidSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - webhook_type
+                - webhook_code
+                - item_id
+              properties:
+                webhook_type:
+                  type: string
+                  enum: [TRANSACTIONS]
+                webhook_code:
+                  type: string
+                  enum: [INITIAL_UPDATE, HISTORICAL_UPDATE, DEFAULT_UPDATE, TRANSACTIONS_REMOVED, SYNC_UPDATES_AVAILABLE]
+                item_id:
+                  type: string
+                new_transactions:
+                  type: integer
+                removed_transactions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Webhook acknowledged
+        '401':
+          description: Invalid signature
+
+  /api/webhooks/plaid/item:
+    post:
+      tags:
+        - Webhooks
+      summary: Plaid item status changes
+      description: Receives item status change notifications from Plaid
+      security:
+        - plaidSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - webhook_type
+                - webhook_code
+                - item_id
+              properties:
+                webhook_type:
+                  type: string
+                  enum: [ITEM]
+                webhook_code:
+                  type: string
+                  enum: [ERROR, PENDING_EXPIRATION, USER_PERMISSION_REVOKED, WEBHOOK_UPDATE_ACKNOWLEDGED, NEW_ACCOUNTS_AVAILABLE]
+                item_id:
+                  type: string
+                error:
+                  type: object
+                  properties:
+                    error_type:
+                      type: string
+                    error_code:
+                      type: string
+                    error_message:
+                      type: string
+      responses:
+        '200':
+          description: Webhook acknowledged
+        '401':
+          description: Invalid signature
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+
+    twilioSignature:
+      type: apiKey
+      in: header
+      name: X-Twilio-Signature
+      description: Twilio request signature
+
+    sendgridSignature:
+      type: apiKey
+      in: header
+      name: X-Twilio-Email-Event-Webhook-Signature
+      description: SendGrid webhook signature
+
+    plaidSignature:
+      type: apiKey
+      in: header
+      name: Plaid-Verification
+      description: Plaid webhook signature
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ===========================================
+    # Common Schemas
+    # ===========================================
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+            - code
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+            statusCode:
+              type: integer
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    Industry:
+      type: string
+      enum:
+        - restaurant
+        - retail
+        - construction
+        - healthcare
+        - manufacturing
+        - services
+        - technology
+
+    ContactRole:
+      type: string
+      enum:
+        - owner
+        - ceo
+        - cfo
+        - controller
+        - manager
+        - bookkeeper
+        - other
+
+    ContactRelationship:
+      type: string
+      enum:
+        - owner
+        - decision_maker
+        - influencer
+        - employee
+        - advisor
+        - other
+
+    ContactMethod:
+      type: string
+      enum:
+        - email
+        - phone
+        - mobile
+        - sms
+
+    ActivityType:
+      type: string
+      enum:
+        - call_outbound
+        - call_inbound
+        - call_missed
+        - email_sent
+        - email_received
+        - email_opened
+        - email_clicked
+        - sms_sent
+        - sms_received
+        - meeting_scheduled
+        - meeting_completed
+        - meeting_cancelled
+        - note
+        - task_created
+        - task_completed
+        - status_change
+        - document_sent
+        - document_signed
+
+    DealPriority:
+      type: string
+      enum:
+        - low
+        - normal
+        - high
+        - urgent
+
+    DocumentType:
+      type: string
+      enum:
+        - application
+        - bank_statement
+        - tax_return
+        - voided_check
+        - drivers_license
+        - business_license
+        - landlord_letter
+        - contract
+        - signed_contract
+        - disclosure
+        - signed_disclosure
+        - other
+
+    UseOfFunds:
+      type: string
+      enum:
+        - working_capital
+        - inventory
+        - equipment
+        - expansion
+        - payroll
+        - marketing
+        - debt_consolidation
+        - real_estate
+        - other
+
+    # ===========================================
+    # Health Schemas
+    # ===========================================
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+
+    DetailedHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/HealthResponse'
+        - type: object
+          properties:
+            environment:
+              type: string
+            services:
+              type: object
+              properties:
+                database:
+                  type: string
+                  enum: [ok, error, unknown]
+                memory:
+                  type: string
+                  enum: [ok, warning]
+                cpu:
+                  type: string
+                  enum: [ok, warning]
+
+    ReadyResponse:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+
+    NotReadyResponse:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        error:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    LiveResponse:
+      type: object
+      properties:
+        alive:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+
+    # ===========================================
+    # Prospect Schemas
+    # ===========================================
+    Prospect:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        state:
+          type: string
+        industry:
+          $ref: '#/components/schemas/Industry'
+        priority_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lien_amount:
+          type: number
+        filing_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProspectListResponse:
+      type: object
+      properties:
+        prospects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Prospect'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateProspectRequest:
+      type: object
+      required:
+        - company_name
+        - state
+        - industry
+      properties:
+        company_name:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 2
+          maxLength: 2
+        industry:
+          $ref: '#/components/schemas/Industry'
+        lien_amount:
+          type: number
+        filing_date:
+          type: string
+          format: date-time
+
+    UpdateProspectRequest:
+      type: object
+      properties:
+        company_name:
+          type: string
+        state:
+          type: string
+        industry:
+          $ref: '#/components/schemas/Industry'
+        lien_amount:
+          type: number
+        filing_date:
+          type: string
+          format: date-time
+
+    # ===========================================
+    # Competitor Schemas
+    # ===========================================
+    Competitor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        filing_count:
+          type: integer
+        total_amount:
+          type: number
+        states:
+          type: array
+          items:
+            type: string
+
+    CompetitorListResponse:
+      type: object
+      properties:
+        competitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competitor'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CompetitorAnalysis:
+      type: object
+      properties:
+        competitor_id:
+          type: string
+          format: uuid
+        strengths:
+          type: array
+          items:
+            type: string
+        weaknesses:
+          type: array
+          items:
+            type: string
+        opportunities:
+          type: array
+          items:
+            type: string
+        threats:
+          type: array
+          items:
+            type: string
+
+    CompetitorStats:
+      type: object
+      properties:
+        total_competitors:
+          type: integer
+        total_filings:
+          type: integer
+        average_filing_amount:
+          type: number
+
+    # ===========================================
+    # Portfolio Schemas
+    # ===========================================
+    PortfolioCompany:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_name:
+          type: string
+        funded_date:
+          type: string
+          format: date
+        funded_amount:
+          type: number
+        health_score:
+          type: integer
+        health_grade:
+          type: string
+          enum: [A, B, C, D, F]
+
+    PortfolioListResponse:
+      type: object
+      properties:
+        companies:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioCompany'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    HealthHistory:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              score:
+                type: integer
+              grade:
+                type: string
+
+    PortfolioStats:
+      type: object
+      properties:
+        total_companies:
+          type: integer
+        total_funded:
+          type: number
+        average_health_score:
+          type: number
+        grade_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+
+    # ===========================================
+    # Enrichment Schemas
+    # ===========================================
+    EnrichmentResult:
+      type: object
+      properties:
+        prospect_id:
+          type: string
+          format: uuid
+        enrichment:
+          type: object
+        enriched_at:
+          type: string
+          format: date-time
+
+    BatchEnrichmentResult:
+      type: object
+      properties:
+        total:
+          type: integer
+        successful:
+          type: integer
+        failed:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              prospect_id:
+                type: string
+                format: uuid
+              success:
+                type: boolean
+              error:
+                type: string
+
+    RefreshResult:
+      type: object
+      properties:
+        triggered:
+          type: boolean
+        force:
+          type: boolean
+        job_id:
+          type: string
+
+    EnrichmentStatus:
+      type: object
+      properties:
+        pipeline_active:
+          type: boolean
+        last_run:
+          type: string
+          format: date-time
+        next_scheduled:
+          type: string
+          format: date-time
+
+    QueueStatus:
+      type: object
+      properties:
+        pending:
+          type: integer
+        processing:
+          type: integer
+        completed:
+          type: integer
+        failed:
+          type: integer
+
+    # ===========================================
+    # Jobs Schemas
+    # ===========================================
+    JobResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        queueName:
+          type: string
+        data:
+          type: object
+        status:
+          type: string
+
+    JobDetail:
+      type: object
+      properties:
+        jobId:
+          type: string
+        queueName:
+          type: string
+        status:
+          type: string
+          enum: [waiting, active, completed, failed, delayed]
+        progress:
+          type: number
+        data:
+          type: object
+        uccProvider:
+          type: string
+          nullable: true
+        returnvalue:
+          type: object
+        failedReason:
+          type: string
+        processedOn:
+          type: integer
+        finishedOn:
+          type: integer
+
+    QueueStats:
+      type: object
+      properties:
+        queues:
+          type: array
+          items:
+            type: object
+            properties:
+              queue:
+                type: string
+              waiting:
+                type: integer
+              active:
+                type: integer
+              completed:
+                type: integer
+              failed:
+                type: integer
+              delayed:
+                type: integer
+              total:
+                type: integer
+
+    QueueJobsResponse:
+      type: object
+      properties:
+        queue:
+          type: string
+        status:
+          type: string
+        count:
+          type: integer
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobDetail'
+
+    # ===========================================
+    # Contact Schemas
+    # ===========================================
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        mobile:
+          type: string
+        title:
+          type: string
+        role:
+          $ref: '#/components/schemas/ContactRole'
+        preferred_contact_method:
+          $ref: '#/components/schemas/ContactMethod'
+        timezone:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_contacted_at:
+          type: string
+          format: date-time
+
+    ContactWithActivities:
+      allOf:
+        - $ref: '#/components/schemas/Contact'
+        - type: object
+          properties:
+            activities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Activity'
+
+    ContactListResponse:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateContactRequest:
+      type: object
+      required:
+        - org_id
+        - first_name
+        - last_name
+      properties:
+        org_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        phone_ext:
+          type: string
+        mobile:
+          type: string
+        title:
+          type: string
+        role:
+          $ref: '#/components/schemas/ContactRole'
+        preferred_contact_method:
+          $ref: '#/components/schemas/ContactMethod'
+        timezone:
+          type: string
+          default: America/New_York
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+
+    UpdateContactRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        phone_ext:
+          type: string
+          nullable: true
+        mobile:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/ContactRole'
+        preferred_contact_method:
+          $ref: '#/components/schemas/ContactMethod'
+        timezone:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+
+    ContactProspectLink:
+      type: object
+      properties:
+        contact_id:
+          type: string
+          format: uuid
+        prospect_id:
+          type: string
+          format: uuid
+        is_primary:
+          type: boolean
+        relationship:
+          $ref: '#/components/schemas/ContactRelationship'
+        created_at:
+          type: string
+          format: date-time
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contact_id:
+          type: string
+          format: uuid
+        prospect_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        subject:
+          type: string
+        description:
+          type: string
+        outcome:
+          type: string
+        duration_seconds:
+          type: integer
+        metadata:
+          type: object
+        scheduled_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    LogActivityRequest:
+      type: object
+      required:
+        - activity_type
+      properties:
+        prospect_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        activity_type:
+          $ref: '#/components/schemas/ActivityType'
+        subject:
+          type: string
+        description:
+          type: string
+        outcome:
+          type: string
+        duration_seconds:
+          type: integer
+        metadata:
+          type: object
+        scheduled_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    # ===========================================
+    # Deal Schemas
+    # ===========================================
+    Deal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        prospect_id:
+          type: string
+          format: uuid
+        contact_id:
+          type: string
+          format: uuid
+        stage_id:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        amount_requested:
+          type: number
+        amount_approved:
+          type: number
+        term_months:
+          type: integer
+        factor_rate:
+          type: number
+        daily_payment:
+          type: number
+        weekly_payment:
+          type: number
+        use_of_funds:
+          $ref: '#/components/schemas/UseOfFunds'
+        priority:
+          $ref: '#/components/schemas/DealPriority'
+        probability:
+          type: integer
+          minimum: 0
+          maximum: 100
+        expected_close_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DealWithDocuments:
+      allOf:
+        - $ref: '#/components/schemas/Deal'
+        - type: object
+          properties:
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Document'
+            documentChecklist:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentChecklistItem'
+
+    DealListResponse:
+      type: object
+      properties:
+        deals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deal'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateDealRequest:
+      type: object
+      required:
+        - org_id
+      properties:
+        org_id:
+          type: string
+          format: uuid
+        prospect_id:
+          type: string
+          format: uuid
+        contact_id:
+          type: string
+          format: uuid
+        stage_id:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        amount_requested:
+          type: number
+        term_months:
+          type: integer
+        use_of_funds:
+          $ref: '#/components/schemas/UseOfFunds'
+        use_of_funds_details:
+          type: string
+        priority:
+          $ref: '#/components/schemas/DealPriority'
+        expected_close_date:
+          type: string
+          format: date-time
+
+    UpdateDealRequest:
+      type: object
+      properties:
+        prospect_id:
+          type: string
+          format: uuid
+          nullable: true
+        contact_id:
+          type: string
+          format: uuid
+          nullable: true
+        lender_id:
+          type: string
+          format: uuid
+          nullable: true
+        assigned_to:
+          type: string
+          format: uuid
+          nullable: true
+        amount_requested:
+          type: number
+        amount_approved:
+          type: number
+          nullable: true
+        term_months:
+          type: integer
+        factor_rate:
+          type: number
+          nullable: true
+        daily_payment:
+          type: number
+          nullable: true
+        weekly_payment:
+          type: number
+          nullable: true
+        use_of_funds:
+          $ref: '#/components/schemas/UseOfFunds'
+        use_of_funds_details:
+          type: string
+          nullable: true
+        average_daily_balance:
+          type: number
+          nullable: true
+        monthly_revenue:
+          type: number
+          nullable: true
+        nsf_count:
+          type: integer
+        existing_positions:
+          type: integer
+        priority:
+          $ref: '#/components/schemas/DealPriority'
+        probability:
+          type: integer
+        expected_close_date:
+          type: string
+          format: date-time
+          nullable: true
+        lost_reason:
+          type: string
+          nullable: true
+        lost_notes:
+          type: string
+          nullable: true
+
+    Stage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: integer
+        color:
+          type: string
+        is_won:
+          type: boolean
+        is_lost:
+          type: boolean
+
+    PipelineView:
+      type: object
+      properties:
+        stages:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Stage'
+              - type: object
+                properties:
+                  deals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deal'
+                  deal_count:
+                    type: integer
+                  total_value:
+                    type: number
+
+    DealStats:
+      type: object
+      properties:
+        total_deals:
+          type: integer
+        total_value:
+          type: number
+        average_deal_size:
+          type: number
+        win_rate:
+          type: number
+        deals_by_stage:
+          type: object
+          additionalProperties:
+            type: integer
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deal_id:
+          type: string
+          format: uuid
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+        file_name:
+          type: string
+        file_path:
+          type: string
+        file_size:
+          type: integer
+        mime_type:
+          type: string
+        is_required:
+          type: boolean
+        is_verified:
+          type: boolean
+        verified_by:
+          type: string
+          format: uuid
+        verified_at:
+          type: string
+          format: date-time
+        uploaded_by:
+          type: string
+          format: uuid
+        uploaded_at:
+          type: string
+          format: date-time
+
+    DocumentChecklistItem:
+      type: object
+      properties:
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+        label:
+          type: string
+        is_required:
+          type: boolean
+        is_uploaded:
+          type: boolean
+        is_verified:
+          type: boolean
+        document_id:
+          type: string
+          format: uuid
+
+    UploadDocumentRequest:
+      type: object
+      required:
+        - document_type
+        - file_name
+        - file_path
+      properties:
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+        file_name:
+          type: string
+          minLength: 1
+        file_path:
+          type: string
+          minLength: 1
+        file_size:
+          type: integer
+        mime_type:
+          type: string
+        is_required:
+          type: boolean
+          default: false
+        uploaded_by:
+          type: string
+          format: uuid
+        metadata:
+          type: object

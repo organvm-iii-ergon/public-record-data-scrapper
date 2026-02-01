@@ -14,6 +14,8 @@ import { authMiddleware } from '../../middleware/authMiddleware'
 // Import routes
 import prospectsRouter from '../../routes/prospects'
 import enrichmentRouter from '../../routes/enrichment'
+import contactsRouter from '../../routes/contacts'
+import dealsRouter from '../../routes/deals'
 
 /**
  * Creates a test Express application with routes but minimal middleware.
@@ -29,6 +31,8 @@ export function createTestApp(): Express {
   // Protected routes
   app.use('/api/prospects', authMiddleware, prospectsRouter)
   app.use('/api/enrichment', authMiddleware, enrichmentRouter)
+  app.use('/api/contacts', authMiddleware, contactsRouter)
+  app.use('/api/deals', authMiddleware, dealsRouter)
 
   // Error handling
   app.use(notFoundHandler)
