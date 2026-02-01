@@ -47,7 +47,7 @@ describe('StateCollectorFactory', () => {
     })
 
     it('should return undefined for unimplemented state', () => {
-      const collector = factory.getCollector('TX')
+      const collector = factory.getCollector('IL')
 
       expect(collector).toBeUndefined()
     })
@@ -96,12 +96,12 @@ describe('StateCollectorFactory', () => {
     })
 
     it('should skip unimplemented states', () => {
-      const collectors = factory.getCollectors(['NY', 'CA', 'TX'])
+      const collectors = factory.getCollectors(['NY', 'CA', 'IL'])
 
       expect(collectors.size).toBe(2)
       expect(collectors.has('NY')).toBe(true)
       expect(collectors.has('CA')).toBe(true)
-      expect(collectors.has('TX')).toBe(false)
+      expect(collectors.has('IL')).toBe(false)
     })
 
     it('should return empty map for no states', () => {
@@ -124,10 +124,11 @@ describe('StateCollectorFactory', () => {
   })
 
   describe('getAllCollectors()', () => {
-    it('should return all implemented collectors', () => {
+    it('should return collectors that can be instantiated', () => {
       const collectors = factory.getAllCollectors()
 
-      expect(collectors.size).toBe(2) // NY and CA implemented
+      // Only NY and CA work without env vars; TX needs API key, FL needs vendor contract
+      expect(collectors.size).toBeGreaterThanOrEqual(2)
       expect(collectors.has('NY')).toBe(true)
       expect(collectors.has('CA')).toBe(true)
     })
@@ -136,6 +137,16 @@ describe('StateCollectorFactory', () => {
       const collectors = factory.getAllCollectors()
 
       expect(collectors).toBeInstanceOf(Map)
+    })
+
+    it('should list all implemented states including those needing config', () => {
+      const implemented = factory.getImplementedStates()
+
+      expect(implemented.length).toBe(4) // NY, CA, TX, FL
+      expect(implemented).toContain('NY')
+      expect(implemented).toContain('CA')
+      expect(implemented).toContain('TX')
+      expect(implemented).toContain('FL')
     })
   })
 
@@ -146,8 +157,8 @@ describe('StateCollectorFactory', () => {
     })
 
     it('should return false for unimplemented state', () => {
-      expect(factory.hasCollector('TX')).toBe(false)
-      expect(factory.hasCollector('FL')).toBe(false)
+      expect(factory.hasCollector('IL')).toBe(false)
+      expect(factory.hasCollector('OH')).toBe(false)
     })
 
     it('should handle case-insensitive codes', () => {
@@ -250,16 +261,18 @@ describe('StateCollectorFactory', () => {
     it('should track implemented states', () => {
       const stats = factory.getStats()
 
-      expect(stats.implemented).toBe(2) // NY and CA
+      expect(stats.implemented).toBe(4) // NY, CA, TX, FL
       expect(stats.implementedStates).toContain('NY')
       expect(stats.implementedStates).toContain('CA')
+      expect(stats.implementedStates).toContain('TX')
+      expect(stats.implementedStates).toContain('FL')
     })
 
     it('should track pending states', () => {
       const stats = factory.getStats()
 
-      expect(stats.pending).toBe(49) // 51 - 2
-      expect(stats.pendingStates.length).toBe(49)
+      expect(stats.pending).toBe(47) // 51 - 4
+      expect(stats.pendingStates.length).toBe(47)
     })
 
     it('should track cached states', () => {
@@ -304,7 +317,9 @@ describe('StateCollectorFactory', () => {
     it('should provide hasCollectorForState helper', () => {
       expect(hasCollectorForState('NY')).toBe(true)
       expect(hasCollectorForState('CA')).toBe(true)
-      expect(hasCollectorForState('TX')).toBe(false)
+      expect(hasCollectorForState('TX')).toBe(true)
+      expect(hasCollectorForState('FL')).toBe(true)
+      expect(hasCollectorForState('IL')).toBe(false)
     })
   })
 
@@ -342,16 +357,18 @@ describe('StateCollectorFactory', () => {
       expect(factory.hasCollector('CA')).toBe(true)
     })
 
-    it('should be ready for Texas collector', () => {
-      const pending = factory.getPendingStates()
+    it('should have Texas collector implemented', () => {
+      const implemented = factory.getImplementedStates()
 
-      expect(pending).toContain('TX')
+      expect(implemented).toContain('TX')
+      expect(factory.hasCollector('TX')).toBe(true)
     })
 
-    it('should be ready for Florida collector', () => {
-      const pending = factory.getPendingStates()
+    it('should have Florida collector implemented', () => {
+      const implemented = factory.getImplementedStates()
 
-      expect(pending).toContain('FL')
+      expect(implemented).toContain('FL')
+      expect(factory.hasCollector('FL')).toBe(true)
     })
 
     it('should be ready for Illinois collector', () => {
