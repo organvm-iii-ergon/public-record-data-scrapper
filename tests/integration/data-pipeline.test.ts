@@ -6,15 +6,15 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { DataIngestionService } from '../../src/lib/services/DataIngestionService'
-import { DataEnrichmentService } from '../../src/lib/services/DataEnrichmentService'
-import { DataRefreshScheduler } from '../../src/lib/services/DataRefreshScheduler'
+import { DataIngestionService } from '../../apps/web/src/lib/services/DataIngestionService'
+import { DataEnrichmentService } from '../../apps/web/src/lib/services/DataEnrichmentService'
+import { DataRefreshScheduler } from '../../apps/web/src/lib/services/DataRefreshScheduler'
 import {
   createMockIngestionConfig,
   createMockEnrichmentSources,
   createMockUCCFiling,
   createMockProspect
-} from '../../src/lib/services/__tests__/test-utils'
+} from '../../apps/web/src/lib/services/__tests__/test-utils'
 
 // Mock fetch globally
 global.fetch = vi.fn()

@@ -8,7 +8,7 @@
  */
 
 import { database } from '../database/connection'
-import type { Prospect } from '../../src/lib/types'
+import type { Prospect } from '../../apps/web/src/lib/types'
 import { NotFoundError, DatabaseError, ValidationError } from '../errors'
 
 /**

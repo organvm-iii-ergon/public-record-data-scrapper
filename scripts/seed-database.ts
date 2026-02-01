@@ -6,7 +6,7 @@
  */
 
 import { createInterface } from 'node:readline'
-import { initDatabase, closeDatabase, createQueries } from '../src/lib/database'
+import { initDatabase, closeDatabase, createQueries } from '../apps/web/src/lib/database'
 
 const sampleProspects = [
   {

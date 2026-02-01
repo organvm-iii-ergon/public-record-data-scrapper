@@ -43,6 +43,7 @@ enriched-data.json
 batch-results/
 *.csv
 !example-companies.csv
+!apps/web/public/ucc_enriched.csv
 
 # Distribution packages
 dist-package/
@@ -50,3 +51,12 @@ ucc-scraper-*.tar.gz
 
 # Video production output
 video-output/
+
+# Expo
+.expo/
+.expo-shared/
+expo-debug.log*
+
+# Tauri
+src-tauri/target/
+src-tauri/bindings/

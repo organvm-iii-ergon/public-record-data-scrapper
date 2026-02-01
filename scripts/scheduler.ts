@@ -21,7 +21,7 @@ import {
   ScraperImplementation,
   SupportedState
 } from './scrapers/scraper-factory'
-import { initDatabase, createQueries, closeDatabase } from '../src/lib/database'
+import { initDatabase, createQueries, closeDatabase } from '../apps/web/src/lib/database'
 import chalk from 'chalk'
 import * as fs from 'fs/promises'
 import * as path from 'path'

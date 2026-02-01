@@ -21,27 +21,40 @@ Bring the repository to a stable, shippable state with clear data-tier routing (
 - Infrastructure applied in target env; monitoring + budgets configured.
 - Demo and production checklists complete.
 
+## AI Agent Team
+
+- ai-agent:platform - monorepo structure, shared core, API contracts
+- ai-agent:mobile - Expo app and mobile UX
+- ai-agent:desktop - Tauri app and desktop UX
+- ai-agent:infra - CI/CD, deployments, budgets, environments
+- ai-agent:observability - monitoring, alerts, performance
+- ai-agent:scrapers - selector stability, scraper reliability
+- ai-agent:compliance - portal access, terms, legal review
+- ai-agent:qa - test matrix and verification
+- ai-agent:security - dependency and secret scanning
+- ai-agent:release - checklists and store readiness
+
 ## TODO Tracker (Owners + Timelines)
 
 ### Phase 1 (T+0 to T+7 days) - Access + Scraper Stability
 
-- [ ] TX SOSDirect access verified (client ID + password). Owner: 4444jPPP. ETA: 2026-02-02.
-- [ ] CA portal access path approved (legal/allowed automation). Owner: 4444jPPP. ETA: 2026-02-05.
-- [ ] CA/TX selectors stabilized + strict failures re-enabled. Owner: 4444jPPP. ETA: 2026-02-07.
-- [ ] All scraper failures emit DOM + screenshot artifacts by default. Owner: 4444jPPP. ETA: 2026-02-03.
+- [ ] TX SOSDirect access verified (client ID + password). Owner: ai-agent:compliance. ETA: 2026-02-02.
+- [ ] CA portal access path approved (legal/allowed automation). Owner: ai-agent:compliance. ETA: 2026-02-05.
+- [ ] CA/TX selectors stabilized + strict failures re-enabled. Owner: ai-agent:scrapers. ETA: 2026-02-07.
+- [ ] All scraper failures emit DOM + screenshot artifacts by default. Owner: ai-agent:scrapers. ETA: 2026-02-03.
 
 ### Phase 2 (T+7 to T+14 days) - Infra + Observability
 
-- [ ] Terraform + AWS CLI validated; baseline infra applied. Owner: 4444jPPP. ETA: 2026-02-10.
-- [ ] Vercel CLI deploy validation (or chosen hosting). Owner: 4444jPPP. ETA: 2026-02-10.
-- [ ] Monitoring + alerting for workers/queues/API latency. Owner: 4444jPPP. ETA: 2026-02-14.
-- [ ] Budget alerts for paid APIs + infra. Owner: 4444jPPP. ETA: 2026-02-14.
+- [ ] Terraform + AWS CLI validated; baseline infra applied. Owner: ai-agent:infra. ETA: 2026-02-10.
+- [ ] Vercel CLI deploy validation (or chosen hosting). Owner: ai-agent:infra. ETA: 2026-02-10.
+- [ ] Monitoring + alerting for workers/queues/API latency. Owner: ai-agent:observability. ETA: 2026-02-14.
+- [ ] Budget alerts for paid APIs + infra. Owner: ai-agent:infra. ETA: 2026-02-14.
 
 ### Phase 3 (T+14 to T+21 days) - Release Readiness
 
-- [ ] Full test suite re-run (unit + e2e + scrapers). Owner: 4444jPPP. ETA: 2026-02-17.
-- [ ] Security checks (dependency + secret scan) signed off. Owner: 4444jPPP. ETA: 2026-02-18.
-- [ ] Demo and production checklists completed. Owner: 4444jPPP. ETA: 2026-02-21.
+- [ ] Full test suite re-run (unit + e2e + scrapers). Owner: ai-agent:qa. ETA: 2026-02-17.
+- [ ] Security checks (dependency + secret scan) signed off. Owner: ai-agent:security. ETA: 2026-02-18.
+- [ ] Demo and production checklists completed. Owner: ai-agent:release. ETA: 2026-02-21.
 
 ## Cost Guardrails
 
@@ -129,3 +142,51 @@ Requirement: verify that automated access is permitted for each state portal and
 
 - Terraform CLI missing locally; Vercel CLI missing locally.
 - After tooling is installed: run `terraform init/plan/apply` and `vercel deploy --prod` (or chosen platform).
+
+## Mobile + Desktop Refactor Roadmap (Proposed)
+
+### Stack Decision (Proposed)
+
+- Mobile: Expo (managed) + React Native + TypeScript.
+- Desktop: Tauri (Rust) + Vite + React (reuse existing web UI where feasible).
+- Shared: `packages/core` (API client, types, tier logic, validation) + `packages/ui` (shared components).
+- Data: React Query for caching + request dedupe; Zod for runtime validation.
+
+### CI/CD (Proposed)
+
+- GitHub Actions:
+  - `ci.yml`: lint + unit + server tests on PRs.
+  - `e2e.yml`: Playwright on main/nightly.
+  - `mobile.yml`: Expo EAS build (preview on PR, production on tag).
+  - `desktop.yml`: Tauri build + signed artifacts on tag.
+- Secrets: `EAS_TOKEN`, signing keys, API envs, and tiered provider secrets.
+- Artifacts: upload build artifacts and Playwright reports to Actions.
+
+### Task List (Owners + Dates)
+
+#### Phase A (2026-02-03 to 2026-02-14) - Foundation
+
+- [ ] Monorepo restructure: `apps/web`, `apps/mobile`, `apps/desktop`, `packages/core`, `packages/ui`. Owner: ai-agent:platform. ETA: 2026-02-05.
+- [ ] Extract shared API client, tier routing, and domain types into `packages/core`. Owner: ai-agent:platform. ETA: 2026-02-08.
+- [ ] Define OpenAPI schema + generate typed client. Owner: ai-agent:platform. ETA: 2026-02-10.
+- [ ] Shared lint/test config (ESLint/Prettier/Vitest) across packages. Owner: ai-agent:platform. ETA: 2026-02-12.
+- [ ] CI/CD workflows scaffolded for web + server. Owner: ai-agent:infra. ETA: 2026-02-14.
+
+#### Phase B (2026-02-17 to 2026-03-06) - Mobile MVP
+
+- [ ] Expo app scaffold + auth flows + settings. Owner: ai-agent:mobile. ETA: 2026-02-20.
+- [ ] Dashboard + jobs list + detail views using shared core. Owner: ai-agent:mobile. ETA: 2026-02-27.
+- [ ] Offline cache + retry policy (React Query + persistent storage). Owner: ai-agent:mobile. ETA: 2026-03-03.
+- [ ] EAS build pipeline + preview builds on PR. Owner: ai-agent:infra. ETA: 2026-03-06.
+
+#### Phase C (2026-02-17 to 2026-03-13) - Desktop MVP
+
+- [ ] Tauri app scaffold with existing Vite UI. Owner: ai-agent:desktop. ETA: 2026-02-21.
+- [ ] Desktop shell: menus, deep links, auto-update config. Owner: ai-agent:desktop. ETA: 2026-03-01.
+- [ ] Tauri build pipeline + signed artifacts on tag. Owner: ai-agent:infra. ETA: 2026-03-13.
+
+#### Phase D (2026-03-16 to 2026-03-27) - Release Readiness
+
+- [ ] Cross-platform QA matrix (iOS/Android/macOS/Windows). Owner: ai-agent:qa. ETA: 2026-03-20.
+- [ ] Performance + crash monitoring (Sentry or equivalent). Owner: ai-agent:observability. ETA: 2026-03-24.
+- [ ] Store submission readiness (App Store + Play + desktop releases). Owner: ai-agent:release. ETA: 2026-03-27.

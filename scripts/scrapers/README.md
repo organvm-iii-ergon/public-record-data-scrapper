@@ -8,12 +8,12 @@ These scrapers replace the previous mock implementations with real web scraping 
 
 ## Supported States
 
-| State | Code | Portal URL | Status |
-|-------|------|-----------|---------|
-| California | CA | https://bizfileonline.sos.ca.gov/search/ucc | ✅ Implemented |
-| Texas | TX | https://www.sos.state.tx.us/ucc/index.shtml | ✅ Implemented |
-| Florida | FL | https://www.floridaucc.com/uccweb/search.aspx | ✅ Implemented |
-| New York | NY | https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame | ✅ Implemented |
+| State      | Code | Portal URL                                                       | Status         |
+| ---------- | ---- | ---------------------------------------------------------------- | -------------- |
+| California | CA   | https://bizfileonline.sos.ca.gov/search/ucc                      | ✅ Implemented |
+| Texas      | TX   | https://www.sos.state.tx.us/ucc/index.shtml                      | ✅ Implemented |
+| Florida    | FL   | https://www.floridaucc.com/uccweb/search.aspx                    | ✅ Implemented |
+| New York   | NY   | https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame | ✅ Implemented |
 
 ## Features
 
@@ -55,7 +55,7 @@ const result = await scraper.search('ACME Corporation LLC')
 
 if (result.success) {
   console.log(`Found ${result.filings.length} filings`)
-  result.filings.forEach(filing => {
+  result.filings.forEach((filing) => {
     console.log(`${filing.filingNumber}: ${filing.debtorName}`)
   })
 } else {
@@ -79,7 +79,7 @@ npx ts-node scripts/scrapers/demo-scraper.ts "ACME Corporation" CA
 ### Using the ScraperAgent
 
 ```typescript
-import { ScraperAgent } from './src/lib/agentic/agents/ScraperAgent'
+import { ScraperAgent } from './apps/web/src/lib/agentic/agents/ScraperAgent'
 
 const agent = new ScraperAgent()
 
@@ -113,6 +113,7 @@ const statesResult = await agent.executeTask({
 ### Base Scraper
 
 All scrapers extend `BaseScraper` which provides:
+
 - Retry logic with exponential backoff
 - Rate limiting
 - Structured logging
@@ -122,6 +123,7 @@ All scrapers extend `BaseScraper` which provides:
 ### State-Specific Scrapers
 
 Each state has its own scraper that implements:
+
 - `search(companyName: string): Promise<ScraperResult>` - Main search method
 - `getManualSearchUrl(companyName: string): string` - Returns URL for manual searching
 
@@ -169,21 +171,25 @@ interface UCCFiling {
 ### State-Specific Notes
 
 #### California
+
 - Uses form-based search interface
 - Free public access
 - May occasionally show CAPTCHA
 
 #### Texas
+
 - **Requires SOS Portal account login** as of September 2025
 - Automated scraping may not work without credentials
 - New online-only filing system (no more paper filings)
 
 #### Florida
+
 - Uses ASP.NET-based search system
 - Free public access
 - Contains filings since January 1997
 
 #### New York
+
 - Uses Playwright instead of Puppeteer
 - Free public access
 - Well-structured search results
@@ -195,7 +201,7 @@ interface UCCFiling {
 1. Create a new file in `scripts/scrapers/states/`
 2. Extend `BaseScraper`
 3. Implement `search()` and `getManualSearchUrl()`
-4. Add to `ScraperAgent` in `src/lib/agentic/agents/ScraperAgent.ts`
+4. Add to `ScraperAgent` in `apps/web/src/lib/agentic/agents/ScraperAgent.ts`
 
 Example:
 
@@ -227,11 +233,13 @@ export class MichiganScraper extends BaseScraper {
 ## Troubleshooting
 
 ### "Playwright not installed" error
+
 ```bash
 npm install -D playwright
 ```
 
 ### "Browser failed to launch" error
+
 ```bash
 # Install Chrome/Chromium dependencies (Linux)
 sudo apt-get install -y chromium-browser
@@ -241,11 +249,13 @@ npm install -D puppeteer
 ```
 
 ### "No result elements found" error
+
 - The page structure may have changed
 - Check if CAPTCHA is present
 - Try accessing the manual search URL to verify the portal is accessible
 
 ### "CAPTCHA detected" error
+
 - Use manual search URL provided in the result
 - Consider implementing CAPTCHA solving service (if legally permitted)
 - Reduce request frequency

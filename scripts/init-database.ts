@@ -5,7 +5,12 @@
  * Initializes database connection, runs migrations, and optionally seeds data
  */
 
-import { initDatabase, runMigrations, closeDatabase, createQueries } from '../src/lib/database'
+import {
+  initDatabase,
+  runMigrations,
+  closeDatabase,
+  createQueries
+} from '../apps/web/src/lib/database'
 
 async function main() {
   console.log('🔧 Initializing database...\n')
@@ -38,13 +43,13 @@ async function main() {
 
     if (migrationResult.success) {
       console.log(`✅ Applied ${migrationResult.migrations.length} migration(s)`)
-      migrationResult.migrations.forEach(m => {
+      migrationResult.migrations.forEach((m) => {
         console.log(`   - ${m.id}_${m.name}`)
       })
       console.log('')
     } else {
       console.error('❌ Migration failed:')
-      migrationResult.errors.forEach(err => console.error(`   - ${err}`))
+      migrationResult.errors.forEach((err) => console.error(`   - ${err}`))
       process.exit(1)
     }
 
@@ -69,7 +74,6 @@ async function main() {
     console.log('✅ Connection closed\n')
 
     console.log('🎉 Database initialization complete!')
-
   } catch (error) {
     console.error('❌ Error:', error instanceof Error ? error.message : error)
     await closeDatabase()

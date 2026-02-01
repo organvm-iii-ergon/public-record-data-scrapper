@@ -36,6 +36,34 @@
 
 ---
 
+## Phase 0: Platform Expansion (Feb–Mar 2026)
+
+**Goal:** Deliver iOS/Android + desktop clients with shared core logic and CI/CD.
+
+**Proposed Stack:**
+
+- Mobile: Expo (managed) + React Native + TypeScript.
+- Desktop: Tauri + Vite + React (reuse existing web UI where feasible).
+- Shared: `packages/core` (API client + tier routing + types) and `packages/ui`.
+- Data: React Query + Zod validation.
+
+**CI/CD (GitHub Actions):**
+
+- `ci.yml`: lint + unit + server tests on PRs.
+- `e2e.yml`: Playwright on main/nightly.
+- `mobile.yml`: EAS preview builds on PR, production on tag.
+- `desktop.yml`: Tauri builds + signed artifacts on tag.
+
+**Milestones (Owners + Dates):**
+
+- [ ] Monorepo restructure (`apps/*`, `packages/*`). Owner: ai-agent:platform. Target: 2026-02-05.
+- [ ] Shared core extraction + OpenAPI client. Owner: ai-agent:platform. Target: 2026-02-10.
+- [ ] Mobile MVP (auth, dashboard, jobs). Owner: ai-agent:mobile. Target: 2026-03-03.
+- [ ] Desktop MVP (shell + reuse web UI). Owner: ai-agent:desktop. Target: 2026-03-13.
+- [ ] Store + release readiness. Owner: ai-agent:release. Target: 2026-03-27.
+
+---
+
 ## Phase 1: Refinement & Validation (Weeks 1-4)
 
 **Goal:** Transition from MOCK data to real production data and validate system stability.

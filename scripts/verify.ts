@@ -72,7 +72,7 @@ const checks: Check[] = [
     check: async () => {
       try {
         // Try to import database module
-        const { getDatabase } = await import('../src/lib/database/index.js')
+        const { getDatabase } = await import('../apps/web/src/lib/database/index.js')
         const db = getDatabase()
 
         // Quick connection test
@@ -158,7 +158,9 @@ async function runChecks() {
   } else {
     console.log(chalk.yellow(`\n⚠️  ${totalChecks - passedChecks} check(s) failed.\n`))
     console.log(chalk.bold('Troubleshooting:'))
-    console.log(chalk.cyan('  - PostgreSQL: brew install postgresql@16 && brew services start postgresql@16'))
+    console.log(
+      chalk.cyan('  - PostgreSQL: brew install postgresql@16 && brew services start postgresql@16')
+    )
     console.log(chalk.cyan('  - Dependencies: npm install'))
     console.log(chalk.cyan('  - Environment: cp .env.example .env'))
     console.log(chalk.cyan('  - Database: npm run db:init\n'))

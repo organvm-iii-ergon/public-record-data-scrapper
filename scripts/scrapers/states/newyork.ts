@@ -7,7 +7,7 @@
  */
 
 import { BaseScraper, ScraperResult, UCCFiling } from '../base-scraper'
-import { NYUCCPortalScraper } from '../../../src/lib/scrapers/NYUCCPortalScraper'
+import { NYUCCPortalScraper } from '../../../apps/web/src/lib/scrapers/NYUCCPortalScraper'
 
 export class NewYorkScraper extends BaseScraper {
   private nyPortalScraper: NYUCCPortalScraper

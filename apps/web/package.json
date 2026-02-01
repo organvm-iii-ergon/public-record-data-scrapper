@@ -1,0 +1,15 @@
+{
+  "name": "@public-records/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b --noCheck ../../tsconfig.json && vite build",
+    "preview": "vite preview",
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --watch --config vitest.config.ts",
+    "test:ui": "vitest --ui --config vitest.config.ts",
+    "test:coverage": "vitest --coverage --config vitest.config.ts"
+  }
+}

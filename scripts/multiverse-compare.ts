@@ -8,7 +8,7 @@
  */
 
 import { performance } from 'perf_hooks'
-import { closeDatabase, connectDatabase } from '../src/lib/database/client'
+import { closeDatabase, connectDatabase } from '../apps/web/src/lib/database/client'
 import type { ScraperImplementation, SupportedState } from './scrapers/scraper-factory'
 import { ScraperFactory } from './scrapers/scraper-factory'
 import type { ScraperResult, UCCFiling } from './scrapers/base-scraper'

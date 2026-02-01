@@ -7,7 +7,7 @@
  * This is mission control for the multiversal strategy.
  */
 
-import { connectDatabase, closeDatabase, getPool } from '../src/lib/database/client'
+import { connectDatabase, closeDatabase, getPool } from '../apps/web/src/lib/database/client'
 import type { ScraperImplementation, SupportedState } from './scrapers/scraper-factory'
 import { compareImplementations } from './multiverse-compare'
 

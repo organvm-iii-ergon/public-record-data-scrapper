@@ -7,7 +7,7 @@
  */
 
 import { config } from 'dotenv'
-import { testConnection, query, closePool } from '../src/lib/db'
+import { testConnection, query, closePool } from '../apps/web/src/lib/db'
 
 // Load environment variables
 config()
