@@ -22,9 +22,9 @@ const ALLOWED_SORT_COLUMNS = [
   'company_name',
   'state',
   'industry',
-  'lien_amount',
-  'filing_date',
-  'status'
+  'status',
+  'default_date',
+  'last_filing_date'
 ] as const
 
 type AllowedSortColumn = (typeof ALLOWED_SORT_COLUMNS)[number]
@@ -229,22 +229,22 @@ export class ProspectsService {
    * @throws {DatabaseError} If the database insert fails
    */
   async create(data: Partial<Prospect>): Promise<Prospect> {
-    if (!data.company_name) {
-      throw new ValidationError('company_name is required', { company_name: ['Required field'] })
+    if (!data.companyName) {
+      throw new ValidationError('companyName is required', { companyName: ['Required field'] })
     }
 
     try {
       const results = await database.query<Prospect>(
-        `INSERT INTO prospects (company_name, state, industry, lien_amount, filing_date, status)
+        `INSERT INTO prospects (company_name, state, industry, priority_score, default_date, status)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
         [
-          data.company_name,
+          data.companyName,
           data.state,
           data.industry,
-          data.lien_amount,
-          data.filing_date,
-          data.status || 'unclaimed'
+          data.priorityScore || 50,
+          data.defaultDate || new Date().toISOString().split('T')[0],
+          data.status || 'new'
         ]
       )
       return results[0]
@@ -342,7 +342,7 @@ export class ProspectsService {
     try {
       const results = await database.query<Prospect>(
         `UPDATE prospects
-         SET status = 'claimed', claimed_by = $2, claimed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         SET status = 'claimed', claimed_by = $2, claimed_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP
          WHERE id = $1
          RETURNING *`,
         [id, userId]

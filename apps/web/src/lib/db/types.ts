@@ -31,7 +31,7 @@ export interface Prospect {
     | 'services'
     | 'technology'
   state: string
-  status: 'new' | 'claimed' | 'contacted' | 'qualified' | 'dead'
+  status: 'new' | 'claimed' | 'contacted' | 'qualified' | 'dead' | 'closed-won' | 'closed-lost' | 'unclaimed'
   priority_score: number
   default_date: Date
   time_since_default: number

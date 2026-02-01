@@ -52,7 +52,8 @@ CREATE TABLE prospects (
     )),
     state CHAR(2) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN (
-        'new', 'claimed', 'contacted', 'qualified', 'dead'
+        'new', 'claimed', 'contacted', 'qualified', 'dead',
+        'closed-won', 'closed-lost', 'unclaimed'
     )),
     priority_score INTEGER NOT NULL CHECK (priority_score >= 0 AND priority_score <= 100),
     default_date DATE NOT NULL,
@@ -311,11 +312,52 @@ CREATE TRIGGER calculate_prospect_time_since_default
     FOR EACH ROW
     EXECUTE FUNCTION calculate_time_since_default();
 
--- Normalize company names for search
+-- Normalize company names for search (with legal suffix stripping)
 CREATE OR REPLACE FUNCTION normalize_company_name()
 RETURNS TRIGGER AS $$
+DECLARE
+    normalized TEXT;
 BEGIN
-    NEW.company_name_normalized = LOWER(TRIM(NEW.company_name));
+    -- Start with basic normalization
+    normalized = LOWER(TRIM(NEW.company_name));
+
+    -- Collapse whitespace
+    normalized = regexp_replace(normalized, '\s+', ' ', 'g');
+
+    -- Strip common legal suffixes (LLC, Inc, Corp, etc.)
+    normalized = regexp_replace(normalized,
+        '\s*(,?\s*)?(llc|l\.l\.c\.|inc\.?|incorporated|corp\.?|corporation|ltd\.?|limited|lp|l\.p\.|llp|l\.l\.p\.|co\.?|company|pllc|p\.l\.l\.c\.)$',
+        '', 'i');
+
+    NEW.company_name_normalized = TRIM(normalized);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Normalize debtor name for UCC filings
+CREATE OR REPLACE FUNCTION normalize_debtor_name()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.debtor_name_normalized = LOWER(TRIM(
+        regexp_replace(
+            regexp_replace(NEW.debtor_name, '\s+', ' ', 'g'),  -- Collapse whitespace
+            '[^\w\s]', '', 'g'  -- Remove special characters
+        )
+    ));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Normalize secured party name for UCC filings
+CREATE OR REPLACE FUNCTION normalize_secured_party()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.secured_party_normalized = LOWER(TRIM(
+        regexp_replace(
+            regexp_replace(NEW.secured_party, '\s+', ' ', 'g'),  -- Collapse whitespace
+            '[^\w\s]', '', 'g'  -- Remove special characters
+        )
+    ));
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -328,7 +370,12 @@ CREATE TRIGGER normalize_prospect_company_name
 CREATE TRIGGER normalize_ucc_debtor_name
     BEFORE INSERT OR UPDATE OF debtor_name ON ucc_filings
     FOR EACH ROW
-    EXECUTE FUNCTION normalize_company_name();
+    EXECUTE FUNCTION normalize_debtor_name();
+
+CREATE TRIGGER normalize_ucc_secured_party
+    BEFORE INSERT OR UPDATE OF secured_party ON ucc_filings
+    FOR EACH ROW
+    EXECUTE FUNCTION normalize_secured_party();
 
 -- ============================================================================
 -- Indexes for Full-Text Search

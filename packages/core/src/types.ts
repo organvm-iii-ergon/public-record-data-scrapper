@@ -1,6 +1,6 @@
 export type HealthGrade = 'A' | 'B' | 'C' | 'D' | 'F'
 export type SignalType = 'hiring' | 'permit' | 'contract' | 'expansion' | 'equipment'
-export type ProspectStatus = 'new' | 'claimed' | 'contacted' | 'qualified' | 'dead'
+export type ProspectStatus = 'new' | 'claimed' | 'contacted' | 'qualified' | 'dead' | 'closed-won' | 'closed-lost' | 'unclaimed'
 export type IndustryType =
   | 'restaurant'
   | 'retail'
@@ -329,3 +329,383 @@ export type ImprovementCategory =
   | 'threat-analysis'
   | 'opportunity-analysis'
   | 'strategic-recommendation'
+
+// ============================================================================
+// Broker OS Types (Multi-tenancy, CRM, Deals, Communications, Compliance)
+// ============================================================================
+
+// Multi-tenancy
+export type SubscriptionTier = 'free' | 'starter' | 'professional' | 'enterprise'
+export type UserRole = 'admin' | 'manager' | 'broker' | 'viewer'
+
+export interface Organization {
+  id: string
+  name: string
+  slug: string
+  settings: Record<string, unknown>
+  subscriptionTier: SubscriptionTier
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface User {
+  id: string
+  orgId: string
+  email: string
+  emailVerified: boolean
+  firstName?: string
+  lastName?: string
+  phone?: string
+  avatarUrl?: string
+  role: UserRole
+  isActive: boolean
+  lastLoginAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// CRM / Contacts
+export type ContactRole = 'owner' | 'ceo' | 'cfo' | 'controller' | 'manager' | 'bookkeeper' | 'other'
+export type ContactMethod = 'email' | 'phone' | 'mobile' | 'sms'
+export type ContactRelationship = 'owner' | 'decision_maker' | 'influencer' | 'employee' | 'advisor' | 'other'
+
+export interface Contact {
+  id: string
+  orgId: string
+  firstName: string
+  lastName: string
+  email?: string
+  phone?: string
+  phoneExt?: string
+  mobile?: string
+  title?: string
+  role?: ContactRole
+  preferredContactMethod: ContactMethod
+  timezone: string
+  notes?: string
+  tags: string[]
+  source?: string
+  isActive: boolean
+  lastContactedAt?: string
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProspectContact {
+  id: string
+  prospectId: string
+  contactId: string
+  isPrimary: boolean
+  relationship: ContactRelationship
+  createdAt: string
+}
+
+export type ActivityType =
+  | 'call_outbound' | 'call_inbound' | 'call_missed'
+  | 'email_sent' | 'email_received' | 'email_opened' | 'email_clicked'
+  | 'sms_sent' | 'sms_received'
+  | 'meeting_scheduled' | 'meeting_completed' | 'meeting_cancelled'
+  | 'note' | 'task_created' | 'task_completed'
+  | 'status_change' | 'document_sent' | 'document_signed'
+
+export interface ContactActivity {
+  id: string
+  contactId: string
+  prospectId?: string
+  userId?: string
+  activityType: ActivityType
+  subject?: string
+  description?: string
+  outcome?: string
+  durationSeconds?: number
+  metadata: Record<string, unknown>
+  scheduledAt?: string
+  completedAt?: string
+  createdAt: string
+}
+
+// Deals
+export type DealPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type TerminalType = 'won' | 'lost' | 'withdrawn'
+
+export interface DealStage {
+  id: string
+  orgId: string
+  name: string
+  slug: string
+  description?: string
+  stageOrder: number
+  isTerminal: boolean
+  terminalType?: TerminalType
+  color?: string
+  autoActions: Record<string, unknown>
+  createdAt: string
+}
+
+export interface Lender {
+  id: string
+  orgId: string
+  name: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  buyBox: Record<string, unknown>
+  commissionRate?: number
+  avgApprovalTimeHours?: number
+  notes?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Deal {
+  id: string
+  orgId: string
+  prospectId?: string
+  contactId?: string
+  lenderId?: string
+  stageId: string
+  assignedTo?: string
+  dealNumber?: string
+  amountRequested?: number
+  amountApproved?: number
+  amountFunded?: number
+  termMonths?: number
+  factorRate?: number
+  dailyPayment?: number
+  weeklyPayment?: number
+  totalPayback?: number
+  commissionAmount?: number
+  useOfFunds?: string
+  useOfFundsDetails?: string
+  bankConnected: boolean
+  averageDailyBalance?: number
+  monthlyRevenue?: number
+  nsfCount?: number
+  existingPositions?: number
+  priority: DealPriority
+  probability?: number
+  expectedCloseDate?: string
+  actualCloseDate?: string
+  lostReason?: string
+  lostNotes?: string
+  submittedAt?: string
+  approvedAt?: string
+  fundedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type DocumentType =
+  | 'application' | 'bank_statement' | 'tax_return' | 'voided_check'
+  | 'drivers_license' | 'business_license' | 'landlord_letter'
+  | 'contract' | 'signed_contract' | 'disclosure' | 'signed_disclosure'
+  | 'other'
+
+export interface DealDocument {
+  id: string
+  dealId: string
+  documentType: DocumentType
+  fileName: string
+  filePath: string
+  fileSize?: number
+  mimeType?: string
+  isRequired: boolean
+  uploadedBy?: string
+  uploadedAt: string
+  verifiedBy?: string
+  verifiedAt?: string
+  metadata: Record<string, unknown>
+}
+
+// Communications
+export type CommunicationChannel = 'email' | 'sms' | 'call'
+export type CommunicationDirection = 'inbound' | 'outbound'
+export type CommunicationStatus =
+  | 'pending' | 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked'
+  | 'bounced' | 'failed' | 'answered' | 'no_answer' | 'voicemail' | 'busy'
+
+export type TemplateCategory =
+  | 'initial_outreach' | 'follow_up' | 'application_request'
+  | 'document_request' | 'approval_notification' | 'funding_notification'
+  | 'check_in' | 'renewal' | 'other'
+
+export interface CommunicationTemplate {
+  id: string
+  orgId: string
+  name: string
+  description?: string
+  channel: CommunicationChannel | 'call_script'
+  category?: TemplateCategory
+  subject?: string
+  body: string
+  variables: string[]
+  isActive: boolean
+  createdBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Communication {
+  id: string
+  orgId: string
+  contactId?: string
+  prospectId?: string
+  dealId?: string
+  templateId?: string
+  sentBy?: string
+  channel: CommunicationChannel
+  direction: CommunicationDirection
+  fromAddress?: string
+  toAddress?: string
+  ccAddresses?: string[]
+  bccAddresses?: string[]
+  subject?: string
+  fromPhone?: string
+  toPhone?: string
+  body?: string
+  bodyHtml?: string
+  attachments: Array<{ name: string; url: string; size: number; mimeType: string }>
+  status: CommunicationStatus
+  statusReason?: string
+  callDurationSeconds?: number
+  callRecordingUrl?: string
+  externalId?: string
+  openedAt?: string
+  clickedAt?: string
+  deliveredAt?: string
+  failedAt?: string
+  failureReason?: string
+  scheduledFor?: string
+  sentAt?: string
+  metadata: Record<string, unknown>
+  createdAt: string
+}
+
+// Compliance
+export type ConsentType =
+  | 'express_written' | 'prior_express' | 'transactional'
+  | 'marketing_email' | 'marketing_sms' | 'marketing_call'
+  | 'data_sharing' | 'terms_of_service' | 'privacy_policy'
+
+export type CollectionMethod =
+  | 'web_form' | 'phone_recording' | 'signed_document'
+  | 'email_opt_in' | 'sms_opt_in' | 'verbal' | 'imported'
+
+export type DisclosureStatus =
+  | 'draft' | 'generated' | 'sent' | 'viewed' | 'signed' | 'expired' | 'superseded'
+
+export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical'
+export type AlertStatus = 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'false_positive'
+
+export interface DisclosureRequirement {
+  id: string
+  state: string
+  regulationName: string
+  effectiveDate: string
+  expiryDate?: string
+  requiredFields: string[]
+  calculationRules: Record<string, unknown>
+  templateUrl?: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Disclosure {
+  id: string
+  orgId: string
+  dealId: string
+  requirementId?: string
+  state: string
+  regulationName: string
+  version: string
+  fundingAmount: number
+  totalDollarCost: number
+  financeCharge?: number
+  termDays?: number
+  paymentFrequency?: string
+  paymentAmount?: number
+  numberOfPayments?: number
+  aprEquivalent?: number
+  disclosureData: Record<string, unknown>
+  documentUrl?: string
+  documentHash?: string
+  signatureRequired: boolean
+  signatureUrl?: string
+  signatureId?: string
+  signedAt?: string
+  signedBy?: string
+  signedIp?: string
+  signatureImageUrl?: string
+  status: DisclosureStatus
+  sentAt?: string
+  viewedAt?: string
+  expiresAt?: string
+  generatedBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ConsentRecord {
+  id: string
+  orgId: string
+  contactId: string
+  consentType: ConsentType
+  channel?: CommunicationChannel | 'mail' | 'all'
+  isGranted: boolean
+  consentText?: string
+  consentVersion?: string
+  collectionMethod: CollectionMethod
+  collectionUrl?: string
+  recordingUrl?: string
+  documentUrl?: string
+  ipAddress?: string
+  userAgent?: string
+  evidence?: Record<string, unknown>
+  grantedAt: string
+  expiresAt?: string
+  revokedAt?: string
+  revokedReason?: string
+  collectedBy?: string
+  createdAt: string
+}
+
+export interface AuditLog {
+  id: string
+  orgId?: string
+  userId?: string
+  action: string
+  entityType: string
+  entityId?: string
+  changes?: Record<string, { old: unknown; new: unknown }>
+  beforeState?: Record<string, unknown>
+  afterState?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+  requestId?: string
+  createdAt: string
+}
+
+export interface ComplianceAlert {
+  id: string
+  orgId: string
+  alertType: string
+  severity: AlertSeverity
+  dealId?: string
+  contactId?: string
+  communicationId?: string
+  title: string
+  description?: string
+  remediationSteps?: string
+  status: AlertStatus
+  acknowledgedBy?: string
+  acknowledgedAt?: string
+  resolvedBy?: string
+  resolvedAt?: string
+  resolutionNotes?: string
+  createdAt: string
+  updatedAt: string
+}
