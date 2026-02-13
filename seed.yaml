@@ -1,0 +1,37 @@
+# seed.yaml — Automation Contract for organvm-iii-ergon/public-record-data-scrapper
+# Schema: seed/v1.0
+# Generated: 2026-02-12 (AUTONOMY Sprint)
+# Category: standard
+
+schema_version: "1.0"
+organ: III
+organ_name: Commerce
+repo: public-record-data-scrapper
+org: organvm-iii-ergon
+
+metadata:
+  implementation_status: PRODUCTION
+  tier: flagship
+  promotion_status: PUBLIC_PROCESS
+  last_validated: "2026-02-11"
+  generated: "2026-02-12"
+  sprint: "AUTONOMY"
+
+agents:
+  - name: ci
+    trigger: on_push
+    workflow: .github/workflows/ci-typescript.yml
+    description: "Continuous integration pipeline"
+
+produces:
+  - type: dependency
+    description: Consumed by organvm-v-logos/public-process
+    consumers: [organvm-v-logos/public-process]
+
+subscriptions:
+  - event: governance.updated
+    source: ORGAN-IV
+    action: Check compliance with updated governance rules
+  - event: health-audit.completed
+    source: ORGAN-IV
+    action: Review audit findings for this repo
