@@ -20,11 +20,19 @@ import {
   createCheckoutSession,
   constructWebhookEvent,
   isStripeConfigured,
+  CHECKOUT_TIERS,
+  type CheckoutTier,
   mapPriceToTier,
   mapTierToPrice,
   normalizeCheckoutTier
 } from '../integrations/stripe'
 import { database } from '../database/connection'
+import {
+  attachCheckoutSessionToSignup,
+  captureBillingSignup,
+  markBillingSignupSubscribed,
+  type BillingSignupPlan
+} from '../services/BillingSignupService'
 
 const router = Router()
 
@@ -156,6 +164,7 @@ async function handleStripeEvent(event: Stripe.Event): Promise<boolean> {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
+      await markBillingSignupSubscribed(session.id, idOf(session.subscription))
       const customerId = idOf(session.customer)
       const orgId = await resolveOrgId(customerId, {
         clientReferenceId: session.client_reference_id,
@@ -287,12 +296,151 @@ const checkoutQuerySchema = z
     }
   })
 
+const signupBodySchema = z
+  .object({
+    email: z.string().trim().email().max(255),
+    companyName: z.string().trim().max(255).optional(),
+    tier: z.string().trim().optional(),
+    plan: z.string().trim().optional(),
+    source: z.string().trim().max(100).optional()
+  })
+  .superRefine((value, ctx) => {
+    if (value.tier && value.plan && value.tier !== value.plan) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['plan'],
+        message: 'tier and plan must match when both are provided'
+      })
+    }
+  })
+
+function parseRawJsonBody(req: Request): unknown {
+  if (Buffer.isBuffer(req.body)) {
+    if (req.body.length === 0) {
+      return {}
+    }
+    return JSON.parse(req.body.toString('utf8')) as unknown
+  }
+
+  return req.body
+}
+
+function normalizeSignupPlan(value: unknown): BillingSignupPlan | null {
+  if (typeof value !== 'string') {
+    return 'starter'
+  }
+
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) {
+    return 'starter'
+  }
+  if (normalized === 'free') {
+    return 'free'
+  }
+
+  return normalizeCheckoutTier(normalized)
+}
+
 router.get('/status', (_req: Request, res: Response) => {
   res.json({
     configured: isStripeConfigured(),
     provider: 'stripe'
   })
 })
+
+router.post(
+  '/signup',
+  asyncHandler(async (req: Request, res: Response) => {
+    let rawBody: unknown
+    try {
+      rawBody = parseRawJsonBody(req)
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        res.status(400).json({ error: 'Invalid JSON body' })
+        return
+      }
+      throw error
+    }
+
+    const signupBody = signupBodySchema.safeParse(rawBody)
+    if (!signupBody.success) {
+      res.status(400).json({
+        error: 'Invalid signup request',
+        details: signupBody.error.flatten().fieldErrors
+      })
+      return
+    }
+    const parsed = signupBody.data
+    const requestedPlan = parsed.tier ?? parsed.plan
+    const plan = normalizeSignupPlan(requestedPlan)
+
+    if (!plan) {
+      res.status(400).json({
+        error: 'Unknown plan',
+        details: { requestedTier: requestedPlan, supportedTiers: ['free', ...CHECKOUT_TIERS] }
+      })
+      return
+    }
+
+    const checkoutTier = plan === 'free' ? null : (plan as CheckoutTier)
+    const priceId = checkoutTier ? mapTierToPrice(checkoutTier) : null
+    const stripeConfigured = isStripeConfigured()
+    const baseUrl = checkoutTier && stripeConfigured && priceId ? resolveCheckoutBaseUrl(req) : null
+    const canStartCheckout =
+      checkoutTier !== null && stripeConfigured && priceId !== null && baseUrl !== null
+    const signup = await captureBillingSignup({
+      email: parsed.email,
+      requestedPlan: plan,
+      status: canStartCheckout ? 'checkout_started' : plan === 'free' ? 'captured' : 'waitlisted',
+      companyName: parsed.companyName,
+      source: parsed.source,
+      metadata: {
+        stripeConfigured,
+        priceConfigured: priceId !== null
+      }
+    })
+
+    if (checkoutTier && stripeConfigured && priceId && !baseUrl) {
+      res.status(500).json({
+        error: 'No allowed origin configured for checkout',
+        signupId: signup.id
+      })
+      return
+    }
+
+    if (!canStartCheckout) {
+      res.status(202).json({
+        status: signup.status,
+        signupId: signup.id,
+        checkoutAvailable: false
+      })
+      return
+    }
+
+    const session = await createCheckoutSession({
+      priceId,
+      customerEmail: parsed.email,
+      successUrl: `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/billing/cancel`,
+      metadata: {
+        source: 'billing-signup',
+        signupId: signup.id,
+        tier: checkoutTier
+      }
+    })
+
+    if (session.id) {
+      await attachCheckoutSessionToSignup(signup.id, session.id)
+    }
+
+    res.status(201).json({
+      status: 'checkout_started',
+      signupId: signup.id,
+      checkoutAvailable: true,
+      url: session.url
+    })
+  })
+)
 
 router.post(
   '/checkout',

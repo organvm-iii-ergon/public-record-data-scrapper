@@ -12,6 +12,12 @@ interface BillingStatus {
   provider: string
 }
 
+type SignupResult = {
+  status?: string
+  checkoutAvailable?: boolean
+  url?: string
+}
+
 const TIERS = [
   {
     name: 'Starter',
@@ -62,6 +68,9 @@ const TIERS = [
 export function PricingPage() {
   const [status, setStatus] = useState<BillingStatus | null>(null)
   const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/billing/status')
@@ -71,14 +80,37 @@ export function PricingPage() {
   }, [])
 
   async function handleCheckout(tierName: string) {
+    if (!email.trim()) {
+      setMessage('Enter your work email to continue.')
+      return
+    }
+
     setLoading(true)
+    setMessage(null)
     try {
-      const tier = encodeURIComponent(tierName.toLowerCase())
-      const res = await fetch(`/api/billing/checkout?tier=${tier}`, { method: 'POST' })
-      const data = await res.json()
+      const res = await fetch('/api/billing/signup', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          companyName: companyName.trim() || undefined,
+          tier: tierName.toLowerCase()
+        })
+      })
+      const data = (await res.json()) as SignupResult & { error?: string }
+      if (!res.ok) {
+        setMessage(data.error ?? 'Could not capture signup interest.')
+        return
+      }
       if (data.url) {
         window.location.href = data.url
+        return
       }
+      setMessage(
+        data.status === 'captured'
+          ? 'Thanks. Your free-plan interest was captured.'
+          : 'Thanks. You are on the waitlist and we will follow up when checkout is ready.'
+      )
     } finally {
       setLoading(false)
     }
@@ -90,6 +122,41 @@ export function PricingPage() {
       <p style={{ textAlign: 'center', opacity: 0.7, marginBottom: '2rem' }}>
         Public record intelligence at scale
       </p>
+      <form
+        onSubmit={(event) => event.preventDefault()}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '0.75rem',
+          marginBottom: '1.5rem'
+        }}
+      >
+        <label>
+          <span style={{ display: 'block', marginBottom: 4 }}>Work email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@company.com"
+            style={{ width: '100%', padding: '0.65rem', borderRadius: 8, border: '1px solid #555' }}
+          />
+        </label>
+        <label>
+          <span style={{ display: 'block', marginBottom: 4 }}>Company</span>
+          <input
+            type="text"
+            value={companyName}
+            onChange={(event) => setCompanyName(event.target.value)}
+            placeholder="Company name"
+            style={{ width: '100%', padding: '0.65rem', borderRadius: 8, border: '1px solid #555' }}
+          />
+        </label>
+      </form>
+      {message && (
+        <p role="status" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          {message}
+        </p>
+      )}
 
       <div
         style={{
@@ -122,8 +189,8 @@ export function PricingPage() {
               ))}
             </ul>
             <button
-              onClick={tier.name === 'Enterprise' ? undefined : () => handleCheckout(tier.name)}
-              disabled={loading || !status?.configured}
+              onClick={() => handleCheckout(tier.name)}
+              disabled={loading || status === null}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -132,11 +199,11 @@ export function PricingPage() {
                 border: 'none',
                 background: tier.highlighted ? '#3b82f6' : '#444',
                 color: '#fff',
-                cursor: status?.configured ? 'pointer' : 'not-allowed',
-                opacity: status?.configured ? 1 : 0.5
+                cursor: status === null ? 'not-allowed' : 'pointer',
+                opacity: status === null ? 0.5 : 1
               }}
             >
-              {status?.configured ? tier.cta : 'Coming Soon'}
+              {status?.configured ? tier.cta : 'Join Waitlist'}
             </button>
           </div>
         ))}
