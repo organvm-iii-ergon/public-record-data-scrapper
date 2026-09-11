@@ -517,7 +517,7 @@ export class StateCollectorFactory {
    * Check if a state has an implemented collector.
    *
    * This reports whether a concrete collector implementation exists for a state
-   * (CA, TX, FL, NY). Like FL, a credential-gated state can be "implemented" yet
+   * (CA, TX, FL, NY, NJ). Like FL, a credential-gated state can be "implemented" yet
    * still have getCollector() return undefined when its configuration is absent
    * (FL: contract inactive; NY: NY_UCC_DEBTOR_SEEDS unset). Callers that
    * materialise collectors go through getCollectors(), which skips undefined
