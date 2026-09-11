@@ -5,6 +5,7 @@ import scrapeRouter from '../../routes/scrape'
 
 const mockSearch = vi.fn()
 const mockGetStateReadiness = vi.fn()
+const mockEnqueue = vi.fn()
 
 vi.mock('../../services/UCCSearchService', () => ({
   UCCSearchService: vi.fn(function () {
@@ -15,17 +16,31 @@ vi.mock('../../services/UCCSearchService', () => ({
   })
 }))
 
+vi.mock('../../services/ScrapeJobService', () => ({
+  ScrapeJobService: vi.fn(function () {
+    return {
+      enqueue: mockEnqueue,
+      markProcessing: vi.fn(),
+      markCompleted: vi.fn(),
+      markFailed: vi.fn(),
+      get: vi.fn()
+    }
+  })
+}))
+
 describe('POST /api/scrape/ucc', () => {
   let app: Express
 
-  const buildTestApp = () => {
+  const buildTestApp = (tier = 'professional') => {
     const testApp = express()
     testApp.use(express.json())
 
     testApp.use((req, _res, next) => {
-      ;(req as { user: { orgId: string; role: string } }).user = {
+      ;(req as { user: { id: string; orgId: string; role: string; tier: string } }).user = {
+        id: 'test-user',
         orgId: 'test-org',
-        role: 'user'
+        role: 'user',
+        tier
       }
       next()
     })
@@ -37,6 +52,7 @@ describe('POST /api/scrape/ucc', () => {
   beforeEach(() => {
     mockSearch.mockReset()
     mockGetStateReadiness.mockReset()
+    mockEnqueue.mockReset()
     mockGetStateReadiness.mockReturnValue({
       state: 'CA',
       canSearch: true,
@@ -69,6 +85,21 @@ describe('POST /api/scrape/ucc', () => {
     expect(response.body.error.code).toBe('UCC_STATE_UNAVAILABLE')
     expect(response.body.error.details).toMatchObject({ state: 'XX' })
     expect(response.body.error.details.readinessEndpoint).toBe('/api/scrape/readiness/XX')
+    expect(mockSearch).not.toHaveBeenCalled()
+  })
+
+  it('returns a 402 upsell for free-tier synchronous searches', async () => {
+    app = buildTestApp('free')
+
+    const response = await request(app).post('/api/scrape/ucc').send({
+      company_name: 'Test Corp',
+      state: 'CA'
+    })
+
+    expect(response.status).toBe(402)
+    expect(response.body.error.code).toBe('TIER_UPGRADE_REQUIRED')
+    expect(response.body.error.details.reason).toBe('on_demand_scrape_requires_paid')
+    expect(mockGetStateReadiness).not.toHaveBeenCalled()
     expect(mockSearch).not.toHaveBeenCalled()
   })
 
@@ -133,6 +164,86 @@ describe('POST /api/scrape/ucc', () => {
     expect(response.body.error).toBe('Unauthorized')
     expect(mockGetStateReadiness).not.toHaveBeenCalled()
     expect(mockSearch).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /api/scrape/jobs', () => {
+  let app: Express
+
+  const buildTestApp = (tier = 'professional') => {
+    const testApp = express()
+    testApp.use(express.json())
+
+    testApp.use((req, _res, next) => {
+      ;(req as { user: { id: string; orgId: string; role: string; tier: string } }).user = {
+        id: 'test-user',
+        orgId: 'test-org',
+        role: 'user',
+        tier
+      }
+      next()
+    })
+
+    testApp.use('/api/scrape', scrapeRouter)
+    return testApp
+  }
+
+  beforeEach(() => {
+    mockSearch.mockReset()
+    mockGetStateReadiness.mockReset()
+    mockEnqueue.mockReset()
+    mockGetStateReadiness.mockReturnValue({
+      state: 'CA',
+      canSearch: true,
+      reason: 'Collector ready for state: CA'
+    })
+    mockEnqueue.mockResolvedValue({
+      id: '11111111-1111-4111-8111-111111111111',
+      status: 'queued',
+      queuedAt: '2026-06-24T00:00:00.000Z',
+      orgId: 'test-org',
+      apiKeyId: null,
+      companyName: 'Test Corp',
+      state: 'CA',
+      limit: 100
+    })
+    app = buildTestApp()
+  })
+
+  it('returns a 402 upsell for free-tier queued searches', async () => {
+    app = buildTestApp('free')
+
+    const response = await request(app).post('/api/scrape/jobs').send({
+      company_name: 'Test Corp',
+      state: 'CA'
+    })
+
+    expect(response.status).toBe(402)
+    expect(response.body.error.code).toBe('TIER_UPGRADE_REQUIRED')
+    expect(response.body.error.details.reason).toBe('on_demand_scrape_requires_paid')
+    expect(mockGetStateReadiness).not.toHaveBeenCalled()
+    expect(mockEnqueue).not.toHaveBeenCalled()
+  })
+
+  it('enqueues paid-tier searches', async () => {
+    const response = await request(app).post('/api/scrape/jobs').send({
+      company_name: 'Test Corp',
+      state: 'ca'
+    })
+
+    expect(response.status).toBe(202)
+    expect(response.body.data).toMatchObject({
+      jobId: '11111111-1111-4111-8111-111111111111',
+      status: 'queued',
+      pollUrl: '/api/scrape/jobs/11111111-1111-4111-8111-111111111111'
+    })
+    expect(mockEnqueue).toHaveBeenCalledWith({
+      orgId: 'test-org',
+      apiKeyId: null,
+      companyName: 'Test Corp',
+      state: 'CA',
+      limit: 100
+    })
   })
 })
 
