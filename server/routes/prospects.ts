@@ -8,8 +8,9 @@ import { QualificationService } from '../services/QualificationService'
 import { UnderwritingService } from '../services/UnderwritingService'
 import type { UnderwritingFeatures } from '../services/UnderwritingService'
 import { LeadExportService, serializeLeadExportCsv } from '../services/LeadExportService'
+import { DeliveryService } from '../services/DeliveryService'
 import { getResolvedDataTier, type ResolvedDataTier } from '../middleware/dataTier'
-import { tierGate } from '../middleware/tierGate'
+import { paidTierGate, tierGate } from '../middleware/tierGate'
 
 const router = Router()
 
@@ -65,16 +66,8 @@ const exportQuerySchema = z
         'unclaimed'
       ])
       .optional(),
-    min_score: z
-      .string()
-      .regex(/^\d+$/)
-      .transform(Number)
-      .default('70'),
-    max_score: z
-      .string()
-      .regex(/^\d+$/)
-      .transform(Number)
-      .optional()
+    min_score: z.string().regex(/^\d+$/).transform(Number).default('70'),
+    max_score: z.string().regex(/^\d+$/).transform(Number).optional()
   })
   .refine((query) => query.min_score >= 0 && query.min_score <= 100, {
     message: 'min_score must be between 0 and 100',
@@ -115,6 +108,16 @@ const idParamSchema = z.object({
 // User') rather than a UUID, so this is a non-empty string, not z.uuid().
 const claimBodySchema = z.object({
   user: z.string().min(1)
+})
+
+const deliverBodySchema = z.object({
+  integration: z.enum(['zapier', 'sfdc', 'airtable']),
+  webhookUrl: z
+    .string()
+    .url()
+    .refine((value) => new URL(value).protocol === 'https:', {
+      message: 'webhookUrl must use https'
+    })
 })
 
 const MAX_BATCH_SIZE = 100
@@ -303,10 +306,7 @@ router.get(
   '/export/leads',
   validateRequest({ query: exportQuerySchema }),
   asyncHandler(async (req, res) => {
-    const query = applyExportTierConstraints(
-      req.query as LeadExportQuery,
-      getResolvedDataTier(req)
-    )
+    const query = applyExportTierConstraints(req.query as LeadExportQuery, getResolvedDataTier(req))
     const exportService = new LeadExportService()
     const batch = await exportService.exportLeads({
       state: query.state,
@@ -347,6 +347,32 @@ router.get(
     }
 
     res.json(prospect)
+  })
+)
+
+// POST /api/prospects/:id/deliver - Deliver a paid-tier lead to an HTTPS integration.
+router.post(
+  '/:id/deliver',
+  paidTierGate,
+  validateRequest({ params: idParamSchema, body: deliverBodySchema }),
+  asyncHandler(async (req, res) => {
+    const prospectsService = new ProspectsService()
+    const prospect = await prospectsService.getById(req.params.id)
+
+    if (!prospect) {
+      return res.status(404).json({
+        error: {
+          message: `Prospect ${req.params.id} not found`,
+          code: 'NOT_FOUND',
+          statusCode: 404
+        }
+      })
+    }
+
+    const body = req.body as z.infer<typeof deliverBodySchema>
+    const result = await new DeliveryService().deliverLead(prospect, body)
+
+    res.json(result)
   })
 )
 
