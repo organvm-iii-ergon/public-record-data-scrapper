@@ -92,7 +92,10 @@ npm run test:server -- serverlessApp
 ## Production deployment gate (security prerequisites)
 
 This checklist covers the security-hardening prerequisites from PR #234 / issue #235.
-Run it before promoting a production deploy.
+Run it before promoting a production deploy. Track target-environment receipts in
+[`DEPLOYMENT_EVIDENCE_MATRIX.md`](./DEPLOYMENT_EVIDENCE_MATRIX.md); the checklist
+below is not complete until the matrix has redacted receipts for the environment
+being promoted.
 
 ### Required sequence
 
