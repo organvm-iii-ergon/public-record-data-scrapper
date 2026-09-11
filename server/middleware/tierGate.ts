@@ -9,7 +9,10 @@ import {
 
 export const FREE_TIER_PROSPECT_LIMIT = 10
 
-type TierGateReason = 'free_quota_exhausted' | 'full_enrichment_requires_paid'
+type TierGateReason =
+  | 'free_quota_exhausted'
+  | 'full_enrichment_requires_paid'
+  | 'on_demand_scrape_requires_paid'
 
 interface TierGateContext {
   reason: TierGateReason
@@ -206,10 +209,13 @@ async function countOrgProspects(orgId: string): Promise<number> {
 }
 
 function buildUpsellPayload(context: TierGateContext) {
+  const isScrapeGate = context.reason === 'on_demand_scrape_requires_paid'
+
   return {
     error: {
-      message:
-        'Free tier includes up to 10 OSS-only prospects. Upgrade to Starter or Pro for full enriched prospects.',
+      message: isScrapeGate
+        ? 'On-demand UCC scraping requires a Starter or Pro plan.'
+        : 'Free tier includes up to 10 OSS-only prospects. Upgrade to Starter or Pro for full enriched prospects.',
       code: 'TIER_UPGRADE_REQUIRED',
       statusCode: 402,
       details: {
@@ -228,9 +234,12 @@ function buildUpsellPayload(context: TierGateContext) {
           action: 'upgrade_plan',
           label: 'Upgrade to Starter',
           href: '/pricing',
-          headline: 'Unlock full enriched prospects',
-          description:
-            'Starter and Pro include full enriched prospect creation beyond the free 10-prospect OSS cap.'
+          headline: isScrapeGate
+            ? 'Unlock on-demand UCC searches'
+            : 'Unlock full enriched prospects',
+          description: isScrapeGate
+            ? 'Starter and Pro include synchronous and queued on-demand UCC searches.'
+            : 'Starter and Pro include full enriched prospect creation beyond the free 10-prospect OSS cap.'
         }
       }
     }
@@ -270,6 +279,20 @@ export async function tierGate(req: Request, res: Response, next: NextFunction):
     }
 
     next()
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function paidTierGate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const resolvedTier = await resolveTierForGate(req)
+    if (resolvedTier !== 'free-tier') {
+      next()
+      return
+    }
+
+    sendUpsell(res, { reason: 'on_demand_scrape_requires_paid' })
   } catch (error) {
     next(error)
   }

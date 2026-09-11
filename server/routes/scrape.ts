@@ -22,6 +22,7 @@ import { z } from 'zod'
 import { validateRequest } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { requireRole, type AuthenticatedRequest } from '../middleware/authMiddleware'
+import { paidTierGate } from '../middleware/tierGate'
 import { UCCSearchService } from '../services/UCCSearchService'
 import { ScrapeJobService } from '../services/ScrapeJobService'
 
@@ -44,7 +45,10 @@ const searchUCCSchema = z.object({
 })
 
 const readinessSchema = z.object({
-  stateCode: z.string().length(2).transform((s) => s.toUpperCase())
+  stateCode: z
+    .string()
+    .length(2)
+    .transform((s) => s.toUpperCase())
 })
 
 // GET /api/scrape/readiness/:stateCode - Check if a state can be searched right now
@@ -70,6 +74,7 @@ router.get(
 router.post(
   '/ucc',
   requireRole('user', 'admin'),
+  paidTierGate,
   validateRequest({ body: searchUCCSchema }),
   asyncHandler(async (req, res) => {
     const searchService = new UCCSearchService()
@@ -137,6 +142,7 @@ const jobIdSchema = z.object({
 router.post(
   '/jobs',
   requireRole('user', 'admin'),
+  paidTierGate,
   validateRequest({ body: enqueueJobSchema }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const body = req.body as z.infer<typeof enqueueJobSchema>
