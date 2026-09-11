@@ -5,16 +5,16 @@ import type { Express } from 'express'
 import { NotFoundError } from '../../errors'
 
 // Use vi.hoisted to ensure mocks are available when vi.mock runs
-const { mockList, mockGetById, mockCreate, mockUpdate, mockDelete, mockQuery } = vi.hoisted(
-  () => ({
+const { mockList, mockGetById, mockCreate, mockUpdate, mockDelete, mockQuery, mockDeliverLead } =
+  vi.hoisted(() => ({
     mockList: vi.fn(),
     mockGetById: vi.fn(),
     mockCreate: vi.fn(),
     mockUpdate: vi.fn(),
     mockDelete: vi.fn(),
-    mockQuery: vi.fn()
-  })
-)
+    mockQuery: vi.fn(),
+    mockDeliverLead: vi.fn()
+  }))
 
 vi.mock('../../database/connection', () => ({
   database: {
@@ -30,6 +30,12 @@ vi.mock('../../services/ProspectsService', () => ({
     create = mockCreate
     update = mockUpdate
     delete = mockDelete
+  }
+}))
+
+vi.mock('../../services/DeliveryService', () => ({
+  DeliveryService: class MockDeliveryService {
+    deliverLead = mockDeliverLead
   }
 }))
 
@@ -215,6 +221,92 @@ describe('Prospects API', () => {
 
       expect(response.status).toBe(400)
       expect(response.body.error).toBeDefined()
+    })
+  })
+
+  describe('POST /api/prospects/:id/deliver', () => {
+    const prospectId = '550e8400-e29b-41d4-a716-446655440000'
+    const prospect = {
+      id: prospectId,
+      companyName: 'Test Company',
+      state: 'NY',
+      industry: 'technology',
+      status: 'new',
+      priorityScore: 85,
+      defaultDate: '2026-01-01',
+      timeSinceDefault: 10,
+      uccFilings: [],
+      growthSignals: [],
+      healthScore: {
+        grade: 'A',
+        score: 90,
+        sentimentTrend: 'stable',
+        reviewCount: 0,
+        avgSentiment: 0,
+        violationCount: 0,
+        lastUpdated: '2026-01-01'
+      },
+      narrative: 'High priority lead'
+    }
+
+    it('returns a 402 upsell for free-tier delivery attempts', async () => {
+      const freeAuthHeader = createAuthHeader('free-user', { tier: 'free' })
+
+      const response = await request(app)
+        .post(`/api/prospects/${prospectId}/deliver`)
+        .set('Authorization', freeAuthHeader)
+        .send({
+          integration: 'zapier',
+          webhookUrl: 'https://hooks.example.com/lead'
+        })
+
+      expect(response.status).toBe(402)
+      expect(response.body.error.code).toBe('TIER_UPGRADE_REQUIRED')
+      expect(response.body.error.details.reason).toBe('on_demand_scrape_requires_paid')
+      expect(mockGetById).not.toHaveBeenCalled()
+      expect(mockDeliverLead).not.toHaveBeenCalled()
+    })
+
+    it('rejects non-HTTPS webhook URLs before delivery', async () => {
+      const response = await request(app)
+        .post(`/api/prospects/${prospectId}/deliver`)
+        .set('Authorization', authHeader)
+        .send({
+          integration: 'zapier',
+          webhookUrl: 'http://hooks.example.com/lead'
+        })
+
+      expect(response.status).toBe(400)
+      expect(response.body.error.code).toBe('VALIDATION_ERROR')
+      expect(mockDeliverLead).not.toHaveBeenCalled()
+    })
+
+    it('delivers paid-tier leads to the requested integration', async () => {
+      mockGetById.mockResolvedValueOnce(prospect)
+      mockDeliverLead.mockResolvedValueOnce({
+        success: true,
+        integration: 'zapier',
+        providerId: 'request-1'
+      })
+
+      const response = await request(app)
+        .post(`/api/prospects/${prospectId}/deliver`)
+        .set('Authorization', authHeader)
+        .send({
+          integration: 'zapier',
+          webhookUrl: 'https://hooks.example.com/lead'
+        })
+
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        success: true,
+        integration: 'zapier',
+        providerId: 'request-1'
+      })
+      expect(mockDeliverLead).toHaveBeenCalledWith(prospect, {
+        integration: 'zapier',
+        webhookUrl: 'https://hooks.example.com/lead'
+      })
     })
   })
 
