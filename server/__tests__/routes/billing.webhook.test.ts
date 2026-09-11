@@ -12,9 +12,12 @@ vi.mock('../../database/connection', () => ({
 }))
 
 vi.mock('../../integrations/stripe', () => ({
+  CHECKOUT_TIERS: ['starter', 'professional', 'enterprise'],
   createCheckoutSession: vi.fn(),
   constructWebhookEvent: vi.fn(),
   isStripeConfigured: vi.fn(() => true),
+  mapTierToPrice: vi.fn(() => null),
+  normalizeCheckoutTier: vi.fn(() => null),
   // Real-ish mapping: price_pro -> professional, anything else -> null.
   mapPriceToTier: vi.fn((priceId: string | null | undefined) =>
     priceId === 'price_pro' ? 'professional' : null

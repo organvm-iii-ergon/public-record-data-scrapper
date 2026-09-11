@@ -31,6 +31,7 @@ export function isStripeConfigured(): boolean {
 export interface CheckoutOptions {
   priceId: string
   customerId?: string
+  customerEmail?: string
   successUrl: string
   cancelUrl: string
   metadata?: Record<string, string>
@@ -44,6 +45,7 @@ export async function createCheckoutSession(
     mode: 'subscription',
     line_items: [{ price: options.priceId, quantity: 1 }],
     customer: options.customerId,
+    customer_email: options.customerId ? undefined : options.customerEmail,
     success_url: options.successUrl,
     cancel_url: options.cancelUrl,
     metadata: options.metadata
