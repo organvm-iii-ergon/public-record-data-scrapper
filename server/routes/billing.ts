@@ -386,7 +386,8 @@ router.post(
     const priceId = checkoutTier ? mapTierToPrice(checkoutTier) : null
     const stripeConfigured = isStripeConfigured()
     const baseUrl = checkoutTier && stripeConfigured && priceId ? resolveCheckoutBaseUrl(req) : null
-    const canStartCheckout = checkoutTier !== null && stripeConfigured && priceId !== null && baseUrl !== null
+    const canStartCheckout =
+      checkoutTier !== null && stripeConfigured && priceId !== null && baseUrl !== null
     const signup = await captureBillingSignup({
       email: parsed.email,
       requestedPlan: plan,
