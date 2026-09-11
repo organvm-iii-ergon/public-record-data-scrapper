@@ -69,13 +69,13 @@ npm run scrape -- list-states
 
 ### Other Key Scripts
 
-*   `npm run scrape:scheduled` (`tsx scripts/scheduled-run.ts`) - Executes the scheduled scraper workflow.
-*   `npm run db:migrate` (`tsx scripts/migrate.ts`) - Applies database migrations.
-*   `npm run seed` (`tsx scripts/seed-database.ts`) - Seeds the database with initial data.
-*   `npm run train:ml-model` (`tsx scripts/trainMLModel.ts`) - Trains the experimental ML scoring model.
+- `npm run scrape:scheduled` (`tsx scripts/scheduled-run.ts`) - Executes the scheduled scraper workflow.
+- `npm run db:migrate` (`tsx scripts/migrate.ts`) - Applies database migrations.
+- `npm run seed` (`tsx scripts/seed-database.ts`) - Seeds the database with initial data.
+- `npm run train:ml-model` (`tsx scripts/trainMLModel.ts`) - Trains the experimental ML scoring model.
 
 ## Subdirectories
 
-*   `scrapers/`: Contains real Puppeteer-based UCC filing scrapers for various states (e.g. California, Texas, Florida, New York). See `scrapers/README.md` for more details.
-*   `video-production/`: Contains scripts for video generation and validation (`video:generate`, `video:validate`).
-*   `academic/`, `audience/`: Miscellaneous scripts for specialized tasks.
+- `scrapers/`: Contains real Puppeteer-based UCC filing scrapers for various states (e.g. California, Texas, Florida, New York). The newer collector factory also includes a credential-gated New Jersey portal collector. See `scrapers/README.md` and `apps/web/src/lib/collectors/` for more details.
+- `video-production/`: Contains scripts for video generation and validation (`video:generate`, `video:validate`).
+- `academic/`, `audience/`: Miscellaneous scripts for specialized tasks.
