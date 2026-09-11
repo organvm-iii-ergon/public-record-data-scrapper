@@ -7,7 +7,11 @@ import request from 'supertest'
 // unit test; here we mock it so route behavior (status codes, session creation)
 // is tested in isolation.
 vi.mock('../../integrations/stripe', () => ({
-  createCheckoutSession: vi.fn(async () => ({ url: 'https://checkout.stripe.test/session' })),
+  CHECKOUT_TIERS: ['starter', 'professional', 'enterprise'],
+  createCheckoutSession: vi.fn(async () => ({
+    id: 'cs_test_123',
+    url: 'https://checkout.stripe.test/session'
+  })),
   constructWebhookEvent: vi.fn(),
   isStripeConfigured: vi.fn(() => true),
   mapPriceToTier: vi.fn(() => null),
@@ -32,6 +36,12 @@ vi.mock('../../integrations/stripe', () => ({
   })
 }))
 
+vi.mock('../../database/connection', () => ({
+  database: {
+    query: vi.fn()
+  }
+}))
+
 vi.mock('../../config', async () => {
   const actual = await vi.importActual<typeof import('../../config')>('../../config')
   return {
@@ -49,6 +59,7 @@ import {
   isStripeConfigured,
   mapTierToPrice
 } from '../../integrations/stripe'
+import { database } from '../../database/connection'
 import billingRouter from '../../routes/billing'
 
 function buildApp(): Express {
@@ -62,6 +73,7 @@ function buildApp(): Express {
 const mockedCreate = vi.mocked(createCheckoutSession)
 const mockedConfigured = vi.mocked(isStripeConfigured)
 const mockedMapTier = vi.mocked(mapTierToPrice)
+const mockedQuery = vi.mocked(database.query)
 
 describe('Billing checkout — tier selection', () => {
   let app: Express
@@ -69,6 +81,7 @@ describe('Billing checkout — tier selection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockedConfigured.mockReturnValue(true)
+    mockedQuery.mockResolvedValue([])
     app = buildApp()
   })
 
@@ -140,6 +153,134 @@ describe('Billing checkout — tier selection', () => {
 
     expect(res.status).toBe(503)
     expect(res.body.error).toBe('Billing not configured')
+    expect(mockedCreate).not.toHaveBeenCalled()
+  })
+
+  it('captures a free signup without starting checkout', async () => {
+    mockedQuery.mockResolvedValueOnce([
+      {
+        id: 'signup_free',
+        email: 'owner@example.com',
+        requested_plan: 'free',
+        status: 'captured'
+      }
+    ])
+
+    const res = await request(app)
+      .post('/api/billing/signup')
+      .set('origin', 'https://app.example.com')
+      .set('content-type', 'application/json')
+      .send({ email: 'owner@example.com', tier: 'free', companyName: 'Example Co' })
+
+    expect(res.status).toBe(202)
+    expect(res.body).toMatchObject({
+      status: 'captured',
+      signupId: 'signup_free',
+      checkoutAvailable: false
+    })
+    expect(mockedCreate).not.toHaveBeenCalled()
+    expect(mockedQuery).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO billing_signups'),
+      ['owner@example.com', 'free', 'captured', 'Example Co', 'pricing-page', expect.any(String)]
+    )
+  })
+
+  it('starts checkout and records the session for a paid signup when configured', async () => {
+    mockedQuery.mockResolvedValueOnce([
+      {
+        id: 'signup_paid',
+        email: 'buyer@example.com',
+        requested_plan: 'professional',
+        status: 'checkout_started'
+      }
+    ])
+
+    const res = await request(app)
+      .post('/api/billing/signup')
+      .set('origin', 'https://app.example.com')
+      .set('content-type', 'application/json')
+      .send({ email: 'buyer@example.com', plan: 'pro' })
+
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({
+      status: 'checkout_started',
+      signupId: 'signup_paid',
+      checkoutAvailable: true,
+      url: 'https://checkout.stripe.test/session'
+    })
+    expect(mockedCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        priceId: 'price_pro',
+        customerEmail: 'buyer@example.com',
+        metadata: expect.objectContaining({
+          source: 'billing-signup',
+          signupId: 'signup_paid',
+          tier: 'professional'
+        })
+      })
+    )
+    expect(mockedQuery).toHaveBeenLastCalledWith(
+      expect.stringContaining('stripe_checkout_session_id = $2'),
+      ['signup_paid', 'cs_test_123']
+    )
+  })
+
+  it('waitlists a paid signup when Stripe is not configured', async () => {
+    mockedConfigured.mockReturnValue(false)
+    mockedQuery.mockResolvedValueOnce([
+      {
+        id: 'signup_waitlist',
+        email: 'buyer@example.com',
+        requested_plan: 'starter',
+        status: 'waitlisted'
+      }
+    ])
+
+    const res = await request(app)
+      .post('/api/billing/signup')
+      .set('origin', 'https://app.example.com')
+      .set('content-type', 'application/json')
+      .send({ email: 'buyer@example.com', tier: 'starter' })
+
+    expect(res.status).toBe(202)
+    expect(res.body).toMatchObject({
+      status: 'waitlisted',
+      signupId: 'signup_waitlist',
+      checkoutAvailable: false
+    })
+    expect(mockedCreate).not.toHaveBeenCalled()
+  })
+
+  it('waitlists a recognized paid signup when that tier has no price configured', async () => {
+    mockedQuery.mockResolvedValueOnce([
+      {
+        id: 'signup_enterprise',
+        email: 'buyer@example.com',
+        requested_plan: 'enterprise',
+        status: 'waitlisted'
+      }
+    ])
+
+    const res = await request(app)
+      .post('/api/billing/signup')
+      .set('origin', 'https://app.example.com')
+      .set('content-type', 'application/json')
+      .send({ email: 'buyer@example.com', tier: 'enterprise' })
+
+    expect(res.status).toBe(202)
+    expect(res.body.checkoutAvailable).toBe(false)
+    expect(mockedCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects invalid signup email before capture', async () => {
+    const res = await request(app)
+      .post('/api/billing/signup')
+      .set('origin', 'https://app.example.com')
+      .set('content-type', 'application/json')
+      .send({ email: 'not-an-email', tier: 'starter' })
+
+    expect(res.status).toBe(400)
+    expect(mockedQuery).not.toHaveBeenCalled()
     expect(mockedCreate).not.toHaveBeenCalled()
   })
 })
