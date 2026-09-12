@@ -40,29 +40,42 @@ Global policy: /Users/4jp/AGENTS.md applies and cannot be overridden.
 - Commit messages are imperative and descriptive; include a short summary and a brief bullet list of key changes. Add issue references and `Co-Authored-By` when needed.
 - Before opening a PR, run `npm run lint` and the relevant test suites, and note what you ran in the PR description. Update README/docs when behavior changes.
 
-## Security & Configuration Tips
+## Multi-Agent Execution Protocol & Concurrency Harness
 
-- Copy `.env.example` to `.env` for local development and keep secrets out of Git.
-- Prefer environment variables and secrets managers for production credentials.
+This repository is governed by the 4-lane stewardship architecture. When operating as an autonomous agent in local or remote environments:
+
+1. **Protocol Document**: Review [.conductor/active-handoff.md](.conductor/active-handoff.md) and [docs/CONCURRENCY_BOUNDARIES.md](docs/CONCURRENCY_BOUNDARIES.md) before claiming or touching any files.
+2. **Never Work Directly on Trunk or Lanes**: Always use an isolated worktree cut via the harness:
+   ```bash
+   ./scripts/agent-harness.sh claim <issue-id>
+   ```
+3. **Preflight Enforcement**: Before opening any PR, run `./scripts/agent-harness.sh preflight` locally.
+4. **Lane Integrity**: PRs must target their owning standing lane (`lane/heal`, `lane/verify`, `lane/expand-public-records`, `lane/evolve-platform`). Standing lanes periodically sync to `main`.
+5. **No Cross-Lane Edits**: Strictly observe file domain ownership to prevent concurrent agent collisions.
 
 <!-- ORGANVM:AUTO:START -->
+
 ## Agent Context (auto-generated — do not edit)
 
 This repo participates in the **ORGAN-III (Commerce)** swarm.
 
 ### Active Subscriptions
+
 - Event: `governance.updated` → Action: Check compliance with updated governance rules
 - Event: `health-audit.completed` → Action: Review audit findings for this repo
 
 ### Production Responsibilities
+
 - **Produce** `dependency` for organvm-v-logos/public-process
 
 ### External Dependencies
-- *No external dependencies*
+
+- _No external dependencies_
 
 ### Governance Constraints
+
 - Adhere to unidirectional flow: I→II→III
 - Never commit secrets or credentials
 
-*Last synced: 2026-06-06T01:01:09Z*
+_Last synced: 2026-06-06T01:01:09Z_
 <!-- ORGANVM:AUTO:END -->
