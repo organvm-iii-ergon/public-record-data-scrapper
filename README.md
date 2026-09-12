@@ -1,6 +1,6 @@
 # Public Record Data Scraper
 
-**Extract, enrich, and score UCC filings from US state Secretary of State portals.** Turns raw public records into prioritized, outreach-ready leads for the Merchant Cash Advance industry. Five state collectors are implemented today (CA, TX, FL, NY, NJ); the remaining states are on the roadmap.
+**Extract, enrich, and score UCC filings from US state Secretary of State portals.** Turns raw public records into prioritized, outreach-ready leads for the Merchant Cash Advance industry. Four state collectors are implemented today (CA, TX, FL, NY); the remaining states are on the roadmap.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -19,13 +19,13 @@ inspectable without implying data completeness or nationwide deployment.
 
 ### Status
 
-The repository contains five implemented state collectors: California, Texas, Florida, New York,
-and New Jersey. They sit inside a broader multi-state architecture; other state paths remain
+The repository contains four implemented state collectors: California, Texas, Florida, and New York.
+They sit inside a broader multi-state architecture; other state paths remain
 roadmap work.
 California requires `CA_SOS_API_KEY`; Texas requires `TX_SOSDIRECT_API_KEY` plus
 `TX_SOSDIRECT_ACCOUNT_ID`; and Florida requires vendor key/secret credentials plus an active
-vendor contract. New York requires configured debtor search names in `NY_UCC_DEBTOR_SEEDS`; New Jersey requires `NJ_UCC_API_KEY`, `NJ_UCC_ACCOUNT_ID`, and `NJ_UCC_DEBTOR_SEEDS`, not
-credentials. Each collector fails closed when its own access or seed requirement is absent.
+vendor contract. New York requires configured debtor search names in `NY_UCC_DEBTOR_SEEDS`.
+Each collector fails closed when its own access or seed requirement is absent.
 
 ### Architecture
 
@@ -90,7 +90,7 @@ Before relying on a collector or scoring claim, inspect the four adapters and ru
 
 ## What It Does
 
-1. **Collects** UCC-1 filing data from state Secretary of State portals — 5 collectors implemented (CA API, TX bulk, FL vendor, NY portal scraper, NJ portal scraper) with per-state strategies (API, bulk download, vendor feed, scrape) and fallback. CA, TX, FL, NY, and NJ use the access gates described above; every collector fails closed when its requirement is absent.
+1. **Collects** UCC-1 filing data from state Secretary of State portals — 4 collectors implemented (CA API, TX bulk, FL vendor, NY portal scraper) with per-state strategies (API, bulk download, vendor feed, scrape) and fallback. CA, TX, FL, and NY use the access gates described above; every collector fails closed when its requirement is absent.
 2. **Enriches** each filing with free public data (SEC EDGAR, OSHA, USPTO, Census Bureau) plus optional, key-gated sources (SAM.gov, D&B, Clearbit, ZoomInfo) that fail closed — returning a named error, never fabricated data — when no API key is configured
 3. **Scores** every prospect 0--100 on financing likelihood, assigns a health grade (A--F), and flags growth signals (hiring, permits, equipment purchases, expansion)
 4. **Delivers** results through a React web dashboard, REST API, or CLI tool
@@ -316,8 +316,8 @@ Internal workspace packages expose source entrypoints for other workspace code:
 └──────────────┘ └─────────────┘ └─────┬──────────────┘
                                        │
                     ┌──────────────────▼────────────────┐
-                    │  State SOS Collectors (5 implemented)│
-                    │  CA · TX · FL · NY · NJ             │
+                    │  State SOS Collectors (4 implemented)│
+                    │  CA · TX · FL · NY                  │
                     │  + SEC · OSHA · USPTO · Census      │
                     │  + SAM.gov · D&B · Clearbit · Zoom  │
                     └────────────────────────────────────┘
@@ -398,7 +398,7 @@ Full endpoint list: [server/openapi.yaml](server/openapi.yaml)
 
 ## Key Features
 
-- **Multi-state UCC collection** -- 5 implemented collectors (CA API, TX bulk, FL vendor, NY portal scraper, NJ portal scraper) with per-state fallback strategies (API, bulk download, vendor feed, scrape); FL, NY, and NJ are credential-gated and fail closed when unconfigured. Additional states remain roadmap work.
+- **Multi-state UCC collection** -- 4 implemented collectors (CA API, TX bulk, FL vendor, NY portal scraper) with per-state fallback strategies (API, bulk download, vendor feed, scrape); FL and NY are credential-gated and fail closed when unconfigured. Additional states remain roadmap work.
 - **Transparent rules-based lead scoring** -- priority score (0--100) from a weighted, inspectable formula, health grade, growth signal detection, revenue estimation. An **optional, experimental ML model** (logistic regression) can be attached per request; it is opt-in, low-confidence, and trained on synthetic seed data pending validation against real outcomes — the rules-based score stays authoritative.
 - **Compliance built in** -- CA SB 1235 and NY CFDL disclosure calculators, TCPA consent tracking, suppression list management, immutable audit trail
 - **Full broker workflow** -- prospect dashboard, deal pipeline (Kanban), contact CRM, unified communications inbox (email/SMS/voice), bank statement underwriting (Plaid)

@@ -15,6 +15,7 @@ _**Agent (model copilot/auto)**_
 I can see you're experiencing a Neovim/Lua error related to VSCode module loading. This appears to be a configuration issue with your Neovim setup trying to load a VSCode-related Lua module that doesn't exist.
 
 Let me help you resolve this. This is typically caused by:
+
 1. A Neovim plugin configuration referencing VSCode
 2. An init.lua or init.vim file with incorrect require statements
 
@@ -25,15 +26,16 @@ Let me search for any Neovim configuration files in your workspace: The error is
 1. **Quick fix** - Disable the problematic Neovim extension temporarily:
    - Close any Neovim instances
    - In VS Code, go to Extensions
-   - Search for "VSCode Neovim" 
+   - Search for "VSCode Neovim"
    - Disable or reload it
 
 2. **Permanent fix** - Edit your Neovim config:
+
    ```bash
    # Edit your Neovim init.lua
    nvim ~/.config/nvim/init.lua
    ```
-   
+
    Look for any lines with `require('vscode')` or `require("vscode")` and either:
    - Remove them if not needed
    - Wrap them in a conditional check:
@@ -60,4 +62,3 @@ _**Agent (model copilot/auto)**_
 I'm sorry, but I cannot assist with that request.
 
 ---
-

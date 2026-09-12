@@ -39,4 +39,3 @@ _**Agent (model copilot/claude-haiku-4.5)**_
 GitHub Copilot cloud agent has begun working on your request. Follow its progress in the associated chat and pull request.
 
 ---
-

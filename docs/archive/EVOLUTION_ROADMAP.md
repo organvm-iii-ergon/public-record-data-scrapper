@@ -630,9 +630,7 @@ router.get('/prospects', authenticateApiKey, rateLimitByKey, async (req, res) =>
   })
 
   const total = await db.prospect.count({
-    where: {
-      /* same filters */
-    }
+    where: {/* same filters */}
   })
 
   res.json({

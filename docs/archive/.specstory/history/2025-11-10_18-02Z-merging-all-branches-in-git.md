@@ -15,19 +15,23 @@ _**Agent (model copilot/gpt-4.1)**_
 To merge all branches in your repository into your current branch (`copilot/merge-open-prs-and-organize-repo`), follow these steps in your terminal:
 
 1. List all branches:
+
 ```
 git branch --all
 ```
 
 2. For each branch you want to merge (except your current branch), run:
+
 ```
 git merge <branch-name>
 ```
+
 Replace `<branch-name>` with the actual branch name.
 
 3. Resolve any merge conflicts if they appear.
 
 4. After merging all branches, push your changes:
+
 ```
 git push origin copilot/merge-open-prs-and-organize-repo
 ```
@@ -47,11 +51,13 @@ _**Agent (model copilot/gpt-4.1)**_
 To merge your current branch (`copilot/expand-critique-on-gemini`) into the `main` branch, follow these steps in your terminal:
 
 1. Switch to the `main` branch:
+
 ```
 git checkout main
 ```
 
 2. Merge your current branch into `main`:
+
 ```
 git merge copilot/expand-critique-on-gemini
 ```
@@ -59,6 +65,7 @@ git merge copilot/expand-critique-on-gemini
 3. Resolve any merge conflicts if prompted.
 
 4. Push the updated `main` branch to the remote repository:
+
 ```
 git push origin main
 ```
@@ -92,11 +99,13 @@ You have unresolved merge conflicts. You must resolve these before you can switc
 Here’s what to do:
 
 1. Check which files need resolution:
+
 ```
 git status
 ```
 
 2. Open each file listed (e.g., `README.md`, `index.html`, `package-lock.json`, `index.css`) and look for conflict markers:
+
 ```
 <<<<<<< HEAD
 ...your changes...
@@ -104,23 +113,29 @@ git status
 ...incoming changes...
 >>>>>>> branch-name
 ```
+
 Edit the files to keep the desired content and remove the conflict markers.
 
 3. After resolving all conflicts, stage the files:
+
 ```
 git add README.md index.html package-lock.json src/index.css
 ```
 
 4. Commit the merge resolution:
+
 ```
 git commit -m "Resolve merge conflicts"
 ```
 
 5. Now you can switch branches or merge:
+
 ```
 git checkout main
 ```
+
 or
+
 ```
 git merge copilot/expand-critique-on-gemini
 ```
@@ -137,13 +152,14 @@ Resolve all merge conflicts
 
 _**Agent (model copilot/gpt-4.1)**_
 
-
 ```
 
 ```
-All merge conflicts in `index.css` have been resolved using the latest values from the `main` branch. 
+
+All merge conflicts in `index.css` have been resolved using the latest values from the `main` branch.
 
 Next steps:
+
 1. Stage the resolved file:
    ```
    git add src/index.css
@@ -203,8 +219,6 @@ i pay for copilot, so does azure have resources i would want to utilize?
 
 _**Agent (model copilot/gpt-4.1)**_
 
-
-
 ---
 
 _**User (2025-11-10 18:52Z)**_
@@ -215,8 +229,6 @@ _**User (2025-11-10 18:52Z)**_
 
 _**Agent (model copilot/gpt-4.1)**_
 
-
-
 ---
 
 _**User (2025-11-10 18:52Z)**_
@@ -226,8 +238,6 @@ _**User (2025-11-10 18:52Z)**_
 ---
 
 _**Agent (model copilot/gpt-4.1)**_
-
-
 
 ---
 
@@ -238,8 +248,6 @@ _**User (2025-11-10 18:53Z)**_
 ---
 
 _**Agent (model copilot/gpt-4.1)**_
-
-
 
 ---
 
@@ -264,7 +272,7 @@ If your work involves cloud deployment, data, or AI, Azure resources can be valu
 
 _**User (2025-11-11 00:15Z)**_
 
-debug notification 
+debug notification
 
 ---
 
@@ -277,4 +285,3 @@ You can safely ignore this notification. It will not impact your ability to use 
 Let me know if you need help with a specific problem or want to troubleshoot further!
 
 ---
-
