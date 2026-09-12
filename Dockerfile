@@ -1,6 +1,6 @@
 # Multi-stage build for UCC-MCA Intelligence Platform
 # Stage 1: Dependencies
-FROM node:24.19.0-alpine3.24 AS deps
+FROM node:26.8-alpine3.24 AS deps
 WORKDIR /app
 
 # Install dependencies for native modules
@@ -15,7 +15,7 @@ RUN npm ci
 
 # Stage 1b: Production-only dependencies (no dev tooling)
 # Produces a node_modules tree containing only runtime deps for the final image.
-FROM node:24.19.0-alpine3.24 AS prod-deps
+FROM node:26.8-alpine3.24 AS prod-deps
 WORKDIR /app
 
 RUN apk add --no-cache libc6-compat
@@ -26,7 +26,7 @@ COPY scripts/ensure-main-branch.mjs ./scripts/ensure-main-branch.mjs
 RUN npm ci --omit=dev
 
 # Stage 2: Builder
-FROM node:24.19.0-alpine3.24 AS builder
+FROM node:26.8-alpine3.24 AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -41,7 +41,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build:render
 
 # Stage 3: Production runner
-FROM node:24.19.0-alpine3.24 AS runner
+FROM node:26.8-alpine3.24 AS runner
 WORKDIR /app
 
 # Security: Run as non-root user
