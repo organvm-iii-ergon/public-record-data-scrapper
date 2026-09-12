@@ -38,14 +38,14 @@ async function main() {
   console.log('Ingesting data...')
   const ingestionResults = await ingestionService.ingestData(['NY', 'CA'])
 
-  ingestionResults.forEach(result => {
+  ingestionResults.forEach((result) => {
     console.log(`\n  Source: ${result.metadata.source}`)
     console.log(`  Status: ${result.success ? '✓ Success' : '✗ Failed'}`)
     console.log(`  Records: ${result.metadata.recordCount}`)
     console.log(`  Time: ${result.metadata.processingTime}ms`)
     if (result.errors.length > 0) {
       console.log(`  Errors:`)
-      result.errors.forEach(err => console.log(`    - ${err}`))
+      result.errors.forEach((err) => console.log(`    - ${err}`))
     }
   })
 
@@ -92,7 +92,7 @@ async function main() {
   console.log(`  Fields Enriched: ${result.enrichedFields.join(', ')}`)
   if (result.errors.length > 0) {
     console.log(`  Errors:`)
-    result.errors.forEach(err => console.log(`    - ${err}`))
+    result.errors.forEach((err) => console.log(`    - ${err}`))
   }
 
   console.log(`\nEnriched Prospect:`)
@@ -110,9 +110,11 @@ async function main() {
 
   if (prospect.growthSignals.length > 0) {
     console.log(`\n  Growth Signals:`)
-    prospect.growthSignals.forEach(signal => {
+    prospect.growthSignals.forEach((signal) => {
       console.log(`    - [${signal.type}] ${signal.description}`)
-      console.log(`      Date: ${signal.detectedDate}, Score: ${signal.score}, Confidence: ${(signal.confidence * 100).toFixed(0)}%`)
+      console.log(
+        `      Date: ${signal.detectedDate}, Score: ${signal.score}, Confidence: ${(signal.confidence * 100).toFixed(0)}%`
+      )
     })
   }
 
@@ -150,9 +152,11 @@ async function main() {
 
   console.log(`\nBatch Results:`)
   console.log(`  Total Processed: ${results.length}`)
-  console.log(`  Successful: ${results.filter(r => r.success).length}`)
-  console.log(`  Failed: ${results.filter(r => !r.success).length}`)
-  console.log(`  Avg Confidence: ${((results.reduce((sum, r) => sum + r.confidence, 0) / results.length) * 100).toFixed(1)}%`)
+  console.log(`  Successful: ${results.filter((r) => r.success).length}`)
+  console.log(`  Failed: ${results.filter((r) => !r.success).length}`)
+  console.log(
+    `  Avg Confidence: ${((results.reduce((sum, r) => sum + r.confidence, 0) / results.length) * 100).toFixed(1)}%`
+  )
 
   prospects.forEach((p, i) => {
     console.log(`\n  Prospect ${i + 1}:`)
@@ -215,7 +219,7 @@ async function main() {
   console.log(`  Total: ${allProspects.length}`)
   if (allProspects.length > 0) {
     console.log(`  Sample:`)
-    allProspects.slice(0, 3).forEach(p => {
+    allProspects.slice(0, 3).forEach((p) => {
       console.log(`    - ${p.companyName} (${p.state}) - Priority: ${p.priorityScore}`)
     })
   }
@@ -248,7 +252,7 @@ async function main() {
 }
 
 // Run the demo
-main().catch(error => {
+main().catch((error) => {
   console.error('Demo failed:', error)
   process.exit(1)
 })

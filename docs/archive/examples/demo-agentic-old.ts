@@ -1,6 +1,6 @@
 /**
  * Agentic Forces - Demonstration Script
- * 
+ *
  * This script demonstrates the autonomous improvement capabilities
  * by running a council review and showing the analysis results.
  */
@@ -12,47 +12,53 @@ import { v4 as uuidv4 } from 'uuid'
 
 // Create sample system context
 const sampleContext: SystemContext = {
-  prospects: Array(50).fill(null).map((_, i): Prospect => ({
-    id: `prospect-${i}`,
-    companyName: `Company ${i}`,
-    industry: 'restaurant',
-    state: 'CA',
-    priorityScore: Math.random() * 100,
-    estimatedRevenue: i % 3 === 0 ? undefined : 500000 + Math.random() * 1000000,
-    healthScore: {
-      grade: 'B' as HealthGrade,
-      score: 75,
-      lastUpdated: i % 4 === 0 
-        ? new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() // 10 days old
-        : new Date().toISOString(),
-      sentimentTrend: 'stable',
-      reviewCount: 45,
-      avgSentiment: 0.7,
-      violationCount: 2
-    },
-    growthSignals: i % 5 === 0 ? [] : [
-      { 
-        id: uuidv4(),
-        type: 'hiring', 
-        description: 'Hiring new staff', 
-        detectedDate: new Date().toISOString(), 
-        score: 70, 
-        confidence: 0.8 
-      }
-    ],
-    uccFilings: [],
-    defaultDate: new Date().toISOString(),
-    timeSinceDefault: 30,
-    status: 'new' as ProspectStatus,
-    narrative: 'Sample prospect'
-  })),
+  prospects: Array(50)
+    .fill(null)
+    .map((_, i): Prospect => ({
+      id: `prospect-${i}`,
+      companyName: `Company ${i}`,
+      industry: 'restaurant',
+      state: 'CA',
+      priorityScore: Math.random() * 100,
+      estimatedRevenue: i % 3 === 0 ? undefined : 500000 + Math.random() * 1000000,
+      healthScore: {
+        grade: 'B' as HealthGrade,
+        score: 75,
+        lastUpdated:
+          i % 4 === 0
+            ? new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() // 10 days old
+            : new Date().toISOString(),
+        sentimentTrend: 'stable',
+        reviewCount: 45,
+        avgSentiment: 0.7,
+        violationCount: 2
+      },
+      growthSignals:
+        i % 5 === 0
+          ? []
+          : [
+              {
+                id: uuidv4(),
+                type: 'hiring',
+                description: 'Hiring new staff',
+                detectedDate: new Date().toISOString(),
+                score: 70,
+                confidence: 0.8
+              }
+            ],
+      uccFilings: [],
+      defaultDate: new Date().toISOString(),
+      timeSinceDefault: 30,
+      status: 'new' as ProspectStatus,
+      narrative: 'Sample prospect'
+    })),
   competitors: [],
   portfolio: [],
   userActions: [
     { type: 'search', timestamp: new Date().toISOString(), details: {} },
     { type: 'filter', timestamp: new Date().toISOString(), details: {} },
     { type: 'claim', timestamp: new Date().toISOString(), details: {} },
-    { type: 'export', timestamp: new Date().toISOString(), details: {} },
+    { type: 'export', timestamp: new Date().toISOString(), details: {} }
   ],
   performanceMetrics: {
     avgResponseTime: 1200, // Slow response time
@@ -70,7 +76,9 @@ async function runDemo() {
   console.log(`   - Prospects: ${sampleContext.prospects.length}`)
   console.log(`   - User Actions: ${sampleContext.userActions.length}`)
   console.log(`   - Avg Response Time: ${sampleContext.performanceMetrics.avgResponseTime}ms`)
-  console.log(`   - User Satisfaction: ${sampleContext.performanceMetrics.userSatisfactionScore}/10`)
+  console.log(
+    `   - User Satisfaction: ${sampleContext.performanceMetrics.userSatisfactionScore}/10`
+  )
   console.log('\n' + '='.repeat(80))
 
   // Create agentic engine
@@ -93,14 +101,15 @@ async function runDemo() {
     console.log('\n📋 Council Review Results:\n')
 
     // Display findings by agent
-    result.review.analyses.forEach(analysis => {
-      const agent = result.review.agents.find(a => a.id === analysis.agentId)
+    result.review.analyses.forEach((analysis) => {
+      const agent = result.review.agents.find((a) => a.id === analysis.agentId)
       console.log(`\n🔍 ${agent?.name || 'Unknown Agent'} (${analysis.agentRole}):`)
-      
+
       if (analysis.findings.length > 0) {
         console.log('   Findings:')
-        analysis.findings.forEach(finding => {
-          const icon = finding.severity === 'critical' ? '🔴' : finding.severity === 'warning' ? '🟡' : '🔵'
+        analysis.findings.forEach((finding) => {
+          const icon =
+            finding.severity === 'critical' ? '🔴' : finding.severity === 'warning' ? '🟡' : '🔵'
           console.log(`   ${icon} [${finding.severity.toUpperCase()}] ${finding.description}`)
         })
       } else {
@@ -109,8 +118,15 @@ async function runDemo() {
 
       if (analysis.improvements.length > 0) {
         console.log('   Improvements Suggested:')
-        analysis.improvements.forEach(imp => {
-          const priorityIcon = imp.priority === 'critical' ? '🔴' : imp.priority === 'high' ? '🟠' : imp.priority === 'medium' ? '🟡' : '🟢'
+        analysis.improvements.forEach((imp) => {
+          const priorityIcon =
+            imp.priority === 'critical'
+              ? '🔴'
+              : imp.priority === 'high'
+                ? '🟠'
+                : imp.priority === 'medium'
+                  ? '🟡'
+                  : '🟢'
           console.log(`   ${priorityIcon} [${imp.priority.toUpperCase()}] ${imp.title}`)
           console.log(`      Safety Score: ${imp.safetyScore}/100`)
           console.log(`      Automatable: ${imp.automatable ? '✅ Yes' : '❌ No'}`)
@@ -126,7 +142,7 @@ async function runDemo() {
 
     if (result.executedImprovements.length > 0) {
       console.log('\n✅ Executed Improvements:')
-      result.executedImprovements.forEach(imp => {
+      result.executedImprovements.forEach((imp) => {
         console.log(`   - ${imp.suggestion.title}`)
         if (imp.result) {
           console.log(`     Result: ${imp.result.feedback}`)
@@ -136,9 +152,11 @@ async function runDemo() {
 
     if (result.pendingImprovements.length > 0) {
       console.log('\n⏳ Pending Improvements (require review):')
-      result.pendingImprovements.forEach(imp => {
+      result.pendingImprovements.forEach((imp) => {
         console.log(`   - ${imp.suggestion.title}`)
-        console.log(`     Reason: ${imp.suggestion.safetyScore < engine.getConfig().safetyThreshold ? 'Safety score too low' : 'Category requires review'}`)
+        console.log(
+          `     Reason: ${imp.suggestion.safetyScore < engine.getConfig().safetyThreshold ? 'Safety score too low' : 'Category requires review'}`
+        )
       })
     }
 
@@ -161,7 +179,6 @@ async function runDemo() {
     console.log('  ✅ Flagged risky improvements for manual review')
     console.log('  ✅ Maintained detailed audit trail and metrics')
     console.log('\n' + '='.repeat(80))
-
   } catch (error) {
     console.error('\n❌ Error during demonstration:', error)
   }

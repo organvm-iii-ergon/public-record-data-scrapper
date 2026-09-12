@@ -9,6 +9,7 @@ _**User (2025-11-11 08:50Z)**_
 Analyze this codebase to generate or update `.github/copilot-instructions.md` for guiding AI coding agents.
 
 Focus on discovering the essential knowledge that would help an AI agents be immediately productive in this codebase. Consider aspects like:
+
 - The "big picture" architecture that requires reading multiple files to understand - major components, service boundaries, data flows, and the "why" behind structural decisions
 - Critical developer workflows (builds, tests, debugging) especially commands that aren't obvious from file inspection alone
 - Project-specific conventions and patterns that differ from common practices
@@ -17,6 +18,7 @@ Focus on discovering the essential knowledge that would help an AI agents be imm
 Source existing AI conventions from `**/{.github/copilot-instructions.md,AGENT.md,AGENTS.md,CLAUDE.md,.cursorrules,.windsurfrules,.clinerules,.cursor/rules/**,.windsurf/rules/**,.clinerules/**,README.md}` (do one glob search).
 
 Guidelines (read more at https://aka.ms/vscode-instructions-docs):
+
 - If `.github/copilot-instructions.md` exists, merge intelligently - preserve valuable content while updating outdated sections
 - Write concise, actionable instructions (~20-50 lines) using markdown structure
 - Include specific examples from the codebase when describing patterns
@@ -30,7 +32,7 @@ Update `.github/copilot-instructions.md` for the user, then ask for feedback on 
 
 _**Agent (model copilot/gpt-5-codex)**_
 
-**Searching for instruction files with glob pattern****Reading GitHub instructions****Reviewing existing instructions and README****Investigating architecture and resolving conflicts****Noting additional components needed****Checking data structures in types.ts****Reviewing agent implementations****Identifying base agent need****Identifying additional agent files****Examining UI components and entry point****Capturing architecture details****Identifying key patterns and modules****Noting key libraries and tests****Identifying testing tools****Reviewing build and config details****Reviewing key documentation for features****Reviewing documentation and UI components****Highlighting project setup guidelines****Summarizing data flow and architecture****Checking ML scoring integration****Reviewing data types in types.ts****Preparing to incorporate command and test instructions****Highlighting state persistence and theme provider****Reviewing theme and data usage****Reviewing styling and project structure****Preparing to review tests and Tailwind config**[object Object]
+**Searching for instruction files with glob pattern****Reading GitHub instructions****Reviewing existing instructions and README****Investigating architecture and resolving conflicts****Noting additional components needed****Checking data structures in types.ts****Reviewing agent implementations****Identifying base agent need****Identifying additional agent files****Examining UI components and entry point****Capturing architecture details****Identifying key patterns and modules****Noting key libraries and tests****Identifying testing tools****Reviewing build and config details****Reviewing key documentation for features****Reviewing documentation and UI components****Highlighting project setup guidelines****Summarizing data flow and architecture****Checking ML scoring integration****Reviewing data types in types.ts****Preparing to incorporate command and test instructions****Highlighting state persistence and theme provider****Reviewing theme and data usage****Reviewing styling and project structure\****Preparing to review tests and Tailwind config**[object Object]
 
 ---
 
@@ -42,7 +44,4 @@ _**User (2025-11-11 08:51Z)**_
 
 _**Agent (model copilot/gpt-5-codex)**_
 
-
-
 ---
-

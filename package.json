@@ -1,7 +1,7 @@
 {
-  "name": "spark-template",
+  "name": "public-record-data-scrapper",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "engines": {
     "node": "24.19.0",
