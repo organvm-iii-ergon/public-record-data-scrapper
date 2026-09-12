@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import {
-  BankStatementAnalyzer,
-  type CsvTransaction
-} from '../../services/BankStatementAnalyzer'
+import { BankStatementAnalyzer, type CsvTransaction } from '../../services/BankStatementAnalyzer'
 
 const analyzer = new BankStatementAnalyzer()
 
@@ -150,9 +147,13 @@ describe('BankStatementAnalyzer', () => {
   it('analyzes the shipped sample statement into the demo narrative', () => {
     // The committed sample is the demo artifact — bind it to the analyzer so
     // a drift in either shows up here, not in the room.
-    const sample = JSON.parse(
-      readFileSync(join(__dirname, '../../../samples/bank-statement-sample.json'), 'utf8')
-    ) as { transactions: CsvTransaction[] }
+    const legacyPath = join(__dirname, '../../../samples/bank-statement-sample.json')
+    const archivePath = join(__dirname, '../../../docs/archive/samples/bank-statement-sample.json')
+    const samplePath = existsSync(legacyPath) ? legacyPath : archivePath
+
+    const sample = JSON.parse(readFileSync(samplePath, 'utf8')) as {
+      transactions: CsvTransaction[]
+    }
 
     const result = analyzer.analyze(sample.transactions)
 
