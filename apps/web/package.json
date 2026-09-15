@@ -6,8 +6,8 @@
   "dependencies": {
     "@public-records/core": "file:../../packages/core",
     "@public-records/ui": "file:../../packages/ui",
-    "papaparse": "5.5.3",
-    "playwright": "1.60.0",
+    "papaparse": "5.7.0",
+    "playwright": "1.63.0",
     "winston": "3.19.0"
   },
   "scripts": {
