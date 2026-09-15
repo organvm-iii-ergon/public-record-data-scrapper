@@ -9,11 +9,7 @@ import { ArrowUp, ArrowDown, ListNumbers } from '@phosphor-icons/react'
 import { Button } from '@public-records/ui/button'
 
 export type SortField =
-  | 'priorityScore'
-  | 'healthScore'
-  | 'signalCount'
-  | 'defaultAge'
-  | 'companyName'
+  'priorityScore' | 'healthScore' | 'signalCount' | 'defaultAge' | 'companyName'
 export type SortDirection = 'asc' | 'desc'
 
 interface SortControlsProps {

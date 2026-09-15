@@ -18,11 +18,13 @@ This guide provides step-by-step instructions for implementing the UI mockup des
 ### 1.1 Enhanced Hero Stats Cards
 
 **Files to modify:**
+
 - `src/components/StatsOverview.tsx`
 
 **Implementation steps:**
 
 1. **Add Sparkline Charts**
+
 ```typescript
 // Install recharts if not present (already installed)
 import { Line, LineChart } from 'recharts'
@@ -37,6 +39,7 @@ const generateSparklineData = () => {
 ```
 
 2. **Enhanced Count-Up Animation**
+
 ```typescript
 import { motion, useSpring, useTransform } from 'framer-motion'
 
@@ -46,16 +49,17 @@ function AnimatedNumber({ value }: { value: number }) {
   const display = useTransform(spring, (current) =>
     Math.floor(current).toLocaleString()
   )
-  
+
   useEffect(() => {
     spring.set(value)
   }, [spring, value])
-  
+
   return <motion.span>{display}</motion.span>
 }
 ```
 
 3. **Add Trend Indicators**
+
 ```typescript
 interface TrendData {
   value: number
@@ -83,11 +87,13 @@ function TrendIndicator({ trend }: { trend: TrendData }) {
 ### 1.2 Improved Filter Sidebar
 
 **Files to modify:**
+
 - `src/components/AdvancedFilters.tsx`
 
 **Implementation steps:**
 
 1. **Add Collapsible Sections**
+
 ```typescript
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
@@ -104,6 +110,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 ```
 
 2. **Add Filter Counts**
+
 ```typescript
 // Show number of items matching each filter option
 <Checkbox id="restaurant">
@@ -113,6 +120,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 ```
 
 3. **Add Quick Filter Pills**
+
 ```typescript
 const quickFilters = [
   { id: 'unclaimed', label: 'Unclaimed Only', icon: Target },
@@ -140,6 +148,7 @@ const quickFilters = [
 ### 1.3 Real-Time Activity Feed (New Component)
 
 **File to create:**
+
 - `src/components/ActivityFeed.tsx`
 
 **Implementation:**
@@ -181,7 +190,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
         </h3>
         <Button variant="ghost" size="sm">View All</Button>
       </div>
-      
+
       <ScrollArea className="h-[400px]">
         <div className="space-y-3">
           {activities.map((activity) => (
@@ -211,6 +220,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
 ```
 
 **Add to App.tsx:**
+
 ```typescript
 // In the main layout, add a right sidebar for desktop
 <div className="hidden xl:block xl:w-80">
@@ -221,6 +231,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
 ### 1.4 View Mode Toggle
 
 **File to modify:**
+
 - `src/App.tsx`
 
 **Implementation:**
@@ -277,6 +288,7 @@ const [viewMode, setViewMode] = useState<ViewMode>('grid')
 ### 2.1 Enhanced Health Score Display
 
 **File to modify:**
+
 - `src/components/ProspectCard.tsx`
 
 **Implementation:**
@@ -293,7 +305,7 @@ function HealthScoreDisplay({ healthScore }: { healthScore: HealthScore }) {
           <span className="font-mono font-semibold">{healthScore.score}/100</span>
         </div>
       </div>
-      
+
       <div className="relative">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <motion.div
@@ -310,7 +322,7 @@ function HealthScoreDisplay({ healthScore }: { healthScore: HealthScore }) {
           />
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2 text-xs">
         <span className="text-muted-foreground">Trend:</span>
         {healthScore.sentimentTrend === 'improving' && (
@@ -338,9 +350,9 @@ function HealthScoreDisplay({ healthScore }: { healthScore: HealthScore }) {
 ```typescript
 function SignalTimeline({ signals }: { signals: GrowthSignal[] }) {
   const [expanded, setExpanded] = useState(false)
-  
+
   const visibleSignals = expanded ? signals : signals.slice(0, 3)
-  
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -358,7 +370,7 @@ function SignalTimeline({ signals }: { signals: GrowthSignal[] }) {
           </Button>
         )}
       </div>
-      
+
       <div className="space-y-2">
         {visibleSignals.map((signal, index) => (
           <motion.div
@@ -433,20 +445,20 @@ useEffect(() => {
       e.preventDefault()
       searchInputRef.current?.focus()
     }
-    
+
     // Ctrl/Cmd + F for filters
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
       e.preventDefault()
       setFiltersOpen(true)
     }
-    
+
     // Esc to close dialogs
     if (e.key === 'Escape') {
       setDialogOpen(false)
       setFiltersOpen(false)
     }
   }
-  
+
   window.addEventListener('keydown', handleKeyPress)
   return () => window.removeEventListener('keydown', handleKeyPress)
 }, [])
@@ -455,16 +467,17 @@ useEffect(() => {
 ### 3.2 Empty States
 
 **File to create:**
+
 - `src/components/EmptyState.tsx`
 
 **Implementation:**
 
 ```typescript
-export function EmptyState({ 
-  icon: Icon, 
-  title, 
-  description, 
-  action 
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action
 }: {
   icon: any
   title: string
@@ -505,9 +518,9 @@ function ProspectCardSkeleton() {
           </div>
           <Skeleton className="h-8 w-12" />
         </div>
-        
+
         <Skeleton className="h-20 w-full" />
-        
+
         <div className="flex gap-2">
           <Skeleton className="h-9 flex-1" />
           <Skeleton className="h-9 flex-1" />
@@ -527,14 +540,14 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 
 function VirtualizedProspectGrid({ prospects }: { prospects: Prospect[] }) {
   const parentRef = useRef<HTMLDivElement>(null)
-  
+
   const virtualizer = useVirtualizer({
     count: prospects.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 350, // Estimated card height
     overscan: 5
   })
-  
+
   return (
     <div ref={parentRef} className="h-[600px] overflow-auto">
       <div
@@ -592,17 +605,23 @@ const filteredProspects = useMemo(() => {
 }, [prospects, filters])
 
 // Memoize card rendering
-const ProspectCard = memo(({ prospect }: { prospect: Prospect }) => {
-  // Card implementation
-}, (prevProps, nextProps) => {
-  return prevProps.prospect.id === nextProps.prospect.id &&
-         prevProps.prospect.status === nextProps.prospect.status
-})
+const ProspectCard = memo(
+  ({ prospect }: { prospect: Prospect }) => {
+    // Card implementation
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.prospect.id === nextProps.prospect.id &&
+      prevProps.prospect.status === nextProps.prospect.status
+    )
+  }
+)
 ```
 
 ## Testing Checklist
 
 ### Visual Testing
+
 - [ ] All breakpoints (mobile, tablet, desktop)
 - [ ] Dark/light themes if applicable
 - [ ] High contrast mode
@@ -614,6 +633,7 @@ const ProspectCard = memo(({ prospect }: { prospect: Prospect }) => {
 - [ ] Error states
 
 ### Functional Testing
+
 - [ ] Filters work correctly
 - [ ] Sorting works correctly
 - [ ] Search works correctly
@@ -624,6 +644,7 @@ const ProspectCard = memo(({ prospect }: { prospect: Prospect }) => {
 - [ ] Forms validate correctly
 
 ### Performance Testing
+
 - [ ] Initial page load < 3s
 - [ ] Smooth animations (60fps)
 - [ ] No layout shifts (CLS < 0.1)
@@ -632,6 +653,7 @@ const ProspectCard = memo(({ prospect }: { prospect: Prospect }) => {
 - [ ] Network requests optimized
 
 ### Accessibility Testing
+
 - [ ] Screen reader compatible
 - [ ] Keyboard navigable
 - [ ] Sufficient color contrast
@@ -642,6 +664,7 @@ const ProspectCard = memo(({ prospect }: { prospect: Prospect }) => {
 ## Deployment
 
 ### Build Process
+
 ```bash
 # Install dependencies
 npm install
@@ -657,9 +680,11 @@ npm run preview
 ```
 
 ### Environment Variables
+
 Ensure all necessary environment variables are set in production.
 
 ### Performance Monitoring
+
 - Set up Core Web Vitals monitoring
 - Track user interactions
 - Monitor error rates
@@ -668,12 +693,14 @@ Ensure all necessary environment variables are set in production.
 ## Maintenance
 
 ### Regular Updates
+
 - Review and update dependencies monthly
 - Test new browser versions
 - Monitor user feedback
 - Track analytics for usage patterns
 
 ### Documentation
+
 - Keep component documentation updated
 - Document new patterns and conventions
 - Update this guide as implementation evolves
@@ -681,6 +708,7 @@ Ensure all necessary environment variables are set in production.
 ## Support
 
 For questions or issues with implementation:
+
 1. Check existing components in `src/components/ui/`
 2. Refer to Radix UI documentation
 3. Review Tailwind CSS documentation
@@ -689,6 +717,7 @@ For questions or issues with implementation:
 ## Next Steps
 
 After completing core implementation:
+
 1. Gather user feedback
 2. A/B test design variations
 3. Iterate based on usage data

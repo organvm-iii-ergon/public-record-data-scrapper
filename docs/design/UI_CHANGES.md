@@ -45,6 +45,7 @@ The platform uses a sophisticated triadic color scheme designed specifically for
 ### WCAG Compliance
 
 All color pairings meet WCAG AA accessibility standards with contrast ratios:
+
 - Background (Off-White) / Foreground Navy: **13.2:1** ✓
 - Primary (Navy) / Primary-Foreground White: **12.8:1** ✓
 - Secondary (Cyan) / Secondary-Foreground Navy: **6.9:1** ✓
@@ -61,13 +62,13 @@ All color pairings meet WCAG AA accessibility standards with contrast ratios:
 
 ### Hierarchy
 
-| Element | Style | Size | Letter Spacing | Line Height |
-|---------|-------|------|----------------|-------------|
-| H1 (Section Headers) | SemiBold | 32px | -0.02em | 1.2 |
-| H2 (Card Titles) | Medium | 20px | -0.01em | 1.3 |
-| H3 (Data Labels) | Medium | 14px | 0em | 1.4 |
-| Body | Regular | 16px | 0em | 1.5 |
-| Small (Metadata) | Regular | 13px | 0em | 1.4 |
+| Element              | Style    | Size | Letter Spacing | Line Height |
+| -------------------- | -------- | ---- | -------------- | ----------- |
+| H1 (Section Headers) | SemiBold | 32px | -0.02em        | 1.2         |
+| H2 (Card Titles)     | Medium   | 20px | -0.01em        | 1.3         |
+| H3 (Data Labels)     | Medium   | 14px | 0em            | 1.4         |
+| Body                 | Regular  | 16px | 0em            | 1.5         |
+| Small (Metadata)     | Regular  | 13px | 0em            | 1.4         |
 
 ### Monospace Font
 
@@ -91,6 +92,7 @@ Applied to cards and overlays throughout the interface:
 ```
 
 **Characteristics:**
+
 - 65% white background opacity for optimal content visibility
 - 20px backdrop blur with 180% saturation for depth
 - Subtle border for definition
@@ -102,10 +104,7 @@ Used for larger containers and page-level backgrounds:
 
 ```css
 .mica-effect {
-  background: linear-gradient(135deg, 
-    oklch(1 0 0 / 0.7) 0%,
-    oklch(0.98 0.01 250 / 0.6) 100%
-  );
+  background: linear-gradient(135deg, oklch(1 0 0 / 0.7) 0%, oklch(0.98 0.01 250 / 0.6) 100%);
   backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   border: 1px solid oklch(1 0 0 / 0.2);
@@ -113,6 +112,7 @@ Used for larger containers and page-level backgrounds:
 ```
 
 **Characteristics:**
+
 - Gradient background for subtle depth
 - Stronger 40px blur for more pronounced effect
 - Higher opacity for structural elements
@@ -362,6 +362,7 @@ Used for larger containers and page-level backgrounds:
 #### 1. Entrance Animations
 
 **Staggered Fade-In**:
+
 ```typescript
 initial={{ opacity: 0, y: 20 }}
 animate={{ opacity: 1, y: 0 }}
@@ -373,6 +374,7 @@ transition={{ duration: 0.4, delay: index * 0.1 }}
 #### 2. Hover Animations
 
 **Card Lift**:
+
 ```typescript
 whileHover={{ scale: 1.02, y: -4 }}
 transition={{ duration: 0.2, ease: "easeOut" }}
@@ -383,6 +385,7 @@ transition={{ duration: 0.2, ease: "easeOut" }}
 #### 3. Continuous Animations
 
 **Subtle Float**:
+
 ```typescript
 animate={{ y: [0, -3, 0] }}
 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -391,6 +394,7 @@ transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
 **Use Case**: Icons, indicators showing live data
 
 **Pulse Scale**:
+
 ```typescript
 animate={{ scale: [1, 1.05, 1] }}
 transition={{ duration: 2, repeat: Infinity }}
@@ -401,6 +405,7 @@ transition={{ duration: 2, repeat: Infinity }}
 #### 4. State Transitions
 
 **Slide In**:
+
 ```typescript
 initial={{ opacity: 0, x: -10 }}
 animate={{ opacity: 1, x: 0 }}
@@ -410,6 +415,7 @@ transition={{ duration: 0.3 }}
 **Use Case**: New data appearing (growth signals)
 
 **Scale In**:
+
 ```typescript
 initial={{ scale: 0.8, opacity: 0 }}
 animate={{ scale: 1, opacity: 1 }}
@@ -421,26 +427,45 @@ transition={{ duration: 0.3, ease: "backOut" }}
 ### Custom Keyframe Animations
 
 #### Ticker Slide
+
 ```css
 @keyframes ticker-slide {
-  0% { transform: translateY(10px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 ```
 
 #### Float Subtle
+
 ```css
 @keyframes float-subtle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 ```
 
 #### Pulse Glow
+
 ```css
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 10px oklch(0.65 0.30 45 / 0.3); }
-  50% { box-shadow: 0 0 20px oklch(0.65 0.30 45 / 0.5); }
+  0%,
+  100% {
+    box-shadow: 0 0 10px oklch(0.65 0.3 45 / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px oklch(0.65 0.3 45 / 0.5);
+  }
 }
 ```
 
@@ -454,13 +479,13 @@ All components are designed mobile-first with progressive enhancement for larger
 
 ### Breakpoints
 
-| Name | Min Width | Target Devices |
-|------|-----------|----------------|
-| sm | 640px | Large phones, small tablets |
-| md | 768px | Tablets |
-| lg | 1024px | Laptops, small desktops |
-| xl | 1280px | Desktops |
-| 2xl | 1536px | Large desktops |
+| Name | Min Width | Target Devices              |
+| ---- | --------- | --------------------------- |
+| sm   | 640px     | Large phones, small tablets |
+| md   | 768px     | Tablets                     |
+| lg   | 1024px    | Laptops, small desktops     |
+| xl   | 1280px    | Desktops                    |
+| 2xl  | 1536px    | Large desktops              |
 
 ### Mobile Optimizations
 
@@ -674,11 +699,11 @@ All text and interactive elements meet minimum 4.5:1 contrast ratio (7:1 for lar
 ### Supported Browsers
 
 | Browser | Minimum Version |
-|---------|----------------|
-| Chrome | 90+ |
-| Firefox | 88+ |
-| Safari | 14+ |
-| Edge | 90+ |
+| ------- | --------------- |
+| Chrome  | 90+             |
+| Firefox | 88+             |
+| Safari  | 14+             |
+| Edge    | 90+             |
 
 ### Progressive Enhancement
 

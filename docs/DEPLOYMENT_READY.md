@@ -7,11 +7,11 @@ available as both JSON and CSV.
 
 ### Access Points
 
-| Surface | Command / Endpoint | Output |
-| --- | --- | --- |
-| CLI | `npm run scrape -- lead-export --min-score 70 --limit 100 --output-dir ./lead-export` | Timestamped `.json` and `.csv` files |
-| API JSON | `GET /api/prospects/export/leads?min_score=70&limit=100` | JSON batch with metadata and leads |
-| API CSV | `GET /api/prospects/export/leads?format=csv&min_score=70` | Downloadable CSV |
+| Surface  | Command / Endpoint                                                                    | Output                               |
+| -------- | ------------------------------------------------------------------------------------- | ------------------------------------ |
+| CLI      | `npm run scrape -- lead-export --min-score 70 --limit 100 --output-dir ./lead-export` | Timestamped `.json` and `.csv` files |
+| API JSON | `GET /api/prospects/export/leads?min_score=70&limit=100`                              | JSON batch with metadata and leads   |
+| API CSV  | `GET /api/prospects/export/leads?format=csv&min_score=70`                             | Downloadable CSV                     |
 
 ### Included Artifacts
 

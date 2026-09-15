@@ -10,14 +10,17 @@
 ## Week 13-14: Authentication & Authorization
 
 ### Task 4.1: OAuth2 + JWT Authentication
+
 **Assignee**: TBD
 **Effort**: 4 days
 **Priority**: CRITICAL
 
 #### Subtask 4.1.1: Auth0 Integration
+
 **Time**: 2 days
 
 **Setup Auth0:**
+
 ```bash
 # Install dependencies
 npm install auth0 express-jwt jwks-rsa
@@ -25,6 +28,7 @@ npm install -D @types/auth0
 ```
 
 **Auth0 Configuration:**
+
 ```typescript
 // server/auth/auth0.config.ts
 export const auth0Config = {
@@ -38,6 +42,7 @@ export const auth0Config = {
 ```
 
 **Authentication Middleware:**
+
 ```typescript
 // server/middleware/authenticate.ts
 import { expressjwt as jwt } from 'express-jwt'
@@ -58,6 +63,7 @@ export const authenticate = jwt({
 ```
 
 **Login Route:**
+
 ```typescript
 // server/routes/auth.ts
 import { Router } from 'express'
@@ -120,6 +126,7 @@ export default router
 ```
 
 **Frontend Integration:**
+
 ```typescript
 // src/lib/auth/AuthService.ts
 export class AuthService {
@@ -182,6 +189,7 @@ export class AuthService {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Auth0 application configured
 - [ ] JWT authentication working
 - [ ] Login endpoint functional
@@ -193,11 +201,13 @@ export class AuthService {
 ---
 
 ### Task 4.2: Role-Based Access Control (RBAC)
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: HIGH
 
 **User Roles:**
+
 ```typescript
 // server/auth/roles.ts
 export enum UserRole {
@@ -230,21 +240,13 @@ export const permissions = {
     'portfolio:write',
     'users:read'
   ],
-  [UserRole.ANALYST]: [
-    'prospects:read',
-    'prospects:write',
-    'competitors:read',
-    'portfolio:read'
-  ],
-  [UserRole.VIEWER]: [
-    'prospects:read',
-    'competitors:read',
-    'portfolio:read'
-  ]
+  [UserRole.ANALYST]: ['prospects:read', 'prospects:write', 'competitors:read', 'portfolio:read'],
+  [UserRole.VIEWER]: ['prospects:read', 'competitors:read', 'portfolio:read']
 }
 ```
 
 **Authorization Middleware:**
+
 ```typescript
 // server/middleware/authorize.ts
 import { Request, Response, NextFunction } from 'express'
@@ -260,9 +262,7 @@ export const authorize = (...requiredPermissions: string[]) => {
     }
 
     const userPermissions = permissions[userRole] || []
-    const hasPermission = requiredPermissions.every(p =>
-      userPermissions.includes(p)
-    )
+    const hasPermission = requiredPermissions.every((p) => userPermissions.includes(p))
 
     if (!hasPermission) {
       return res.status(403).json({
@@ -279,28 +279,20 @@ export const authorize = (...requiredPermissions: string[]) => {
 ```
 
 **Usage:**
+
 ```typescript
 // Protect routes with permissions
-router.delete(
-  '/prospects/:id',
-  authenticate,
-  authorize('prospects:delete'),
-  async (req, res) => {
-    // Only admins can delete prospects
-  }
-)
+router.delete('/prospects/:id', authenticate, authorize('prospects:delete'), async (req, res) => {
+  // Only admins can delete prospects
+})
 
-router.post(
-  '/users',
-  authenticate,
-  authorize('users:write'),
-  async (req, res) => {
-    // Only admins and managers can create users
-  }
-)
+router.post('/users', authenticate, authorize('users:write'), async (req, res) => {
+  // Only admins and managers can create users
+})
 ```
 
 **Row-Level Security (RLS) in PostgreSQL:**
+
 ```sql
 -- Enable RLS on prospects table
 ALTER TABLE prospects ENABLE ROW LEVEL SECURITY;
@@ -335,6 +327,7 @@ async list(userId: string, userRole: string, params: any) {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] 4 user roles defined
 - [ ] Permission matrix implemented
 - [ ] Authorization middleware working
@@ -345,11 +338,13 @@ async list(userId: string, userRole: string, params: any) {
 ---
 
 ### Task 4.3: API Key Authentication
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: MEDIUM
 
 **API Keys Table:**
+
 ```sql
 CREATE TABLE api_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -369,6 +364,7 @@ CREATE TABLE api_keys (
 ```
 
 **API Key Generation:**
+
 ```typescript
 // server/services/APIKeyService.ts
 import crypto from 'crypto'
@@ -425,10 +421,7 @@ export class APIKeyService {
     }
 
     // Update last used
-    await this.pool.query(
-      'UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = $1',
-      [keyHash]
-    )
+    await this.pool.query('UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = $1', [keyHash])
 
     return {
       userId: apiKeyData.user_id,
@@ -437,15 +430,13 @@ export class APIKeyService {
   }
 
   async revoke(keyHash: string): Promise<void> {
-    await this.pool.query(
-      'UPDATE api_keys SET revoked_at = NOW() WHERE key_hash = $1',
-      [keyHash]
-    )
+    await this.pool.query('UPDATE api_keys SET revoked_at = NOW() WHERE key_hash = $1', [keyHash])
   }
 }
 ```
 
 **API Key Middleware:**
+
 ```typescript
 // server/middleware/apiKeyAuth.ts
 import { Request, Response, NextFunction } from 'express'
@@ -477,6 +468,7 @@ export const apiKeyAuth = (apiKeyService: APIKeyService) => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] API key generation
 - [ ] Secure storage (hashed)
 - [ ] Verification middleware
@@ -489,11 +481,13 @@ export const apiKeyAuth = (apiKeyService: APIKeyService) => {
 ## Week 15-16: Security Hardening
 
 ### Task 4.4: Data Encryption
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: HIGH
 
 **Field-Level Encryption:**
+
 ```typescript
 // server/crypto/encryption.ts
 import crypto from 'crypto'
@@ -540,6 +534,7 @@ const encryptedPhone = encrypt(prospect.contactPhone)
 ```
 
 **AWS Secrets Manager Integration:**
+
 ```typescript
 // server/secrets/secretsManager.ts
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
@@ -571,6 +566,7 @@ const stripeKey = await secretsManager.getAPIKey('stripe')
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Encryption functions tested
 - [ ] Sensitive fields encrypted
 - [ ] Secrets in AWS Secrets Manager
@@ -580,29 +576,32 @@ const stripeKey = await secretsManager.getAPIKey('stripe')
 ---
 
 ### Task 4.5: Security Scanning
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
 
 **Dependabot Configuration:**
 `.github/dependabot.yml`
+
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 10
     reviewers:
-      - "security-team"
+      - 'security-team'
     labels:
-      - "dependencies"
-      - "security"
+      - 'dependencies'
+      - 'security'
 ```
 
 **CodeQL Analysis:**
 `.github/workflows/codeql.yml`
+
 ```yaml
 name: CodeQL
 
@@ -636,6 +635,7 @@ jobs:
 ```
 
 **OWASP ZAP Scan:**
+
 ```yaml
 # .github/workflows/security-scan.yml
 name: Security Scan
@@ -675,6 +675,7 @@ jobs:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Dependabot enabled
 - [ ] CodeQL analysis running
 - [ ] OWASP ZAP scans weekly
@@ -684,11 +685,13 @@ jobs:
 ---
 
 ### Task 4.6: Compliance & Audit Logging
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: MEDIUM
 
 **Audit Log Schema:**
+
 ```sql
 CREATE TABLE audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -708,6 +711,7 @@ CREATE TABLE audit_logs (
 ```
 
 **Audit Middleware:**
+
 ```typescript
 // server/middleware/audit.ts
 export const auditLog = (action: string, resourceType: string) => {
@@ -752,6 +756,7 @@ router.delete(
 ```
 
 **GDPR Compliance:**
+
 ```typescript
 // server/routes/gdpr.ts
 router.post('/gdpr/export-data', authenticate, async (req, res) => {
@@ -798,6 +803,7 @@ router.delete('/gdpr/delete-account', authenticate, async (req, res) => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Audit logging for all actions
 - [ ] GDPR data export
 - [ ] GDPR account deletion
@@ -809,6 +815,7 @@ router.delete('/gdpr/delete-account', authenticate, async (req, res) => {
 ## Phase 4 Completion Checklist
 
 ### Week 13-14: Authentication & Authorization ✓
+
 - [ ] Auth0 OAuth2 integration
 - [ ] JWT authentication
 - [ ] Token refresh mechanism
@@ -819,6 +826,7 @@ router.delete('/gdpr/delete-account', authenticate, async (req, res) => {
 - [ ] Rate limiting per API key
 
 ### Week 15-16: Security Hardening ✓
+
 - [ ] Field-level encryption (AES-256-GCM)
 - [ ] AWS Secrets Manager integration
 - [ ] No API keys in code
@@ -830,6 +838,7 @@ router.delete('/gdpr/delete-account', authenticate, async (req, res) => {
 - [ ] Security audit report
 
 ### Deliverables
+
 - [ ] Authentication system operational
 - [ ] RBAC fully implemented
 - [ ] All secrets in vault
@@ -839,6 +848,7 @@ router.delete('/gdpr/delete-account', authenticate, async (req, res) => {
 - [ ] Security test coverage 80%+
 
 ### Metrics
+
 - **Authentication Success Rate**: 99%+
 - **Average Auth Response Time**: <200ms
 - **Security Scan Pass Rate**: 100%

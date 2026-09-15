@@ -17,6 +17,7 @@ environment cannot reach the meta-workspace:
   only** — external repos/indices are unreachable.
 
 **TODO (run from a context with meta-organvm + `organvm` CLI access):**
+
 1. **IRF** — register completed items (security hardening, multi-tenant
    isolation, RLS, webhook verification) and any newly-discovered items; move to
    `## Completed`; update statistics.

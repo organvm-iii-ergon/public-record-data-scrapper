@@ -138,7 +138,7 @@ export class CAApiCollector implements StateCollector {
 
     const headers: Record<string, string> = {
       'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json'
     }
 
@@ -180,7 +180,7 @@ export class CAApiCollector implements StateCollector {
           throw new Error(`CA API error ${response.status}: ${errorText}`)
         }
 
-        return await response.json() as T
+        return (await response.json()) as T
       } catch (error) {
         lastError = error as Error
         this.stats.totalErrors++
@@ -354,17 +354,18 @@ export class CAApiCollector implements StateCollector {
     const rateLimitStats = this.rateLimiter.getStats()
 
     return {
-      isHealthy: this.stats.totalRequests > 0
-        ? this.stats.totalErrors / this.stats.totalRequests < 0.1
-        : true,
+      isHealthy:
+        this.stats.totalRequests > 0
+          ? this.stats.totalErrors / this.stats.totalRequests < 0.1
+          : true,
       lastCollectionTime: this.stats.lastCollectionTime,
       totalCollected: this.stats.totalCollected,
-      errorRate: this.stats.totalRequests > 0
-        ? this.stats.totalErrors / this.stats.totalRequests
-        : 0,
-      averageLatency: this.stats.latencies.length > 0
-        ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
-        : 0,
+      errorRate:
+        this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0,
+      averageLatency:
+        this.stats.latencies.length > 0
+          ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
+          : 0,
       rateLimitStats: {
         perMinute: rateLimitStats.perMinute,
         perHour: rateLimitStats.perHour,
@@ -407,13 +408,15 @@ export class CAApiCollector implements StateCollector {
       organizationType: party.Type?.toLowerCase().includes('individual')
         ? 'individual'
         : 'organization',
-      address: party.Address ? {
-        street: [party.Address.Street1, party.Address.Street2].filter(Boolean).join(' '),
-        city: party.Address.City,
-        state: party.Address.State,
-        zipCode: party.Address.PostalCode,
-        country: party.Address.Country || 'US'
-      } : undefined
+      address: party.Address
+        ? {
+            street: [party.Address.Street1, party.Address.Street2].filter(Boolean).join(' '),
+            city: party.Address.City,
+            state: party.Address.State,
+            zipCode: party.Address.PostalCode,
+            country: party.Address.Country || 'US'
+          }
+        : undefined
     }
   }
 
@@ -477,7 +480,7 @@ export class CAApiCollector implements StateCollector {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 

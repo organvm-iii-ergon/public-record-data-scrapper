@@ -49,6 +49,7 @@ aws configure
 ```
 
 Enter your:
+
 - AWS Access Key ID
 - AWS Secret Access Key
 - Default region (e.g., `us-east-1`)
@@ -115,6 +116,7 @@ terraform init
 ```
 
 Expected output:
+
 ```
 Initializing modules...
 Initializing the backend...
@@ -129,6 +131,7 @@ terraform plan
 ```
 
 This will show you:
+
 - Resources to be created (~40 resources)
 - Estimated cost
 - Configuration details
@@ -244,6 +247,7 @@ psql "$(terraform output -raw database_endpoint)"
 ### Issue: "Error: Access Denied"
 
 **Solution**: Verify AWS credentials are correct:
+
 ```bash
 aws sts get-caller-identity
 ```
@@ -251,6 +255,7 @@ aws sts get-caller-identity
 ### Issue: "Error: Backend configuration changed"
 
 **Solution**: Reinitialize Terraform:
+
 ```bash
 terraform init -reconfigure
 ```
@@ -258,6 +263,7 @@ terraform init -reconfigure
 ### Issue: "Error: Resource already exists"
 
 **Solution**: Import existing resource or change identifier:
+
 ```bash
 terraform import aws_db_instance.postgresql existing-db-id
 ```
@@ -265,6 +271,7 @@ terraform import aws_db_instance.postgresql existing-db-id
 ### Issue: "Error: Insufficient capacity"
 
 **Solution**: Try a different instance type or region:
+
 ```hcl
 db_instance_class = "db.t3.medium"  # Use smaller instance
 ```
@@ -385,7 +392,7 @@ Type `yes` when prompted.
 
 ## Support
 
-Need help? 
+Need help?
 
 - Open an [issue](https://github.com/ivi374forivi/public-record-data-scrapper/issues)
 - Check [troubleshooting guide](README.md#troubleshooting)

@@ -13,12 +13,14 @@ This guide will help you set up PostgreSQL database for the UCC-MCA Intelligence
 ### 1. Install PostgreSQL
 
 **macOS (using Homebrew):**
+
 ```bash
 brew install postgresql@14
 brew services start postgresql@14
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
@@ -74,6 +76,7 @@ npm run db:migrate
 ```
 
 You should see output like:
+
 ```
 Database Migration Runner
 ============================================================
@@ -165,6 +168,7 @@ SELECT COUNT(*) FROM prospects;
 If you see "connection refused" errors:
 
 1. Check if PostgreSQL is running:
+
    ```bash
    # macOS
    brew services list
@@ -188,6 +192,7 @@ If you see "authentication failed" errors:
 
 1. Check your `.env` file has correct credentials
 2. Try connecting directly with psql to verify credentials:
+
    ```bash
    psql -U postgres -d ucc_mca
    ```
@@ -234,6 +239,7 @@ For production deployments:
 
 1. **Use SSL connections:**
    Add to your DATABASE_URL or connection config:
+
    ```
    ?sslmode=require
    ```
@@ -248,6 +254,7 @@ For production deployments:
    Set `DB_LOG_QUERIES=true` initially to monitor query performance
 
 5. **Regular backups:**
+
    ```bash
    pg_dump -U postgres ucc_mca > backup.sql
    ```
@@ -265,6 +272,7 @@ To create a new migration:
 
 1. Create a new file in `database/migrations/` with format: `002_migration_name.sql`
 2. Start with:
+
    ```sql
    -- Migration: 002_migration_name
    -- Description: What this migration does
@@ -289,6 +297,7 @@ To create a new migration:
 ### Indexes
 
 The schema includes optimized indexes for:
+
 - Fuzzy text search (using pg_trgm)
 - Date range queries
 - Priority/score sorting
@@ -306,5 +315,6 @@ After setting up the database:
 4. Set up monitoring and alerting
 
 For more information, see:
+
 - [DATA_PIPELINE.md](./DATA_PIPELINE.md) - Data ingestion and processing
 - [README.md](./README.md) - General project documentation

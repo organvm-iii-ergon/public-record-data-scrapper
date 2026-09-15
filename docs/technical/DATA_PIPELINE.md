@@ -68,6 +68,7 @@ Fetches UCC filing data from multiple sources:
 - **Databases**: Queries internal or external databases
 
 **Key Features:**
+
 - Rate limiting (respects API limits)
 - Circuit breaker pattern (prevents cascading failures)
 - Exponential backoff retry logic
@@ -79,6 +80,7 @@ Fetches UCC filing data from multiple sources:
 Enriches raw UCC filings with additional intelligence:
 
 **Growth Signals:**
+
 - Hiring signals (job postings)
 - Permit signals (building permits, licenses)
 - Contract signals (government contracts)
@@ -86,12 +88,14 @@ Enriches raw UCC filings with additional intelligence:
 - Equipment signals (financing, leases)
 
 **Health Scoring:**
+
 - Sentiment analysis from reviews
 - Violation tracking (OSHA, health dept)
 - Trend analysis (improving/declining)
 - Review aggregation (Google, Yelp, BBB)
 
 **Additional Enrichment:**
+
 - Revenue estimation (ML-based)
 - Industry classification
 - Priority score calculation
@@ -102,11 +106,13 @@ Enriches raw UCC filings with additional intelligence:
 Manages periodic data refresh operations:
 
 **Scheduled Operations:**
+
 - **Ingestion**: Fetch new UCC filings (daily)
 - **Enrichment**: Process incomplete data (6 hours)
 - **Refresh**: Update stale data (12 hours)
 
 **Event System:**
+
 - Real-time status updates
 - Error notifications
 - Progress tracking
@@ -142,6 +148,7 @@ VITE_SCRAPER_ENDPOINT=https://scraper.example.com
 Edit `src/lib/config/dataPipeline.ts` to customize:
 
 **Data Sources:**
+
 ```typescript
 sources: [
   {
@@ -156,6 +163,7 @@ sources: [
 ```
 
 **Schedule Configuration:**
+
 ```typescript
 schedule: {
   enabled: true,
@@ -286,16 +294,15 @@ Subscribe to scheduler events:
 ```typescript
 scheduler.on((event) => {
   console.log(event.type, event.data)
-})
-
-// Event types:
-- 'ingestion-started'
-- 'ingestion-completed'
-- 'enrichment-started'
-- 'enrichment-completed'
-- 'refresh-started'
-- 'refresh-completed'
-- 'error'
+}) -
+  // Event types:
+  'ingestion-started' -
+  'ingestion-completed' -
+  'enrichment-started' -
+  'enrichment-completed' -
+  'refresh-started' -
+  'refresh-completed' -
+  'error'
 ```
 
 ### Status Metrics
@@ -353,11 +360,13 @@ VITE_ENABLE_ML_ENRICHMENT=true
 ### Resource Usage
 
 **Development:**
+
 - Memory: ~50MB
 - Network: Minimal (mock data)
 - CPU: Low
 
 **Production:**
+
 - Memory: ~200-500MB (depending on dataset size)
 - Network: Moderate (API calls, web scraping)
 - CPU: Medium (ML inference, data processing)
@@ -410,6 +419,7 @@ npm test
 ### Common Issues
 
 **1. No data appearing:**
+
 ```bash
 # Check if using mock data
 console.log(import.meta.env.VITE_USE_MOCK_DATA)
@@ -419,6 +429,7 @@ await triggerIngestion()
 ```
 
 **2. Scheduler not running:**
+
 ```typescript
 // Check scheduler status
 console.log(schedulerStatus)
@@ -428,6 +439,7 @@ startScheduler()
 ```
 
 **3. API errors:**
+
 ```bash
 # Check API key
 echo $VITE_UCC_API_KEY

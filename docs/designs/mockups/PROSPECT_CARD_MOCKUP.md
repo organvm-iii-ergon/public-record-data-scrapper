@@ -3,6 +3,7 @@
 ## Card Anatomy
 
 ### Compact View (Default)
+
 ```
 ┌────────────────────────────────────────────┐
 │ ☐ [🍽️]  Acme Restaurant Co.    ⭐ 89      │ ← Header row
@@ -18,6 +19,7 @@
 ```
 
 ### Expanded View (On Click/Hover)
+
 ```
 ┌────────────────────────────────────────────┐
 │ ☐ [🍽️]  Acme Restaurant Co.    ⭐ 89      │
@@ -61,6 +63,7 @@
 ### 1. Grid Card (Current Enhancement)
 
 #### Desktop (Large)
+
 - Width: 380px (flexible in grid)
 - Height: Auto (minimum 320px)
 - Padding: 24px
@@ -68,12 +71,14 @@
 - Glass effect opacity: 0.75
 
 #### Tablet (Medium)
+
 - Width: 100% (in 2-column grid)
 - Height: Auto
 - Padding: 20px
 - Border radius: 10px
 
 #### Mobile (Small)
+
 - Width: 100% (single column)
 - Height: Auto
 - Padding: 16px
@@ -116,6 +121,7 @@
 ### 1. Card Header
 
 #### Company Identity Section
+
 ```
 ┌─────────────────────────────┐
 │ [🍽️]  Acme Restaurant Co.  │
@@ -125,12 +131,14 @@
 ```
 
 **Elements:**
+
 - **Selection Checkbox**: Top-left, glass-effect, 20px
 - **Industry Icon**: Emoji/Icon, 32px, animated float
 - **Company Name**: 18px, font-weight 600, truncate
 - **Priority Score Badge**: Top-right, 24px, animated pulse
 
 **Styling:**
+
 ```css
 .card-header {
   display: flex;
@@ -144,7 +152,7 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: oklch(0.65 0.30 45 / 0.1);
+  background: oklch(0.65 0.3 45 / 0.1);
   animation: float-subtle 4s ease-in-out infinite;
 }
 
@@ -152,7 +160,7 @@
   font-size: 18px;
   font-weight: 600;
   line-height: 1.3;
-  color: oklch(0.20 0.05 250);
+  color: oklch(0.2 0.05 250);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -162,7 +170,7 @@
   font-size: 24px;
   font-weight: 700;
   font-family: 'IBM Plex Mono', monospace;
-  color: oklch(0.65 0.30 45);
+  color: oklch(0.65 0.3 45);
   animation: pulse-scale 2s ease-in-out infinite;
 }
 ```
@@ -174,19 +182,21 @@ CA • Restaurant • $2.5M Revenue
 ```
 
 **Elements:**
+
 - **Location**: State abbreviation, icon prefix
 - **Industry**: Capitalized, industry icon
 - **Revenue**: Formatted currency (optional)
 - **Separator**: • (bullet) between items
 
 **Styling:**
+
 ```css
 .metadata-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: oklch(0.50 0.02 270);
+  color: oklch(0.5 0.02 270);
   margin-bottom: 16px;
 }
 
@@ -204,6 +214,7 @@ CA • Restaurant • $2.5M Revenue
 ### 3. Health Score Display
 
 #### Progress Bar Variant
+
 ```
 Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
         ▲    ▲       ▲           ▲
@@ -211,12 +222,14 @@ Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
 ```
 
 **Elements:**
+
 - **Grade Badge**: Letter grade, color-coded
 - **Numeric Score**: /100, tabular figures
 - **Progress Bar**: Animated fill, gradient
 - **Trend Arrow**: Direction indicator with animation
 
 **Styling:**
+
 ```css
 .health-display {
   display: flex;
@@ -235,10 +248,22 @@ Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
   font-size: 14px;
 }
 
-.grade-a { background: oklch(0.60 0.15 145 / 0.2); color: oklch(0.40 0.15 145); }
-.grade-b { background: oklch(0.70 0.15 60 / 0.2); color: oklch(0.50 0.15 60); }
-.grade-c { background: oklch(0.75 0.15 75 / 0.2); color: oklch(0.55 0.15 75); }
-.grade-d { background: oklch(0.55 0.35 15 / 0.2); color: oklch(0.45 0.35 15); }
+.grade-a {
+  background: oklch(0.6 0.15 145 / 0.2);
+  color: oklch(0.4 0.15 145);
+}
+.grade-b {
+  background: oklch(0.7 0.15 60 / 0.2);
+  color: oklch(0.5 0.15 60);
+}
+.grade-c {
+  background: oklch(0.75 0.15 75 / 0.2);
+  color: oklch(0.55 0.15 75);
+}
+.grade-d {
+  background: oklch(0.55 0.35 15 / 0.2);
+  color: oklch(0.45 0.35 15);
+}
 
 .health-score {
   font-family: 'IBM Plex Mono', monospace;
@@ -256,10 +281,12 @@ Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
 
 .health-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, 
+  background: linear-gradient(
+    90deg,
     oklch(0.55 0.35 15) 0%,
     oklch(0.75 0.15 75) 50%,
-    oklch(0.60 0.15 145) 100%);
+    oklch(0.6 0.15 145) 100%
+  );
   transition: width 1s ease-out;
   animation: shimmer 2s infinite;
 }
@@ -271,6 +298,7 @@ Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
 ```
 
 #### Circular Progress Variant (Alternative)
+
 ```
    [A-]
   ◯━━━◯
@@ -282,6 +310,7 @@ Health: [A-] 85/100  ●━━━━━━━━━○ ↗️
 ### 4. Signal Indicators
 
 #### Icon Pills Variant
+
 ```
 Signals: 🟢🟢🟢🟢 (4 active)
          ▲        ▲
@@ -289,11 +318,13 @@ Signals: 🟢🟢🟢🟢 (4 active)
 ```
 
 **Elements:**
+
 - **Signal Icons**: Visual indicators
 - **Count Badge**: Number of signals
 - **Tooltip**: Signal types on hover
 
 **Styling:**
+
 ```css
 .signal-indicators {
   display: flex;
@@ -311,19 +342,28 @@ Signals: 🟢🟢🟢🟢 (4 active)
   animation: pulse-grow 2s ease-in-out infinite;
 }
 
-.signal-hiring { background: oklch(0.65 0.30 45); }
-.signal-expansion { background: oklch(0.60 0.15 145); }
-.signal-license { background: oklch(0.65 0.14 210); }
-.signal-social { background: oklch(0.70 0.15 60); }
+.signal-hiring {
+  background: oklch(0.65 0.3 45);
+}
+.signal-expansion {
+  background: oklch(0.6 0.15 145);
+}
+.signal-license {
+  background: oklch(0.65 0.14 210);
+}
+.signal-social {
+  background: oklch(0.7 0.15 60);
+}
 
 .signal-count {
   font-size: 12px;
   font-weight: 600;
-  color: oklch(0.50 0.02 270);
+  color: oklch(0.5 0.02 270);
 }
 ```
 
 #### Timeline Variant (Expanded View)
+
 ```
 📈 Growth Signals Timeline
 ┌────────────────────────┐
@@ -341,12 +381,14 @@ Default: 2y ago  |  Signals: 4  |  Rev: $2.5M
 ```
 
 **Elements:**
+
 - **Default Age**: Time since UCC default
 - **Signal Count**: Number of growth indicators
 - **Revenue**: Estimated annual revenue
 - **Separator**: Vertical bar or bullet
 
 **Styling:**
+
 ```css
 .metrics-row {
   display: flex;
@@ -366,12 +408,12 @@ Default: 2y ago  |  Signals: 4  |  Rev: $2.5M
 }
 
 .metric-label {
-  color: oklch(0.50 0.02 270);
+  color: oklch(0.5 0.02 270);
   font-weight: 500;
 }
 
 .metric-value {
-  color: oklch(0.20 0.05 250);
+  color: oklch(0.2 0.05 250);
   font-weight: 600;
   font-family: 'IBM Plex Mono', monospace;
 }
@@ -380,22 +422,24 @@ Default: 2y ago  |  Signals: 4  |  Rev: $2.5M
 ### 6. Narrative Section
 
 ```
-💼 "Recently expanded to 3 locations with 
-    strong hiring activity and positive 
+💼 "Recently expanded to 3 locations with
+    strong hiring activity and positive
     sentiment. Ready for MCA opportunity."
 ```
 
 **Elements:**
+
 - **Icon**: Context indicator
 - **Text**: AI-generated narrative
 - **Line clamp**: 2-3 lines with ellipsis
 
 **Styling:**
+
 ```css
 .narrative-section {
   padding: 12px;
   background: oklch(1 0 0 / 0.3);
-  border-left: 3px solid oklch(0.65 0.30 45);
+  border-left: 3px solid oklch(0.65 0.3 45);
   border-radius: 6px;
   margin: 12px 0;
 }
@@ -403,7 +447,7 @@ Default: 2y ago  |  Signals: 4  |  Rev: $2.5M
 .narrative-text {
   font-size: 14px;
   line-height: 1.5;
-  color: oklch(0.30 0.03 250);
+  color: oklch(0.3 0.03 250);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -426,11 +470,13 @@ Primary          Secondary        Ghost
 ```
 
 **Elements:**
+
 - **Primary Action**: View details/full analysis
 - **Secondary Action**: Claim lead (if unclaimed)
 - **Tertiary Actions**: Export, share, etc.
 
 **Styling:**
+
 ```css
 .action-buttons {
   display: flex;
@@ -441,7 +487,7 @@ Primary          Secondary        Ghost
 .btn-primary {
   flex: 1;
   padding: 10px 16px;
-  background: oklch(0.65 0.30 45);
+  background: oklch(0.65 0.3 45);
   color: oklch(0.05 0.005 0);
   border: none;
   border-radius: 8px;
@@ -452,16 +498,16 @@ Primary          Secondary        Ghost
 }
 
 .btn-primary:hover {
-  background: oklch(0.70 0.30 45);
+  background: oklch(0.7 0.3 45);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px oklch(0.65 0.30 45 / 0.3);
+  box-shadow: 0 4px 12px oklch(0.65 0.3 45 / 0.3);
 }
 
 .btn-secondary {
   flex: 1;
   padding: 10px 16px;
   background: oklch(1 0 0 / 0.5);
-  color: oklch(0.20 0.05 250);
+  color: oklch(0.2 0.05 250);
   border: 1px solid oklch(1 0 0 / 0.3);
   border-radius: 8px;
   font-weight: 600;
@@ -473,7 +519,7 @@ Primary          Secondary        Ghost
 .btn-ghost {
   padding: 10px;
   background: transparent;
-  color: oklch(0.50 0.02 270);
+  color: oklch(0.5 0.02 270);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -482,13 +528,14 @@ Primary          Secondary        Ghost
 
 .btn-ghost:hover {
   background: oklch(1 0 0 / 0.3);
-  color: oklch(0.20 0.05 250);
+  color: oklch(0.2 0.05 250);
 }
 ```
 
 ## Interactive States
 
 ### 1. Default State
+
 - No special styling
 - Standard opacity (0.75)
 - Subtle shadow
@@ -504,6 +551,7 @@ Primary          Secondary        Ghost
 ```
 
 ### 2. Hover State
+
 - Lift effect (translateY -4px)
 - Increased shadow
 - Brighter border
@@ -518,18 +566,20 @@ Primary          Secondary        Ghost
 ```
 
 ### 3. Selected State
+
 - Primary border color
 - Glow effect
 - Checkbox checked
 
 ```css
 .prospect-card.selected {
-  border: 2px solid oklch(0.65 0.30 45);
-  box-shadow: 0 0 0 3px oklch(0.65 0.30 45 / 0.2);
+  border: 2px solid oklch(0.65 0.3 45);
+  box-shadow: 0 0 0 3px oklch(0.65 0.3 45 / 0.2);
 }
 ```
 
 ### 4. Claimed State
+
 - Muted colors
 - "Claimed" badge
 - Disabled buttons
@@ -538,7 +588,7 @@ Primary          Secondary        Ghost
 ```css
 .prospect-card.claimed {
   opacity: 0.8;
-  border-color: oklch(0.50 0.02 270 / 0.3);
+  border-color: oklch(0.5 0.02 270 / 0.3);
 }
 
 .claimed-badge {
@@ -547,7 +597,7 @@ Primary          Secondary        Ghost
   right: 16px;
   padding: 4px 12px;
   background: oklch(0.92 0.01 90);
-  color: oklch(0.50 0.02 270);
+  color: oklch(0.5 0.02 270);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
@@ -556,6 +606,7 @@ Primary          Secondary        Ghost
 ```
 
 ### 5. Loading State
+
 - Skeleton screens
 - Pulsing placeholders
 - No interactions
@@ -578,12 +629,17 @@ Primary          Secondary        Ghost
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 ```
 
 ### 6. Error State
+
 - Red border
 - Error icon
 - Retry action
@@ -598,6 +654,7 @@ Primary          Secondary        Ghost
 ## Responsive Behavior
 
 ### Desktop (>1280px)
+
 ```css
 .prospect-card {
   width: 380px;
@@ -607,6 +664,7 @@ Primary          Secondary        Ghost
 ```
 
 ### Tablet (768-1279px)
+
 ```css
 .prospect-card {
   width: 100%;
@@ -620,6 +678,7 @@ Primary          Secondary        Ghost
 ```
 
 ### Mobile (<768px)
+
 ```css
 .prospect-card {
   width: 100%;
@@ -646,6 +705,7 @@ Primary          Secondary        Ghost
 ## Animations
 
 ### 1. Card Entry
+
 ```css
 @keyframes card-enter {
   from {
@@ -664,9 +724,11 @@ Primary          Secondary        Ghost
 ```
 
 ### 2. Score Pulse
+
 ```css
 @keyframes pulse-scale {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -676,6 +738,7 @@ Primary          Secondary        Ghost
 ```
 
 ### 3. Signal Detection
+
 ```css
 @keyframes signal-pop {
   0% {
@@ -697,6 +760,7 @@ Primary          Secondary        Ghost
 ```
 
 ### 4. Health Bar Fill
+
 ```css
 @keyframes health-bar-fill {
   from {
@@ -715,6 +779,7 @@ Primary          Secondary        Ghost
 ## Key Improvements
 
 ### Visual
+
 - ✅ Clearer information hierarchy
 - ✅ Better use of whitespace
 - ✅ Improved color coding
@@ -722,6 +787,7 @@ Primary          Secondary        Ghost
 - ✅ Consistent iconography
 
 ### Functional
+
 - ✅ Quick selection checkbox
 - ✅ Inline metrics display
 - ✅ Progressive disclosure
@@ -729,6 +795,7 @@ Primary          Secondary        Ghost
 - ✅ Multiple view modes
 
 ### Interactive
+
 - ✅ Smooth animations
 - ✅ Hover previews
 - ✅ Touch-friendly
@@ -736,6 +803,7 @@ Primary          Secondary        Ghost
 - ✅ Error handling
 
 ### Accessibility
+
 - ✅ High contrast colors
 - ✅ Keyboard navigation
 - ✅ Screen reader support
@@ -745,18 +813,21 @@ Primary          Secondary        Ghost
 ## Design Variations for Team Review
 
 ### Option A: Bold & Colorful
+
 - Large priority scores
 - Bright accent colors
 - More visual signals
 - Higher contrast
 
 ### Option B: Minimal & Clean
+
 - Subtle colors
 - More whitespace
 - Fewer elements
 - Typography-focused
 
 ### Option C: Data-Dense
+
 - Smaller cards
 - More info visible
 - Compact spacing

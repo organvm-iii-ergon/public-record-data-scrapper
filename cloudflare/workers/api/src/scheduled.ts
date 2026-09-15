@@ -60,7 +60,9 @@ async function processJob(env: Env, job: JobRow): Promise<void> {
     // case 'enrichment':  return runEnrichmentJob(env, job)   // when ported
     // case 'ingestion':   return runIngestionJob(env, job)
     default:
-      throw new Error(`No handler for job type "${job.type}" — not yet ported (org=${job.org_id ?? 'none'})`)
+      throw new Error(
+        `No handler for job type "${job.type}" — not yet ported (org=${job.org_id ?? 'none'})`
+      )
   }
 }
 

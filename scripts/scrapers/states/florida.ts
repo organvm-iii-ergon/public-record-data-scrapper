@@ -10,15 +10,17 @@ import { BasePuppeteerScraper } from '../base-puppeteer-scraper'
 import { PaginationHandler } from '../pagination-handler'
 
 export class FloridaScraper extends BasePuppeteerScraper {
-
   constructor(options: { headless?: boolean; keepPageOpenOnFailure?: boolean } = {}) {
-    super({
-      state: 'FL',
-      baseUrl: 'https://floridaucc.com/search',
-      rateLimit: 4, // 4 requests per minute (conservative for privatized system)
-      timeout: 45000, // Increased timeout for third-party portal
-      retryAttempts: 2
-    }, options)
+    super(
+      {
+        state: 'FL',
+        baseUrl: 'https://floridaucc.com/search',
+        rateLimit: 4, // 4 requests per minute (conservative for privatized system)
+        timeout: 45000, // Increased timeout for third-party portal
+        retryAttempts: 2
+      },
+      options
+    )
   }
 
   /**

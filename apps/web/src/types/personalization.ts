@@ -8,12 +8,7 @@ import type { OutreachChannel, Tonality } from './generative'
 // ==================== USER PROFILES ====================
 
 export type UserRole =
-  | 'sales_rep'
-  | 'sales_manager'
-  | 'analyst'
-  | 'executive'
-  | 'underwriter'
-  | 'admin'
+  'sales_rep' | 'sales_manager' | 'analyst' | 'executive' | 'underwriter' | 'admin'
 
 export type RiskTolerance = 'conservative' | 'moderate' | 'aggressive'
 export type DashboardLayout = 'compact' | 'detailed' | 'visual' | 'custom'
@@ -344,13 +339,7 @@ export type UserSegment =
 // ==================== RECOMMENDATIONS ====================
 
 export type RecommendationType =
-  | 'prospect'
-  | 'action'
-  | 'strategy'
-  | 'timing'
-  | 'pricing'
-  | 'learning'
-  | 'workflow'
+  'prospect' | 'action' | 'strategy' | 'timing' | 'pricing' | 'learning' | 'workflow'
 
 export interface PersonalizedRecommendation {
   recommendationId: string

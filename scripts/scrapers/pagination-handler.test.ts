@@ -11,13 +11,7 @@ type PageDouble = {
 }
 
 type GlobalKey =
-  | 'window'
-  | 'document'
-  | 'HTMLElement'
-  | 'HTMLButtonElement'
-  | 'Event'
-  | 'Node'
-  | 'URL'
+  'window' | 'document' | 'HTMLElement' | 'HTMLButtonElement' | 'Event' | 'Node' | 'URL'
 
 const globalKeys: GlobalKey[] = [
   'window',
@@ -78,9 +72,8 @@ function createPage(html: string, url = 'https://portal.example.test/search') {
   }
 
   const rawPage: PageDouble = {
-    evaluate: vi.fn(
-      async (fn: (...args: unknown[]) => unknown, ...args: unknown[]) =>
-        runInDom(dom, () => fn(...args))
+    evaluate: vi.fn(async (fn: (...args: unknown[]) => unknown, ...args: unknown[]) =>
+      runInDom(dom, () => fn(...args))
     ),
     waitForNavigation: vi.fn(async () => undefined),
     goto: vi.fn(async (nextUrl: string) => {
@@ -142,8 +135,10 @@ describe('PaginationHandler', () => {
   })
 
   it('falls back to URL parameter pagination and no-pagination states', async () => {
-    const urlPage = createPage('<main>Results</main>', 'https://portal.example.test/search?page=4')
-      .page
+    const urlPage = createPage(
+      '<main>Results</main>',
+      'https://portal.example.test/search?page=4'
+    ).page
     await expect(new PaginationHandler().detectPagination(urlPage)).resolves.toEqual({
       currentPage: 4,
       hasNextPage: true,

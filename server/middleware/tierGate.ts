@@ -10,9 +10,7 @@ import {
 export const FREE_TIER_PROSPECT_LIMIT = 10
 
 type TierGateReason =
-  | 'free_quota_exhausted'
-  | 'full_enrichment_requires_paid'
-  | 'on_demand_scrape_requires_paid'
+  'free_quota_exhausted' | 'full_enrichment_requires_paid' | 'on_demand_scrape_requires_paid'
 
 interface TierGateContext {
   reason: TierGateReason

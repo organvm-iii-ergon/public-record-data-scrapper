@@ -10,14 +10,17 @@
 ## Week 5-6: UCC Portal Scrapers
 
 ### Task 2.1: New York UCC Portal Scraper
+
 **Assignee**: TBD
 **Effort**: 5 days
 **Priority**: CRITICAL (Largest market)
 
 #### Subtask 2.1.1: Setup Playwright Infrastructure
+
 **Time**: 1 day
 
 **Install Dependencies:**
+
 ```bash
 npm install playwright playwright-core
 npm install -D @types/node
@@ -75,10 +78,7 @@ export abstract class BaseScraper {
   async initialize(): Promise<void> {
     this.browser = await chromium.launch({
       headless: this.config.headless,
-      args: [
-        '--disable-blink-features=AutomationControlled',
-        '--disable-dev-shm-usage'
-      ]
+      args: ['--disable-blink-features=AutomationControlled', '--disable-dev-shm-usage']
     })
 
     const context = await this.browser.newContext({
@@ -106,13 +106,11 @@ export abstract class BaseScraper {
   protected async randomDelay(minMs: number = 1000, maxMs: number = 3000): Promise<void> {
     if (!this.config.antiDetection.randomDelay) return
     const delay = Math.random() * (maxMs - minMs) + minMs
-    await new Promise(resolve => setTimeout(resolve, delay))
+    await new Promise((resolve) => setTimeout(resolve, delay))
   }
 
   protected async rateLimitDelay(): Promise<void> {
-    await new Promise(resolve =>
-      setTimeout(resolve, this.config.rateLimit.delayMs)
-    )
+    await new Promise((resolve) => setTimeout(resolve, this.config.rateLimit.delayMs))
   }
 
   protected async detectCaptcha(page: Page): Promise<boolean> {
@@ -136,6 +134,7 @@ export abstract class BaseScraper {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] BaseScraper class created
 - [ ] Playwright initialized
 - [ ] Anti-detection measures implemented
@@ -145,6 +144,7 @@ export abstract class BaseScraper {
 ---
 
 #### Subtask 2.1.2: NY UCC Portal Implementation
+
 **File**: `src/lib/scrapers/NYUCCPortalScraper.ts`
 **Time**: 2 days
 
@@ -214,7 +214,6 @@ export class NYUCCPortalScraper extends BaseScraper {
         }
 
         return allFilings
-
       } catch (error) {
         console.error('NY UCC scraping error:', error)
         throw error
@@ -234,12 +233,12 @@ export class NYUCCPortalScraper extends BaseScraper {
       if (cells.length < 6) continue
 
       const filing: UCCFiling = {
-        id: await cells[0].textContent() || '',
-        filingNumber: await cells[1].textContent() || '',
-        filingDate: await cells[2].textContent() || '',
-        debtorName: await cells[3].textContent() || '',
-        securedParty: await cells[4].textContent() || '',
-        status: await cells[5].textContent() || '',
+        id: (await cells[0].textContent()) || '',
+        filingNumber: (await cells[1].textContent()) || '',
+        filingDate: (await cells[2].textContent()) || '',
+        debtorName: (await cells[3].textContent()) || '',
+        securedParty: (await cells[4].textContent()) || '',
+        status: (await cells[5].textContent()) || '',
         state: 'NY',
         sourceUrl: this.PORTAL_URL,
         scrapedAt: new Date().toISOString()
@@ -299,7 +298,6 @@ export class NYUCCPortalScraper extends BaseScraper {
           sourceUrl: this.page!.url(),
           scrapedAt: new Date().toISOString()
         }
-
       } finally {
         await this.cleanup()
       }
@@ -309,6 +307,7 @@ export class NYUCCPortalScraper extends BaseScraper {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Portal navigation working
 - [ ] Search form automation
 - [ ] Results parsing accurate
@@ -320,6 +319,7 @@ export class NYUCCPortalScraper extends BaseScraper {
 ---
 
 #### Subtask 2.1.3: NY Scraper Tests
+
 **File**: `src/lib/scrapers/__tests__/NYUCCPortalScraper.test.ts`
 **Time**: 1 day
 
@@ -361,8 +361,9 @@ describe('NYUCCPortalScraper', () => {
 
   it('should detect CAPTCHA and throw error', async () => {
     // Mock CAPTCHA response
-    await expect(scraper.scrape({ debtorName: 'CAPTCHA_TRIGGER' }))
-      .rejects.toThrow('CAPTCHA_DETECTED')
+    await expect(scraper.scrape({ debtorName: 'CAPTCHA_TRIGGER' })).rejects.toThrow(
+      'CAPTCHA_DETECTED'
+    )
   })
 
   it('should enforce rate limiting', async () => {
@@ -390,14 +391,14 @@ describe('NYUCCPortalScraper', () => {
 
   it('should handle portal outage gracefully', async () => {
     // Mock 503 error
-    await expect(scraper.scrape({ debtorName: 'Test' }))
-      .rejects.toThrow()
+    await expect(scraper.scrape({ debtorName: 'Test' })).rejects.toThrow()
     // Verify circuit breaker opened after 3 failures
   })
 })
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All scraper methods tested
 - [ ] CAPTCHA detection verified
 - [ ] Rate limiting confirmed
@@ -407,6 +408,7 @@ describe('NYUCCPortalScraper', () => {
 ---
 
 #### Subtask 2.1.4: Manual Review Queue
+
 **File**: `src/lib/services/ManualReviewQueue.ts`
 **Time**: 1 day
 
@@ -443,11 +445,11 @@ export class ManualReviewQueue {
   }
 
   async getPending(): Promise<ManualReviewItem[]> {
-    return this.queue.filter(item => item.status === 'pending')
+    return this.queue.filter((item) => item.status === 'pending')
   }
 
   async resolve(id: string, resolvedData: UCCFiling): Promise<void> {
-    const item = this.queue.find(i => i.id === id)
+    const item = this.queue.find((i) => i.id === id)
     if (!item) throw new Error('Review item not found')
 
     item.status = 'resolved'
@@ -457,7 +459,7 @@ export class ManualReviewQueue {
   }
 
   async reject(id: string, reason: string): Promise<void> {
-    const item = this.queue.find(i => i.id === id)
+    const item = this.queue.find((i) => i.id === id)
     if (!item) throw new Error('Review item not found')
 
     item.status = 'rejected'
@@ -479,6 +481,7 @@ export class ManualReviewQueue {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Queue management implemented
 - [ ] Admin notifications working
 - [ ] Status tracking
@@ -487,11 +490,13 @@ export class ManualReviewQueue {
 ---
 
 ### Task 2.2: California UCC Portal Scraper
+
 **Assignee**: TBD
 **Effort**: 4 days
 **Priority**: HIGH
 
 #### Subtask 2.2.1: CA Portal Implementation
+
 **File**: `src/lib/scrapers/CAUCCPortalScraper.ts`
 **Time**: 2 days
 
@@ -519,7 +524,6 @@ export class CAUCCPortalScraper extends BaseScraper {
 
         const filings = await this.parseCAResults()
         return filings
-
       } finally {
         await this.cleanup()
       }
@@ -534,6 +538,7 @@ export class CAUCCPortalScraper extends BaseScraper {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] CA portal navigation
 - [ ] Search automation
 - [ ] Results parsing
@@ -542,11 +547,13 @@ export class CAUCCPortalScraper extends BaseScraper {
 ---
 
 ### Task 2.3: Texas & Florida Scrapers
+
 **Assignee**: TBD
 **Effort**: 5 days
 **Priority**: HIGH
 
 #### Subtask 2.3.1: TX UCC Portal
+
 **File**: `src/lib/scrapers/TXUCCPortalScraper.ts`
 **Time**: 2.5 days
 
@@ -564,12 +571,14 @@ export class TXUCCPortalScraper extends BaseScraper {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] TX portal working
 - [ ] Tests passing
 
 ---
 
 #### Subtask 2.3.2: FL UCC Portal
+
 **File**: `src/lib/scrapers/FLUCCPortalScraper.ts`
 **Time**: 2.5 days
 
@@ -587,12 +596,14 @@ export class FLUCCPortalScraper extends BaseScraper {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] FL portal working
 - [ ] Tests passing
 
 ---
 
 ### Task 2.4: Scraper Factory & Orchestration
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: MEDIUM
@@ -640,6 +651,7 @@ export class ScraperFactory {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Factory pattern implemented
 - [ ] Multi-state scraping
 - [ ] Error handling per state
@@ -649,6 +661,7 @@ export class ScraperFactory {
 ## Week 7-8: Free Tier Data Sources
 
 ### Task 2.5: SEC EDGAR Integration
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
@@ -706,7 +719,6 @@ export class SECEdgarAPI {
       }
 
       return this.getCompanyByCIK(response.data.cik)
-
     } catch (error) {
       console.error('SEC EDGAR search error:', error)
       return null
@@ -735,16 +747,16 @@ export class SECEdgarAPI {
         exchanges: data.exchanges || [],
         sic: data.sic,
         sicDescription: data.sicDescription,
-        filings: data.filings?.recent?.map((filing: any, index: number) => ({
-          accessionNumber: filing.accessionNumber[index],
-          filingDate: filing.filingDate[index],
-          reportDate: filing.reportDate[index],
-          form: filing.form[index],
-          fileNumber: filing.fileNumber[index],
-          filmNumber: filing.filmNumber[index]
-        })) || []
+        filings:
+          data.filings?.recent?.map((filing: any, index: number) => ({
+            accessionNumber: filing.accessionNumber[index],
+            filingDate: filing.filingDate[index],
+            reportDate: filing.reportDate[index],
+            form: filing.form[index],
+            fileNumber: filing.fileNumber[index],
+            filmNumber: filing.filmNumber[index]
+          })) || []
       }
-
     } catch (error) {
       console.error('SEC EDGAR CIK lookup error:', error)
       return null
@@ -766,7 +778,6 @@ export class SECEdgarAPI {
       })
 
       return response.data
-
     } catch (error) {
       console.error('SEC filing document error:', error)
       return null
@@ -779,9 +790,7 @@ export class SECEdgarAPI {
     const minInterval = 1000 / this.RATE_LIMIT // 100ms for 10 req/sec
 
     if (timeSinceLastRequest < minInterval) {
-      await new Promise(resolve =>
-        setTimeout(resolve, minInterval - timeSinceLastRequest)
-      )
+      await new Promise((resolve) => setTimeout(resolve, minInterval - timeSinceLastRequest))
     }
 
     this.lastRequestTime = Date.now()
@@ -836,6 +845,7 @@ describe('SECEdgarAPI', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] SEC EDGAR API integration working
 - [ ] Company search by name
 - [ ] CIK lookup
@@ -846,6 +856,7 @@ describe('SECEdgarAPI', () => {
 ---
 
 ### Task 2.6: OSHA API Integration
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Priority**: MEDIUM
@@ -890,7 +901,6 @@ export class OSHAAPI {
       })
 
       return response.data.items || []
-
     } catch (error) {
       console.error('OSHA API error:', error)
       return []
@@ -914,14 +924,14 @@ export class OSHAAPI {
     if (violations.length === 0) return 100
 
     const weights = {
-      'Serious': -10,
-      'Willful': -20,
-      'Repeat': -15,
-      'Other': -5
+      Serious: -10,
+      Willful: -20,
+      Repeat: -15,
+      Other: -5
     }
 
     let score = 100
-    violations.forEach(v => {
+    violations.forEach((v) => {
       score += weights[v.violationType] || -5
     })
 
@@ -931,6 +941,7 @@ export class OSHAAPI {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] OSHA inspection search
 - [ ] Violation retrieval
 - [ ] Violation scoring
@@ -939,6 +950,7 @@ export class OSHAAPI {
 ---
 
 ### Task 2.7: USPTO API Integration
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Priority**: MEDIUM
@@ -972,7 +984,6 @@ export class USPTOAPI {
       })
 
       return response.data.results || []
-
     } catch (error) {
       console.error('USPTO API error:', error)
       return []
@@ -983,7 +994,6 @@ export class USPTOAPI {
     try {
       const response = await axios.get(`${this.BASE_URL}/${serialNumber}`)
       return response.data
-
     } catch (error) {
       return null
     }
@@ -992,6 +1002,7 @@ export class USPTOAPI {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Trademark search working
 - [ ] Serial number lookup
 - [ ] Tests passing
@@ -999,6 +1010,7 @@ export class USPTOAPI {
 ---
 
 ### Task 2.8: Census Bureau API Integration
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Priority**: LOW
@@ -1020,6 +1032,7 @@ export class CensusBureauAPI {
 ---
 
 ### Task 2.9: SAM.gov API Integration
+
 **Assignee**: TBD
 **Effort**: 1.5 days
 **Priority**: MEDIUM
@@ -1051,7 +1064,6 @@ export class SAMgovAPI {
       })
 
       return response.data.opportunitiesData || []
-
     } catch (error) {
       console.error('SAM.gov API error:', error)
       return []
@@ -1061,12 +1073,14 @@ export class SAMgovAPI {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Contract search working
 - [ ] Tests passing
 
 ---
 
 ### Task 2.10: Unified Enrichment Pipeline
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
@@ -1106,9 +1120,9 @@ export class UnifiedEnrichmentService {
         federalContracts: samResult.status === 'fulfilled' ? samResult.value : []
       },
       enrichedAt: new Date().toISOString(),
-      errors: results.map((r, i) =>
-        r.status === 'rejected' ? { source: i, error: r.reason } : null
-      ).filter(Boolean)
+      errors: results
+        .map((r, i) => (r.status === 'rejected' ? { source: i, error: r.reason } : null))
+        .filter(Boolean)
     }
   }
 
@@ -1117,9 +1131,7 @@ export class UnifiedEnrichmentService {
 
     for (let i = 0; i < prospects.length; i += concurrency) {
       const batch = prospects.slice(i, i + concurrency)
-      const batchResults = await Promise.all(
-        batch.map(p => this.enrichProspect(p))
-      )
+      const batchResults = await Promise.all(batch.map((p) => this.enrichProspect(p)))
       results.push(...batchResults)
     }
 
@@ -1129,6 +1141,7 @@ export class UnifiedEnrichmentService {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All 5 APIs integrated
 - [ ] Parallel enrichment working
 - [ ] Error handling per source
@@ -1140,6 +1153,7 @@ export class UnifiedEnrichmentService {
 ## Phase 2 Completion Checklist
 
 ### Week 5-6: UCC Portal Scrapers ✓
+
 - [ ] BaseScraper class with anti-detection
 - [ ] NY UCC portal scraper (fully tested)
 - [ ] CA UCC portal scraper (fully tested)
@@ -1151,6 +1165,7 @@ export class UnifiedEnrichmentService {
 - [ ] Scraper factory & orchestration
 
 ### Week 7-8: Free Tier Data Sources ✓
+
 - [ ] SEC EDGAR API (company filings)
 - [ ] OSHA API (violations)
 - [ ] USPTO API (trademarks)
@@ -1161,6 +1176,7 @@ export class UnifiedEnrichmentService {
 - [ ] Usage tracking per source
 
 ### Deliverables
+
 - [ ] 4 state scrapers operational
 - [ ] 5 free data source integrations
 - [ ] Manual review queue for errors
@@ -1169,6 +1185,7 @@ export class UnifiedEnrichmentService {
 - [ ] Documentation updated
 
 ### Metrics
+
 - **UCC Filings Ingested**: Target 10,000+
 - **Enrichment Success Rate**: Target 85%+
 - **Scraper Uptime**: Target 95%+

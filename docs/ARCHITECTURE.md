@@ -69,32 +69,35 @@ This document establishes architectural alignment between the Product Requiremen
 
 ### System Characteristics
 
-| Characteristic | Description |
-|----------------|-------------|
-| **Type** | Single-Page Application (SPA) |
-| **Architecture Pattern** | Component-Based Architecture |
-| **Data Flow** | Unidirectional (React pattern) |
-| **State Strategy** | Hybrid (Local + KV Persistence) |
-| **Deployment Model** | Static Site (Vite build) |
-| **Target Platforms** | Web (Desktop + Mobile responsive) |
+| Characteristic           | Description                       |
+| ------------------------ | --------------------------------- |
+| **Type**                 | Single-Page Application (SPA)     |
+| **Architecture Pattern** | Component-Based Architecture      |
+| **Data Flow**            | Unidirectional (React pattern)    |
+| **State Strategy**       | Hybrid (Local + KV Persistence)   |
+| **Deployment Model**     | Static Site (Vite build)          |
+| **Target Platforms**     | Web (Desktop + Mobile responsive) |
 
 ---
 
 ## Architecture Principles
 
 ### 1. **Component-First Design**
+
 - **Principle**: Build reusable, composable components following atomic design methodology
 - **Implementation**: Shadcn UI components extended with domain-specific logic
 - **Benefit**: Maintainability, testability, and consistency
 
 ### 2. **Type Safety**
+
 - **Principle**: Leverage TypeScript for compile-time safety and enhanced developer experience
 - **Implementation**: Strict TypeScript configuration with comprehensive type definitions
 - **Benefit**: Reduced runtime errors, better IDE support, self-documenting code
 
 ### 3. **Performance by Default**
+
 - **Principle**: Optimize for perceived and actual performance
-- **Implementation**: 
+- **Implementation**:
   - React.useMemo for expensive computations
   - Lazy loading for large datasets
   - Virtual scrolling considerations for lists
@@ -102,16 +105,19 @@ This document establishes architectural alignment between the Product Requiremen
 - **Benefit**: Fast, responsive user experience
 
 ### 4. **Progressive Enhancement**
+
 - **Principle**: Core functionality works, enhanced features improve experience
 - **Implementation**: Mobile-first responsive design with graceful degradation
 - **Benefit**: Accessibility across device capabilities and network conditions
 
 ### 5. **Security in Depth**
+
 - **Principle**: Multiple layers of security controls
 - **Implementation**: Input validation, output encoding, secure storage, no secrets in client
 - **Benefit**: Protection against common vulnerabilities (XSS, injection attacks)
 
 ### 6. **Data Integrity**
+
 - **Principle**: Ensure data consistency and prevent stale closures
 - **Implementation**: Functional state updates, defensive null checks, validation layers
 - **Benefit**: Reliable data operations without race conditions
@@ -123,40 +129,45 @@ This document establishes architectural alignment between the Product Requiremen
 ### Frontend Framework
 
 #### Core Technologies
-| Technology | Version | Purpose | Rationale |
-|------------|---------|---------|-----------|
-| **React** | 19.0.0 | UI Framework | Industry standard, excellent ecosystem, concurrent features |
-| **TypeScript** | 5.7.2 | Type System | Type safety, better tooling, maintainability |
-| **Vite** | 6.3.5 | Build Tool | Fast HMR, optimized builds, modern development experience |
+
+| Technology     | Version | Purpose      | Rationale                                                   |
+| -------------- | ------- | ------------ | ----------------------------------------------------------- |
+| **React**      | 19.0.0  | UI Framework | Industry standard, excellent ecosystem, concurrent features |
+| **TypeScript** | 5.7.2   | Type System  | Type safety, better tooling, maintainability                |
+| **Vite**       | 6.3.5   | Build Tool   | Fast HMR, optimized builds, modern development experience   |
 
 #### UI & Styling
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Tailwind CSS** | Utility-first CSS | Rapid development, consistent design system, excellent DX |
-| **Radix UI** | Headless Components | Accessibility, flexibility, composability |
-| **Shadcn UI** | Component Library | Pre-built patterns, customizable, Radix-based |
-| **Phosphor Icons** | Icon System | Consistent iconography, extensive library |
-| **Framer Motion** | Animations | Smooth, performant animations for micro-interactions |
+
+| Technology         | Purpose             | Rationale                                                 |
+| ------------------ | ------------------- | --------------------------------------------------------- |
+| **Tailwind CSS**   | Utility-first CSS   | Rapid development, consistent design system, excellent DX |
+| **Radix UI**       | Headless Components | Accessibility, flexibility, composability                 |
+| **Shadcn UI**      | Component Library   | Pre-built patterns, customizable, Radix-based             |
+| **Phosphor Icons** | Icon System         | Consistent iconography, extensive library                 |
+| **Framer Motion**  | Animations          | Smooth, performant animations for micro-interactions      |
 
 #### State & Data Management
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **@github/spark** | KV Storage & Hooks | Persistent client-side storage with React integration |
-| **React Query** | Data Fetching (Future) | Server state management, caching, synchronization |
-| **React Hook Form** | Form Management | Performance, validation, developer experience |
-| **Zod** | Schema Validation | Type-safe validation, runtime checking |
+
+| Technology          | Purpose                | Rationale                                             |
+| ------------------- | ---------------------- | ----------------------------------------------------- |
+| **@github/spark**   | KV Storage & Hooks     | Persistent client-side storage with React integration |
+| **React Query**     | Data Fetching (Future) | Server state management, caching, synchronization     |
+| **React Hook Form** | Form Management        | Performance, validation, developer experience         |
+| **Zod**             | Schema Validation      | Type-safe validation, runtime checking                |
 
 #### Visualization & Analytics
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **Recharts** | Charts/Graphs | React-native charts, customizable, responsive |
-| **D3.js** | Advanced Visualizations | Powerful data manipulation and custom visualizations |
+
+| Technology   | Purpose                 | Rationale                                            |
+| ------------ | ----------------------- | ---------------------------------------------------- |
+| **Recharts** | Charts/Graphs           | React-native charts, customizable, responsive        |
+| **D3.js**    | Advanced Visualizations | Powerful data manipulation and custom visualizations |
 
 #### Developer Experience
-| Technology | Purpose | Rationale |
-|------------|---------|-----------|
-| **ESLint** | Code Quality | Enforce coding standards, catch errors early |
-| **TypeScript ESLint** | TS Linting | TypeScript-aware linting rules |
+
+| Technology            | Purpose      | Rationale                                    |
+| --------------------- | ------------ | -------------------------------------------- |
+| **ESLint**            | Code Quality | Enforce coding standards, catch errors early |
+| **TypeScript ESLint** | TS Linting   | TypeScript-aware linting rules               |
 
 ---
 
@@ -222,7 +233,9 @@ App (Root)
 ### Component Design Patterns
 
 #### 1. **Compound Components**
+
 Used for complex UI patterns like filters and dialogs:
+
 ```typescript
 <Dialog>
   <DialogTrigger />
@@ -235,7 +248,9 @@ Used for complex UI patterns like filters and dialogs:
 ```
 
 #### 2. **Render Props Pattern**
+
 For flexible component composition:
+
 ```typescript
 <DataTable
   data={prospects}
@@ -244,7 +259,9 @@ For flexible component composition:
 ```
 
 #### 3. **Custom Hooks Pattern**
+
 Encapsulate reusable logic:
+
 ```typescript
 // State management
 const [prospects, setProspects, deleteProspects] = useKV<Prospect[]>('key', [])
@@ -254,7 +271,9 @@ const { data, isLoading, error } = useQuery(['prospects'], fetchProspects)
 ```
 
 #### 4. **Container/Presenter Pattern**
+
 Separate logic from presentation:
+
 - **Container**: `App.tsx` (manages state and logic)
 - **Presenter**: `ProspectCard.tsx` (pure presentation)
 
@@ -267,64 +286,69 @@ Separate logic from presentation:
 #### Core Entities
 
 ##### Prospect
+
 ```typescript
 interface Prospect {
-  id: string;
-  companyName: string;
-  industry: IndustryType;
-  state: string;
-  score: number;              // ML opportunity score (0-100)
-  healthGrade: HealthGrade;   // A-F rating
-  defaultAmount: number;       // UCC default amount
-  daysInDefault: number;
-  lender: string;
-  signals: GrowthSignal[];    // Array of positive indicators
-  sentiment: Sentiment;       // improving | stable | declining
-  status: ProspectStatus;     // new | claimed | contacted | qualified
-  claimedBy?: string;
-  lastUpdated: Date;
-  violations?: string[];
+  id: string
+  companyName: string
+  industry: IndustryType
+  state: string
+  score: number // ML opportunity score (0-100)
+  healthGrade: HealthGrade // A-F rating
+  defaultAmount: number // UCC default amount
+  daysInDefault: number
+  lender: string
+  signals: GrowthSignal[] // Array of positive indicators
+  sentiment: Sentiment // improving | stable | declining
+  status: ProspectStatus // new | claimed | contacted | qualified
+  claimedBy?: string
+  lastUpdated: Date
+  violations?: string[]
 }
 ```
 
 ##### GrowthSignal
+
 ```typescript
 interface GrowthSignal {
-  type: SignalType;  // hiring | permit | contract | expansion | equipment
-  date: Date;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
+  type: SignalType // hiring | permit | contract | expansion | equipment
+  date: Date
+  description: string
+  impact: 'high' | 'medium' | 'low'
 }
 ```
 
 ##### CompetitorData
+
 ```typescript
 interface CompetitorData {
-  lender: string;
-  marketShare: number;
-  avgDealSize: number;
-  industryFocus: IndustryType[];
-  dealVolume: number;
-  trendDirection: 'up' | 'down' | 'stable';
+  lender: string
+  marketShare: number
+  avgDealSize: number
+  industryFocus: IndustryType[]
+  dealVolume: number
+  trendDirection: 'up' | 'down' | 'stable'
 }
 ```
 
 ##### PortfolioCompany
+
 ```typescript
 interface PortfolioCompany {
-  id: string;
-  companyName: string;
-  healthGrade: HealthGrade;
-  dealAmount: number;
-  originationDate: Date;
-  riskLevel: RiskLevel;
-  alerts: Alert[];
+  id: string
+  companyName: string
+  healthGrade: HealthGrade
+  dealAmount: number
+  originationDate: Date
+  riskLevel: RiskLevel
+  alerts: Alert[]
 }
 ```
 
 ### Data Flow
 
 #### 1. **Initialization Flow**
+
 ```
 Application Start
     ↓
@@ -338,6 +362,7 @@ Render UI
 ```
 
 #### 2. **User Interaction Flow**
+
 ```
 User Action (filter, sort, claim)
     ↓
@@ -353,6 +378,7 @@ UI Update
 ```
 
 #### 3. **Data Transformation Pipeline**
+
 ```
 Raw Prospects Array
     ↓
@@ -372,6 +398,7 @@ Render Filtered/Sorted Results
 ### Data Persistence Strategy
 
 #### Current Implementation (Client-Side)
+
 - **Storage**: GitHub Spark KV (Key-Value) store
 - **Scope**: Browser-local, per-user
 - **Persistence**: Survives page reloads, not cross-device
@@ -382,6 +409,7 @@ Render Filtered/Sorted Results
   - `lastDataRefresh`: Timestamp for staleness tracking
 
 #### Future Implementation (Server-Side)
+
 - **Database**: PostgreSQL or MongoDB for relational/document storage
 - **API Layer**: RESTful or GraphQL API
 - **Caching**: Redis for hot data
@@ -394,7 +422,9 @@ Render Filtered/Sorted Results
 ### State Architecture
 
 #### 1. **Persistent State (KV Storage)**
+
 Used for data that must survive page reloads:
+
 ```typescript
 const [prospects, setProspects, deleteProspects] = useKV<Prospect[]>('ucc-prospects', [])
 const [competitors, setCompetitors] = useKV<CompetitorData[]>('competitor-data', [])
@@ -402,13 +432,16 @@ const [portfolio, setPortfolio] = useKV<PortfolioCompany[]>('portfolio-companies
 ```
 
 **Characteristics**:
+
 - Automatic persistence to browser storage
 - Synchronous read/write
 - Survives page reloads
 - User-specific (not shared)
 
 #### 2. **Transient State (React useState)**
+
 Used for UI state that doesn't need persistence:
+
 ```typescript
 const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
 const [dialogOpen, setDialogOpen] = useState(false)
@@ -418,24 +451,28 @@ const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 ```
 
 **Characteristics**:
+
 - Ephemeral (resets on reload)
 - Fast updates
 - Component-scoped or lifted to parent
 
 #### 3. **Derived State (useMemo)**
+
 Computed values that depend on other state:
+
 ```typescript
 const filteredAndSortedProspects = useMemo(() => {
   let filtered = prospects
     .filter(/* search */)
     .filter(/* industry */)
-    .filter(/* advanced filters */);
-  
-  return filtered.sort(/* by sortField */);
-}, [prospects, searchQuery, filters, sortField, sortDirection]);
+    .filter(/* advanced filters */)
+
+  return filtered.sort(/* by sortField */)
+}, [prospects, searchQuery, filters, sortField, sortDirection])
 ```
 
 **Characteristics**:
+
 - Memoized for performance
 - Automatically recomputes when dependencies change
 - No explicit state setter
@@ -443,23 +480,21 @@ const filteredAndSortedProspects = useMemo(() => {
 ### State Update Patterns
 
 #### Functional Updates (Prevents Stale Closures)
+
 ```typescript
 // ✅ CORRECT: Functional update
-setProspects((current) => 
-  current.map(p => p.id === id ? { ...p, status: 'claimed' } : p)
-)
+setProspects((current) => current.map((p) => (p.id === id ? { ...p, status: 'claimed' } : p)))
 
 // ❌ INCORRECT: Direct reference (stale closure risk)
-setProspects(
-  prospects.map(p => p.id === id ? { ...p, status: 'claimed' } : p)
-)
+setProspects(prospects.map((p) => (p.id === id ? { ...p, status: 'claimed' } : p)))
 ```
 
 #### Batch Updates
+
 ```typescript
 // Claim multiple prospects atomically
-setProspects((current) => 
-  current.map(p => 
+setProspects((current) =>
+  current.map((p) =>
     selectedIds.has(p.id) && p.status !== 'claimed'
       ? { ...p, status: 'claimed', claimedBy: currentUser }
       : p
@@ -492,21 +527,24 @@ setProspects((current) =>
 #### 1. **Client-Side Security**
 
 ##### Input Validation
+
 ```typescript
 // Zod schema for form validation
 const prospectFilterSchema = z.object({
   minScore: z.number().min(0).max(100),
-  industry: z.enum(['Restaurant', 'Retail', 'Healthcare', /* ... */]),
-  state: z.string().length(2),
-});
+  industry: z.enum(['Restaurant', 'Retail', 'Healthcare' /* ... */]),
+  state: z.string().length(2)
+})
 ```
 
 ##### XSS Prevention
+
 - React automatically escapes JSX content
 - No `dangerouslySetInnerHTML` usage
 - Sanitize any user-generated content
 
 ##### Secure Storage
+
 - No sensitive credentials in client-side code
 - KV storage for non-sensitive user preferences only
 - API keys and secrets in environment variables (future)
@@ -514,24 +552,27 @@ const prospectFilterSchema = z.object({
 #### 2. **Data Security**
 
 ##### Sensitive Data Handling
+
 - Financial data (deal amounts, defaults) handled with care
 - No PII exposed in logs or error messages
 - Export functionality includes only necessary data fields
 
 ##### Data Integrity
+
 ```typescript
 // Defensive programming
-const safeProspects = (prospects || []).filter(Boolean);
+const safeProspects = (prospects || []).filter(Boolean)
 
 // Type guards
 function isProspect(obj: unknown): obj is Prospect {
-  return typeof obj === 'object' && obj !== null && 'id' in obj;
+  return typeof obj === 'object' && obj !== null && 'id' in obj
 }
 ```
 
 #### 3. **Future Security Considerations**
 
 When integrating with backend APIs:
+
 - **Authentication**: OAuth 2.0 / JWT tokens
 - **Authorization**: Role-Based Access Control (RBAC)
 - **HTTPS**: Enforce encrypted connections
@@ -554,24 +595,28 @@ When integrating with backend APIs:
 #### 1. **React Performance**
 
 ##### Memoization
+
 ```typescript
 // Expensive computation cached
 const filteredProspects = useMemo(() => {
-  return prospects.filter(/* complex logic */);
-}, [prospects, filters]);
+  return prospects.filter(/* complex logic */)
+}, [prospects, filters])
 
 // Component memoization (when needed)
-const MemoizedProspectCard = React.memo(ProspectCard);
+const MemoizedProspectCard = React.memo(ProspectCard)
 ```
 
 ##### Lazy Loading
+
 ```typescript
 // Code splitting for large components
-const HeavyComponent = lazy(() => import('./HeavyComponent'));
+const HeavyComponent = lazy(() => import('./HeavyComponent'))
 ```
 
 ##### Virtual Scrolling
+
 For large lists (1000+ items), consider:
+
 - `react-window` or `react-virtualized`
 - Only render visible items
 - Significant memory reduction
@@ -579,27 +624,31 @@ For large lists (1000+ items), consider:
 #### 2. **Bundle Optimization**
 
 ##### Current Strategy (Vite)
+
 - Tree shaking (removes unused code)
 - Code splitting (dynamic imports)
 - Asset optimization (image compression)
 - Minification (production builds)
 
 ##### Optimization Results
-| Metric | Development | Production |
-|--------|-------------|------------|
+
+| Metric       | Development       | Production                  |
+| ------------ | ----------------- | --------------------------- |
 | Initial Load | ~2MB (unminified) | ~300KB (minified + gzipped) |
-| HMR Update | <100ms | N/A |
-| Build Time | N/A | <30s |
+| HMR Update   | <100ms            | N/A                         |
+| Build Time   | N/A               | <30s                        |
 
 #### 3. **Runtime Performance**
 
 ##### Rendering Performance
+
 - Target: 60fps (16.67ms per frame)
 - Avoid layout thrashing
 - Debounce expensive operations (search, filters)
 - Throttle scroll handlers
 
 ##### Memory Management
+
 - Clean up event listeners in useEffect cleanup
 - Avoid memory leaks from unclosed dialogs
 - Proper Set/Map usage for O(1) lookups
@@ -607,14 +656,16 @@ For large lists (1000+ items), consider:
 ### Scalability Considerations
 
 #### Current Limits (Client-Only Architecture)
-| Aspect | Limit | Mitigation |
-|--------|-------|------------|
-| Prospects Displayed | ~1000 | Pagination, virtual scrolling |
-| Concurrent Users | N/A (client-only) | Future: Load balancing |
-| Data Freshness | Manual refresh | Future: Real-time updates |
-| Search Performance | O(n) | useMemo caching |
+
+| Aspect              | Limit             | Mitigation                    |
+| ------------------- | ----------------- | ----------------------------- |
+| Prospects Displayed | ~1000             | Pagination, virtual scrolling |
+| Concurrent Users    | N/A (client-only) | Future: Load balancing        |
+| Data Freshness      | Manual refresh    | Future: Real-time updates     |
+| Search Performance  | O(n)              | useMemo caching               |
 
 #### Future Scalability (Server Architecture)
+
 - **Database Indexing**: Fast queries on large datasets
 - **API Pagination**: Limit response sizes
 - **CDN**: Static asset distribution
@@ -629,11 +680,13 @@ For large lists (1000+ items), consider:
 ### Current Integrations
 
 #### 1. **GitHub Spark**
+
 - **Purpose**: Client-side storage and hooks
 - **Integration Point**: `@github/spark/hooks`
 - **Usage**: `useKV` for persistent state
 
 #### 2. **Shadcn/Radix UI**
+
 - **Purpose**: Component library
 - **Integration Point**: Component imports
 - **Customization**: Tailwind theming
@@ -643,40 +696,43 @@ For large lists (1000+ items), consider:
 #### 1. **Backend API Integration**
 
 ##### REST API Pattern
+
 ```typescript
 // API client setup
 const apiClient = axios.create({
   baseURL: process.env.VITE_API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-  },
-});
+    'Content-Type': 'application/json'
+  }
+})
 
 // React Query integration
-const { data: prospects, isLoading } = useQuery(
-  ['prospects', filters],
-  () => apiClient.get('/api/prospects', { params: filters })
-);
+const { data: prospects, isLoading } = useQuery(['prospects', filters], () =>
+  apiClient.get('/api/prospects', { params: filters })
+)
 ```
 
 ##### API Endpoints (Planned)
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/prospects` | GET | Fetch filtered prospects |
-| `/api/prospects/:id` | GET | Fetch single prospect details |
-| `/api/prospects/:id/claim` | POST | Claim a prospect |
-| `/api/competitors` | GET | Fetch competitor intelligence |
-| `/api/portfolio` | GET | Fetch portfolio companies |
-| `/api/export` | POST | Export data to CRM |
+
+| Endpoint                   | Method | Purpose                       |
+| -------------------------- | ------ | ----------------------------- |
+| `/api/prospects`           | GET    | Fetch filtered prospects      |
+| `/api/prospects/:id`       | GET    | Fetch single prospect details |
+| `/api/prospects/:id/claim` | POST   | Claim a prospect              |
+| `/api/competitors`         | GET    | Fetch competitor intelligence |
+| `/api/portfolio`           | GET    | Fetch portfolio companies     |
+| `/api/export`              | POST   | Export data to CRM            |
 
 #### 2. **CRM Integration**
 
 ##### Salesforce
+
 - REST API for lead export
 - OAuth authentication
 - Mapping: Prospect → Lead object
 
 ##### HubSpot
+
 - REST API v3
 - API key authentication
 - Mapping: Prospect → Contact + Company
@@ -684,11 +740,13 @@ const { data: prospects, isLoading } = useQuery(
 #### 3. **Data Pipeline Integration**
 
 ##### Web Scraping Service
+
 - Separate microservice for UCC scraping
 - Rate limiting and CAPTCHA handling
 - Queue-based architecture
 
 ##### ML Scoring Service
+
 - Python-based ML API
 - Feature engineering pipeline
 - Model versioning and A/B testing
@@ -696,11 +754,13 @@ const { data: prospects, isLoading } = useQuery(
 #### 4. **Monitoring & Analytics**
 
 ##### Application Performance Monitoring (APM)
+
 - Options: Datadog, New Relic, Sentry
 - Error tracking and performance metrics
 - Real user monitoring (RUM)
 
 ##### Business Analytics
+
 - Options: Mixpanel, Amplitude
 - User behavior tracking
 - Conversion funnel analysis
@@ -712,6 +772,7 @@ const { data: prospects, isLoading } = useQuery(
 ### Current Deployment (Static Site)
 
 #### Build Process
+
 ```bash
 # Development
 npm run dev         # Vite dev server on localhost:5173
@@ -722,11 +783,13 @@ npm run build       # TypeScript compile + Vite build
 ```
 
 #### Deployment Target
+
 - **Platform**: Any static hosting (GitHub Pages, Netlify, Vercel, S3)
 - **Requirements**: HTTPS, CDN, SPA routing support
 - **Configuration**: Environment variables via `.env` files
 
 #### Environment Management
+
 ```
 .env.development     # Local development
 .env.staging         # Staging environment
@@ -736,6 +799,7 @@ npm run build       # TypeScript compile + Vite build
 ### Future Deployment (Full Stack)
 
 #### Architecture Diagram
+
 ```
                     ┌─────────────┐
                     │   CDN       │
@@ -760,19 +824,20 @@ npm run build       # TypeScript compile + Vite build
 ```
 
 #### Container Strategy
+
 ```yaml
 # docker-compose.yml
 services:
   web:
     build: ./frontend
-    ports: ["3000:80"]
-  
+    ports: ['3000:80']
+
   api:
     build: ./backend
-    ports: ["8080:8080"]
+    ports: ['8080:8080']
     environment:
       DATABASE_URL: postgres://...
-  
+
   db:
     image: postgres:15
     volumes:
@@ -780,6 +845,7 @@ services:
 ```
 
 #### CI/CD Pipeline
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy
@@ -808,6 +874,7 @@ jobs:
 ### Local Development Setup
 
 #### Prerequisites
+
 ```bash
 Node.js >= 18.0.0
 npm >= 9.0.0
@@ -815,6 +882,7 @@ Git
 ```
 
 #### Installation
+
 ```bash
 git clone https://github.com/ivi374forivi/public-record-data-scrapper.git
 cd public-record-data-scrapper
@@ -823,6 +891,7 @@ npm run dev
 ```
 
 #### Development Scripts
+
 ```bash
 npm run dev        # Start dev server (Vite HMR)
 npm run build      # Production build
@@ -834,12 +903,14 @@ npm run optimize   # Optimize dependencies
 ### Code Organization Standards
 
 #### File Naming Conventions
+
 - **Components**: PascalCase (e.g., `ProspectCard.tsx`)
 - **Utilities**: camelCase (e.g., `mockData.ts`)
 - **Types**: PascalCase (e.g., `Prospect`, `HealthGrade`)
 - **Constants**: UPPER_SNAKE_CASE (e.g., `DEFAULT_SCORE`)
 
 #### Import Order
+
 1. External libraries (React, third-party)
 2. Internal components (`@/components`)
 3. Internal utilities (`@/lib`)
@@ -847,6 +918,7 @@ npm run optimize   # Optimize dependencies
 5. Types (if separate imports)
 
 #### Component Structure
+
 ```typescript
 // 1. Imports
 import { useState } from 'react'
@@ -863,10 +935,10 @@ interface ProspectCardProps {
 export function ProspectCard({ prospect, onClaim }: ProspectCardProps) {
   // 3a. Hooks
   const [isExpanded, setIsExpanded] = useState(false)
-  
+
   // 3b. Event handlers
   const handleClaim = () => onClaim(prospect.id)
-  
+
   // 3c. Render logic
   return (
     <div>
@@ -879,6 +951,7 @@ export function ProspectCard({ prospect, onClaim }: ProspectCardProps) {
 ### Git Workflow
 
 #### Branch Strategy
+
 ```
 main                 # Production-ready code
 ├── develop          # Integration branch (future)
@@ -888,7 +961,9 @@ main                 # Production-ready code
 ```
 
 #### Commit Message Convention
+
 Following Conventional Commits:
+
 ```
 feat: add batch operations for prospects
 fix: resolve stale closure bug in useKV
@@ -902,6 +977,7 @@ chore: update dependencies
 ### Code Review Process
 
 #### Review Checklist
+
 - [ ] Code follows TypeScript and ESLint standards
 - [ ] No console.log or debugging code
 - [ ] Proper error handling
@@ -918,6 +994,7 @@ chore: update dependencies
 ### Testing Strategy (Future Implementation)
 
 #### Test Pyramid
+
 ```
         ┌─────────────┐
         │     E2E     │  10% (Playwright/Cypress)
@@ -936,7 +1013,9 @@ chore: update dependencies
 #### Test Categories
 
 ##### 1. Unit Tests
+
 Test individual functions and utilities:
+
 ```typescript
 // lib/utils.test.ts
 import { describe, it, expect } from 'vitest'
@@ -944,14 +1023,16 @@ import { calculateScore, filterByHealthGrade } from './utils'
 
 describe('calculateScore', () => {
   it('calculates opportunity score correctly', () => {
-    const result = calculateScore({ /* ... */ })
+    const result = calculateScore({/* ... */})
     expect(result).toBe(85)
   })
 })
 ```
 
 ##### 2. Component Tests
+
 Test component behavior:
+
 ```typescript
 // components/ProspectCard.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -961,7 +1042,7 @@ describe('ProspectCard', () => {
   it('calls onClaim when button is clicked', () => {
     const onClaim = vi.fn()
     render(<ProspectCard prospect={mockProspect} onClaim={onClaim} />)
-    
+
     fireEvent.click(screen.getByText('Claim'))
     expect(onClaim).toHaveBeenCalledWith(mockProspect.id)
   })
@@ -969,18 +1050,20 @@ describe('ProspectCard', () => {
 ```
 
 ##### 3. Integration Tests
+
 Test user workflows:
+
 ```typescript
 // App.integration.test.tsx
 it('allows filtering and claiming prospects', async () => {
   render(<App />)
-  
+
   // Apply filter
   fireEvent.change(screen.getByLabelText('Industry'), { target: { value: 'Restaurant' } })
-  
+
   // Verify filtered results
   expect(screen.getAllByTestId('prospect-card')).toHaveLength(5)
-  
+
   // Claim prospect
   fireEvent.click(screen.getAllByText('Claim')[0])
   expect(await screen.findByText('Claimed')).toBeInTheDocument()
@@ -988,22 +1071,24 @@ it('allows filtering and claiming prospects', async () => {
 ```
 
 ##### 4. E2E Tests
+
 Test complete user journeys:
+
 ```typescript
 // e2e/prospect-workflow.spec.ts
 test('user can filter, sort, and claim prospects', async ({ page }) => {
   await page.goto('/')
-  
+
   // Apply filters
   await page.selectOption('[name="industry"]', 'Restaurant')
   await page.fill('[name="search"]', 'ABC Company')
-  
+
   // Sort by score
   await page.click('[data-testid="sort-score"]')
-  
+
   // Claim top prospect
   await page.click('[data-testid="claim-btn"]:first-child')
-  
+
   // Verify claim
   await expect(page.locator('.claimed-badge')).toBeVisible()
 })
@@ -1012,6 +1097,7 @@ test('user can filter, sort, and claim prospects', async ({ page }) => {
 ### Code Quality Tools
 
 #### Linting (ESLint)
+
 ```javascript
 // eslint.config.js
 export default [
@@ -1020,13 +1106,14 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn'
     }
   }
 ]
 ```
 
 #### Type Checking (TypeScript)
+
 ```json
 // tsconfig.json
 {
@@ -1041,11 +1128,13 @@ export default [
 ```
 
 #### Formatting (Prettier - Future)
+
 Consistent code formatting across the project.
 
 ### Performance Monitoring
 
 #### Metrics to Track
+
 - **First Contentful Paint (FCP)**: < 1.8s
 - **Largest Contentful Paint (LCP)**: < 2.5s
 - **Time to Interactive (TTI)**: < 3.8s
@@ -1053,6 +1142,7 @@ Consistent code formatting across the project.
 - **First Input Delay (FID)**: < 100ms
 
 #### Tools
+
 - Lighthouse (automated audits)
 - Chrome DevTools Performance tab
 - React DevTools Profiler
@@ -1063,47 +1153,53 @@ Consistent code formatting across the project.
 ## Future Roadmap
 
 ### Phase 1: Foundation (Current - Complete)
+
 ✅ Component architecture established  
 ✅ Type-safe development environment  
 ✅ Mock data and client-side state management  
 ✅ Core UI/UX patterns implemented  
 ✅ Responsive design with mobile support  
 ✅ Advanced filtering and sorting  
-✅ Batch operations  
+✅ Batch operations
 
 ### Phase 2: Backend Integration (Q1 2026)
+
 🔲 REST API development  
 🔲 PostgreSQL database schema  
 🔲 Authentication & authorization  
 🔲 Real data pipeline from UCC sources  
 🔲 ML model integration  
-🔲 WebSocket for real-time updates  
+🔲 WebSocket for real-time updates
 
 ### Phase 3: Enhanced Intelligence (Q2 2026)
+
 🔲 Advanced competitor analysis  
 🔲 Predictive lead scoring (ML improvements)  
 🔲 Automated re-qualification engine  
 🔲 Custom signal detection  
-🔲 Portfolio risk monitoring  
+🔲 Portfolio risk monitoring
 
 ### Phase 4: Integrations & Scale (Q3 2026)
+
 🔲 CRM integrations (Salesforce, HubSpot)  
 🔲 Export automation  
 🔲 API rate limiting and optimization  
 🔲 Pagination and virtual scrolling  
-🔲 Advanced caching strategies  
+🔲 Advanced caching strategies
 
 ### Phase 5: Enterprise Features (Q4 2026)
+
 🔲 Multi-tenant architecture  
 🔲 Role-based access control (RBAC)  
 🔲 Audit logging and compliance  
 🔲 Custom dashboards and reporting  
 🔲 White-label capabilities  
-🔲 SLA monitoring and alerting  
+🔲 SLA monitoring and alerting
 
 ### Technical Debt & Improvements
 
 #### High Priority
+
 - Add comprehensive test coverage (unit, integration, E2E)
 - Implement proper error boundaries for all major sections
 - Add loading states and skeleton screens
@@ -1111,6 +1207,7 @@ Consistent code formatting across the project.
 - Set up CI/CD pipeline
 
 #### Medium Priority
+
 - Migrate to React Query for data fetching patterns
 - Add Storybook for component documentation
 - Implement feature flags for gradual rollouts
@@ -1118,6 +1215,7 @@ Consistent code formatting across the project.
 - Create design system documentation
 
 #### Low Priority
+
 - Add keyboard shortcuts for power users
 - Implement undo/redo functionality
 - Add export to CSV/Excel formats
@@ -1130,45 +1228,45 @@ Consistent code formatting across the project.
 
 ### PRD → Architecture Mapping
 
-| PRD Feature | Architecture Component | Status |
-|-------------|------------------------|--------|
-| Prospect Dashboard | `App.tsx` + `ProspectCard` | ✅ Implemented |
-| Filtering (Industry, State, Score) | `AdvancedFilters` | ✅ Implemented |
-| Health Scoring | `Prospect.healthGrade` | ✅ Implemented |
-| Growth Signals | `Prospect.signals[]` | ✅ Implemented |
-| Competitor Intelligence | `CompetitorChart` | ✅ Implemented |
-| Portfolio Monitoring | `PortfolioMonitor` | ✅ Implemented |
-| Lead Re-qualification | Business logic | ⏳ Planned (Phase 3) |
-| CRM Export | `handleExport` function | 🟡 Partial (JSON only) |
-| Real-time Updates | WebSocket integration | ⏳ Planned (Phase 2) |
-| ML Scoring API | Backend service | ⏳ Planned (Phase 2) |
+| PRD Feature                        | Architecture Component     | Status                 |
+| ---------------------------------- | -------------------------- | ---------------------- |
+| Prospect Dashboard                 | `App.tsx` + `ProspectCard` | ✅ Implemented         |
+| Filtering (Industry, State, Score) | `AdvancedFilters`          | ✅ Implemented         |
+| Health Scoring                     | `Prospect.healthGrade`     | ✅ Implemented         |
+| Growth Signals                     | `Prospect.signals[]`       | ✅ Implemented         |
+| Competitor Intelligence            | `CompetitorChart`          | ✅ Implemented         |
+| Portfolio Monitoring               | `PortfolioMonitor`         | ✅ Implemented         |
+| Lead Re-qualification              | Business logic             | ⏳ Planned (Phase 3)   |
+| CRM Export                         | `handleExport` function    | 🟡 Partial (JSON only) |
+| Real-time Updates                  | WebSocket integration      | ⏳ Planned (Phase 2)   |
+| ML Scoring API                     | Backend service            | ⏳ Planned (Phase 2)   |
 
 ### Design System → Implementation Mapping
 
-| Design Specification | Implementation | Alignment |
-|---------------------|----------------|-----------|
-| Color: Deep Navy `oklch(0.25 0.06 250)` | Tailwind theme | ✅ |
-| Typography: IBM Plex Sans | Font family config | ✅ |
-| Components: Shadcn/Radix | UI component library | ✅ |
-| Icons: Phosphor | `@phosphor-icons/react` | ✅ |
-| Animations: Subtle micro-interactions | Framer Motion | ✅ |
-| Mobile-first responsive | Tailwind breakpoints | ✅ |
-| Glassmorphism effects | CSS backdrop-blur | ✅ |
+| Design Specification                    | Implementation          | Alignment |
+| --------------------------------------- | ----------------------- | --------- |
+| Color: Deep Navy `oklch(0.25 0.06 250)` | Tailwind theme          | ✅        |
+| Typography: IBM Plex Sans               | Font family config      | ✅        |
+| Components: Shadcn/Radix                | UI component library    | ✅        |
+| Icons: Phosphor                         | `@phosphor-icons/react` | ✅        |
+| Animations: Subtle micro-interactions   | Framer Motion           | ✅        |
+| Mobile-first responsive                 | Tailwind breakpoints    | ✅        |
+| Glassmorphism effects                   | CSS backdrop-blur       | ✅        |
 
 ### Logic Analysis → Code Implementation Mapping
 
-| Logic Issue Identified | Solution Implemented | Status |
-|------------------------|----------------------|--------|
-| Stale Data Detection | `StaleDataWarning` component | ✅ Fixed |
-| Unclaim Operations | `handleUnclaimLead` function | ✅ Fixed |
-| Batch Operations | `BatchOperations` component | ✅ Fixed |
-| Advanced Filtering | `AdvancedFilters` (8 dimensions) | ✅ Fixed |
-| Sorting Capabilities | `SortControls` component | ✅ Fixed |
-| Export Flexibility | Unified export (single + batch) | ✅ Fixed |
-| useKV Stale Closures | Functional updates pattern | ✅ Fixed |
-| Filter Performance | useMemo optimization | ✅ Fixed |
-| Selection Management | `selectedProspectIds` Set | ✅ Fixed |
-| TypeScript Safety | Complete type coverage | ✅ Fixed |
+| Logic Issue Identified | Solution Implemented             | Status   |
+| ---------------------- | -------------------------------- | -------- |
+| Stale Data Detection   | `StaleDataWarning` component     | ✅ Fixed |
+| Unclaim Operations     | `handleUnclaimLead` function     | ✅ Fixed |
+| Batch Operations       | `BatchOperations` component      | ✅ Fixed |
+| Advanced Filtering     | `AdvancedFilters` (8 dimensions) | ✅ Fixed |
+| Sorting Capabilities   | `SortControls` component         | ✅ Fixed |
+| Export Flexibility     | Unified export (single + batch)  | ✅ Fixed |
+| useKV Stale Closures   | Functional updates pattern       | ✅ Fixed |
+| Filter Performance     | useMemo optimization             | ✅ Fixed |
+| Selection Management   | `selectedProspectIds` Set        | ✅ Fixed |
+| TypeScript Safety      | Complete type coverage           | ✅ Fixed |
 
 ---
 
@@ -1200,13 +1298,12 @@ Consistent code formatting across the project.
 
 ### Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-11-09 | Copilot | Initial architecture alignment document |
+| Version | Date       | Author  | Changes                                 |
+| ------- | ---------- | ------- | --------------------------------------- |
+| 1.0     | 2025-11-09 | Copilot | Initial architecture alignment document |
 
 ---
 
 **Document Owner**: Engineering Team  
 **Last Review**: 2025-11-09  
 **Next Review**: 2026-01-09 (Quarterly)
-

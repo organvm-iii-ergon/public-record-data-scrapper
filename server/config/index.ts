@@ -203,7 +203,9 @@ export function validateConfig(): void {
     // CORS with credentials must never allow the wildcard or an empty origin.
     if (config.cors.credentials && Array.isArray(config.cors.origin)) {
       if (config.cors.origin.some((o) => o === '*' || o === '')) {
-        errors.push("CORS_ORIGIN cannot include '*' or an empty origin when credentials are enabled")
+        errors.push(
+          "CORS_ORIGIN cannot include '*' or an empty origin when credentials are enabled"
+        )
       }
     }
 

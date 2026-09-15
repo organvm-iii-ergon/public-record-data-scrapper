@@ -12,15 +12,8 @@ import { PersonalizationEngine } from './personalization/PersonalizationEngine'
 
 import type { Prospect } from '@public-records/core'
 import type { GenerativeConfig, OutreachTemplate, Message } from '@/types/generative'
-import type {
-  RecursiveEnrichmentConfig,
-  EnrichmentTree,
-  EnrichmentNode
-} from '@/types/recursive'
-import type {
-  PersonalizedProspect,
-  PersonalizedDashboard
-} from '@/types/personalization'
+import type { RecursiveEnrichmentConfig, EnrichmentTree, EnrichmentNode } from '@/types/recursive'
+import type { PersonalizedProspect, PersonalizedDashboard } from '@/types/personalization'
 
 /**
  * Main hub for all generative, recursive, and personalized intelligence features

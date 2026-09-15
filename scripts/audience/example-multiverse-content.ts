@@ -31,11 +31,15 @@ const MULTIVERSE_FINDING: ResearchFinding = {
     fundamentally transform software product development methodologies.
   `,
   field: 'Software Engineering',
-  background: 'product-market fit discovery requires iterative testing of implementation hypotheses',
+  background:
+    'product-market fit discovery requires iterative testing of implementation hypotheses',
   variables: ['implementation_approach', 'time_to_pmf', 'test_coverage', 'ai_assistance'],
-  methodology: 'Controlled experiment with random assignment to sequential vs parallel testing conditions',
-  hypothesis: 'Parallel testing of N implementations reduces time-to-PMF by a factor proportional to N',
-  statistical_methods: 'Independent samples t-test, effect size calculation (Cohen\'s d), power analysis',
+  methodology:
+    'Controlled experiment with random assignment to sequential vs parallel testing conditions',
+  hypothesis:
+    'Parallel testing of N implementations reduces time-to-PMF by a factor proportional to N',
+  statistical_methods:
+    "Independent samples t-test, effect size calculation (Cohen's d), power analysis",
   sampleSize: 200,
   timeframe: '2024-01-01 to 2024-12-31',
   geography: 'Global (remote teams across 23 countries)',
@@ -47,10 +51,14 @@ const MULTIVERSE_FINDING: ResearchFinding = {
     'Developer satisfaction improved 2.3x (Net Promoter Score: 71 vs 31)',
     'Code quality metrics unchanged (technical debt ratio: 0.23 vs 0.24, p=0.67)'
   ],
-  robustnessTests: 'different team sizes (2-50), different domains (B2B SaaS, consumer apps, dev tools), different AI models (GPT-4, Claude, Codex)',
-  implications: 'AI-assisted parallel testing may become standard practice for startups seeking PMF',
-  limitations: 'Study conducted only on web/mobile applications; hardware products not tested; AI assistance quality may vary',
-  futureWork: 'extending to N>4 implementations; investigating optimal parallelization strategies; long-term impact on product evolution',
+  robustnessTests:
+    'different team sizes (2-50), different domains (B2B SaaS, consumer apps, dev tools), different AI models (GPT-4, Claude, Codex)',
+  implications:
+    'AI-assisted parallel testing may become standard practice for startups seeking PMF',
+  limitations:
+    'Study conducted only on web/mobile applications; hardware products not tested; AI assistance quality may vary',
+  futureWork:
+    'extending to N>4 implementations; investigating optimal parallelization strategies; long-term impact on product evolution',
   references: [
     'Ries, E. (2011). The Lean Startup. Crown Business.',
     'Eisenmann, T. et al. (2012). Why Startups Fail. Harvard Business Review.',
@@ -60,8 +68,9 @@ const MULTIVERSE_FINDING: ResearchFinding = {
   dataUrl: 'https://github.com/user/public-record-data-scrapper/data/multiverse-results.csv',
 
   // === CASUAL VERSION ===
-  casualHook: 'We Built 4 Versions of the Same Product Simultaneously. Here\'s What Happened.',
-  eliExplanation: 'Instead of building one thing, testing it, and starting over if it fails, we built 4 different versions at the same time using AI. We found the winner 73% faster.',
+  casualHook: "We Built 4 Versions of the Same Product Simultaneously. Here's What Happened.",
+  eliExplanation:
+    'Instead of building one thing, testing it, and starting over if it fails, we built 4 different versions at the same time using AI. We found the winner 73% faster.',
   storyOpening: `
     Imagine you're building a product. The traditional way: spend 6 months building version A,
     launch it, realize nobody wants it, scrap it, build version B, repeat. This is SLOW and PAINFUL.
@@ -116,7 +125,8 @@ const MULTIVERSE_FINDING: ResearchFinding = {
   // === BUSINESS VERSION ===
   businessValue: 'Reduce Time-to-Market by 73%',
   businessHook: 'The Startup Playbook Just Changed: Why Building ONE Product is a Mistake',
-  actionableInsight: 'parallel implementation testing can reduce your burn rate and extend runway by 12+ months',
+  actionableInsight:
+    'parallel implementation testing can reduce your burn rate and extend runway by 12+ months',
   tldr: 'We proved you can test 4 product variants simultaneously using AI-assisted development, finding PMF 73% faster (4.4 months vs 16.3 months) while reducing cost by 61%.',
   financialImpact: `
     **For a typical startup with $2M seed round:**
@@ -303,9 +313,12 @@ runMultiCompanyComparison(
   // === POLICY VERSION ===
   policyTitle: 'Accelerating Small Business Innovation Through AI-Assisted Development',
   policyArea: 'innovation policy, small business development, AI adoption',
-  keyPoint1: 'AI-assisted parallel testing reduces time and cost to validate business ideas by 60-70%',
-  keyPoint2: 'Small businesses and startups benefit disproportionately from democratized access to AI development tools',
-  keyPoint3: 'Policy interventions could accelerate adoption and create competitive advantages for domestic entrepreneurs',
+  keyPoint1:
+    'AI-assisted parallel testing reduces time and cost to validate business ideas by 60-70%',
+  keyPoint2:
+    'Small businesses and startups benefit disproportionately from democratized access to AI development tools',
+  keyPoint3:
+    'Policy interventions could accelerate adoption and create competitive advantages for domestic entrepreneurs',
   policyBackground: `
     Small business creation drives employment growth and economic innovation. However, high
     failure rates (90% within 5 years) result in wasted capital and lost economic opportunity.
@@ -427,7 +440,7 @@ async function demonstrateMultiAudienceContent() {
   const contents = generator.generateMultiAudienceContent(MULTIVERSE_FINDING)
 
   console.log(`Generated ${contents.length} content variants:\n`)
-  contents.forEach(content => {
+  contents.forEach((content) => {
     console.log(`📄 ${content.id}`)
     console.log(`   Audience: ${content.audience.join(', ')}`)
     console.log(`   Platforms: ${content.platforms.join(', ')}`)

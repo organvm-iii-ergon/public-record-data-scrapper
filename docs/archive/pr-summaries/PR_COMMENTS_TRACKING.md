@@ -10,6 +10,7 @@
 ## Summary
 
 This tracking system helps manage open-ended PR comments that require:
+
 - Further discussion
 - Owner assignment
 - Action items
@@ -21,60 +22,70 @@ This tracking system helps manage open-ended PR comments that require:
 ## Open Pull Requests Review
 
 ### PR #72: Document dashboard and prospect card UI redesign
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #71: Implement redesigned dashboard based on approved mockups
-- **Status**: Open (Draft)  
+
+- **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #70: Collect user and team feedback on new UI
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #69: Implement redesigned prospect cards based on approved designs
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #68: Create new UI mockups for dashboard and prospect cards
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #67: Fix markdown formatting by specifying language for code block
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #66: Add /docs with comprehensive architecture alignment document
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #65: Organize and resolve open-ended PR comments org-wide
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: This is the current PR
 - **Action Required**: Complete the tracking system
 
 ### PR #64: Add /docs directory with architecture alignment document
+
 - **Status**: Open (Draft)
 - **Created**: 2025-11-09
 - **Comments Review**: No open-ended human comments found
 - **Action Required**: None at this time
 
 ### PR #63: Research MCP servers, open source scraping frameworks, and analytics databases
+
 - **Status**: Open
 - **Created**: 2025-11-09
 - **Open-Ended Comments**: ✅ **FOUND COMMENTS**
@@ -82,9 +93,11 @@ This tracking system helps manage open-ended PR comments that require:
 #### Comment Thread Analysis
 
 **Comment by @4444JPP (2025-11-09 05:54:25)**:
+
 ```
 @copilot free version required in addition to all previous work drafted in current thread
 ```
+
 - **Type**: Feature Request
 - **Status**: ✅ Resolved (Copilot responded with FREE_STACK_GUIDE.md)
 - **Owner**: @Copilot
@@ -104,7 +117,7 @@ This tracking system helps manage open-ended PR comments that require:
      - Configuration file credentials exposure
    - **Affected Files**: IMPLEMENTATION_GUIDE.md
    - **Owner**: Unassigned
-   - **Action Required**: 
+   - **Action Required**:
      - Decide on approach: Use environment variables or secret management
      - Update documentation to remove hardcoded credentials
      - Add security best practices section
@@ -118,44 +131,44 @@ This tracking system helps manage open-ended PR comments that require:
    - **Status**: ⚠️ **OPEN - REQUIRES DECISION**
    - **Priority**: MEDIUM to HIGH
    - **Suggestions**:
-     
+
      a. **High-Priority - Implementation Blueprint Issue**
-        - **Concern**: Committing rigid implementation plan before code is built
-        - **Recommendation**: Use Architectural Decision Records (ADRs)
-        - **Impact**: Maintainability, premature decisions
-        - **Owner**: Unassigned
-        - **Action Required**: Decide on documentation approach (ADRs vs implementation guide)
-     
+     - **Concern**: Committing rigid implementation plan before code is built
+     - **Recommendation**: Use Architectural Decision Records (ADRs)
+     - **Impact**: Maintainability, premature decisions
+     - **Owner**: Unassigned
+     - **Action Required**: Decide on documentation approach (ADRs vs implementation guide)
+
      b. **High-Priority - Browser Instance Management**
-        - **Issue**: Puppeteer launches new browser on every request
-        - **Impact**: Performance and resource consumption
-        - **Recommendation**: Use persistent browser instance
-        - **Owner**: Unassigned
-        - **Action Required**: If implementation proceeds, apply this fix
-     
+     - **Issue**: Puppeteer launches new browser on every request
+     - **Impact**: Performance and resource consumption
+     - **Recommendation**: Use persistent browser instance
+     - **Owner**: Unassigned
+     - **Action Required**: If implementation proceeds, apply this fix
+
      c. **Medium-Priority - Data Synchronization**
-        - **Issue**: Time-based sync can cause data loss
-        - **Recommendation**: Use watermark-based approach
-        - **Owner**: Unassigned
-        - **Action Required**: If implementation proceeds, consider this improvement
-     
+     - **Issue**: Time-based sync can cause data loss
+     - **Recommendation**: Use watermark-based approach
+     - **Owner**: Unassigned
+     - **Action Required**: If implementation proceeds, consider this improvement
+
      d. **Medium-Priority - Database Performance**
-        - **Issue**: Per-item commit in Scrapy pipeline
-        - **Recommendation**: Batch commits
-        - **Owner**: Unassigned
-        - **Action Required**: If implementation proceeds, apply this optimization
-     
+     - **Issue**: Per-item commit in Scrapy pipeline
+     - **Recommendation**: Batch commits
+     - **Owner**: Unassigned
+     - **Action Required**: If implementation proceeds, apply this optimization
+
      e. **High-Priority - Security: Hardcoded Secrets**
-        - **Issue**: Database connection string in .mcpconfig.json
-        - **Recommendation**: Use environment variables
-        - **Owner**: Unassigned
-        - **Action Required**: Fix before merge
-     
+     - **Issue**: Database connection string in .mcpconfig.json
+     - **Recommendation**: Use environment variables
+     - **Owner**: Unassigned
+     - **Action Required**: Fix before merge
+
      f. **Low-Priority - Deprecated apt-key**
-        - **Issue**: Using deprecated apt-key add command
-        - **Recommendation**: Use modern GPG key management
-        - **Owner**: Unassigned
-        - **Action Required**: Nice to have, not critical
+     - **Issue**: Using deprecated apt-key add command
+     - **Recommendation**: Use modern GPG key management
+     - **Owner**: Unassigned
+     - **Action Required**: Nice to have, not critical
 
 3. **Custom Compliance Checks**
    - **Failed Checks**:
@@ -172,13 +185,14 @@ This tracking system helps manage open-ended PR comments that require:
 ## Action Items Summary
 
 ### High Priority
+
 1. **PR #63 - Security Compliance**: Resolve hardcoded credential issues
    - Owner: **Unassigned**
    - Deadline: Before merge
    - Status: Open
 
 2. **PR #63 - Documentation Approach**: Decide between implementation guide vs ADRs
-   - Owner: **Unassigned**  
+   - Owner: **Unassigned**
    - Deadline: Before finalization
    - Status: Open for discussion
 
@@ -188,6 +202,7 @@ This tracking system helps manage open-ended PR comments that require:
    - Status: Open
 
 ### Medium Priority
+
 1. **PR #63 - Data Sync**: Consider watermark-based synchronization
    - Owner: **Unassigned**
    - Deadline: During implementation phase
@@ -199,6 +214,7 @@ This tracking system helps manage open-ended PR comments that require:
    - Status: Open for consideration
 
 ### Low Priority
+
 1. **PR #63 - apt-key deprecation**: Update to modern GPG key management
    - Owner: **Unassigned**
    - Deadline: Nice to have
@@ -209,18 +225,21 @@ This tracking system helps manage open-ended PR comments that require:
 ## Resolution Process
 
 ### For Comment Authors
+
 1. Review this tracking document
 2. Provide clarification or additional context
 3. Assign yourself or suggest an owner
 4. Set expected resolution timeline
 
 ### For PR Authors
+
 1. Review comments related to your PR
 2. Address or respond to each comment
 3. Update comment status in this document
 4. Mark resolved comments in GitHub
 
 ### For Reviewers
+
 1. Check this document before reviewing PRs
 2. Add new open-ended comments here
 3. Follow up on unresolved items
@@ -231,16 +250,19 @@ This tracking system helps manage open-ended PR comments that require:
 ## Comment Categories
 
 ### 🔴 Critical - Blocks Merge
+
 - Security vulnerabilities
 - Major architectural issues
 - Breaking changes
 
 ### 🟡 Important - Should Address
+
 - Performance concerns
 - Maintainability issues
 - Design pattern questions
 
 ### 🟢 Nice to Have
+
 - Minor improvements
 - Documentation suggestions
 - Style preferences
@@ -250,12 +272,14 @@ This tracking system helps manage open-ended PR comments that require:
 ## Guidelines for Managing PR Comments
 
 ### For Contributors
+
 - **Be Clear**: Make comments specific and actionable
 - **Be Timely**: Respond to comments within 48 hours
 - **Be Constructive**: Focus on improvement, not criticism
 - **Use Labels**: Tag comments with [Question], [Suggestion], [Security], etc.
 
 ### For Maintainers
+
 - **Track Progress**: Update this document weekly
 - **Assign Owners**: Don't let comments languish unassigned
 - **Set Deadlines**: Give timeline expectations
@@ -270,7 +294,9 @@ This tracking system helps manage open-ended PR comments that require:
 ```markdown
 **Comment by @username (YYYY-MM-DD HH:MM:SS)**:
 ```
+
 [Comment text]
+
 ```
 - **Type**: [Question/Suggestion/Security/Bug/Discussion]
 - **Status**: [Open/In Progress/Resolved/Blocked]
@@ -285,6 +311,7 @@ This tracking system helps manage open-ended PR comments that require:
 
 ```markdown
 **Resolution** (YYYY-MM-DD):
+
 - **Resolved by**: @username
 - **Solution**: [Brief description]
 - **Commit/PR**: [Reference]
@@ -314,6 +341,7 @@ This tracking system helps manage open-ended PR comments that require:
 ## Contact
 
 For questions about this tracking system:
+
 - Open an issue with the `question` label
 - Tag `@copilot` for assistance
 - Discuss in PR #65

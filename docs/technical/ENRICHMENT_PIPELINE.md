@@ -34,6 +34,7 @@ The enrichment pipeline provides multi-tier data acquisition, normalization, and
 Manages data source integration and routing based on subscription tiers.
 
 **Capabilities:**
+
 - Multi-source data fetching
 - Tier-based access control
 - API authentication management
@@ -41,6 +42,7 @@ Manages data source integration and routing based on subscription tiers.
 - Response normalization
 
 **Usage:**
+
 ```typescript
 import { DataAcquisitionAgent } from './src/lib/agentic'
 
@@ -61,6 +63,7 @@ const result = await agent.executeTask({
 Manages UCC filing scraping from state Secretary of State portals.
 
 **Capabilities:**
+
 - UCC filing scraping
 - Multi-state support (CA, TX, FL)
 - Rate limiting (5 requests/minute per state)
@@ -68,6 +71,7 @@ Manages UCC filing scraping from state Secretary of State portals.
 - CAPTCHA handling (returns manual URL on detection)
 
 **Usage:**
+
 ```typescript
 import { ScraperAgent } from './src/lib/agentic'
 
@@ -88,6 +92,7 @@ const result = await agent.executeTask({
 Canonicalizes, standardizes, and deduplicates data from multiple sources.
 
 **Capabilities:**
+
 - Company name canonicalization (removes LLC/Inc suffixes)
 - Address normalization (USPS standards)
 - Date standardization (ISO 8601)
@@ -95,6 +100,7 @@ Canonicalizes, standardizes, and deduplicates data from multiple sources.
 - Data validation
 
 **Usage:**
+
 ```typescript
 import { DataNormalizationAgent } from './src/lib/agentic'
 
@@ -111,6 +117,7 @@ const result = await agent.executeTask({
 Tracks usage, enforces quotas, and monitors system health.
 
 **Capabilities:**
+
 - Usage tracking
 - Quota enforcement
 - Cost calculation
@@ -119,6 +126,7 @@ Tracks usage, enforces quotas, and monitors system health.
 - Usage reporting
 
 **Usage:**
+
 ```typescript
 import { MonitoringAgent } from './src/lib/agentic'
 
@@ -134,6 +142,7 @@ const result = await agent.executeTask({
 Coordinates the enrichment workflow across all agents.
 
 **Capabilities:**
+
 - Workflow coordination
 - Task orchestration
 - Parallel processing
@@ -142,6 +151,7 @@ Coordinates the enrichment workflow across all agents.
 - Result aggregation
 
 **Usage:**
+
 ```typescript
 import { EnrichmentOrchestratorAgent } from './src/lib/agentic'
 
@@ -160,24 +170,28 @@ const result = await orchestrator.executeTask({
 ## Subscription Tiers
 
 ### Free Tier
+
 - **Quota:** 100 requests/month
 - **Sources:** SEC EDGAR, OSHA, USPTO, Census, SAM.gov
 - **Cost:** $0
 - **Concurrent requests:** 1
 
 ### Starter Tier
+
 - **Quota:** 1,000 requests/month
 - **Sources:** Free tier + D&B, Google Places, Clearbit
 - **Cost:** ~$1.50 per enrichment
 - **Concurrent requests:** 3
 
 ### Professional Tier
+
 - **Quota:** 5,000 requests/month
 - **Sources:** Starter tier + Experian, ZoomInfo, NewsAPI
 - **Cost:** ~$3.00+ per enrichment
 - **Concurrent requests:** 5
 
 ### Enterprise Tier
+
 - **Quota:** Unlimited
 - **Sources:** All sources
 - **Cost:** Custom pricing
@@ -241,18 +255,21 @@ await rateLimiterManager.waitForTokens('sec-edgar', 1)
 ### Free Tier Sources
 
 #### SEC EDGAR
+
 - **Endpoint:** `https://www.sec.gov/cgi-bin/browse-edgar`
 - **Data:** Company filings, CIK, SIC codes
 - **Rate Limit:** 10 requests/second
 - **Cost:** Free
 
 #### OSHA Violations
+
 - **Endpoint:** `https://data.dol.gov/get/inspection`
 - **Data:** Workplace safety violations, penalties
 - **Rate Limit:** 1 request/second
 - **Cost:** Free
 
 #### USPTO Trademarks
+
 - **Endpoint:** `https://developer.uspto.gov/ds-api/trademarks`
 - **Data:** Trademark registrations
 - **Rate Limit:** 1 request/second
@@ -261,16 +278,19 @@ await rateLimiterManager.waitForTokens('sec-edgar', 1)
 ### Starter Tier Sources
 
 #### D&B Direct
+
 - **Data:** Business credit, DUNS number, revenue estimates
 - **Cost:** $0.50 per lookup
 - **Requires:** API key in `DNB_API_KEY` env variable
 
 #### Google Places
+
 - **Data:** Business location, reviews, ratings
 - **Cost:** $0.02 per lookup
 - **Requires:** API key in `GOOGLE_PLACES_API_KEY` env variable
 
 #### Clearbit
+
 - **Data:** Company enrichment, tech stack, employee count
 - **Cost:** $1.00 per lookup
 - **Requires:** API key in `CLEARBIT_API_KEY` env variable

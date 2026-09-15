@@ -17,8 +17,8 @@ groups:
           severity: warning
           component: data-pipeline
         annotations:
-          summary: "High ingestion error rate for {{ $labels.source }}"
-          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+          summary: 'High ingestion error rate for {{ $labels.source }}'
+          description: 'Error rate is {{ $value | humanizePercentage }} (threshold: 10%)'
 
       # Circuit breaker open
       - alert: CircuitBreakerOpen
@@ -28,8 +28,8 @@ groups:
           severity: critical
           component: data-pipeline
         annotations:
-          summary: "Circuit breaker open for {{ $labels.source }}"
-          description: "Circuit breaker has been open for 2+ minutes"
+          summary: 'Circuit breaker open for {{ $labels.source }}'
+          description: 'Circuit breaker has been open for 2+ minutes'
 
       # Stale data
       - alert: StaleDataDetected
@@ -40,8 +40,8 @@ groups:
           severity: warning
           component: data-pipeline
         annotations:
-          summary: "Data has not been updated in 24+ hours"
-          description: "Last update: {{ $value | humanizeDuration }} ago"
+          summary: 'Data has not been updated in 24+ hours'
+          description: 'Last update: {{ $value | humanizeDuration }} ago'
 
       # Low enrichment confidence
       - alert: LowEnrichmentConfidence
@@ -52,8 +52,8 @@ groups:
           severity: warning
           component: enrichment
         annotations:
-          summary: "Average enrichment confidence is low"
-          description: "Confidence: {{ $value | humanizePercentage }} (threshold: 70%)"
+          summary: 'Average enrichment confidence is low'
+          description: 'Confidence: {{ $value | humanizePercentage }} (threshold: 70%)'
 
       # Scheduler not running
       - alert: SchedulerNotRunning
@@ -63,8 +63,8 @@ groups:
           severity: critical
           component: scheduler
         annotations:
-          summary: "Data refresh scheduler is not running"
-          description: "Scheduler has been stopped for 5+ minutes"
+          summary: 'Data refresh scheduler is not running'
+          description: 'Scheduler has been stopped for 5+ minutes'
 
       # High memory usage
       - alert: HighMemoryUsage
@@ -79,8 +79,8 @@ groups:
           severity: warning
           component: system
         annotations:
-          summary: "High memory usage detected"
-          description: "Memory usage: {{ $value | humanizePercentage }}"
+          summary: 'High memory usage detected'
+          description: 'Memory usage: {{ $value | humanizePercentage }}'
 
       # Database connection issues
       - alert: DatabaseConnectionFailures
@@ -91,8 +91,8 @@ groups:
           severity: critical
           component: database
         annotations:
-          summary: "Database connection failures detected"
-          description: "{{ $value }} connection errors per second"
+          summary: 'Database connection failures detected'
+          description: '{{ $value }} connection errors per second'
 
       # Slow queries
       - alert: SlowDatabaseQueries
@@ -103,8 +103,8 @@ groups:
           severity: warning
           component: database
         annotations:
-          summary: "Database queries are slow"
-          description: "P95 query time: {{ $value }}s (threshold: 5s)"
+          summary: 'Database queries are slow'
+          description: 'P95 query time: {{ $value }}s (threshold: 5s)'
 
       # API rate limit approaching
       - alert: APIRateLimitApproaching
@@ -119,8 +119,8 @@ groups:
           severity: warning
           component: api
         annotations:
-          summary: "API rate limit approaching for {{ $labels.source }}"
-          description: "Usage: {{ $value | humanizePercentage }} of limit"
+          summary: 'API rate limit approaching for {{ $labels.source }}'
+          description: 'Usage: {{ $value | humanizePercentage }} of limit'
 
   - name: business_metrics_alerts
     interval: 60s
@@ -134,8 +134,8 @@ groups:
           severity: info
           component: business
         annotations:
-          summary: "Average prospect quality is low"
-          description: "Average priority score: {{ $value }} (threshold: 50)"
+          summary: 'Average prospect quality is low'
+          description: 'Average priority score: {{ $value }} (threshold: 50)'
 
       # No new prospects
       - alert: NoNewProspects
@@ -146,8 +146,8 @@ groups:
           severity: warning
           component: business
         annotations:
-          summary: "No new prospects created in 6 hours"
-          description: "Last prospect creation: {{ $value | humanizeDuration }} ago"
+          summary: 'No new prospects created in 6 hours'
+          description: 'Last prospect creation: {{ $value | humanizeDuration }} ago'
 
       # High default rate in portfolio
       - alert: HighPortfolioDefaultRate
@@ -162,5 +162,5 @@ groups:
           severity: critical
           component: portfolio
         annotations:
-          summary: "Portfolio default rate is high"
-          description: "Default rate: {{ $value | humanizePercentage }} (threshold: 10%)"
+          summary: 'Portfolio default rate is high'
+          description: 'Default rate: {{ $value | humanizePercentage }} (threshold: 10%)'

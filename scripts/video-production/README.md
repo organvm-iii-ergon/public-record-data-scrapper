@@ -53,11 +53,13 @@ Videos are production-ready:
 ### System Dependencies
 
 **Required:**
+
 - Node.js 18+ (for TypeScript execution)
 - FFmpeg 4.0+ (for video rendering)
 - TSX (TypeScript execution engine)
 
 **Text-to-Speech (choose one):**
+
 - macOS: `say` command (built-in)
 - Linux: `espeak` or `festival`
   ```bash
@@ -69,18 +71,20 @@ Videos are production-ready:
 ### Installation
 
 1. Install FFmpeg:
+
    ```bash
    # macOS
    brew install ffmpeg
-   
+
    # Ubuntu/Debian
    sudo apt-get install ffmpeg
-   
+
    # Windows (with Chocolatey)
    choco install ffmpeg
    ```
 
 2. Install Node dependencies (already in project):
+
    ```bash
    npm install
    ```
@@ -102,6 +106,7 @@ Generate videos from the default script:
 ```
 
 This will:
+
 - Process `docs/video-portfolio/EXECUTIVE_VIDEO_SCRIPT.md`
 - Output to `video-output/` directory
 - Generate narration audio, visuals, and final MP4
@@ -140,15 +145,15 @@ tsx scripts/video-production/video-generator.ts
 
 ### CLI Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--script-dir <dir>` | Directory containing scripts | `docs/video-portfolio` |
-| `--pattern <pattern>` | Glob pattern for scripts | `EXECUTIVE_VIDEO_SCRIPT.md` |
-| `--output-dir <dir>` | Output directory for videos | `video-output` |
-| `--demo-url <url>` | URL for demo capture | None |
-| `--resolution <res>` | Video resolution (WxH) | `1920x1080` |
-| `--fps <fps>` | Frames per second | `30` |
-| `--help` | Show help message | - |
+| Option                | Description                  | Default                     |
+| --------------------- | ---------------------------- | --------------------------- |
+| `--script-dir <dir>`  | Directory containing scripts | `docs/video-portfolio`      |
+| `--pattern <pattern>` | Glob pattern for scripts     | `EXECUTIVE_VIDEO_SCRIPT.md` |
+| `--output-dir <dir>`  | Output directory for videos  | `video-output`              |
+| `--demo-url <url>`    | URL for demo capture         | None                        |
+| `--resolution <res>`  | Video resolution (WxH)       | `1920x1080`                 |
+| `--fps <fps>`         | Frames per second            | `30`                        |
+| `--help`              | Show help message            | -                           |
 
 ## Script Format
 
@@ -162,25 +167,29 @@ Scripts must be markdown files with this structure:
 ## 1. SCENE NAME (0:00 - 0:30)
 
 ### Voiceover:
-*"This is the narration text that will be spoken."*
+
+_"This is the narration text that will be spoken."_
 
 [PAUSE]
 
-*"More narration after a pause."*
+_"More narration after a pause."_
 
 ### Visual Plan:
+
 - Description of what should appear on screen
 - Can include ON SCREEN or TEXT OVERLAY notes
 
 ## 2. NEXT SCENE (0:30 - 1:00)
 
 ### Voiceover:
-*"Next scene narration..."*
+
+_"Next scene narration..."_
 ```
 
 ### Scene Detection
 
 The agent detects scenes using:
+
 - H2 headings (`##`) as major scene boundaries
 - H3 `### Voiceover:` sections for narration extraction
 - Text between `*"..."*` as spoken content
@@ -189,6 +198,7 @@ The agent detects scenes using:
 ### Visual Type Inference
 
 Based on scene headings:
+
 - **Title cards**: Hook, CTA, Why Me sections
 - **Diagrams**: Solution, Architecture, Layer descriptions
 - **Demo**: Dashboard, Demo sections (requires `--demo-url`)
@@ -215,6 +225,7 @@ video-output/
 ### Render Report
 
 The `render-report.json` includes:
+
 - Timestamp and configuration
 - Per-script results with success/failure status
 - Fallbacks used during generation
@@ -265,6 +276,7 @@ To add custom visual types:
 ### Different TTS Voices
 
 **macOS:**
+
 ```bash
 # List available voices
 say -v ?
@@ -274,6 +286,7 @@ say -v ?
 ```
 
 **Linux:**
+
 ```bash
 # Adjust speaking rate in video-generator.ts
 # Change '-s 150' to desired speed (100-300)
@@ -285,14 +298,12 @@ In `video-generator.ts`, modify FFmpeg parameters:
 
 ```typescript
 // Higher quality (larger file)
-`-c:v libx264 -preset slow -crf 18`
-
+;`-c:v libx264 -preset slow -crf 18`
 // Lower quality (smaller file)
 `-c:v libx264 -preset fast -crf 28`
-
 // Audio bitrate
-`-c:a aac -b:a 256k`  // Higher quality
-`-c:a aac -b:a 128k`  // Lower quality
+`-c:a aac -b:a 256k` // Higher quality
+`-c:a aac -b:a 128k` // Lower quality
 ```
 
 ## Troubleshooting
@@ -300,6 +311,7 @@ In `video-generator.ts`, modify FFmpeg parameters:
 ### TTS Not Working
 
 **macOS:**
+
 ```bash
 # Test 'say' command
 say "Hello world"
@@ -308,6 +320,7 @@ say "Hello world"
 ```
 
 **Linux:**
+
 ```bash
 # Test espeak
 espeak "Hello world"
@@ -453,6 +466,7 @@ See the main repository LICENSE file for details.
 ## Support
 
 For issues or questions:
+
 1. Check the Troubleshooting section above
 2. Review the render-report.json for detailed error information
 3. Open an issue in the repository with logs and configuration
@@ -460,6 +474,7 @@ For issues or questions:
 ## Credits
 
 Built using:
+
 - [FFmpeg](https://ffmpeg.org/) - Video processing
 - [espeak](http://espeak.sourceforge.net/) - Linux TTS
 - macOS `say` - macOS TTS

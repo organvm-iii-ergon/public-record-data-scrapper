@@ -1,7 +1,7 @@
 name: 🎨 UI Feedback
 description: Provide feedback on the redesigned dashboard and prospect cards
-title: "[UI Feedback]: "
-labels: ["feedback", "ui", "enhancement"]
+title: '[UI Feedback]: '
+labels: ['feedback', 'ui', 'enhancement']
 body:
   - type: markdown
     attributes:

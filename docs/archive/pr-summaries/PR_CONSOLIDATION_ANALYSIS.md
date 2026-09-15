@@ -7,12 +7,14 @@
 These PRs were already included in the consolidation (PR #109):
 
 #### Duplicate TypeError Fixes (3 PRs)
+
 - **PR #89**: codex/fix-typeerror.../21-06-21 ❌ Superseded
 - **PR #94**: codex/fix-typeerror.../22-04-41 ❌ Superseded
 - **PR #95**: codex/fix-typeerror.../22-05-18 ❌ Superseded
 - **Reason**: We merged the latest version (2025-11-1222-05-29) in consolidation
 
 #### Duplicate CodeQL Workflows (4 PRs)
+
 - **PR #90**: enable-code-scanning.../21-47-54 ❌ Superseded
 - **PR #91**: enable-code-scanning.../22-03-35 ❌ Superseded
 - **PR #92**: enable-code-scanning.../22-03-46 ❌ Superseded
@@ -20,6 +22,7 @@ These PRs were already included in the consolidation (PR #109):
 - **Reason**: Main already has CodeQL, all are duplicates
 
 #### Superseded by Consolidation (4 PRs)
+
 - **PR #36**: copilot/expand-critique-on-gemini ❌ Superseded
   - Testing features included in revamp-ui-modern-design merge
 

@@ -214,7 +214,7 @@ class PostgresPipeline:
         self.db_settings = db_settings
         self.conn = None
         self.cursor = None
-    
+
     @classmethod
     def from_crawler(cls, crawler):
         return cls({
@@ -224,18 +224,18 @@ class PostgresPipeline:
             'user': crawler.settings.get('POSTGRES_USER'),
             'password': crawler.settings.get('POSTGRES_PASSWORD'),
         })
-    
+
     def open_spider(self, spider):
         self.conn = psycopg2.connect(**self.db_settings)
         self.cursor = self.conn.cursor()
         logging.info("Database connection established")
-    
+
     def close_spider(self, spider):
         self.conn.commit()
         self.cursor.close()
         self.conn.close()
         logging.info("Database connection closed")
-    
+
     def process_item(self, item, spider):
         try:
             self.cursor.execute("""
@@ -250,7 +250,7 @@ class PostgresPipeline:
                     scraped_at
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                ON CONFLICT (filing_number, state) 
+                ON CONFLICT (filing_number, state)
                 DO UPDATE SET
                     debtor_name = EXCLUDED.debtor_name,
                     secured_party_name = EXCLUDED.secured_party_name,
@@ -285,13 +285,13 @@ from scrapy_playwright.page import PageMethod
 class CaliforniaUCCSpider(scrapy.Spider):
     name = 'california_ucc'
     allowed_domains = ['bizfileonline.sos.ca.gov']
-    
+
     def start_requests(self):
         # Example: Search form
         urls = [
             'https://bizfileonline.sos.ca.gov/search/business'
         ]
-        
+
         for url in urls:
             yield scrapy.Request(
                 url,
@@ -303,13 +303,13 @@ class CaliforniaUCCSpider(scrapy.Spider):
                 },
                 callback=self.parse_search_form
             )
-    
+
     def parse_search_form(self, response):
         # Extract CSRF token or other required fields
         # Fill in search criteria
         # Submit form
         # Example simplified:
-        
+
         yield {
             'filing_number': response.css('.filing-number::text').get(),
             'debtor_name': response.css('.debtor-name::text').get(),
@@ -318,7 +318,7 @@ class CaliforniaUCCSpider(scrapy.Spider):
             'state': 'CA',
             'status': response.css('.status::text').get(),
         }
-    
+
     def parse_filing_detail(self, response):
         # Parse detailed filing information
         yield {
@@ -350,8 +350,8 @@ touch src/main.ts
 Edit `src/main.ts`:
 
 ```typescript
-import { PlaywrightCrawler, Dataset } from 'crawlee';
-import { Pool } from 'pg';
+import { PlaywrightCrawler, Dataset } from 'crawlee'
+import { Pool } from 'pg'
 
 // Database connection
 const pool = new Pool({
@@ -359,16 +359,16 @@ const pool = new Pool({
   port: 5432,
   database: 'ucc_intelligence',
   user: 'ucc_admin',
-  password: 'your_secure_password',
-});
+  password: 'your_secure_password'
+})
 
 const crawler = new PlaywrightCrawler({
   async requestHandler({ request, page, enqueueLinks, log }) {
-    log.info(`Processing ${request.url}`);
-    
+    log.info(`Processing ${request.url}`)
+
     // Wait for content to load
-    await page.waitForSelector('.filing-results');
-    
+    await page.waitForSelector('.filing-results')
+
     // Extract data
     const filings = await page.$$eval('.filing-row', (rows) =>
       rows.map((row) => ({
@@ -376,10 +376,10 @@ const crawler = new PlaywrightCrawler({
         debtorName: row.querySelector('.debtor-name')?.textContent?.trim(),
         securedParty: row.querySelector('.secured-party')?.textContent?.trim(),
         filingDate: row.querySelector('.filing-date')?.textContent?.trim(),
-        state: 'CA',
+        state: 'CA'
       }))
-    );
-    
+    )
+
     // Save to database
     for (const filing of filings) {
       await pool.query(
@@ -394,24 +394,24 @@ const crawler = new PlaywrightCrawler({
           filing.debtorName,
           filing.securedParty,
           filing.filingDate,
-          filing.state,
+          filing.state
         ]
-      );
+      )
     }
-    
+
     // Enqueue more pages
     await enqueueLinks({
       selector: '.pagination a',
-      label: 'listing',
-    });
+      label: 'listing'
+    })
   },
-  
-  maxRequestsPerCrawl: 100,
-  maxConcurrency: 2,
-});
 
-await crawler.run(['https://bizfileonline.sos.ca.gov/search/business']);
-await pool.end();
+  maxRequestsPerCrawl: 100,
+  maxConcurrency: 2
+})
+
+await crawler.run(['https://bizfileonline.sos.ca.gov/search/business'])
+await pool.end()
 ```
 
 ---
@@ -514,7 +514,7 @@ SELECT create_hypertable('growth_signals', 'signal_date', if_not_exists => TRUE)
 
 -- Prospects view
 CREATE VIEW prospects AS
-SELECT 
+SELECT
     d.id as debtor_id,
     d.name as debtor_name,
     d.state,
@@ -527,10 +527,10 @@ SELECT
     ARRAY_AGG(DISTINCT gs.signal_type) as signal_types
 FROM debtors d
 LEFT JOIN ucc_filings uf ON d.name = uf.debtor_name AND d.state = uf.state
-LEFT JOIN health_scores hs ON d.id = hs.debtor_id 
+LEFT JOIN health_scores hs ON d.id = hs.debtor_id
     AND hs.calculated_at = (
-        SELECT MAX(calculated_at) 
-        FROM health_scores 
+        SELECT MAX(calculated_at)
+        FROM health_scores
         WHERE debtor_id = d.id
     )
 LEFT JOIN growth_signals gs ON d.id = gs.debtor_id
@@ -640,10 +640,10 @@ ch_client = Client(
 def sync_filings():
     """Sync filings from PostgreSQL to ClickHouse"""
     logging.info("Starting filings sync...")
-    
+
     with pg_conn.cursor() as cursor:
         cursor.execute("""
-            SELECT 
+            SELECT
                 id::text,
                 filing_number,
                 state,
@@ -657,15 +657,15 @@ def sync_filings():
             FROM ucc_filings
             WHERE scraped_at >= NOW() - INTERVAL '1 hour'
         """)
-        
+
         rows = cursor.fetchall()
-        
+
         if rows:
             ch_client.execute(
                 """
-                INSERT INTO filings_analytics 
-                (filing_id, filing_number, state, debtor_name, 
-                 secured_party_name, filing_date, year, month, 
+                INSERT INTO filings_analytics
+                (filing_id, filing_number, state, debtor_name,
+                 secured_party_name, filing_date, year, month,
                  status, scraped_at)
                 VALUES
                 """,
@@ -731,21 +731,21 @@ Create `index.js`:
 ```javascript
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import puppeteer from 'puppeteer';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import puppeteer from 'puppeteer'
 
 const server = new Server(
   {
     name: 'puppeteer-scraper',
-    version: '1.0.0',
+    version: '1.0.0'
   },
   {
     capabilities: {
-      tools: {},
-    },
+      tools: {}
+    }
   }
-);
+)
 
 // Define scraping tools
 server.setRequestHandler('tools/list', async () => {
@@ -759,69 +759,69 @@ server.setRequestHandler('tools/list', async () => {
           properties: {
             url: {
               type: 'string',
-              description: 'URL to scrape',
+              description: 'URL to scrape'
             },
             selector: {
               type: 'string',
-              description: 'CSS selector to extract',
+              description: 'CSS selector to extract'
             },
             wait_for: {
               type: 'string',
-              description: 'Selector to wait for before extracting',
-            },
+              description: 'Selector to wait for before extracting'
+            }
           },
-          required: ['url'],
-        },
-      },
-    ],
-  };
-});
+          required: ['url']
+        }
+      }
+    ]
+  }
+})
 
 server.setRequestHandler('tools/call', async (request) => {
   if (request.params.name === 'scrape_url') {
-    const { url, selector, wait_for } = request.params.arguments;
-    
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-    
+    const { url, selector, wait_for } = request.params.arguments
+
+    const browser = await puppeteer.launch({ headless: 'new' })
+    const page = await browser.newPage()
+
     try {
-      await page.goto(url, { waitUntil: 'networkidle2' });
-      
+      await page.goto(url, { waitUntil: 'networkidle2' })
+
       if (wait_for) {
-        await page.waitForSelector(wait_for, { timeout: 10000 });
+        await page.waitForSelector(wait_for, { timeout: 10000 })
       }
-      
-      let content;
+
+      let content
       if (selector) {
         content = await page.$$eval(selector, (elements) =>
           elements.map((el) => el.textContent.trim())
-        );
+        )
       } else {
-        content = await page.content();
+        content = await page.content()
       }
-      
-      await browser.close();
-      
+
+      await browser.close()
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(content, null, 2),
-          },
-        ],
-      };
+            text: JSON.stringify(content, null, 2)
+          }
+        ]
+      }
     } catch (error) {
-      await browser.close();
-      throw error;
+      await browser.close()
+      throw error
     }
   }
-  
-  throw new Error(`Unknown tool: ${request.params.name}`);
-});
+
+  throw new Error(`Unknown tool: ${request.params.name}`)
+})
 
 // Start server
-const transport = new StdioServerTransport();
-await server.connect(transport);
+const transport = new StdioServerTransport()
+await server.connect(transport)
 ```
 
 Make it executable:
@@ -880,7 +880,7 @@ python sync_to_clickhouse.py
 
 ```sql
 -- In ClickHouse
-SELECT 
+SELECT
     secured_party_name,
     COUNT(*) as filing_count,
     COUNT(DISTINCT state) as state_count
@@ -919,9 +919,9 @@ def test_data_sync(pg_connection, ch_client):
     with pg_connection.cursor() as cursor:
         cursor.execute("SELECT COUNT(*) FROM ucc_filings")
         pg_count = cursor.fetchone()[0]
-    
+
     ch_count = ch_client.execute("SELECT COUNT(*) FROM filings_analytics")[0][0]
-    
+
     assert ch_count > 0
     assert ch_count <= pg_count  # ClickHouse may lag slightly
 
@@ -930,19 +930,19 @@ def test_prospect_view(pg_connection):
     with pg_connection.cursor() as cursor:
         cursor.execute("SELECT COUNT(*) FROM prospects")
         count = cursor.fetchone()[0]
-    
+
     assert count > 0
 
 def test_time_series_queries(pg_connection):
     """Test TimescaleDB time-series queries"""
     with pg_connection.cursor() as cursor:
         cursor.execute("""
-            SELECT COUNT(*) 
-            FROM health_scores 
+            SELECT COUNT(*)
+            FROM health_scores
             WHERE calculated_at >= NOW() - INTERVAL '30 days'
         """)
         count = cursor.fetchone()[0]
-    
+
     assert count >= 0
 ```
 
@@ -963,6 +963,7 @@ pytest tests/test_integration.py -v
 **Problem**: `ConnectionError: Connection refused`
 
 **Solution**:
+
 ```bash
 # Check robots.txt compliance
 scrapy shell https://example.com
@@ -977,6 +978,7 @@ DOWNLOAD_DELAY = 3
 **Problem**: `psycopg2.OperationalError: could not connect`
 
 **Solution**:
+
 ```bash
 # Check PostgreSQL is running
 sudo systemctl status postgresql
@@ -995,6 +997,7 @@ sudo systemctl restart postgresql
 **Problem**: `ERROR: could not load library "timescaledb"`
 
 **Solution**:
+
 ```bash
 # Reinstall TimescaleDB
 sudo apt install --reinstall timescaledb-2-postgresql-15
@@ -1011,6 +1014,7 @@ sudo systemctl restart postgresql
 **Problem**: `Connection refused to localhost:9000`
 
 **Solution**:
+
 ```bash
 # Check ClickHouse is running
 docker ps | grep clickhouse
@@ -1027,6 +1031,7 @@ docker logs clickhouse-server
 **Problem**: MCP server fails to start
 
 **Solution**:
+
 ```bash
 # Check Node.js version
 node --version  # Should be 18+
@@ -1081,7 +1086,7 @@ CREATE MATERIALIZED VIEW monthly_stats
 ENGINE = AggregatingMergeTree()
 ORDER BY (state, month)
 AS
-SELECT 
+SELECT
     state,
     toYYYYMM(filing_date) as month,
     count() as filing_count,
@@ -1117,6 +1122,7 @@ GROUP BY state, month;
 ## Support
 
 For issues or questions:
+
 - Check the troubleshooting section
 - Review logs in detail
 - Test components independently

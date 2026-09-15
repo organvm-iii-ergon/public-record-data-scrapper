@@ -301,9 +301,15 @@ describe('verifyPlaidSignature', () => {
     const rawBody = '{}'
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', kid: KID })).toString('base64url')
     const payload = Buffer.from(
-      JSON.stringify({ request_body_sha256: bodyHashOf(rawBody), iat: Math.floor(Date.now() / 1000) })
+      JSON.stringify({
+        request_body_sha256: bodyHashOf(rawBody),
+        iat: Math.floor(Date.now() / 1000)
+      })
     ).toString('base64url')
-    const sig = crypto.createHmac('sha256', 'whatever').update(`${header}.${payload}`).digest('base64url')
+    const sig = crypto
+      .createHmac('sha256', 'whatever')
+      .update(`${header}.${payload}`)
+      .digest('base64url')
     const token = `${header}.${payload}.${sig}`
     const req = buildReq(token, rawBody)
 
@@ -406,8 +412,8 @@ describe('createWebhookAuthMiddleware', () => {
   })
 
   it('throws for an unknown provider', () => {
-    expect(() =>
-      createWebhookAuthMiddleware('unknown' as 'twilio')
-    ).toThrow('Unknown webhook provider')
+    expect(() => createWebhookAuthMiddleware('unknown' as 'twilio')).toThrow(
+      'Unknown webhook provider'
+    )
   })
 })

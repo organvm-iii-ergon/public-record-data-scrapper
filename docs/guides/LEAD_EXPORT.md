@@ -45,16 +45,16 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 Supported query parameters:
 
-| Parameter | Default | Notes |
-| --- | --- | --- |
-| `format` | `json` | `json` or `csv` |
-| `min_score` | `70` | Lower bound for `prospects.priority_score` |
-| `max_score` | none | Optional upper bound |
-| `state` | none | Two-letter state code |
-| `industry` | none | Prospect industry value |
-| `status` | none | Prospect status filter |
-| `limit` | `100` | Batch size, capped at 1000 |
-| `offset` | `0` | Zero-based pagination offset |
+| Parameter   | Default | Notes                                      |
+| ----------- | ------- | ------------------------------------------ |
+| `format`    | `json`  | `json` or `csv`                            |
+| `min_score` | `70`    | Lower bound for `prospects.priority_score` |
+| `max_score` | none    | Optional upper bound                       |
+| `state`     | none    | Two-letter state code                      |
+| `industry`  | none    | Prospect industry value                    |
+| `status`    | none    | Prospect status filter                     |
+| `limit`     | `100`   | Batch size, capped at 1000                 |
+| `offset`    | `0`     | Zero-based pagination offset               |
 
 ## Output Contract
 
@@ -63,17 +63,17 @@ stable column headers.
 
 Key lead fields:
 
-| Field | Meaning |
-| --- | --- |
-| `prospect_id` | Internal prospect identifier |
-| `company_name`, `state`, `industry`, `status` | Sales-facing prospect context |
-| `mca_score` | Persisted MCA priority score, 0-100 |
-| `score_grade` | A-F grade derived from `mca_score` |
-| `recommendation` | `high_priority`, `moderate_priority`, `low_priority`, or `pass` |
-| `score_confidence` | Export confidence from enrichment confidence or available UCC context |
-| `ucc_filing_count`, `active_ucc_count`, `terminated_ucc_count`, `lapsed_ucc_count` | UCC stack context |
-| `secured_parties` | Distinct secured parties joined with `; ` in CSV |
-| `narrative` | Existing scoring narrative for outreach review |
+| Field                                                                              | Meaning                                                               |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `prospect_id`                                                                      | Internal prospect identifier                                          |
+| `company_name`, `state`, `industry`, `status`                                      | Sales-facing prospect context                                         |
+| `mca_score`                                                                        | Persisted MCA priority score, 0-100                                   |
+| `score_grade`                                                                      | A-F grade derived from `mca_score`                                    |
+| `recommendation`                                                                   | `high_priority`, `moderate_priority`, `low_priority`, or `pass`       |
+| `score_confidence`                                                                 | Export confidence from enrichment confidence or available UCC context |
+| `ucc_filing_count`, `active_ucc_count`, `terminated_ucc_count`, `lapsed_ucc_count` | UCC stack context                                                     |
+| `secured_parties`                                                                  | Distinct secured parties joined with `; ` in CSV                      |
+| `narrative`                                                                        | Existing scoring narrative for outreach review                        |
 
 Sample files:
 

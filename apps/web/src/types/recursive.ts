@@ -114,12 +114,7 @@ export interface CompetitorMetadata {
 
 export interface CompetitorActivity {
   activityType:
-    | 'filing'
-    | 'funding'
-    | 'expansion'
-    | 'partnership'
-    | 'acquisition'
-    | 'product_launch'
+    'filing' | 'funding' | 'expansion' | 'partnership' | 'acquisition' | 'product_launch'
   description: string
   date: Date
   impact: 'positive' | 'negative' | 'neutral'
@@ -278,12 +273,7 @@ export interface FeatureContribution {
 // ==================== DATA SOURCE DISCOVERY ====================
 
 export type SourceType =
-  | 'api'
-  | 'web_portal'
-  | 'database'
-  | 'file_feed'
-  | 'web_scraper'
-  | 'third_party_provider'
+  'api' | 'web_portal' | 'database' | 'file_feed' | 'web_scraper' | 'third_party_provider'
 
 export type DiscoveryMethod =
   | 'web_crawl'

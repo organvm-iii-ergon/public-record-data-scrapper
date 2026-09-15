@@ -315,9 +315,7 @@ describe('SuppressionService', () => {
     it('should remove for specific channel', async () => {
       // Channel-specific removal: (1) delete exact-channel rows, (2) query for
       // overlapping 'all' entries to narrow (here none exist).
-      mockQuery
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
-        .mockResolvedValueOnce([])
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as []).mockResolvedValueOnce([])
 
       const result = await service.removeFromSuppressionList('org-1', '1234567890', 'sms')
 

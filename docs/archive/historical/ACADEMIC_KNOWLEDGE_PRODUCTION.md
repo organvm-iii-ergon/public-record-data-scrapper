@@ -28,6 +28,7 @@ Academic Data Sources → Knowledge Extraction → Synthesis → Network Buildin
 Build collectors for ALL major academic databases simultaneously:
 
 #### **Collector Universe A: Preprint Servers**
+
 ```typescript
 // arXiv (Physics, Math, CS, etc.)
 interface ArXivCollector {
@@ -59,6 +60,7 @@ interface SSRNCollector {
 ```
 
 #### **Collector Universe B: Published Journals**
+
 ```typescript
 // PubMed Central (Biomedical)
 interface PubMedCollector {
@@ -101,6 +103,7 @@ interface GoogleScholarCollector {
 ```
 
 #### **Collector Universe C: Specialized Databases**
+
 ```typescript
 // JSTOR (Humanities & Social Sciences)
 // IEEE Xplore (Engineering)
@@ -924,6 +927,7 @@ async function buildMultiversalAcademia() {
 ## Part 5: Business Models (Multiversal Monetization)
 
 ### **Universe A: Research-as-a-Service**
+
 ```
 Pricing: $99/mo - Individual researchers
          $999/mo - Research groups
@@ -938,6 +942,7 @@ Features:
 ```
 
 ### **Universe B: API for Publishers/Universities**
+
 ```
 Pricing: $0.10 per paper processed
          $1,000/mo base + usage
@@ -950,6 +955,7 @@ Use cases:
 ```
 
 ### **Universe C: Data Marketplace**
+
 ```
 Products:
 - Pre-built knowledge graphs ($5,000 per field)
@@ -959,6 +965,7 @@ Products:
 ```
 
 ### **Universe D: Academic Social Network**
+
 ```
 Free tier: Basic profile, paper uploads
 Pro tier: $19/mo - Collaboration matching, analytics
@@ -970,6 +977,7 @@ Enterprise: Custom - White-label for institutions
 ## Part 6: Network Effects & Moat Building
 
 ### **Flywheel:**
+
 ```
 More papers processed
         ↓
@@ -989,6 +997,7 @@ Network effects compound
 ```
 
 ### **Defensibility:**
+
 1. **Data moat:** Largest knowledge graph
 2. **Network effects:** More users = better recommendations
 3. **AI moat:** Models trained on proprietary data
@@ -1000,18 +1009,21 @@ Network effects compound
 ## Part 7: Impact Vision
 
 ### **Short-term (1 year)**
+
 - Process 10M+ papers across all fields
 - 100K+ researchers using the platform
 - 10K+ automated literature reviews generated
 - 1K+ new collaborations formed
 
 ### **Medium-term (3 years)**
+
 - Comprehensive knowledge graph of all human knowledge
 - AI co-author on 10% of published papers
 - Predict breakthrough discoveries before they happen
 - Democratize research - anyone can synthesize knowledge
 
 ### **Long-term (10 years)**
+
 - Accelerate human knowledge production 10x
 - AI-human collaboration as standard in research
 - Solve major scientific challenges faster

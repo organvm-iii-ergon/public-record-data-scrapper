@@ -12,9 +12,15 @@ const { mockCreate, mockList, mockRevoke } = vi.hoisted(() => ({
 
 vi.mock('../../services/ApiKeyService', () => ({
   ApiKeyService: class {
-    create(...args: unknown[]) { return mockCreate(...args) }
-    list(...args: unknown[]) { return mockList(...args) }
-    revoke(...args: unknown[]) { return mockRevoke(...args) }
+    create(...args: unknown[]) {
+      return mockCreate(...args)
+    }
+    list(...args: unknown[]) {
+      return mockList(...args)
+    }
+    revoke(...args: unknown[]) {
+      return mockRevoke(...args)
+    }
   }
 }))
 
@@ -60,9 +66,7 @@ describe('POST /api/keys', () => {
       createdAt: '2026-06-28T00:00:00Z'
     })
 
-    const res = await request(app)
-      .post('/api/keys')
-      .send({ name: 'prod-integration' })
+    const res = await request(app).post('/api/keys').send({ name: 'prod-integration' })
 
     expect(res.status).toBe(201)
     expect(res.body.success).toBe(true)

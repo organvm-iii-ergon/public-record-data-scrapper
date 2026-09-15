@@ -17,8 +17,7 @@ const mockQuery = vi.mocked(database.query)
 
 // Fixed reference date so recency math is deterministic.
 const NOW = new Date('2026-06-01T00:00:00Z')
-const daysAgo = (n: number) =>
-  new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000).toISOString()
+const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000).toISOString()
 
 describe('EquipmentLifecycleDetector', () => {
   let detector: EquipmentLifecycleDetector
@@ -58,7 +57,9 @@ describe('EquipmentLifecycleDetector', () => {
 
   describe('classifySecuredPartyType', () => {
     it('classifies a known equipment lender', () => {
-      expect(detector.classifySecuredPartyType('De Lage Landen Financial Services')).toBe('equipment')
+      expect(detector.classifySecuredPartyType('De Lage Landen Financial Services')).toBe(
+        'equipment'
+      )
       expect(detector.classifySecuredPartyType('Balboa Capital Corporation')).toBe('equipment')
     })
 

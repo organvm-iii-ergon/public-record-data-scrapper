@@ -25,50 +25,48 @@ describe('LeadExportService', () => {
   })
 
   it('exports scored leads with filters and pagination metadata', async () => {
-    mockQuery
-      .mockResolvedValueOnce([{ count: 3 }])
-      .mockResolvedValueOnce([
-        {
-          id: 'prospect-1',
-          company_name: 'Acme Bistro',
-          state: 'CA',
-          industry: 'restaurant',
-          status: 'new',
-          priority_score: 82,
-          default_date: '2026-01-15',
-          time_since_default: 30,
-          last_filing_date: '2026-02-01',
-          estimated_revenue: '250000.00',
-          narrative: 'Strong MCA potential.',
-          enrichment_confidence: '0.81',
-          filing_count: 2,
-          active_ucc_count: 1,
-          terminated_ucc_count: 1,
-          lapsed_ucc_count: 0,
-          latest_ucc_filing_date: '2026-02-01',
-          secured_parties: ['Rapid Funding LLC', 'First Capital MCA']
-        },
-        {
-          id: 'prospect-2',
-          company_name: 'Peak Retail',
-          state: 'CA',
-          industry: 'retail',
-          status: 'contacted',
-          priority_score: 76,
-          default_date: '2025-12-10',
-          time_since_default: 66,
-          last_filing_date: null,
-          estimated_revenue: null,
-          narrative: null,
-          enrichment_confidence: null,
-          filing_count: 1,
-          active_ucc_count: 0,
-          terminated_ucc_count: 1,
-          lapsed_ucc_count: 0,
-          latest_ucc_filing_date: '2026-01-05',
-          secured_parties: ['Merchant Growth Partners']
-        }
-      ])
+    mockQuery.mockResolvedValueOnce([{ count: 3 }]).mockResolvedValueOnce([
+      {
+        id: 'prospect-1',
+        company_name: 'Acme Bistro',
+        state: 'CA',
+        industry: 'restaurant',
+        status: 'new',
+        priority_score: 82,
+        default_date: '2026-01-15',
+        time_since_default: 30,
+        last_filing_date: '2026-02-01',
+        estimated_revenue: '250000.00',
+        narrative: 'Strong MCA potential.',
+        enrichment_confidence: '0.81',
+        filing_count: 2,
+        active_ucc_count: 1,
+        terminated_ucc_count: 1,
+        lapsed_ucc_count: 0,
+        latest_ucc_filing_date: '2026-02-01',
+        secured_parties: ['Rapid Funding LLC', 'First Capital MCA']
+      },
+      {
+        id: 'prospect-2',
+        company_name: 'Peak Retail',
+        state: 'CA',
+        industry: 'retail',
+        status: 'contacted',
+        priority_score: 76,
+        default_date: '2025-12-10',
+        time_since_default: 66,
+        last_filing_date: null,
+        estimated_revenue: null,
+        narrative: null,
+        enrichment_confidence: null,
+        filing_count: 1,
+        active_ucc_count: 0,
+        terminated_ucc_count: 1,
+        lapsed_ucc_count: 0,
+        latest_ucc_filing_date: '2026-01-05',
+        secured_parties: ['Merchant Growth Partners']
+      }
+    ])
 
     const batch = await service.exportLeads({
       state: 'CA',
@@ -112,11 +110,12 @@ describe('LeadExportService', () => {
       expect.stringContaining('p.priority_score >= $1'),
       [75, 'CA']
     )
-    expect(mockQuery).toHaveBeenNthCalledWith(
+    expect(mockQuery).toHaveBeenNthCalledWith(2, expect.stringContaining('LIMIT $3 OFFSET $4'), [
+      75,
+      'CA',
       2,
-      expect.stringContaining('LIMIT $3 OFFSET $4'),
-      [75, 'CA', 2, 0]
-    )
+      0
+    ])
   })
 
   it('validates score ranges before querying', async () => {

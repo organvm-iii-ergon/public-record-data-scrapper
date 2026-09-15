@@ -69,7 +69,7 @@ function toJob(row: ScrapeJobRow): ScrapeJob {
     queuedAt: row.queued_at,
     startedAt: row.started_at,
     completedAt: row.completed_at,
-    expiresAt: row.expires_at,
+    expiresAt: row.expires_at
   }
 }
 
