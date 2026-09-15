@@ -23,7 +23,7 @@ Fields below are standard on every record unless noted.
 | `debtor_name`       | Business name on the UCC filing (normalized + raw)                                                      |
 | `secured_party`     | Existing lender / funder on file                                                                        |
 | `filing_date`       | Date the UCC-1 was recorded                                                                             |
-| `state`             | Filing jurisdiction (CA, TX, FL, NY today — more on request)                                            |
+| `state`             | Filing jurisdiction (CA, TX, FL, NY, NJ today — additional states onboarded via State Factory)          |
 | `status`            | Filing status (active / lapsed / terminated)                                                            |
 | `industry`          | Classified vertical (restaurant, retail, construction, healthcare, manufacturing, services, technology) |
 | `estimated_revenue` | Modeled annual revenue band                                                                             |
@@ -57,8 +57,8 @@ Fields below are standard on every record unless noted.
 - **Delivery formats:** CSV / JSON export, S3 drop, or direct push to your CRM via
   webhook/API.
 - **Cadence options:** daily drip, weekly batch, or real-time API pull.
-- **Coverage today:** California, Texas, Florida, New York. Additional states
-  onboarded on request (typ. 2–4 weeks per state).
+- **Coverage today:** California, Texas, Florida, New York, New Jersey. Additional states
+  onboarded rapidly on demand via the repeatable State Factory pipeline (see `docs/playbooks/ADD_ONE_STATE_PLAYBOOK.md`).
 
 ---
 
