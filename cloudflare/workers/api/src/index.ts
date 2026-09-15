@@ -1,14 +1,25 @@
 /**
  * ucc-mca-edge API Worker (Hono).
  *
- * The Express-shaped edge API from telos. Routes are ported from server/routes/*
- * one at a time — security logic first. Today: a public health check and one
- * real org-scoped read (`GET /api/prospects`) demonstrating the full chain:
- * Cloudflare Access JWT → identity → org cross-check → org-scoped D1 query.
+ * Versioned REST API (v1) delivery platform for multi-tenant UCC data access.
+ * Implements:
+ *  - Public health & OpenAPI endpoints (/health, /v1/health, /openapi.json, /v1/openapi.json)
+ *  - Edge API key & Access JWT authentication (unifiedAuth)
+ *  - Edge sliding-window rate limiting & tier entitlement checks (rateLimiter)
+ *  - Org-scoped resource routes (/v1/prospects, /v1/jobs, /v1/enrichment, /v1/keys)
+ *  - Fail-closed error handling & structured logging
  */
 import { Hono } from 'hono'
-import { accessAuth, orgScope } from './auth'
+import { cors } from 'hono/cors'
+import type { Context } from 'hono'
+import { accessAuth, orgScope, unifiedAuth } from './auth'
 import { all, first, run } from './db'
+import { rateLimiter } from './rateLimit'
+import { enrichmentRoute } from './routes/enrichment'
+import { jobsRoute } from './routes/jobs'
+import { keysRoute } from './routes/keys'
+import { openApiSpec } from './routes/openapi'
+import { prospectsRoute } from './routes/prospects'
 import { scheduled } from './scheduled'
 import { replayWebhookDelivery, sendWebhookDelivery, triggerWebhookEvent } from './webhooks'
 import { pushProspectToCrm, CRM_ADAPTERS } from './crm'
@@ -17,38 +28,64 @@ import type {
   CrmIntegrationRow,
   CrmProvider,
   CrmPushLogRow,
+  ProspectRow,
   WebhookDeliveryRow,
   WebhookEndpointRow
 } from './types'
 
 const app = new Hono<AppBindings>()
 
+// Global permissive CORS for API clients
+app.use('*', cors())
+
 /** Public liveness probe (no auth — telos invariant #5: observability default-on). */
-app.get('/health', (c) => {
+const healthHandler = (c: Context<AppBindings>) => {
   return c.json({
     ok: true,
     env: c.env.ENVIRONMENT,
     ...(c.env.DEPLOYMENT_SHA ? { revision: c.env.DEPLOYMENT_SHA } : {})
   })
-})
-
-interface ProspectRow {
-  id: string
-  company_name: string | null
-  priority_score: number | null
-  status: string | null
 }
 
+app.get('/health', healthHandler)
+app.get('/v1/health', healthHandler)
+
+/** OpenAPI Specification */
+app.get('/openapi.json', (c) => c.json(openApiSpec))
+app.get('/v1/openapi.json', (c) => c.json(openApiSpec))
+
+// ============================================================================
+// Version 1 (v1) Sub-Application
+// ============================================================================
+const v1 = new Hono<AppBindings>()
+
+// Protect v1 business endpoints with edge auth and rate limiting
+v1.use('/prospects/*', unifiedAuth, rateLimiter)
+v1.use('/prospects', unifiedAuth, rateLimiter)
+v1.use('/jobs/*', unifiedAuth, rateLimiter)
+v1.use('/jobs', unifiedAuth, rateLimiter)
+v1.use('/enrichment/*', unifiedAuth, rateLimiter)
+v1.use('/enrichment', unifiedAuth, rateLimiter)
+v1.use('/keys/*', unifiedAuth, rateLimiter)
+v1.use('/keys', unifiedAuth, rateLimiter)
+
+v1.route('/prospects', prospectsRoute)
+v1.route('/jobs', jobsRoute)
+v1.route('/enrichment', enrichmentRoute)
+v1.route('/keys', keysRoute)
+
+app.route('/v1', v1)
+
+// ============================================================================
+// Legacy /api routes for backward compatibility
+// ============================================================================
+
 /**
- * GET /api/prospects — org-scoped prospect list.
- * accessAuth: requires a valid Access JWT with an org_id (else 401).
- * orgScope:  any client-supplied org_id must match the token (else 403).
- * Query is org-scoped at the SQL layer (telos invariant #3).
+ * GET /api/prospects — org-scoped prospect list (legacy Cloudflare Access auth).
  */
 app.get('/api/prospects', accessAuth, orgScope, async (c) => {
   const { orgId } = c.get('identity')
 
-  // Clamp limit defensively; never trust client pagination as-is.
   const rawLimit = Number.parseInt(c.req.query('limit') ?? '50', 10)
   const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50
 
@@ -654,9 +691,7 @@ app.get('/api/crm/logs', accessAuth, orgScope, async (c) => {
 })
 
 /**
- * Fail-closed error handler. Never leak internals (telos invariant #5: no
- * silent failure, but also no stack traces to clients). Log server-side; return
- * a generic shape matching the Express API.
+ * Fail-closed error handler. Never leak internals (telos invariant #5).
  */
 app.onError((err, c) => {
   console.error('[api] unhandled error', err)
@@ -666,7 +701,7 @@ app.onError((err, c) => {
   )
 })
 
-/** 404 fallback in the same envelope as the rest of the API. */
+/** 404 fallback in the standard API envelope. */
 app.notFound((c) => {
   return c.json({ error: { message: 'Not Found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
 })
