@@ -1,14 +1,9 @@
 version: 2
 updates:
   - package-ecosystem: 'npm'
-    directories:
-      - '/'
-      - '/apps/desktop'
-      - '/apps/mobile'
-      - '/apps/web'
-      - '/packages/core'
-      - '/packages/ui'
-      - '/cloudflare'
+    # Use workspace root only; prevents Dependabot from generating split PRs per directory
+    directory: '/'
+    target-branch: 'lane/heal'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 3
@@ -16,20 +11,9 @@ updates:
       npm-deps:
         applies-to: version-updates
         patterns: ['*']
-        exclude-patterns:
-          - 'stripe'
-          - 'jose'
-          - 'jsonwebtoken'
-          - 'express'
-          - 'pg'
-          - 'bullmq'
-          - 'hono'
-          - 'wrangler'
-          - '@github/spark'
-        update-types: ['minor', 'patch']
   - package-ecosystem: 'github-actions'
-    directories:
-      - '/'
+    directory: '/'
+    target-branch: 'lane/heal'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 3
@@ -37,10 +21,9 @@ updates:
       github-actions-deps:
         applies-to: version-updates
         patterns: ['*']
-        update-types: ['minor', 'patch']
   - package-ecosystem: 'docker'
-    directories:
-      - '/'
+    directory: '/'
+    target-branch: 'lane/heal'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 3
@@ -48,10 +31,9 @@ updates:
       docker-deps:
         applies-to: version-updates
         patterns: ['*']
-        update-types: ['minor', 'patch']
   - package-ecosystem: 'cargo'
-    directories:
-      - '/apps/desktop/src-tauri'
+    directory: '/apps/desktop/src-tauri'
+    target-branch: 'lane/heal'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 3
@@ -59,4 +41,3 @@ updates:
       cargo-deps:
         applies-to: version-updates
         patterns: ['*']
-        update-types: ['minor', 'patch']
