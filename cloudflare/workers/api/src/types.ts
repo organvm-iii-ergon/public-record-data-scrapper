@@ -36,19 +36,91 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string
 }
 
+export type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
+
 /**
- * The authenticated caller, derived from the Cloudflare Access JWT.
+ * The authenticated caller, derived from Cloudflare Access JWT or an API Key.
  * `orgId` is the tenant boundary — every org-scoped query keys off it.
  */
 export interface Identity {
   orgId: string
   email?: string
   role?: string
+  tier: SubscriptionTier
+  authMethod: 'cf_access' | 'api_key'
+  keyId?: string
+}
+
+/**
+ * Organization row in D1.
+ */
+export interface OrganizationRow {
+  id: string
+  name: string
+  subscription_tier: string
+  created_at: string
+}
+
+/**
+ * Prospect row in D1.
+ */
+export interface ProspectRow {
+  id: string
+  org_id: string
+  company_name: string | null
+  priority_score: number | null
+  status: string | null
+  enrichment_confidence: number | null
+  raw_data: string | null
+  created_at: string
+}
+
+/**
+ * Job row in D1.
+ */
+export interface JobRow {
+  id: string
+  type: string
+  payload: string | null
+  status: 'pending' | 'processing' | 'done' | 'failed'
+  org_id: string | null
+  attempts: number
+  created_at: string
+}
+
+/**
+ * API Key row in D1.
+ */
+export interface ApiKeyRow {
+  id: string
+  org_id: string
+  name: string
+  key_prefix: string
+  key_hash: string
+  role: 'user' | 'admin'
+  expires_at: string | null
+  revoked_at: string | null
+  last_used_at: string | null
+  created_at: string
+}
+
+/**
+ * Sanitized public API key record (never exposes hash or full key).
+ */
+export interface ApiKeyPublic {
+  id: string
+  name: string
+  key_prefix: string
+  role: 'user' | 'admin'
+  expires_at: string | null
+  revoked_at: string | null
+  last_used_at: string | null
+  created_at: string
 }
 
 /**
  * Hono variable map. Lets handlers do `c.get('identity')` with full typing
- * after `accessAuth` has run.
+ * after auth has run.
  */
 export interface Variables {
   identity: Identity
