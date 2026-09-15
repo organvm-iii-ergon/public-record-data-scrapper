@@ -8,6 +8,7 @@ import { createDigestWorker } from './queue/workers/digestWorker'
 import { createTerminationDetectionWorker } from './queue/workers/terminationDetectionWorker'
 import { createVelocityAnalysisWorker } from './queue/workers/velocityAnalysisWorker'
 import { createPortalProbeWorker } from './queue/workers/portalProbeWorker'
+import { createWebhookDeliveryWorker } from './queue/workers/webhookDeliveryWorker'
 import { redisConnection } from './queue/connection'
 import { config } from './config'
 import { createServiceLogger } from './utils/logger'
@@ -47,6 +48,7 @@ class WorkerProcess {
       this.workers.push(createTerminationDetectionWorker())
       this.workers.push(createVelocityAnalysisWorker())
       this.workers.push(createPortalProbeWorker())
+      this.workers.push(createWebhookDeliveryWorker())
 
       workerLogger.info('Worker process started successfully', { workerCount: this.workers.length })
     } catch (error) {
