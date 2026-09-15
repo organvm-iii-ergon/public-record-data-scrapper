@@ -172,19 +172,49 @@ prospectsRoute.post('/', async (c) => {
     )
   }
 
+  if (body.priority_score !== undefined) {
+    if (
+      typeof body.priority_score !== 'number' ||
+      !Number.isFinite(body.priority_score) ||
+      body.priority_score < 0 ||
+      body.priority_score > 100
+    ) {
+      return c.json(
+        {
+          error: {
+            message: 'priority_score must be a number between 0 and 100',
+            code: 'VALIDATION_ERROR',
+            statusCode: 400
+          }
+        },
+        400
+      )
+    }
+  }
   const priorityScore =
-    typeof body.priority_score === 'number' &&
-    body.priority_score >= 0 &&
-    body.priority_score <= 100
-      ? Math.round(body.priority_score)
-      : null
+    typeof body.priority_score === 'number' ? Math.round(body.priority_score) : null
 
+  if (body.enrichment_confidence !== undefined) {
+    if (
+      typeof body.enrichment_confidence !== 'number' ||
+      !Number.isFinite(body.enrichment_confidence) ||
+      body.enrichment_confidence < 0 ||
+      body.enrichment_confidence > 1
+    ) {
+      return c.json(
+        {
+          error: {
+            message: 'enrichment_confidence must be a number between 0 and 1',
+            code: 'VALIDATION_ERROR',
+            statusCode: 400
+          }
+        },
+        400
+      )
+    }
+  }
   const confidence =
-    typeof body.enrichment_confidence === 'number' &&
-    body.enrichment_confidence >= 0 &&
-    body.enrichment_confidence <= 1
-      ? body.enrichment_confidence
-      : null
+    typeof body.enrichment_confidence === 'number' ? body.enrichment_confidence : null
 
   const rawDataString = body.raw_data !== undefined ? JSON.stringify(body.raw_data) : null
   const id = crypto.randomUUID()

@@ -56,7 +56,8 @@ vi.mock('../../middleware/rateLimiter', () => ({
 }))
 
 vi.mock('../../middleware/orgContext', () => ({
-  orgContextMiddleware: vi.fn((_req: unknown, _res: unknown, next: () => void) => next())
+  orgContextMiddleware: vi.fn((_req: unknown, _res: unknown, next: () => void) => next()),
+  getCurrentOrgId: vi.fn(() => 'org-123')
 }))
 
 vi.mock('../../middleware/dataTier', () => ({

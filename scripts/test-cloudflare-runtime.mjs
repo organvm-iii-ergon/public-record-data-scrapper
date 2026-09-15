@@ -232,7 +232,7 @@ try {
     headers: { 'X-API-Key': growthKey }
   })
   assert.equal(validHeaderRes.status, 200)
-  assert.equal(validHeaderRes.headers.get('X-RateLimit-Limit'), '1200')
+  assert.equal(validHeaderRes.headers.get('X-RateLimit-Limit'), '1000')
   assert.ok(validHeaderRes.headers.get('X-RateLimit-Remaining'))
   assert.ok(validHeaderRes.headers.get('X-RateLimit-Reset'))
   const validHeaderJson = await validHeaderRes.json()
@@ -411,15 +411,15 @@ try {
   assert.equal(afterRevokeRes.status, 401)
 
   // 8. Rate Limiting Edge Enforcement (Trigger 429)
-  // Free tier limit is 60 requests/minute. Issue a burst of requests with freeKey.
+  // Free tier limit is 10 requests/minute. Issue a burst of requests with freeKey.
   let rateLimited = false
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 15; i++) {
     const burstRes = await worker.dispatchFetch('http://localhost/v1/prospects', {
       headers: { 'X-API-Key': freeKey }
     })
     if (burstRes.status === 429) {
       rateLimited = true
-      assert.equal(burstRes.headers.get('X-RateLimit-Limit'), '60')
+      assert.equal(burstRes.headers.get('X-RateLimit-Limit'), '10')
       assert.equal(burstRes.headers.get('X-RateLimit-Remaining'), '0')
       assert.ok(burstRes.headers.get('Retry-After'))
       const body429 = await burstRes.json()
