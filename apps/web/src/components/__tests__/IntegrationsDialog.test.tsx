@@ -20,7 +20,7 @@ describe('IntegrationsDialog', () => {
     expect(screen.getByText(/Native HubSpot Push/i)).toBeInTheDocument()
     expect(screen.getByText('HubSpot')).toBeInTheDocument()
     expect(screen.getByText('Salesforce')).toBeInTheDocument()
-    expect(screen.getByText(/Private App Access Token/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Private App Access Token/i)[0]).toBeInTheDocument()
     expect(screen.getByText(/Test Connection/i)).toBeInTheDocument()
   })
 
