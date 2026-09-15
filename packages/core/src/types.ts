@@ -955,7 +955,8 @@ export interface ComplianceAlert {
 // ============================================================================
 
 export type WebhookStatus = 'active' | 'paused' | 'disabled'
-export type WebhookDeliveryStatus = 'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
+export type WebhookDeliveryStatus =
+  'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
 
 export interface WebhookEndpoint {
   id: string

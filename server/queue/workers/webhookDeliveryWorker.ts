@@ -84,7 +84,12 @@ export async function processWebhookDeliveryJob(
   const result = await service.deliver(deliveryId)
 
   if (result.success) {
-    return { deliveryId, success: true, responseStatus: result.responseStatus, newStatus: 'delivered' }
+    return {
+      deliveryId,
+      success: true,
+      responseStatus: result.responseStatus,
+      newStatus: 'delivered'
+    }
   }
 
   // Delivery failed. Determine whether to re-queue or promote to dead.

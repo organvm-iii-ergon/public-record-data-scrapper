@@ -10,11 +10,7 @@ import { Hono } from 'hono'
 import { accessAuth, orgScope } from './auth'
 import { all, first, run } from './db'
 import { scheduled } from './scheduled'
-import {
-  replayWebhookDelivery,
-  sendWebhookDelivery,
-  triggerWebhookEvent
-} from './webhooks'
+import { replayWebhookDelivery, sendWebhookDelivery, triggerWebhookEvent } from './webhooks'
 import { pushProspectToCrm, CRM_ADAPTERS } from './crm'
 import type {
   AppBindings,
@@ -99,7 +95,8 @@ app.get('/api/webhooks', accessAuth, orgScope, async (c) => {
         return [ep.events]
       }
     })(),
-    secret_preview: ep.secret.length > 8 ? `${ep.secret.slice(0, 6)}••••${ep.secret.slice(-4)}` : '••••••••'
+    secret_preview:
+      ep.secret.length > 8 ? `${ep.secret.slice(0, 6)}••••${ep.secret.slice(-4)}` : '••••••••'
   }))
 
   return c.json({ endpoints: masked })
@@ -119,21 +116,43 @@ app.post('/api/webhooks', accessAuth, orgScope, async (c) => {
   }
 
   if (!body.url || typeof body.url !== 'string') {
-    return c.json({ error: { message: 'Missing required field: url', code: 'BAD_REQUEST', statusCode: 400 } }, 400)
+    return c.json(
+      { error: { message: 'Missing required field: url', code: 'BAD_REQUEST', statusCode: 400 } },
+      400
+    )
   }
 
   try {
     const parsedUrl = new URL(body.url)
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      return c.json({ error: { message: 'URL protocol must be http or https', code: 'BAD_REQUEST', statusCode: 400 } }, 400)
+      return c.json(
+        {
+          error: {
+            message: 'URL protocol must be http or https',
+            code: 'BAD_REQUEST',
+            statusCode: 400
+          }
+        },
+        400
+      )
     }
   } catch {
-    return c.json({ error: { message: 'Invalid destination URL format', code: 'BAD_REQUEST', statusCode: 400 } }, 400)
+    return c.json(
+      {
+        error: { message: 'Invalid destination URL format', code: 'BAD_REQUEST', statusCode: 400 }
+      },
+      400
+    )
   }
 
   const endpointId = `whe_${crypto.randomUUID()}`
-  const secret = body.secret && body.secret.length >= 16 ? body.secret : `whsec_${crypto.randomUUID().replace(/-/g, '')}`
-  const events = JSON.stringify(Array.isArray(body.events) && body.events.length > 0 ? body.events : ['*'])
+  const secret =
+    body.secret && body.secret.length >= 16
+      ? body.secret
+      : `whsec_${crypto.randomUUID().replace(/-/g, '')}`
+  const events = JSON.stringify(
+    Array.isArray(body.events) && body.events.length > 0 ? body.events : ['*']
+  )
   const description = body.description ?? null
 
   await run(
@@ -180,7 +199,10 @@ app.get('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
   )
 
   if (!endpoint) {
-    return c.json({ error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   return c.json({
@@ -212,7 +234,10 @@ app.put('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
   )
 
   if (!endpoint) {
-    return c.json({ error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   const body = (await c.req.json().catch(() => ({}))) as {
@@ -276,7 +301,10 @@ app.delete('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
   )
 
   if (res.meta.changes === 0) {
-    return c.json({ error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   return c.json({ success: true, id })
@@ -297,7 +325,10 @@ app.post('/api/webhooks/:id/test', accessAuth, orgScope, async (c) => {
   )
 
   if (!endpoint) {
-    return c.json({ error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Webhook endpoint not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   const deliveryId = `del_${crypto.randomUUID()}`
@@ -379,7 +410,10 @@ app.get('/api/webhooks/deliveries/:id', accessAuth, orgScope, async (c) => {
   )
 
   if (!delivery) {
-    return c.json({ error: { message: 'Delivery not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Delivery not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   return c.json({ delivery })
@@ -394,7 +428,16 @@ app.post('/api/webhooks/deliveries/:id/retry', accessAuth, orgScope, async (c) =
 
   const replayed = await replayWebhookDelivery(c.env, orgId, id)
   if (!replayed) {
-    return c.json({ error: { message: 'Delivery not found or cannot replay', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      {
+        error: {
+          message: 'Delivery not found or cannot replay',
+          code: 'NOT_FOUND',
+          statusCode: 404
+        }
+      },
+      404
+    )
   }
 
   const updated = await first<WebhookDeliveryRow>(
@@ -429,7 +472,10 @@ app.get('/api/crm/integrations', accessAuth, orgScope, async (c) => {
   // Mask API keys in response
   const masked = integrations.map((item) => ({
     ...item,
-    api_key_preview: item.api_key.length > 8 ? `${item.api_key.slice(0, 4)}••••${item.api_key.slice(-4)}` : '••••••••',
+    api_key_preview:
+      item.api_key.length > 8
+        ? `${item.api_key.slice(0, 4)}••••${item.api_key.slice(-4)}`
+        : '••••••••',
     config: (() => {
       try {
         return item.config ? JSON.parse(item.config) : {}
@@ -456,13 +502,24 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
 
   if (!body.provider || !['hubspot', 'salesforce', 'gohighlevel'].includes(body.provider)) {
     return c.json(
-      { error: { message: 'Invalid provider. Must be "hubspot", "salesforce", or "gohighlevel"', code: 'BAD_REQUEST', statusCode: 400 } },
+      {
+        error: {
+          message: 'Invalid provider. Must be "hubspot", "salesforce", or "gohighlevel"',
+          code: 'BAD_REQUEST',
+          statusCode: 400
+        }
+      },
       400
     )
   }
 
   if (!body.api_key || typeof body.api_key !== 'string' || body.api_key.trim().length === 0) {
-    return c.json({ error: { message: 'Missing required field: api_key', code: 'BAD_REQUEST', statusCode: 400 } }, 400)
+    return c.json(
+      {
+        error: { message: 'Missing required field: api_key', code: 'BAD_REQUEST', statusCode: 400 }
+      },
+      400
+    )
   }
 
   // Verify credentials via provider adapter
@@ -496,7 +553,9 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
     provider: body.provider,
     status,
     verified: isValid,
-    message: isValid ? 'Integration connected and verified' : 'Connected but credential verification failed'
+    message: isValid
+      ? 'Integration connected and verified'
+      : 'Connected but credential verification failed'
   })
 })
 
@@ -515,7 +574,10 @@ app.delete('/api/crm/integrations/:id', accessAuth, orgScope, async (c) => {
   )
 
   if (res.meta.changes === 0) {
-    return c.json({ error: { message: 'Integration not found', code: 'NOT_FOUND', statusCode: 404 } }, 404)
+    return c.json(
+      { error: { message: 'Integration not found', code: 'NOT_FOUND', statusCode: 404 } },
+      404
+    )
   }
 
   return c.json({ success: true, id })
@@ -533,13 +595,31 @@ app.post('/api/crm/push', accessAuth, orgScope, async (c) => {
   }
 
   if (!body.prospect_id || typeof body.prospect_id !== 'string') {
-    return c.json({ error: { message: 'Missing required field: prospect_id', code: 'BAD_REQUEST', statusCode: 400 } }, 400)
+    return c.json(
+      {
+        error: {
+          message: 'Missing required field: prospect_id',
+          code: 'BAD_REQUEST',
+          statusCode: 400
+        }
+      },
+      400
+    )
   }
 
   const result = await pushProspectToCrm(c.env, orgId, body.prospect_id, body.provider)
 
   if (!result.success) {
-    return c.json({ error: { message: result.error ?? 'CRM push failed', code: 'CRM_PUSH_FAILED', statusCode: 502 } }, 502)
+    return c.json(
+      {
+        error: {
+          message: result.error ?? 'CRM push failed',
+          code: 'CRM_PUSH_FAILED',
+          statusCode: 502
+        }
+      },
+      502
+    )
   }
 
   // Also trigger outbound webhook for the prospect push event

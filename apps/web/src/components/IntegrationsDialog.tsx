@@ -12,7 +12,7 @@ import { Input } from '@public-records/ui/input'
 import { Badge } from '@public-records/ui/badge'
 import { Switch } from '@public-records/ui/switch'
 import { Label } from '@public-records/ui/label'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@public-records/ui/card'
+import { Card, CardContent, CardHeader, CardDescription } from '@public-records/ui/card'
 import {
   PlugsConnected,
   ShareNetwork,
@@ -27,12 +27,7 @@ import {
   PaperPlaneTilt
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type {
-  WebhookEndpoint,
-  WebhookDelivery,
-  CrmIntegration,
-  CrmProvider
-} from '@public-records/core'
+import type { WebhookEndpoint, WebhookDelivery, CrmProvider } from '@public-records/core'
 
 interface IntegrationsDialogProps {
   open: boolean
@@ -60,7 +55,7 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
   // New endpoint inputs
   const [newUrl, setNewUrl] = useState('')
   const [newDescription, setNewDescription] = useState('')
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([
+  const [selectedEvents] = useState<string[]>([
     'prospect.created',
     'prospect.updated',
     'score.updated'
@@ -86,7 +81,8 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
       orgId: 'org_current',
       webhookId: 'whe_demo_01',
       event: 'score.updated',
-      payload: '{"id":"evt_02","event":"score.updated","data":{"companyName":"Metro Builders","score":88}}',
+      payload:
+        '{"id":"evt_02","event":"score.updated","data":{"companyName":"Metro Builders","score":88}}',
       status: 'dead_letter',
       attempts: 5,
       maxAttempts: 5,
@@ -137,62 +133,56 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
   }
 
   const handleTestPing = (ep: WebhookEndpoint) => {
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 800)),
-      {
-        loading: `Sending HMAC-SHA256 signed test ping to ${ep.url}...`,
-        success: () => {
-          const testDelivery: WebhookDelivery = {
-            id: `del_${Date.now()}`,
-            orgId: ep.orgId,
-            webhookId: ep.id,
+    toast.promise(new Promise((resolve) => setTimeout(resolve, 800)), {
+      loading: `Sending HMAC-SHA256 signed test ping to ${ep.url}...`,
+      success: () => {
+        const testDelivery: WebhookDelivery = {
+          id: `del_${Date.now()}`,
+          orgId: ep.orgId,
+          webhookId: ep.id,
+          event: 'test.ping',
+          payload: JSON.stringify({
+            id: `evt_test_${Date.now()}`,
             event: 'test.ping',
-            payload: JSON.stringify({
-              id: `evt_test_${Date.now()}`,
-              event: 'test.ping',
-              api_version: '2026-09-01',
-              data: { message: 'Ping from UCC-MCA Platform', timestamp: new Date().toISOString() }
-            }),
-            status: 'delivered',
-            attempts: 1,
-            maxAttempts: 1,
-            responseStatus: 200,
-            deliveredAt: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          }
-          setDeliveries((prev) => [testDelivery, ...prev])
-          return 'Test ping delivered successfully with valid signature!'
-        },
-        error: 'Failed to deliver test ping'
-      }
-    )
+            api_version: '2026-09-01',
+            data: { message: 'Ping from UCC-MCA Platform', timestamp: new Date().toISOString() }
+          }),
+          status: 'delivered',
+          attempts: 1,
+          maxAttempts: 1,
+          responseStatus: 200,
+          deliveredAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        }
+        setDeliveries((prev) => [testDelivery, ...prev])
+        return 'Test ping delivered successfully with valid signature!'
+      },
+      error: 'Failed to deliver test ping'
+    })
   }
 
   const handleReplayDelivery = (deliveryId: string) => {
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 900)),
-      {
-        loading: 'Replaying dead-letter delivery from queue...',
-        success: () => {
-          setDeliveries((prev) =>
-            prev.map((d) =>
-              d.id === deliveryId
-                ? {
-                    ...d,
-                    status: 'delivered',
-                    attempts: 1,
-                    errorMessage: undefined,
-                    responseStatus: 200,
-                    deliveredAt: new Date().toISOString()
-                  }
-                : d
-            )
+    toast.promise(new Promise((resolve) => setTimeout(resolve, 900)), {
+      loading: 'Replaying dead-letter delivery from queue...',
+      success: () => {
+        setDeliveries((prev) =>
+          prev.map((d) =>
+            d.id === deliveryId
+              ? {
+                  ...d,
+                  status: 'delivered',
+                  attempts: 1,
+                  errorMessage: undefined,
+                  responseStatus: 200,
+                  deliveredAt: new Date().toISOString()
+                }
+              : d
           )
-          return 'Delivery redelivered successfully! DLQ cleared.'
-        },
-        error: 'Redelivery failed'
-      }
-    )
+        )
+        return 'Delivery redelivered successfully! DLQ cleared.'
+      },
+      error: 'Redelivery failed'
+    })
   }
 
   const handleTestCrm = (provider: CrmProvider) => {
@@ -216,7 +206,8 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
             </DialogTitle>
           </div>
           <DialogDescription className="text-white/70">
-            Push real-time UCC prospect intelligence into external CRMs and subscribed webhook endpoints.
+            Push real-time UCC prospect intelligence into external CRMs and subscribed webhook
+            endpoints.
           </DialogDescription>
         </DialogHeader>
 
@@ -237,9 +228,13 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
             <div className="p-3.5 rounded-lg border border-primary/30 bg-primary/10 flex items-start gap-3">
               <ShieldCheck size={24} weight="fill" className="text-primary mt-0.5 flex-shrink-0" />
               <div className="text-xs space-y-1 text-white/90">
-                <span className="font-semibold text-white">Native HubSpot Push (Most Requested MCA Integration)</span>
+                <span className="font-semibold text-white">
+                  Native HubSpot Push (Most Requested MCA Integration)
+                </span>
                 <p>
-                  Directly upsert high-priority UCC prospect records into HubSpot Companies & Contacts using HubSpot REST API v3. Eliminates manual data entry for ISO brokers and MCA syndication desks.
+                  Directly upsert high-priority UCC prospect records into HubSpot Companies &
+                  Contacts using HubSpot REST API v3. Eliminates manual data entry for ISO brokers
+                  and MCA syndication desks.
                 </p>
               </div>
             </div>
@@ -250,7 +245,10 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-white">HubSpot</span>
-                    <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-[10px]">
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-[10px]"
+                    >
                       Recommended
                     </Badge>
                   </div>
@@ -266,7 +264,8 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                   </div>
                 </div>
                 <CardDescription className="text-xs text-white/60">
-                  Connect using a HubSpot Private App Access Token with <code className="text-primary">crm.objects.companies.write</code> scope.
+                  Connect using a HubSpot Private App Access Token with{' '}
+                  <code className="text-primary">crm.objects.companies.write</code> scope.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -287,7 +286,10 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                       disabled={testingCrm === 'hubspot' || !hubspotActive}
                       className="border-white/30 text-white hover:bg-white/10 flex-shrink-0 h-9"
                     >
-                      <ArrowsClockwise size={14} className={testingCrm === 'hubspot' ? 'animate-spin mr-1' : 'mr-1'} />
+                      <ArrowsClockwise
+                        size={14}
+                        className={testingCrm === 'hubspot' ? 'animate-spin mr-1' : 'mr-1'}
+                      />
                       Test Connection
                     </Button>
                   </div>
@@ -295,8 +297,12 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
 
                 <div className="flex items-center justify-between pt-1 border-t border-white/10 text-xs">
                   <div>
-                    <span className="font-medium text-white/90">Auto-push High Priority Prospects</span>
-                    <p className="text-[11px] text-white/60">Automatically create Company when priority score &ge; 75</p>
+                    <span className="font-medium text-white/90">
+                      Auto-push High Priority Prospects
+                    </span>
+                    <p className="text-[11px] text-white/60">
+                      Automatically create Company when priority score &ge; 75
+                    </p>
                   </div>
                   <Switch
                     checked={hubspotAutoSync}
@@ -308,10 +314,19 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                 <div className="p-2.5 rounded bg-black/40 border border-white/10 text-[11px] text-white/70 space-y-1">
                   <div className="font-semibold text-white/90">Default Property Mappings:</div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                    <span>• Debtor Company &rarr; <code className="text-emerald-300">name</code></span>
-                    <span>• Priority Score &rarr; <code className="text-emerald-300">ucc_priority_score</code></span>
-                    <span>• State & City &rarr; <code className="text-emerald-300">state, city</code></span>
-                    <span>• UCC Status &rarr; <code className="text-emerald-300">ucc_status</code></span>
+                    <span>
+                      • Debtor Company &rarr; <code className="text-emerald-300">name</code>
+                    </span>
+                    <span>
+                      • Priority Score &rarr;{' '}
+                      <code className="text-emerald-300">ucc_priority_score</code>
+                    </span>
+                    <span>
+                      • State & City &rarr; <code className="text-emerald-300">state, city</code>
+                    </span>
+                    <span>
+                      • UCC Status &rarr; <code className="text-emerald-300">ucc_status</code>
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -420,7 +435,9 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                         {ep.status}
                       </Badge>
                     </div>
-                    {ep.description && <p className="text-white/60 text-[11px]">{ep.description}</p>}
+                    {ep.description && (
+                      <p className="text-white/60 text-[11px]">{ep.description}</p>
+                    )}
                     <div className="flex items-center gap-2 text-white/50 text-[11px]">
                       <span>Secret: {ep.secretPreview || 'whsec_••••••••'}</span>
                       <button
@@ -463,7 +480,10 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                 <div className="text-xs font-semibold text-white/80 uppercase tracking-wide">
                   Recent Deliveries & Dead-Letter Queue (DLQ)
                 </div>
-                <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px]">
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px]"
+                >
                   5-step Exponential Backoff
                 </Badge>
               </div>
@@ -502,7 +522,9 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                           {del.attempts}/{del.maxAttempts}
                         </td>
                         <td className="p-2 text-white/60 max-w-[200px] truncate">
-                          {del.responseStatus ? `HTTP ${del.responseStatus}` : del.errorMessage || '—'}
+                          {del.responseStatus
+                            ? `HTTP ${del.responseStatus}`
+                            : del.errorMessage || '—'}
                         </td>
                         <td className="p-2 text-right">
                           {del.status === 'dead_letter' && (

@@ -11,12 +11,7 @@
  */
 
 import { all, first, run } from './db'
-import type {
-  Env,
-  WebhookDeliveryRow,
-  WebhookEndpointRow,
-  WebhookPayload
-} from './types'
+import type { Env, WebhookDeliveryRow, WebhookEndpointRow, WebhookPayload } from './types'
 
 export const API_VERSION = '2026-09-01'
 export const MAX_RETRY_ATTEMPTS = 5
@@ -60,11 +55,7 @@ export async function signWebhookPayload(
   )
 
   const signedPayload = `${timestamp}.${payloadString}`
-  const signatureBuffer = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(signedPayload)
-  )
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload))
 
   const signatureHex = Array.from(new Uint8Array(signatureBuffer))
     .map((b) => b.toString(16).padStart(2, '0'))

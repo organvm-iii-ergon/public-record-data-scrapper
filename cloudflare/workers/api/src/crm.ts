@@ -78,17 +78,12 @@ export class HubSpotAdapter implements CrmAdapter {
     }
 
     const domain =
-      prospect.domain ??
-      (typeof parsedRaw.domain === 'string' ? parsedRaw.domain : undefined)
+      prospect.domain ?? (typeof parsedRaw.domain === 'string' ? parsedRaw.domain : undefined)
     const phone =
-      prospect.phone ??
-      (typeof parsedRaw.phone === 'string' ? parsedRaw.phone : undefined)
+      prospect.phone ?? (typeof parsedRaw.phone === 'string' ? parsedRaw.phone : undefined)
     const state =
-      prospect.state ??
-      (typeof parsedRaw.state === 'string' ? parsedRaw.state : undefined)
-    const city =
-      prospect.city ??
-      (typeof parsedRaw.city === 'string' ? parsedRaw.city : undefined)
+      prospect.state ?? (typeof parsedRaw.state === 'string' ? parsedRaw.state : undefined)
+    const city = prospect.city ?? (typeof parsedRaw.city === 'string' ? parsedRaw.city : undefined)
 
     const properties: Record<string, string> = {
       name: companyName,

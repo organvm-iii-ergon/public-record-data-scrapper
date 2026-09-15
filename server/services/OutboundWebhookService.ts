@@ -179,10 +179,7 @@ export async function deliverWebhook(
   const rawBody = JSON.stringify(payload)
   const signature = signPayload(rawBody, config.secret)
   const controller = new AbortController()
-  const timeout = setTimeout(
-    () => controller.abort(),
-    config.timeoutMs ?? DEFAULT_TIMEOUT_MS
-  )
+  const timeout = setTimeout(() => controller.abort(), config.timeoutMs ?? DEFAULT_TIMEOUT_MS)
 
   try {
     const response = await fetch(url, {

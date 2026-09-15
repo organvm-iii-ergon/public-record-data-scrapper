@@ -217,7 +217,7 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
 
     const queries: string[] = []
     const mockDb = {
-      query: vi.fn(async (sql: string, _params?: unknown[]) => {
+      query: vi.fn(async (sql: string) => {
         queries.push(sql.trim().split('\n')[0].trim())
 
         // Fetch delivery + subscription
@@ -250,7 +250,9 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
     expect(result.success).toBe(false)
 
     // The UPDATE call should have set status = 'dead' and next_retry_at = null
-    const updateCall = mockDb.query.mock.calls.find(([sql]) => sql.includes('UPDATE webhook_deliveries'))
+    const updateCall = mockDb.query.mock.calls.find(([sql]) =>
+      sql.includes('UPDATE webhook_deliveries')
+    )
     expect(updateCall).toBeDefined()
     const updateParams = updateCall![1] as unknown[]
     expect(updateParams[0]).toBe('dead')
@@ -259,7 +261,7 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
 
   it('sets status = failed with next_retry_at on first failure', async () => {
     const mockDb = {
-      query: vi.fn(async (sql: string, _params?: unknown[]) => {
+      query: vi.fn(async (sql: string) => {
         if (sql.includes('webhook_deliveries d')) {
           return [
             {
@@ -284,7 +286,9 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
     const service = new OutboundWebhookService(mockDb)
     await service.deliver('del-2')
 
-    const updateCall = mockDb.query.mock.calls.find(([sql]) => sql.includes('UPDATE webhook_deliveries'))
+    const updateCall = mockDb.query.mock.calls.find(([sql]) =>
+      sql.includes('UPDATE webhook_deliveries')
+    )
     expect(updateCall).toBeDefined()
     const updateParams = updateCall![1] as unknown[]
     expect(updateParams[0]).toBe('failed')

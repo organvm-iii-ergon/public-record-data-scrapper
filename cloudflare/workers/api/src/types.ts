@@ -65,7 +65,8 @@ export interface AppBindings {
 // ============================================================================
 
 export type WebhookStatus = 'active' | 'paused' | 'disabled'
-export type WebhookDeliveryStatus = 'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
+export type WebhookDeliveryStatus =
+  'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
 export type CrmProvider = 'hubspot' | 'salesforce' | 'gohighlevel'
 export type CrmStatus = 'active' | 'disabled' | 'error'
 
