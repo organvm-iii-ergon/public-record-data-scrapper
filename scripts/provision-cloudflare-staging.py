@@ -194,6 +194,7 @@ def one_exact(rows, kind):
 
 
 def safe_path(root, relative, must_exist=False):
+    root = root.resolve()
     path = root / relative
     for part in [path, *path.parents]:
         if part.is_symlink():
