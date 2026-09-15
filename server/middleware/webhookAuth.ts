@@ -304,10 +304,7 @@ export const verifyPlaidSignature: RequestHandler = async (
     // Verify the request body hash matches the signed claim.
     const bodyHash = crypto.createHash('sha256').update(rawBody).digest('hex')
 
-    if (
-      !payload.request_body_sha256 ||
-      !timingSafeEqual(payload.request_body_sha256, bodyHash)
-    ) {
+    if (!payload.request_body_sha256 || !timingSafeEqual(payload.request_body_sha256, bodyHash)) {
       console.error('[webhookAuth] Plaid webhook body hash mismatch')
       return webhookUnauthorized(res, 'Plaid webhook body hash mismatch')
     }

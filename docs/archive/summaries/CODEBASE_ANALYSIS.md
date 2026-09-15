@@ -5,6 +5,7 @@
 The **UCC-MCA Intelligence Platform** is a sophisticated, AI-powered lead generation system designed for Merchant Cash Advance (MCA) providers. It analyzes Uniform Commercial Code (UCC) filings to identify businesses with active financing and predict their need for MCAs.
 
 **Key Metrics:**
+
 - 526 automated tests (100% pass rate)
 - 60+ autonomous agents (5 analysis + 50 state + 5 entry-point)
 - ~6,571 lines of service code
@@ -69,11 +70,11 @@ The platform employs a **multi-agent autonomous system** with the following arch
 1. **Agent Pattern**: Base class inheritance with role-based agents
    - `BaseAgent` → Abstract interface for all agents
    - Specialized agents for specific responsibilities
-   
+
 2. **Factory Pattern**: Dynamic agent creation
    - `StateAgentFactory` - Creates all 50 state agents
    - `EntryPointAgentFactory` - Creates 5 entry-point agents
-   
+
 3. **Service Layer**: Business logic encapsulation
    - Clear separation between data access and business logic
    - Service dependency injection
@@ -102,9 +103,11 @@ The platform employs a **multi-agent autonomous system** with the following arch
 ### A. Agentic System (Autonomous Decision Making)
 
 #### AgenticEngine
+
 **File**: `src/lib/agentic/AgenticEngine.ts` (322 lines)
 
 **Responsibilities:**
+
 - Manages autonomous improvement cycles
 - Enforces safety thresholds (min safety score 80 for auto-execution)
 - Tracks improvement execution history
@@ -113,21 +116,25 @@ The platform employs a **multi-agent autonomous system** with the following arch
 - Categories requiring manual review: security, data-quality, threat-analysis, strategic-recommendation
 
 **Key Methods:**
+
 - `runAutonomousCycle()` - Main autonomous loop
 - `canExecuteAutonomously()` - Safety checking before execution
 - `executeImprovement()` - Executes approved improvements
 - `createFeedbackLoop()` - Records system feedback
 
 #### AgenticCouncil
+
 **File**: `src/lib/agentic/AgenticCouncil.ts` (180 lines)
 
 **Responsibilities:**
+
 - Orchestrates 5 analysis agents in sequence
 - Implements AI Council pattern with agent handoff mechanism
 - Aggregates findings and improvements
 - Tracks council review status
 
 **Agent Sequence:**
+
 1. **DataAnalyzerAgent** - Identifies stale data, quality issues, completeness
 2. **OptimizerAgent** - Performance metrics, caching, query optimization
 3. **SecurityAgent** - Vulnerability detection, encryption, access patterns
@@ -135,9 +142,11 @@ The platform employs a **multi-agent autonomous system** with the following arch
 5. **CompetitorAgent** - Market analysis, competitive threats
 
 #### BaseAgent
+
 **File**: `src/lib/agentic/BaseAgent.ts` (74 lines)
 
 **Responsibilities:**
+
 - Provides common agent interface
 - UUID generation for each agent
 - Finding creation helper
@@ -145,6 +154,7 @@ The platform employs a **multi-agent autonomous system** with the following arch
 - Analysis assembly
 
 **Interface:**
+
 ```typescript
 interface Agent {
   id: string
@@ -158,9 +168,11 @@ interface Agent {
 ### B. Data Collection Agents
 
 #### StateAgent (50 agents - one per US state + DC)
+
 **File**: `src/lib/agentic/agents/state-agents/StateAgent.ts`
 
 **Configuration per State:**
+
 ```typescript
 {
   stateCode: 'CA',
@@ -175,6 +187,7 @@ interface Agent {
 ```
 
 **Responsibilities:**
+
 - State-specific UCC filing collection
 - Respect state rate limits and business hours
 - Monitor data freshness (alert if >24h old)
@@ -183,20 +196,24 @@ interface Agent {
 - Handle state-specific authentication
 
 **Metrics Tracked:**
+
 - totalFilings, recentFilings, activeFilings
 - averageProcessingTime, successRate
 - errors count, lastUpdate timestamp
 
 #### StateAgentFactory
+
 **File**: `src/lib/agentic/agents/state-agents/StateAgentFactory.ts`
 
 **Responsibilities:**
+
 - Dynamic creation of all 50 state agents
 - Registry management
 - Regional agent grouping (west, south, midwest, northeast)
 - Agent lifecycle management
 
 **Methods:**
+
 ```typescript
 createAllStateAgents(): StateAgentRegistry
 createStateAgents(states: string[]): StateAgentRegistry
@@ -205,9 +222,11 @@ getCollectorForState(stateCode: string): StateCollector
 ```
 
 #### EntryPointAgent (5 types)
+
 **File**: `src/lib/agentic/agents/entry-point-agents/EntryPointAgent.ts`
 
 **Entry Point Types:**
+
 1. **API** - REST/GraphQL/SOAP with various auth methods
 2. **Portal** - Web scraping with HTML parsing
 3. **Database** - Direct database connections
@@ -215,6 +234,7 @@ getCollectorForState(stateCode: string): StateCollector
 5. **Webhook** - Real-time notification receivers
 
 **Configuration:**
+
 ```typescript
 {
   id: string
@@ -232,6 +252,7 @@ getCollectorForState(stateCode: string): StateCollector
 ```
 
 **Metrics:**
+
 - totalRequests, successfulRequests, failedRequests
 - averageLatency, lastRequestTime
 - uptime percentage
@@ -239,9 +260,11 @@ getCollectorForState(stateCode: string): StateCollector
 ### C. Data Processing Services
 
 #### DataEnrichmentService
+
 **File**: `src/lib/services/DataEnrichmentService.ts`
 
 **Responsibilities:**
+
 - Enriches prospect data with growth signals
 - Calculates health scores
 - Estimates revenue
@@ -249,18 +272,22 @@ getCollectorForState(stateCode: string): StateCollector
 - Tracks confidence scores per field
 
 **Enrichment Sources:**
+
 ```typescript
 interface EnrichmentSource {
   id: string
   name: string
   type: 'web-scraping' | 'api' | 'ml-inference'
-  capabilities: ('growth-signals' | 'health-score' | 'revenue-estimate' | 'industry-classification')[]
+  capabilities: (
+    'growth-signals' | 'health-score' | 'revenue-estimate' | 'industry-classification'
+  )[]
   endpoint?: string
   apiKey?: string
 }
 ```
 
 **Key Methods:**
+
 - `enrichProspect()` - Main enrichment pipeline
 - `detectGrowthSignals()` - Hiring, permits, contracts, expansion
 - `calculateHealthScore()` - Sentiment + violations + reviews
@@ -268,9 +295,11 @@ interface EnrichmentSource {
 - `inferIndustry()` - Industry classification
 
 #### DataIngestionService
+
 **File**: `src/lib/services/DataIngestionService.ts`
 
 **Responsibilities:**
+
 - Fetches UCC filings from multiple sources
 - Implements circuit breaker for fault tolerance
 - Rate limits requests per source
@@ -278,11 +307,13 @@ interface EnrichmentSource {
 - Error aggregation
 
 **Sources Handled:**
+
 - State UCC portals (CA, TX, FL, NY, etc.)
 - Public records databases
 - External data providers
 
 **Configuration:**
+
 ```typescript
 interface IngestionConfig {
   sources: DataSource[]
@@ -294,9 +325,11 @@ interface IngestionConfig {
 ```
 
 #### DataRefreshScheduler
+
 **File**: `src/lib/services/DataRefreshScheduler.ts`
 
 **Responsibilities:**
+
 - Schedules automated data refreshes
 - Different intervals: 24h for ingestion, 6h for enrichment
 - Manages stale data detection
@@ -304,18 +337,22 @@ interface IngestionConfig {
 - Monitors refresh job health
 
 #### RecursiveEnrichmentEngine
+
 **File**: `src/lib/services/recursive/RecursiveEnrichmentEngine.ts`
 
 **Responsibilities:**
+
 - Multi-pass enrichment with increasing detail
 - Recursive data fetching from multiple sources
 - Cross-references and validation
 - Confidence scoring
 
 #### RecursiveSignalDetector
+
 **File**: `src/lib/services/recursive/RecursiveSignalDetector.ts`
 
 **Responsibilities:**
+
 - Multi-level signal detection
 - Identifies hiring trends, permits, contracts
 - Analyzes financial signals
@@ -324,9 +361,11 @@ interface IngestionConfig {
 ### D. Data Source Integrations
 
 #### BaseDataSource
+
 **File**: `src/lib/data-sources/base-source.ts`
 
 **Common Functionality:**
+
 - Rate limiting via `rateLimiterManager`
 - Timeout enforcement
 - Exponential backoff retry logic
@@ -334,6 +373,7 @@ interface IngestionConfig {
 - Tier-based access control
 
 **Methods:**
+
 ```typescript
 abstract fetchData(query: Record<string, any>): Promise<DataSourceResponse>
 protected async executeFetch(): Promise<DataSourceResponse>
@@ -342,6 +382,7 @@ isAvailableForTier(tier: SubscriptionTier): boolean
 ```
 
 #### Free Tier Sources
+
 **File**: `src/lib/data-sources/free-tier.ts`
 
 1. **SECEdgarSource** - Company filings, financial data
@@ -365,11 +406,13 @@ isAvailableForTier(tier: SubscriptionTier): boolean
    - Employment data, industry statistics
 
 #### Starter Tier Sources (Structure Ready)
+
 - **D&B** (Dun & Bradstreet) - Company credit ratings
 - **Google Places** - Location and review data
 - **Clearbit** - Company intelligence
 
 #### Professional/Enterprise Tier Sources (Structure Ready)
+
 - **Experian** - Credit and financial data
 - **ZoomInfo** - B2B contact and company database
 - **NewsAPI** - Company news and sentiment
@@ -377,9 +420,11 @@ isAvailableForTier(tier: SubscriptionTier): boolean
 ### E. State Collectors
 
 #### CAStateCollector
+
 **File**: `src/lib/collectors/state-collectors/CAStateCollector.ts`
 
 **California Specifics:**
+
 - API: `https://bizfileonline.sos.ca.gov/api`
 - Authentication: OAuth2 required
 - Cost: $0.01 per request
@@ -387,20 +432,24 @@ isAvailableForTier(tier: SubscriptionTier): boolean
 - Rate limits: 60/min, 1200/hour, 12000/day
 
 **Features:**
+
 - Search by business name, filing number, debtor name
 - Response format: Filing details with debtor/secured party info
 - Status tracking: active, lapsed, terminated
 - Expiration date monitoring
 
 #### NYStateCollector (Similar structure)
+
 - New York-specific implementation
 - State portal API integration
 - Rate limiting compliance
 
 #### RateLimiter
+
 **File**: `src/lib/collectors/RateLimiter.ts`
 
 **Implementation:**
+
 - Token bucket algorithm
 - Multi-level enforcement:
   - Per-second, per-minute, per-hour, per-day
@@ -408,6 +457,7 @@ isAvailableForTier(tier: SubscriptionTier): boolean
 - Promise-based acquire/release pattern
 
 **Methods:**
+
 ```typescript
 async acquire(): Promise<void>
 release(): void
@@ -491,6 +541,7 @@ getStats(): RateLimitStats
 ### Detailed Step-by-Step Processing
 
 **1. Data Acquisition (StateAgent + EntryPointAgent)**
+
 ```
 State Portal → StateAgent → RateLimiter → HTTP Request
                                              ↓
@@ -498,6 +549,7 @@ State Portal → StateAgent → RateLimiter → HTTP Request
 ```
 
 **2. Ingestion (DataIngestionService)**
+
 ```
 Queue → Batch Processing → Circuit Breaker → Error Handling
            ↓
@@ -507,6 +559,7 @@ Queue → Batch Processing → Circuit Breaker → Error Handling
 ```
 
 **3. Normalization (DataNormalizationAgent)**
+
 ```
 Raw UCC Filing → Standardize format → Extract key fields
                       ↓
@@ -514,6 +567,7 @@ Raw UCC Filing → Standardize format → Extract key fields
 ```
 
 **4. Enrichment (DataEnrichmentService)**
+
 ```
 UCC Filing → Growth Signal Detection
                ↓
@@ -527,6 +581,7 @@ UCC Filing → Growth Signal Detection
 ```
 
 **5. Recursive Enrichment (RecursiveEnrichmentEngine)**
+
 ```
 Prospect → Fetch from Free sources (SEC, OSHA, USPTO, Census)
                ↓
@@ -540,6 +595,7 @@ Prospect → Fetch from Free sources (SEC, OSHA, USPTO, Census)
 ```
 
 **6. Signal Detection (RecursiveSignalDetector)**
+
 ```
 Company Data → Pattern Matching
                    ↓
@@ -555,6 +611,7 @@ Company Data → Pattern Matching
 ```
 
 **7. Lead Requalification (RecursiveLeadRequalifier)**
+
 ```
 Dead leads → Detect new signals
                 ↓
@@ -568,6 +625,7 @@ Dead leads → Detect new signals
 ### Error Handling in Pipelines
 
 **Retry Strategy:**
+
 - **Type**: Exponential backoff with jitter
 - **Max attempts**: Configurable (typically 3)
 - **Base delay**: 1000ms
@@ -575,12 +633,14 @@ Dead leads → Detect new signals
 - **Jitter**: Random 0-1000ms added per retry
 
 **Conditions to retry:**
+
 - Network errors
 - HTTP 5xx errors
 - Rate limit errors (429)
 - Timeout errors
 
 **Conditions NOT to retry:**
+
 - Invalid query parameters
 - HTTP 4xx errors (except 429)
 - Authentication failures
@@ -590,8 +650,9 @@ Dead leads → Detect new signals
 ## 4. Key Abstractions & Interfaces
 
 ### Agent System Types
+
 ```typescript
-type AgentRole = 
+type AgentRole =
   | 'data-analyzer'
   | 'optimizer'
   | 'security'
@@ -645,6 +706,7 @@ interface ImprovementSuggestion {
 ```
 
 ### Prospect Data Structure
+
 ```typescript
 interface Prospect {
   id: string
@@ -699,6 +761,7 @@ interface UCCFiling {
 ```
 
 ### Subscription & Access Control
+
 ```typescript
 type SubscriptionTier = 'free' | 'starter' | 'professional' | 'enterprise'
 
@@ -737,6 +800,7 @@ Enterprise: {
 ```
 
 ### Orchestration Configuration
+
 ```typescript
 interface OrchestrationConfig {
   enableStateAgents: boolean
@@ -763,47 +827,56 @@ interface CollectionResult {
 ### NPM Dependencies (Key)
 
 **UI Framework:**
+
 - `react@^19.0.0` - Frontend framework
 - `react-dom@^19.2.0` - DOM rendering
 - `@vitejs/plugin-react-swc@^4.2.1` - React compilation
 
 **UI Components:**
+
 - `@radix-ui/*` - Headless UI components (accordion, dialog, dropdown, etc.)
 - `recharts@^2.15.1` - Charting library
 - `lucide-react@^0.484.0` - Icon library
 - `@phosphor-icons/react@^2.1.7` - Alternative icons
 
 **Styling:**
+
 - `tailwindcss@^4.1.11` - Utility CSS framework
 - `@tailwindcss/vite@^4.1.11` - Tailwind Vite plugin
 - `tailwind-merge@^3.0.2` - Class merging utility
 - `clsx@^2.1.1` - Class concatenation
 
 **Forms & Validation:**
+
 - `react-hook-form@^7.54.2` - Form state management
 - `@hookform/resolvers@^4.1.3` - Validation resolvers
 - `zod@^3.25.76` - Schema validation
 
 **State Management:**
+
 - `@tanstack/react-query@^5.83.1` - Server state management
 - `@github/spark/hooks` - KV store hooks (custom GitHub Spark)
 
 **Utilities:**
+
 - `date-fns@^3.6.0` - Date manipulation
 - `uuid@^11.1.0` - UUID generation
 - `marked@^15.0.7` - Markdown parsing
 
 **Web Scraping:**
+
 - `puppeteer@^23.11.1` - Headless browser automation
 - `cheerio@^1.1.2` - HTML parsing
 - `axios@^1.13.2` - HTTP client
 
 **CLI & Formatting:**
+
 - `commander@^12.1.0` - CLI framework
 - `chalk@^5.3.0` - Terminal colors
 - `ora@^8.1.1` - Terminal spinner
 
 **Testing:**
+
 - `vitest@^4.0.8` - Test runner
 - `@testing-library/react@^16.3.0` - React component testing
 - `@testing-library/dom@^10.4.0` - DOM testing utilities
@@ -811,6 +884,7 @@ interface CollectionResult {
 - `@vitest/ui@^4.0.8` - Test UI
 
 **Build & Development:**
+
 - `vite@^6.4.1` - Build tool
 - `typescript@~5.7.2` - Type checking
 - `tsx@^4.20.6` - TypeScript execution
@@ -818,6 +892,7 @@ interface CollectionResult {
 - `typescript-eslint@^8.46.4` - TypeScript ESLint
 
 **GitHub Integration:**
+
 - `@github/spark@^0.39.0` - Custom GitHub Spark library
 - `@octokit/core@^6.1.4` - GitHub API client
 - `octokit@^4.1.2` - Higher-level GitHub API
@@ -827,6 +902,7 @@ interface CollectionResult {
 ## 6. Testing Strategy & Coverage
 
 ### Test Statistics
+
 - **Total Tests**: 526
 - **Pass Rate**: 100%
 - **Test Files**: 15
@@ -835,6 +911,7 @@ interface CollectionResult {
 - **Coverage**: Comprehensive edge case and integration testing
 
 ### Testing Framework Configuration
+
 ```typescript
 // vitest.config.ts
 {
@@ -842,7 +919,9 @@ interface CollectionResult {
   environment: 'jsdom'
   setupFiles: './src/test/setup.ts'
   pool: 'forks'
-  poolOptions: { maxForks: 4 }
+  poolOptions: {
+    maxForks: 4
+  }
   fileParallelism: true
   testTimeout: 10000
   hookTimeout: 10000
@@ -852,6 +931,7 @@ interface CollectionResult {
 ### Test Files by Component
 
 **1. Agentic System Tests (5 files, 1,659 lines)**
+
 - `BaseAgent.test.ts` - Agent initialization, finding/improvement creation
 - `AgenticEngine.test.ts` - Autonomous cycles, safety checking, execution
 - `AgenticCouncil.test.ts` - Agent handoff, review aggregation
@@ -862,10 +942,12 @@ interface CollectionResult {
 - `CompetitorAgent.test.ts` - Competitive analysis
 
 **2. Agent Factory Tests (2 files)**
+
 - `StateAgentFactory.test.ts` - Agent creation, registry management
 - `EntryPointAgent.test.ts` - Entry point configuration, metrics
 
 **3. Agent Orchestration Tests (1 file, 776 lines)**
+
 - `AgentOrchestrator.test.ts` - Multi-agent coordination
   - Parallel collection (4 tests)
   - Failure handling (4 tests)
@@ -874,14 +956,17 @@ interface CollectionResult {
   - Edge cases (14 tests including boundary conditions, error recovery, state management, resource management, timeout handling)
 
 **4. State Collector Tests (2 files)**
+
 - `CAStateCollector.test.ts` - California-specific collection
 - `NYStateCollector.test.ts` - New York-specific collection
 - `StateCollectorFactory.test.ts` - Factory pattern tests
 
 **5. Rate Limiter Tests (1 file)**
+
 - `RateLimiter.test.ts` - Token bucket algorithm, rate limiting
 
 **6. Other Tests (4 files)**
+
 - Component tests, integration tests, utility tests
 
 ### Recent Test Improvements (November 2025)
@@ -913,6 +998,7 @@ interface CollectionResult {
    - Location: `AgentOrchestrator.test.ts:492`
 
 **Added 14 Edge Case Tests**
+
 - Boundary Conditions (3 tests): empty arrays, extreme values, minimal configs
 - Error Recovery (3 tests): multiple failures, accurate counts, error details
 - State Management (3 tests): state transitions, concurrent updates, recovery
@@ -922,6 +1008,7 @@ interface CollectionResult {
 ### Test Patterns
 
 **1. Mocking**
+
 ```typescript
 const mockContext: SystemContext = {
   prospects: [],
@@ -934,6 +1021,7 @@ const mockContext: SystemContext = {
 ```
 
 **2. Concrete Implementation Testing**
+
 ```typescript
 class TestAgent extends BaseAgent {
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
@@ -943,6 +1031,7 @@ class TestAgent extends BaseAgent {
 ```
 
 **3. Edge Case Coverage**
+
 - Empty arrays
 - Very large datasets
 - Concurrent operations
@@ -951,6 +1040,7 @@ class TestAgent extends BaseAgent {
 - State transitions
 
 **4. Assertion Patterns**
+
 - Expect initialization
 - Expect function calls
 - Expect async behavior
@@ -964,6 +1054,7 @@ class TestAgent extends BaseAgent {
 ### Core Documentation Files
 
 **User Documentation:**
+
 - `README.md` - Overview, quick start, features (443 lines)
 - `CLI_USAGE.md` - Terminal CLI scraper documentation
 - `CONTRIBUTING.md` - Contribution guidelines
@@ -971,6 +1062,7 @@ class TestAgent extends BaseAgent {
 - `LICENSE` - MIT License
 
 **Technical Documentation:**
+
 - `TESTING.md` - Comprehensive testing guide (100+ lines)
 - `docs/AGENTIC_FORCES.md` - Agentic system architecture
 - `docs/technical/DATA_PIPELINE.md` - Data pipeline guide
@@ -979,18 +1071,21 @@ class TestAgent extends BaseAgent {
 - `docs/technical/STATE_IMPLEMENTATION_PLAN.md` - State agents roadmap
 
 **Product Documentation:**
+
 - `PRD.md` - Product Requirements Document
 - `LOGIC_ANALYSIS.md` - Implementation details
 - `COMPETITIVE_ANALYSIS.md` - Market research
 - `IMPLEMENTATION_SUMMARY.md` - Implementation overview
 
 **Project Reports:**
+
 - `docs/reports/BRANCH_CLEANUP_PLAN.md`
 - `docs/reports/BRANCH_REVIEW_SUMMARY.md`
 - `docs/reports/MEGA_CONSOLIDATION_SUMMARY.md`
 - `docs/reports/FINAL_CLEANUP_REPORT.md`
 
 **Repository Management:**
+
 - `BRANCH_RESOLUTION.md` - Branch cleanup strategy
 - `MAINTENANCE_GUIDE.md` - Post-merge maintenance
 - `PR_COMMENTS_RESOLUTION.md` - Open action items
@@ -1001,22 +1096,26 @@ class TestAgent extends BaseAgent {
 ### Documentation by Audience
 
 **For Product Managers:**
+
 - `README.md` - Features, capabilities overview
 - `PRD.md` - Detailed specifications
 - `COMPETITIVE_ANALYSIS.md` - Market positioning
 
 **For Developers:**
+
 - `docs/AGENTIC_FORCES.md` - Architecture deep dive
 - `docs/technical/DATA_PIPELINE.md` - Processing pipelines
 - `TESTING.md` - Testing infrastructure
 - `IMPLEMENTATION_SUMMARY.md` - Code patterns
 
 **For Operators:**
+
 - `docs/technical/DEPLOYMENT.md` - Deployment steps
 - `MAINTENANCE_GUIDE.md` - Operational procedures
 - `docs/technical/STATE_IMPLEMENTATION_PLAN.md` - Integration status
 
 **For Contributors:**
+
 - `CONTRIBUTING.md` - Development workflow
 - `SECURITY.md` - Security guidelines
 - `TODO.md` - Development roadmap
@@ -1043,12 +1142,14 @@ async function retry<T>(
 ```
 
 **Usage:**
+
 - Network requests
 - API calls
 - File operations
 - Database queries
 
 **Configuration:**
+
 - Max attempts: 3-5 (configurable)
 - Base delay: 1000ms
 - Max delay: 30000ms
@@ -1064,17 +1165,19 @@ class CircuitBreaker {
   private state: 'closed' | 'open' | 'half-open'
   private threshold: number = 5
   private timeout: number = 60000
-  
+
   async execute<T>(fn: () => Promise<T>): Promise<T>
 }
 ```
 
 **States:**
+
 - **Closed**: Normal operation, requests pass through
 - **Open**: Failure threshold exceeded, requests fail immediately
 - **Half-Open**: Testing if service recovered, allows one request
 
 **Usage:**
+
 - Prevents cascading failures
 - Protects against external service outages
 - Per-data-source implementation
@@ -1096,6 +1199,7 @@ class RateLimiter {
 ```
 
 **Features:**
+
 - Token bucket algorithm
 - Automatic request queuing
 - Promise-based blocking on rate limit
@@ -1109,27 +1213,28 @@ class RateLimiter {
 async canExecuteAutonomously(improvement: Improvement): Promise<boolean> {
   // Check 1: System enabled?
   if (!this.config.enabled) return false
-  
+
   // Check 2: Autonomous execution enabled?
   if (!this.config.autonomousExecutionEnabled) return false
-  
+
   // Check 3: Safety score >= threshold?
   if (improvement.suggestion.safetyScore < this.config.safetyThreshold) return false
-  
+
   // Check 4: Daily limit exceeded?
   const todayExecutions = this.executionHistory.filter(
     e => new Date(e.timestamp).toDateString() === today
   )
   if (todayExecutions.length >= this.config.maxDailyImprovements) return false
-  
+
   // Check 5: Category requires manual review?
   if (this.config.reviewRequired.includes(improvement.suggestion.category)) return false
-  
+
   return true
 }
 ```
 
 **Safety Thresholds:**
+
 - Min safety score: 80/100 for auto-execution
 - Max daily improvements: 3
 - Categories requiring review: security, data-quality, threat-analysis, strategic-recommendation
@@ -1153,7 +1258,7 @@ async enrichProspect(filing, existingData) {
     // Log error, continue with other enrichment
     errors.push('Signal detection failed')
   }
-  
+
   // Enrich from health score sources
   try {
     const health = await this.calculateHealthScore(...)
@@ -1161,7 +1266,7 @@ async enrichProspect(filing, existingData) {
     // Use default health score
     errors.push('Health score calculation failed')
   }
-  
+
   // Continue with revenue estimation
   // ... etc
 }
@@ -1182,6 +1287,7 @@ async enrichProspect(filing, existingData) {
 ### 7. Graceful Degradation
 
 **Features:**
+
 - Missing data fields: Use defaults or null
 - Source unavailable: Skip and try next source
 - API timeout: Return partial data with error
@@ -1206,6 +1312,7 @@ const [reminders, setReminders] = useKV<FollowUpReminder[]>('prospect-reminders'
 ```
 
 **Characteristics:**
+
 - Persists to local storage
 - Type-safe with TypeScript generics
 - Automatic synchronization
@@ -1214,6 +1321,7 @@ const [reminders, setReminders] = useKV<FollowUpReminder[]>('prospect-reminders'
 ### B. Agent State (In-memory)
 
 **AgenticEngine State:**
+
 ```typescript
 private improvements: Map<string, Improvement> = new Map()
 private executionHistory: Array<{
@@ -1225,6 +1333,7 @@ private feedbackLoops: FeedbackLoop[] = []
 ```
 
 **AgentOrchestrator State:**
+
 ```typescript
 private collectionQueue: string[] = []
 private activeCollections: Set<string> = new Set()
@@ -1242,12 +1351,14 @@ private status: OrchestrationStatus = {
 ### C. Service Layer State
 
 **DataIngestionService:**
+
 ```typescript
 private requestCounts: Map<string, number[]> = new Map() // Track rate limiting
 private circuitBreakers: Map<string, CircuitBreaker> = new Map()
 ```
 
 **DataEnrichmentService:**
+
 ```typescript
 private sources: EnrichmentSource[] // Configured sources
 ```
@@ -1255,6 +1366,7 @@ private sources: EnrichmentSource[] // Configured sources
 ### D. Type System for State Contracts
 
 **Strict typing ensures:**
+
 - Type safety across component boundaries
 - Compile-time validation
 - IDE autocomplete and refactoring support
@@ -1310,6 +1422,7 @@ NY_UCC_API_KEY=...
 ### B. Agent Configuration
 
 **StateAgentFactory creates all states with configs:**
+
 ```typescript
 const stateConfigs: Record<string, StateConfig> = {
   CA: {
@@ -1326,6 +1439,7 @@ const stateConfigs: Record<string, StateConfig> = {
 ```
 
 **EntryPointAgentFactory creates entry point agents:**
+
 ```typescript
 const entryPoints: EntryPointConfig[] = [
   {
@@ -1343,6 +1457,7 @@ const entryPoints: EntryPointConfig[] = [
 ### C. Service Configuration
 
 **DataEnrichmentService:**
+
 ```typescript
 const enrichmentSources: EnrichmentSource[] = [
   {
@@ -1350,12 +1465,13 @@ const enrichmentSources: EnrichmentSource[] = [
     name: 'SEC EDGAR',
     type: 'api',
     capabilities: ['growth-signals', 'health-score']
-  },
+  }
   // ... more sources
 ]
 ```
 
 **AgenticEngine Configuration:**
+
 ```typescript
 const agenticConfig: Partial<AgenticConfig> = {
   enabled: true,
@@ -1370,6 +1486,7 @@ const agenticConfig: Partial<AgenticConfig> = {
 ### D. Extensibility Mechanisms
 
 **1. Adding New States**
+
 ```typescript
 // StateAgentFactory automatically creates agents for:
 // - All 50 US states
@@ -1378,6 +1495,7 @@ const agenticConfig: Partial<AgenticConfig> = {
 ```
 
 **2. Adding New Data Sources**
+
 ```typescript
 // Extend BaseDataSource
 class NewDataSource extends BaseDataSource {
@@ -1391,11 +1509,11 @@ class NewDataSource extends BaseDataSource {
       retryDelay: 1000
     })
   }
-  
+
   async fetchData(query: Record<string, any>): Promise<DataSourceResponse> {
     // Implementation
   }
-  
+
   protected validateQuery(query: Record<string, any>): boolean {
     // Validation
   }
@@ -1403,25 +1521,27 @@ class NewDataSource extends BaseDataSource {
 ```
 
 **3. Adding New Entry Point Types**
+
 ```typescript
 // Implement EntryPointAgent pattern
 const newEntryPoint: EntryPointConfig = {
   id: 'new-portal',
   name: 'New Data Portal',
   type: 'portal', // or 'api', 'database', 'file', 'webhook'
-  endpoint: 'https://example.com',
+  endpoint: 'https://example.com'
   // ... rest of config
 }
 ```
 
 **4. Adding New Analysis Agents**
+
 ```typescript
 // Extend BaseAgent
 class NewAnalysisAgent extends BaseAgent {
   constructor() {
     super('new-role', 'New Agent Name', ['capability1', 'capability2'])
   }
-  
+
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
     // Analysis logic
     return this.createAnalysis(findings, improvements)
@@ -1490,4 +1610,3 @@ class NewAnalysisAgent extends BaseAgent {
 - **Chain of Responsibility** - Agent handoff in council
 - **State Pattern** - Circuit breaker states
 - **Singleton Pattern** - Shared managers (rate limiter, tier manager)
-

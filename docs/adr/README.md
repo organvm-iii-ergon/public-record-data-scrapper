@@ -16,6 +16,7 @@ An Architectural Decision Record (ADR) is a document that captures an important 
 Each ADR follows a standardized structure:
 
 ### Front Matter
+
 - **Title**: Clear, descriptive name
 - **Status**: Proposed | Accepted | Rejected | Superseded | Deprecated
 - **Date**: Decision date (YYYY-MM-DD)
@@ -24,6 +25,7 @@ Each ADR follows a standardized structure:
 - **Supersedes/Superseded by**: Links to related ADRs
 
 ### Sections
+
 1. **Status**: Current state of the decision
 2. **Context**: Problem statement and constraints
 3. **Decision**: The chosen solution with rationale
@@ -34,8 +36,8 @@ Each ADR follows a standardized structure:
 
 ## ADR Index
 
-| Number | Title | Status | Date |
-|--------|-------|--------|------|
+| Number                                                   | Title                                                    | Status   | Date       |
+| -------------------------------------------------------- | -------------------------------------------------------- | -------- | ---------- |
 | [0001](./adr-0001-react-spa-client-side-architecture.md) | React SPA with Client-Side State Management Architecture | Accepted | 2025-11-20 |
 
 ## Creating a New ADR

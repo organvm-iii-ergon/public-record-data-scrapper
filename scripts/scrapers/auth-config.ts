@@ -89,7 +89,7 @@ class AuthConfigManager {
    * Get all configured states
    */
   getConfiguredStates(): string[] {
-    return Object.keys(this.config).filter(state =>
+    return Object.keys(this.config).filter((state) =>
       this.hasCredentials(state as keyof AuthConfig)
     )
   }

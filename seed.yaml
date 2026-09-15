@@ -3,7 +3,7 @@
 # Generated: 2026-02-12 (AUTONOMY Sprint)
 # Category: standard
 
-schema_version: "1.0"
+schema_version: '1.0'
 organ: III
 organ_name: Commerce
 repo: public-record-data-scrapper
@@ -13,15 +13,15 @@ metadata:
   implementation_status: PRODUCTION
   tier: flagship
   promotion_status: PUBLIC_PROCESS
-  last_validated: "2026-02-11"
-  generated: "2026-02-12"
-  sprint: "AUTONOMY"
+  last_validated: '2026-02-11'
+  generated: '2026-02-12'
+  sprint: 'AUTONOMY'
 
 agents:
   - name: ci
     trigger: on_push
     workflow: .github/workflows/ci-typescript.yml
-    description: "Continuous integration pipeline"
+    description: 'Continuous integration pipeline'
 
 produces:
   - type: dependency

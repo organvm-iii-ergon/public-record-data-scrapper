@@ -331,7 +331,10 @@ export class ContactsService {
 
       return this.transformContact(results[0])
     } catch (error) {
-      throw new DatabaseError('Failed to create contact', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to create contact',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -389,7 +392,10 @@ export class ContactsService {
       return this.transformContact(results[0])
     } catch (error) {
       if (error instanceof NotFoundError) throw error
-      throw new DatabaseError('Failed to update contact', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to update contact',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -409,7 +415,10 @@ export class ContactsService {
       return true
     } catch (error) {
       if (error instanceof NotFoundError) throw error
-      throw new DatabaseError('Failed to delete contact', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to delete contact',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -473,7 +482,10 @@ export class ContactsService {
       const results = await database.query<ContactActivityRow>(query, values)
       return results.map(this.transformActivity)
     } catch (error) {
-      throw new DatabaseError('Failed to get activity timeline', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to get activity timeline',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -506,7 +518,10 @@ export class ContactsService {
         createdAt: row.created_at
       }
     } catch (error) {
-      throw new DatabaseError('Failed to link contact to prospect', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to link contact to prospect',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -521,16 +536,23 @@ export class ContactsService {
       )
       return (results as { rowCount: number }).rowCount > 0
     } catch (error) {
-      throw new DatabaseError('Failed to unlink contact from prospect', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to unlink contact from prospect',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
   /**
    * Get all contacts for a prospect
    */
-  async getContactsForProspect(prospectId: string): Promise<(Contact & { relationship: ContactRelationship; isPrimary: boolean })[]> {
+  async getContactsForProspect(
+    prospectId: string
+  ): Promise<(Contact & { relationship: ContactRelationship; isPrimary: boolean })[]> {
     try {
-      const results = await database.query<ContactRow & { relationship: string; is_primary: boolean }>(
+      const results = await database.query<
+        ContactRow & { relationship: string; is_primary: boolean }
+      >(
         `SELECT c.*, pc.relationship, pc.is_primary
          FROM contacts c
          JOIN prospect_contacts pc ON c.id = pc.contact_id
@@ -539,13 +561,16 @@ export class ContactsService {
         [prospectId]
       )
 
-      return results.map(row => ({
+      return results.map((row) => ({
         ...this.transformContact(row),
         relationship: row.relationship as ContactRelationship,
         isPrimary: row.is_primary
       }))
     } catch (error) {
-      throw new DatabaseError('Failed to get contacts for prospect', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to get contacts for prospect',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -565,7 +590,10 @@ export class ContactsService {
 
       return results[0] ? this.transformContact(results[0]) : null
     } catch (error) {
-      throw new DatabaseError('Failed to get primary contact', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to get primary contact',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -580,7 +608,10 @@ export class ContactsService {
       )
       return results.map(this.transformContact)
     } catch (error) {
-      throw new DatabaseError('Failed to find contacts by email', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to find contacts by email',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 
@@ -603,7 +634,10 @@ export class ContactsService {
       )
       return results.map(this.transformContact)
     } catch (error) {
-      throw new DatabaseError('Failed to find contacts by phone', error instanceof Error ? error : undefined)
+      throw new DatabaseError(
+        'Failed to find contacts by phone',
+        error instanceof Error ? error : undefined
+      )
     }
   }
 

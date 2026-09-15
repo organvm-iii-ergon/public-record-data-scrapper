@@ -11,16 +11,19 @@
 ## Quick Commands
 
 ### Generate Video
+
 ```bash
 npm run video:generate
 ```
 
 ### Validate Setup
+
 ```bash
 npm run video:validate
 ```
 
 ### Install Dependencies (First Time)
+
 ```bash
 # Linux
 sudo apt-get update
@@ -32,6 +35,7 @@ brew install ffmpeg
 ```
 
 ### Custom Generation
+
 ```bash
 # 4K video at 60 FPS
 ./scripts/video-production/generate-videos.sh \
@@ -58,12 +62,14 @@ brew install ffmpeg
 ## Sharing Options
 
 ### Upload to YouTube
+
 1. Go to youtube.com/upload
 2. Upload `video-output/EXECUTIVE_VIDEO_SCRIPT.mp4`
 3. Add title, description, tags
 4. Set visibility (Public/Unlisted/Private)
 
 ### Share on LinkedIn
+
 1. Create a new post
 2. Click video icon
 3. Upload `video-output/EXECUTIVE_VIDEO_SCRIPT.mp4`
@@ -71,6 +77,7 @@ brew install ffmpeg
 5. Tag relevant connections
 
 ### Email/Direct Share
+
 - File size is only 4.1 MB
 - Can be attached directly to emails
 - Or upload to Google Drive/Dropbox and share link
@@ -78,6 +85,7 @@ brew install ffmpeg
 ## Customization
 
 ### Edit the Script
+
 ```bash
 # Edit the markdown script
 nano docs/video-portfolio/EXECUTIVE_VIDEO_SCRIPT.md
@@ -87,6 +95,7 @@ npm run video:generate
 ```
 
 ### Change Video Quality
+
 ```bash
 # Higher quality (larger file)
 ./scripts/video-production/generate-videos.sh --resolution 3840x2160
@@ -96,6 +105,7 @@ npm run video:generate
 ```
 
 ### Process Multiple Scripts
+
 ```bash
 # Generate videos for all markdown files
 ./scripts/video-production/generate-videos.sh --pattern "*.md"
@@ -118,23 +128,27 @@ video-output/
 ## Troubleshooting
 
 ### FFmpeg Not Found
+
 ```bash
 sudo apt-get install ffmpeg  # Linux
 brew install ffmpeg          # macOS
 ```
 
 ### TTS Not Working
+
 ```bash
 sudo apt-get install espeak  # Linux
 # macOS uses built-in 'say'
 ```
 
 ### Permission Denied
+
 ```bash
 chmod +x scripts/video-production/generate-videos.sh
 ```
 
 ### Slow Generation
+
 ```bash
 # Reduce resolution/FPS
 ./scripts/video-production/generate-videos.sh --resolution 1280x720 --fps 24
@@ -152,7 +166,7 @@ chmod +x scripts/video-production/generate-videos.sh
 ✅ Video successfully generated  
 ✅ All tests passing  
 ✅ Ready to share  
-✅ Documentation complete  
+✅ Documentation complete
 
 ---
 

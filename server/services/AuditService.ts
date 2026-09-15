@@ -131,11 +131,7 @@ export class AuditService {
     page: number
     limit: number
   }> {
-    const {
-      page = 1,
-      limit = 50,
-      sortOrder = 'desc'
-    } = pagination
+    const { page = 1, limit = 50, sortOrder = 'desc' } = pagination
 
     const conditions: string[] = []
     const values: unknown[] = []
@@ -198,10 +194,7 @@ export class AuditService {
         ORDER BY created_at ${safeSortOrder}
         LIMIT $${paramCount} OFFSET $${paramCount + 1}
       `
-      const results = await database.query<AuditLogRow>(
-        query,
-        [...values, limit, offset]
-      )
+      const results = await database.query<AuditLogRow>(query, [...values, limit, offset])
 
       // Get total count
       const countQuery = `SELECT COUNT(*) as count FROM audit_logs ${whereClause}`
@@ -228,15 +221,17 @@ export class AuditService {
   async getAuditSummary(
     orgId: string,
     dateRange: DateRange
-  ): Promise<{
-    entityType: string
-    totalChanges: number
-    creates: number
-    updates: number
-    deletes: number
-    uniqueEntities: number
-    uniqueUsers: number
-  }[]> {
+  ): Promise<
+    {
+      entityType: string
+      totalChanges: number
+      creates: number
+      updates: number
+      deletes: number
+      uniqueEntities: number
+      uniqueUsers: number
+    }[]
+  > {
     try {
       const results = await database.query<{
         entity_type: string
@@ -304,11 +299,7 @@ export class AuditService {
 
     try {
       const conditions: string[] = ['org_id = $1', 'created_at >= $2', 'created_at <= $3']
-      const values: unknown[] = [
-        orgId,
-        dateRange.start.toISOString(),
-        dateRange.end.toISOString()
-      ]
+      const values: unknown[] = [orgId, dateRange.start.toISOString(), dateRange.end.toISOString()]
       let paramCount = 4
 
       if (filters.entityType) {
@@ -503,12 +494,14 @@ export class AuditService {
       thresholdPerHour?: number
       hoursBack?: number
     } = {}
-  ): Promise<{
-    userId: string
-    hour: string
-    actionCount: number
-    entityTypes: string[]
-  }[]> {
+  ): Promise<
+    {
+      userId: string
+      hour: string
+      actionCount: number
+      entityTypes: string[]
+    }[]
+  > {
     const { thresholdPerHour = 100, hoursBack = 24 } = options
 
     try {

@@ -87,13 +87,7 @@ export interface CollectionOptions {
  * Collection error types
  */
 export type CollectionErrorType =
-  | 'NETWORK'
-  | 'PARSE'
-  | 'RATE_LIMIT'
-  | 'AUTH'
-  | 'CAPTCHA'
-  | 'TIMEOUT'
-  | 'STRUCTURE_CHANGE'
+  'NETWORK' | 'PARSE' | 'RATE_LIMIT' | 'AUTH' | 'CAPTCHA' | 'TIMEOUT' | 'STRUCTURE_CHANGE'
 
 /**
  * Collection error

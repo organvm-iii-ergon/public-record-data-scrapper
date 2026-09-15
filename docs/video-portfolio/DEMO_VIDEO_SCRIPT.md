@@ -3,47 +3,55 @@
 ## 1. Introduction (0:00 - 0:15)
 
 ### Voiceover:
-*"Welcome to this demonstration of automated video production."*
+
+_"Welcome to this demonstration of automated video production."_
 
 [PAUSE]
 
-*"This system transforms text scripts into professional videos."*
+_"This system transforms text scripts into professional videos."_
 
 ### Visual Plan:
+
 - Title card with project name
 - Clean, professional design
 
 ## 2. The Problem (0:15 - 0:30)
 
 ### Voiceover:
-*"Creating videos manually is time-consuming and requires specialized skills."*
+
+_"Creating videos manually is time-consuming and requires specialized skills."_
 
 [PAUSE]
 
-*"This automation handles everything from narration to final rendering."*
+_"This automation handles everything from narration to final rendering."_
 
 ### Visual Plan:
+
 - Problem statement visual
 - Simple graphics showing complexity
 
 ## 3. The Solution (0:30 - 0:50)
 
 ### Voiceover:
-*"Our system uses local text-to-speech, generates visuals automatically, and renders high-quality videos."*
+
+_"Our system uses local text-to-speech, generates visuals automatically, and renders high-quality videos."_
 
 [PAUSE]
 
-*"Everything runs locally with intelligent fallbacks for reliability."*
+_"Everything runs locally with intelligent fallbacks for reliability."_
 
 ### Visual Plan:
+
 - Solution diagram showing pipeline
 - Three-stage process visualization
 
 ## 4. Call to Action (0:50 - 1:00)
 
 ### Voiceover:
-*"Ready to automate your video production? Get started today."*
+
+_"Ready to automate your video production? Get started today."_
 
 ### Visual Plan:
+
 - Call to action card
 - Contact information or next steps

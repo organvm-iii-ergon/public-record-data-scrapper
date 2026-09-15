@@ -18,13 +18,16 @@ export class TexasScraper extends BasePuppeteerScraper {
   private isAuthenticated: boolean = false
 
   constructor(options: { headless?: boolean; keepPageOpenOnFailure?: boolean } = {}) {
-    super({
-      state: 'TX',
-      baseUrl: 'https://direct.sos.state.tx.us/',
-      rateLimit: 3, // 3 requests per minute (conservative for new portal)
-      timeout: 45000, // Increased timeout for portal that requires login
-      retryAttempts: 2
-    }, options)
+    super(
+      {
+        state: 'TX',
+        baseUrl: 'https://direct.sos.state.tx.us/',
+        rateLimit: 3, // 3 requests per minute (conservative for new portal)
+        timeout: 45000, // Increased timeout for portal that requires login
+        retryAttempts: 2
+      },
+      options
+    )
   }
 
   async closeBrowser(): Promise<void> {

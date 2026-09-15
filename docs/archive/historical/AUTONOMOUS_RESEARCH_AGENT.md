@@ -3,6 +3,7 @@
 ## Meta-Circular Vision
 
 **Core Insight:** The repository should become a self-aware research agent that:
+
 1. Studies itself and its domain
 2. Publishes academic papers about its findings
 3. Applies for research grants to fund development
@@ -126,7 +127,6 @@ class SelfStudyAgent {
 class ResearchPaperGenerator {
   // Generate papers from self-study findings
   async generatePaper(topic: ResearchTopic): Promise<AcademicPaper> {
-
     // Select paper type based on findings
     const paperType = this.selectPaperType(topic)
     // 'empirical' | 'methodology' | 'system' | 'survey' | 'position'
@@ -195,7 +195,8 @@ class ResearchPaperGenerator {
   // Example: Write empirical paper about UCC filing patterns
   async writeEmpiricalPaper(topic: 'ucc-patterns'): Promise<AcademicPaper> {
     return {
-      title: 'Seasonal Patterns in Commercial Lending: Analysis of 50,000 UCC Filings Across 5 States',
+      title:
+        'Seasonal Patterns in Commercial Lending: Analysis of 50,000 UCC Filings Across 5 States',
 
       abstract: `
         We analyze 50,000 UCC (Uniform Commercial Code) filings across California,
@@ -224,7 +225,8 @@ class ResearchPaperGenerator {
   // Example: Write methodology paper about citation network analysis
   async writeMethodologyPaper(topic: 'citation-networks'): Promise<AcademicPaper> {
     return {
-      title: 'Scaling Citation Network Analysis to 200 Million Papers: Algorithms and Implementation',
+      title:
+        'Scaling Citation Network Analysis to 200 Million Papers: Algorithms and Implementation',
 
       abstract: `
         Citation network analysis is crucial for understanding knowledge flow,
@@ -256,7 +258,7 @@ const PUBLICATION_TARGETS = {
   softwareEngineering: [
     { venue: 'ICSE', acceptance: 0.22, prestige: 'A*', deadline: 'Aug 25' },
     { venue: 'FSE', acceptance: 0.24, prestige: 'A*', deadline: 'Feb 23' },
-    { venue: 'ASE', acceptance: 0.20, prestige: 'A', deadline: 'Apr 19' }
+    { venue: 'ASE', acceptance: 0.2, prestige: 'A', deadline: 'Apr 19' }
   ],
 
   finance: [
@@ -349,12 +351,7 @@ class GrantOpportunityFinder {
       duration: '3 years',
       deadline: 'Rolling',
       fit: 0.92, // 92% match
-      topics: [
-        'Data science',
-        'Knowledge graphs',
-        'Information retrieval',
-        'Network analysis'
-      ],
+      topics: ['Data science', 'Knowledge graphs', 'Information retrieval', 'Network analysis'],
       proposalFocus: 'Automated knowledge integration from multi-source academic data'
     })
 
@@ -366,11 +363,7 @@ class GrantOpportunityFinder {
       duration: '6-12 months',
       deadline: 'Quarterly',
       fit: 0.88,
-      topics: [
-        'AI/ML',
-        'Data analytics',
-        'Software platforms'
-      ],
+      topics: ['AI/ML', 'Data analytics', 'Software platforms'],
       proposalFocus: 'Multiverse framework for accelerated product-market fit'
     })
 
@@ -381,11 +374,7 @@ class GrantOpportunityFinder {
       amount: '$750,000 - $2,000,000',
       duration: '3 years',
       fit: 0.75,
-      topics: [
-        'High-performance computing',
-        'Data management',
-        'Scientific workflows'
-      ],
+      topics: ['High-performance computing', 'Data management', 'Scientific workflows'],
       proposalFocus: 'Scalable citation network analysis for 200M+ papers'
     })
 
@@ -396,11 +385,7 @@ class GrantOpportunityFinder {
       amount: '€2,000,000 - €5,000,000',
       duration: '4 years',
       fit: 0.85,
-      topics: [
-        'Open science',
-        'Research infrastructure',
-        'Data sharing'
-      ],
+      topics: ['Open science', 'Research infrastructure', 'Data sharing'],
       proposalFocus: 'Open academic intelligence platform for EU researchers'
     })
 
@@ -410,12 +395,8 @@ class GrantOpportunityFinder {
       program: 'Data & Computational Research',
       amount: '$500,000 - $1,000,000',
       duration: '2 years',
-      fit: 0.90,
-      topics: [
-        'Open source software',
-        'Research tools',
-        'Data science'
-      ],
+      fit: 0.9,
+      topics: ['Open source software', 'Research tools', 'Data science'],
       proposalFocus: 'Open-source tools for automated literature review'
     })
 
@@ -486,12 +467,12 @@ class GrantProposalWriter {
     const amount = parseInt(totalAmount.replace(/[$,]/g, ''))
 
     return {
-      personnel: amount * 0.60, // 60% - Senior personnel, postdocs, students
-      equipment: amount * 0.10, // 10% - Computing infrastructure
-      travel: amount * 0.08,    // 8% - Conference presentations
-      materials: amount * 0.05,  // 5% - Cloud computing, APIs
+      personnel: amount * 0.6, // 60% - Senior personnel, postdocs, students
+      equipment: amount * 0.1, // 10% - Computing infrastructure
+      travel: amount * 0.08, // 8% - Conference presentations
+      materials: amount * 0.05, // 5% - Cloud computing, APIs
       publication: amount * 0.02, // 2% - Open access fees
-      indirect: amount * 0.15,   // 15% - Overhead
+      indirect: amount * 0.15, // 15% - Overhead
       total: amount,
 
       justification: {
@@ -798,21 +779,25 @@ const RESEARCH_AGENDA = {
 ## Implementation Timeline
 
 ### **Week 1: Self-Study Tools**
+
 - Code analyzer (analyze this repo)
 - Data analyzer (UCC + citation patterns)
 - Research question generator
 
 ### **Week 2: Paper Writing**
+
 - Paper template system
 - Automated writing for 3 paper types
 - arXiv submission automation
 
 ### **Week 3: Grant Applications**
+
 - Grant opportunity database
 - Proposal template system
 - Budget generator
 
 ### **Week 4: Audience Building**
+
 - Twitter bot
 - Blog automation
 - Newsletter system
@@ -821,6 +806,7 @@ const RESEARCH_AGENDA = {
 ---
 
 **This creates a fully autonomous research entity that:**
+
 1. Studies data and generates insights
 2. Publishes papers about findings
 3. Applies for grants to fund development

@@ -204,8 +204,9 @@ export function buildStatusDashboardMetrics(
   const portfolioAtRisk = portfolio.filter(
     (company) => company.currentStatus === 'at-risk' || company.currentStatus === 'default'
   ).length
-  const actions24h = userActions.filter((action) => isWithinLast24Hours(action.timestamp, now))
-    .length
+  const actions24h = userActions.filter((action) =>
+    isWithinLast24Hours(action.timestamp, now)
+  ).length
   const latestAction = findLatestAction(userActions)
   const stateBreakdown = buildStateBreakdown(prospects)
 
@@ -460,9 +461,7 @@ export function StatusDashboard({
             {topStates.map((state) => (
               <div key={state.state} className={stateRowClass}>
                 <span className="font-semibold text-white">{state.state}</span>
-                <span className="text-white/70">
-                  {state.prospects.toLocaleString()} prospects
-                </span>
+                <span className="text-white/70">{state.prospects.toLocaleString()} prospects</span>
                 <span className="text-white/70">{state.filings.toLocaleString()} filings</span>
               </div>
             ))}

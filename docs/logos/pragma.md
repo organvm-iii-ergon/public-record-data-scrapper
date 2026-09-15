@@ -13,6 +13,7 @@ implemented across six disjoint work-streams over two rounds, then integration-
 verified.
 
 ### Remediated (present in tree, verified)
+
 - **Multi-tenant isolation**: org is derived from the JWT `org_id` claim
   (`req.user.orgId`); a client-supplied `org_id` must equal it (else 403); a
   token with no org **fails closed** (403). Runtime-verified over HTTP
@@ -39,6 +40,7 @@ verified.
   XSS href sanitizing; type errors 628→357.
 
 ### Verification status
+
 - Server + `packages/core`: **0 TypeScript errors**.
 - Server test suite: **1085 passing / 0 failing / 6 skipped**.
 - Security behavior: driven at the real HTTP surface (see PR; auth/IDOR/role/
@@ -47,12 +49,14 @@ verified.
   and the frontend (type-only changes, no behavioral diff).
 
 ### Integrity (the "nothing lost" rule)
+
 - local HEAD == remote HEAD (1:1); working tree clean.
 - 10 dangling commits exist — all `WIP on <branch>:` git-stash snapshots from
   agent stash/pop; no `reset --hard` occurred; every agent deliverable is
   present in HEAD. **No work was lost.**
 
 ## Known-deliberate stubs (fail-closed, not bugs)
+
 - `EnrichmentService` refuses to fabricate enrichment data → throws "not wired
   to live providers"; tests assert this contract.
 - `AlertService` DEWS persistence is observable-stub (logs, no fabricated rows).

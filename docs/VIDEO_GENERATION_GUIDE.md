@@ -36,6 +36,7 @@ The video covers the following sections:
 ### Prerequisites
 
 Ensure the following are installed:
+
 - FFmpeg 4.0+ (for video rendering)
 - espeak or festival (for Linux TTS) or `say` command (for macOS)
 - Node.js 18+
@@ -43,12 +44,14 @@ Ensure the following are installed:
 ### Installation
 
 On Ubuntu/Debian:
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y ffmpeg espeak
 ```
 
 On macOS:
+
 ```bash
 brew install ffmpeg
 # 'say' command is built-in
@@ -57,11 +60,13 @@ brew install ffmpeg
 ### Quick Generation
 
 Generate the executive video:
+
 ```bash
 npm run video:generate
 ```
 
 Or use the shell script directly:
+
 ```bash
 ./scripts/video-production/generate-videos.sh
 ```
@@ -69,6 +74,7 @@ Or use the shell script directly:
 ### Custom Configuration
 
 Generate with custom settings:
+
 ```bash
 ./scripts/video-production/generate-videos.sh \
   --script-dir docs/video-portfolio \
@@ -81,6 +87,7 @@ Generate with custom settings:
 ### Validation
 
 Validate your setup before generating:
+
 ```bash
 npm run video:validate
 ```
@@ -141,6 +148,7 @@ The generated video is ready to share:
 ### FFmpeg not found
 
 Install FFmpeg:
+
 ```bash
 sudo apt-get install ffmpeg  # Linux
 brew install ffmpeg          # macOS
@@ -149,6 +157,7 @@ brew install ffmpeg          # macOS
 ### TTS not working
 
 **Linux**: Install espeak or festival:
+
 ```bash
 sudo apt-get install espeak
 # or
@@ -160,6 +169,7 @@ sudo apt-get install festival festvox-kallpc16k
 ### Video quality issues
 
 Adjust resolution or frame rate:
+
 ```bash
 ./scripts/video-production/generate-videos.sh --resolution 1280x720 --fps 24
 ```
@@ -167,6 +177,7 @@ Adjust resolution or frame rate:
 ### Memory issues
 
 Generate one script at a time:
+
 ```bash
 ./scripts/video-production/generate-videos.sh --pattern "EXECUTIVE_VIDEO_SCRIPT.md"
 ```

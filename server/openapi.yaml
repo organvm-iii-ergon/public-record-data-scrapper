@@ -161,20 +161,29 @@ paths:
           description: Filter by prospect status
           schema:
             type: string
-            enum: [all, unclaimed, claimed, contacted]
+            enum:
+              - all
+              - unclaimed
+              - claimed
+              - contacted
         - name: sort_by
           in: query
           description: Field to sort by
           schema:
             type: string
-            enum: [priority_score, created_at, company_name]
+            enum:
+              - priority_score
+              - created_at
+              - company_name
             default: priority_score
         - name: sort_order
           in: query
           description: Sort order
           schema:
             type: string
-            enum: [asc, desc]
+            enum:
+              - asc
+              - desc
             default: desc
       responses:
         '200':
@@ -223,7 +232,9 @@ paths:
           description: Response format.
           schema:
             type: string
-            enum: [json, csv]
+            enum:
+              - json
+              - csv
             default: json
         - name: min_score
           in: query
@@ -372,13 +383,18 @@ paths:
           in: query
           schema:
             type: string
-            enum: [filing_count, total_amount, name]
+            enum:
+              - filing_count
+              - total_amount
+              - name
             default: filing_count
         - name: sort_order
           in: query
           schema:
             type: string
-            enum: [asc, desc]
+            enum:
+              - asc
+              - desc
             default: desc
       responses:
         '200':
@@ -458,18 +474,28 @@ paths:
           in: query
           schema:
             type: string
-            enum: [A, B, C, D, F]
+            enum:
+              - A
+              - B
+              - C
+              - D
+              - F
         - name: sort_by
           in: query
           schema:
             type: string
-            enum: [funded_date, health_score, company_name]
+            enum:
+              - funded_date
+              - health_score
+              - company_name
             default: funded_date
         - name: sort_order
           in: query
           schema:
             type: string
-            enum: [asc, desc]
+            enum:
+              - asc
+              - desc
             default: desc
       responses:
         '200':
@@ -831,12 +857,20 @@ paths:
           required: true
           schema:
             type: string
-            enum: [ucc-ingestion, data-enrichment, health-scores]
+            enum:
+              - ucc-ingestion
+              - data-enrichment
+              - health-scores
         - name: status
           in: query
           schema:
             type: string
-            enum: [waiting, active, completed, failed, delayed]
+            enum:
+              - waiting
+              - active
+              - completed
+              - failed
+              - delayed
             default: waiting
         - name: limit
           in: query
@@ -893,13 +927,19 @@ paths:
           in: query
           schema:
             type: string
-            enum: [first_name, last_name, created_at, last_contacted_at]
+            enum:
+              - first_name
+              - last_name
+              - created_at
+              - last_contacted_at
             default: last_name
         - name: sort_order
           in: query
           schema:
             type: string
-            enum: [asc, desc]
+            enum:
+              - asc
+              - desc
             default: asc
       responses:
         '200':
@@ -1167,13 +1207,19 @@ paths:
           in: query
           schema:
             type: string
-            enum: [created_at, updated_at, amount_requested, expected_close_date]
+            enum:
+              - created_at
+              - updated_at
+              - amount_requested
+              - expected_close_date
             default: created_at
         - name: sort_order
           in: query
           schema:
             type: string
-            enum: [asc, desc]
+            enum:
+              - asc
+              - desc
             default: desc
       responses:
         '200':
@@ -1525,7 +1571,15 @@ paths:
                   type: string
                 MessageStatus:
                   type: string
-                  enum: [queued, failed, sent, delivered, undelivered, receiving, received, accepted]
+                  enum:
+                    - queued
+                    - failed
+                    - sent
+                    - delivered
+                    - undelivered
+                    - receiving
+                    - received
+                    - accepted
                 To:
                   type: string
                 From:
@@ -1608,7 +1662,15 @@ paths:
                   type: string
                 CallStatus:
                   type: string
-                  enum: [queued, ringing, in-progress, completed, busy, no-answer, canceled, failed]
+                  enum:
+                    - queued
+                    - ringing
+                    - in-progress
+                    - completed
+                    - busy
+                    - no-answer
+                    - canceled
+                    - failed
                 CallDuration:
                   type: integer
                 RecordingUrl:
@@ -1644,7 +1706,16 @@ paths:
                     type: integer
                   event:
                     type: string
-                    enum: [processed, dropped, delivered, deferred, bounce, open, click, spam_report, unsubscribe]
+                    enum:
+                      - processed
+                      - dropped
+                      - delivered
+                      - deferred
+                      - bounce
+                      - open
+                      - click
+                      - spam_report
+                      - unsubscribe
                   sg_event_id:
                     type: string
                   sg_message_id:
@@ -1676,10 +1747,16 @@ paths:
               properties:
                 webhook_type:
                   type: string
-                  enum: [TRANSACTIONS]
+                  enum:
+                    - TRANSACTIONS
                 webhook_code:
                   type: string
-                  enum: [INITIAL_UPDATE, HISTORICAL_UPDATE, DEFAULT_UPDATE, TRANSACTIONS_REMOVED, SYNC_UPDATES_AVAILABLE]
+                  enum:
+                    - INITIAL_UPDATE
+                    - HISTORICAL_UPDATE
+                    - DEFAULT_UPDATE
+                    - TRANSACTIONS_REMOVED
+                    - SYNC_UPDATES_AVAILABLE
                 item_id:
                   type: string
                 new_transactions:
@@ -1715,10 +1792,16 @@ paths:
               properties:
                 webhook_type:
                   type: string
-                  enum: [ITEM]
+                  enum:
+                    - ITEM
                 webhook_code:
                   type: string
-                  enum: [ERROR, PENDING_EXPIRATION, USER_PERMISSION_REVOKED, WEBHOOK_UPDATE_ACKNOWLEDGED, NEW_ACCOUNTS_AVAILABLE]
+                  enum:
+                    - ERROR
+                    - PENDING_EXPIRATION
+                    - USER_PERMISSION_REVOKED
+                    - WEBHOOK_UPDATE_ACKNOWLEDGED
+                    - NEW_ACCOUNTS_AVAILABLE
                 item_id:
                   type: string
                 error:
@@ -1836,10 +1919,10 @@ paths:
                     properties:
                       message:
                         type: string
-                        example: "No UCC data available for state: XX"
+                        example: 'No UCC data available for state: XX'
                       code:
                         type: string
-                        example: "UCC_SEARCH_FAILED"
+                        example: 'UCC_SEARCH_FAILED'
                       statusCode:
                         type: integer
                         example: 400
@@ -1888,7 +1971,7 @@ paths:
                         example: true
                       reason:
                         type: string
-                        example: "Collector ready for state: CA"
+                        example: 'Collector ready for state: CA'
                   meta:
                     type: object
                     properties:
@@ -1925,7 +2008,9 @@ paths:
                   example: acme-production
                 role:
                   type: string
-                  enum: [user, admin]
+                  enum:
+                    - user
+                    - admin
                   default: user
                 expires_at:
                   type: string
@@ -2226,7 +2311,9 @@ components:
       properties:
         status:
           type: string
-          enum: [ok, degraded]
+          enum:
+            - ok
+            - degraded
         timestamp:
           type: string
           format: date-time
@@ -2245,13 +2332,20 @@ components:
               properties:
                 database:
                   type: string
-                  enum: [ok, error, unknown]
+                  enum:
+                    - ok
+                    - error
+                    - unknown
                 memory:
                   type: string
-                  enum: [ok, warning]
+                  enum:
+                    - ok
+                    - warning
                 cpu:
                   type: string
-                  enum: [ok, warning]
+                  enum:
+                    - ok
+                    - warning
 
     ReadyResponse:
       type: object
@@ -2360,11 +2454,16 @@ components:
           description: Lien amount in dollars (if available)
         status:
           type: string
-          enum: [active, terminated, lapsed]
+          enum:
+            - active
+            - terminated
+            - lapsed
           description: Current status of the UCC filing
         filingType:
           type: string
-          enum: [UCC-1, UCC-3]
+          enum:
+            - UCC-1
+            - UCC-3
           description: Type of UCC filing (UCC-1 is initial, UCC-3 is amendment/continuation)
 
     UCCSearchResponse:
@@ -2461,10 +2560,19 @@ components:
           maximum: 100
         score_grade:
           type: string
-          enum: [A, B, C, D, F]
+          enum:
+            - A
+            - B
+            - C
+            - D
+            - F
         recommendation:
           type: string
-          enum: [high_priority, moderate_priority, low_priority, pass]
+          enum:
+            - high_priority
+            - moderate_priority
+            - low_priority
+            - pass
         score_confidence:
           type: integer
           minimum: 0
@@ -2618,7 +2726,12 @@ components:
           type: integer
         health_grade:
           type: string
-          enum: [A, B, C, D, F]
+          enum:
+            - A
+            - B
+            - C
+            - D
+            - F
 
     PortfolioListResponse:
       type: object
@@ -2758,7 +2871,12 @@ components:
           type: string
         status:
           type: string
-          enum: [waiting, active, completed, failed, delayed]
+          enum:
+            - waiting
+            - active
+            - completed
+            - failed
+            - delayed
         progress:
           type: number
         data:

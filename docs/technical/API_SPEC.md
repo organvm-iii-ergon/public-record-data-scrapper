@@ -25,6 +25,7 @@ Authorization: Bearer <jwt_token>
 Enrich a prospect with data from multiple sources.
 
 **Request Body:**
+
 ```json
 {
   "companyName": "Acme Corporation",
@@ -35,6 +36,7 @@ Enrich a prospect with data from multiple sources.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -63,6 +65,7 @@ Enrich a prospect with data from multiple sources.
 Get enriched prospect details.
 
 **Response:**
+
 ```json
 {
   "id": "prospect-123",
@@ -79,9 +82,11 @@ Get enriched prospect details.
 Get current user's usage statistics.
 
 **Query Parameters:**
+
 - `period`: "daily" or "monthly" (default: "monthly")
 
 **Response:**
+
 ```json
 {
   "userId": "user-123",
@@ -104,6 +109,7 @@ Get current user's usage statistics.
 Track a usage event (internal use).
 
 **Request Body:**
+
 ```json
 {
   "userId": "user-123",
@@ -124,6 +130,7 @@ Track a usage event (internal use).
 Get status of all data sources.
 
 **Response:**
+
 ```json
 {
   "sources": [
@@ -137,7 +144,7 @@ Get status of all data sources.
     {
       "name": "dnb",
       "tier": "starter",
-      "cost": 0.50,
+      "cost": 0.5,
       "available": true,
       "configured": false,
       "message": "API key not configured"
@@ -151,6 +158,7 @@ Get status of all data sources.
 Get status of a specific data source.
 
 **Response:**
+
 ```json
 {
   "name": "sec-edgar",
@@ -172,6 +180,7 @@ Get status of a specific data source.
 Get list of supported states for UCC scraping.
 
 **Response:**
+
 ```json
 {
   "states": ["CA", "TX", "FL"],
@@ -184,10 +193,12 @@ Get list of supported states for UCC scraping.
 Get manual search URL for a company.
 
 **Query Parameters:**
+
 - `companyName`: Company name
 - `state`: State code
 
 **Response:**
+
 ```json
 {
   "state": "CA",
@@ -227,10 +238,12 @@ Real-time enrichment progress updates:
 const ws = new WebSocket('ws://localhost:3000/enrichment')
 
 // Subscribe to enrichment
-ws.send(JSON.stringify({
-  action: 'subscribe',
-  enrichmentId: 'enrichment-123'
-}))
+ws.send(
+  JSON.stringify({
+    action: 'subscribe',
+    enrichmentId: 'enrichment-123'
+  })
+)
 
 // Receive progress updates
 ws.onmessage = (event) => {

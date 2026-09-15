@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  BaseScraper,
-  type ScraperConfig,
-  type ScraperResult,
-  type UCCFiling
-} from './base-scraper'
+import { BaseScraper, type ScraperConfig, type ScraperResult, type UCCFiling } from './base-scraper'
 
 class HarnessScraper extends BaseScraper {
   sleeps: number[] = []

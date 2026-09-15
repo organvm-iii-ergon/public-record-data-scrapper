@@ -53,11 +53,11 @@ export class PaginationHandler {
           for (let i = 0; i < elements.length; i++) {
             const element = elements[i]
             const text = element.textContent?.trim().toLowerCase() || ''
-            
+
             for (let j = 0; j < labels.length; j++) {
               const label = labels[j]
               if (text === label) return element
-              
+
               const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
               const title = element.getAttribute('title')?.toLowerCase() || ''
               if (ariaLabel.includes(label) || title.includes(label)) return element
@@ -175,55 +175,65 @@ export class PaginationHandler {
   /**
    * Helper to find and click a button based on selector and labels
    */
-  private async findAndClickButton(page: Page, selector: string, labels: string[]): Promise<boolean> {
-    return await page.evaluate((sel, labs) => {
-      const directSelector = document.querySelector(sel) as HTMLElement | null
-      const directVisible =
-        !!directSelector &&
-        (directSelector.offsetWidth ||
-          directSelector.offsetHeight ||
-          directSelector.getClientRects().length)
-      if (directSelector && !directSelector.hasAttribute('disabled') && directVisible) {
-        directSelector.click()
-        return true
-      }
+  private async findAndClickButton(
+    page: Page,
+    selector: string,
+    labels: string[]
+  ): Promise<boolean> {
+    return await page.evaluate(
+      (sel, labs) => {
+        const directSelector = document.querySelector(sel) as HTMLElement | null
+        const directVisible =
+          !!directSelector &&
+          (directSelector.offsetWidth ||
+            directSelector.offsetHeight ||
+            directSelector.getClientRects().length)
+        if (directSelector && !directSelector.hasAttribute('disabled') && directVisible) {
+          directSelector.click()
+          return true
+        }
 
-      const candidates = Array.from(document.querySelectorAll('a, button')) as HTMLElement[]
-      let targetButton: HTMLElement | null = null
+        const candidates = Array.from(document.querySelectorAll('a, button')) as HTMLElement[]
+        let targetButton: HTMLElement | null = null
 
-      for (let i = 0; i < candidates.length; i++) {
-        const element = candidates[i]
-        const text = element.textContent?.trim().toLowerCase() || ''
-        
-        for (let j = 0; j < labs.length; j++) {
-          const label = labs[j]
-          if (text === label) {
-            targetButton = element
-            break
+        for (let i = 0; i < candidates.length; i++) {
+          const element = candidates[i]
+          const text = element.textContent?.trim().toLowerCase() || ''
+
+          for (let j = 0; j < labs.length; j++) {
+            const label = labs[j]
+            if (text === label) {
+              targetButton = element
+              break
+            }
+
+            const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
+            const title = element.getAttribute('title')?.toLowerCase() || ''
+            if (ariaLabel.includes(label) || title.includes(label)) {
+              targetButton = element
+              break
+            }
           }
 
-          const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || ''
-          const title = element.getAttribute('title')?.toLowerCase() || ''
-          if (ariaLabel.includes(label) || title.includes(label)) {
-            targetButton = element
+          if (targetButton) {
             break
           }
         }
 
-        if (targetButton) {
-          break
+        const targetVisible =
+          !!targetButton &&
+          (targetButton.offsetWidth ||
+            targetButton.offsetHeight ||
+            targetButton.getClientRects().length)
+        if (targetButton && !targetButton.hasAttribute('disabled') && targetVisible) {
+          targetButton.click()
+          return true
         }
-      }
-
-      const targetVisible =
-        !!targetButton &&
-        (targetButton.offsetWidth || targetButton.offsetHeight || targetButton.getClientRects().length)
-      if (targetButton && !targetButton.hasAttribute('disabled') && targetVisible) {
-        targetButton.click()
-        return true
-      }
-      return false
-    }, selector, labels)
+        return false
+      },
+      selector,
+      labels
+    )
   }
 
   async goToNextPage(page: Page, pagination: PaginationResult): Promise<boolean> {
@@ -315,11 +325,10 @@ export class PaginationHandler {
    * Handle "Load More" button pagination
    */
   private async handleLoadMorePagination(page: Page): Promise<boolean> {
-    const clicked = await this.findAndClickButton(
-      page,
-      '.load-more, .show-more',
-      ['load more', 'show more']
-    )
+    const clicked = await this.findAndClickButton(page, '.load-more, .show-more', [
+      'load more',
+      'show more'
+    ])
 
     if (clicked) {
       await this.sleep(this.config.waitBetweenPages)

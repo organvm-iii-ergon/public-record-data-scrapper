@@ -35,11 +35,13 @@ The video presents a compelling pitch organized in 9 sections:
 ### 🛠️ Technical Setup
 
 **Installed Components:**
+
 - FFmpeg 6.1.1 - Industry-standard video processing
 - espeak 1.48.15 - Text-to-speech engine for Linux
 - Existing TypeScript-based video production agent
 
 **Generated Assets:**
+
 - 1 MP4 video file (final output)
 - 1 MP3 audio narration file (5:39 duration)
 - 9 PNG title card images (one per scene)
@@ -63,6 +65,7 @@ New documentation to support future video generation:
 ### Viewing Locally
 
 The video is located at:
+
 ```
 video-output/EXECUTIVE_VIDEO_SCRIPT.mp4
 ```
@@ -94,9 +97,10 @@ You can play it with any standard video player (VLC, Windows Media Player, Quick
 ### Embedding in Applications
 
 Portfolio website example:
+
 ```html
 <video controls width="100%">
-  <source src="presentation.mp4" type="video/mp4">
+  <source src="presentation.mp4" type="video/mp4" />
   Your browser doesn't support video playback.
 </video>
 ```
@@ -106,6 +110,7 @@ Portfolio website example:
 ### Quick Regeneration
 
 If you need to regenerate the video:
+
 ```bash
 npm run video:generate
 ```
@@ -118,6 +123,7 @@ npm run video:generate
 4. **Process multiple scripts**: Use `--pattern "*.md"`
 
 Example:
+
 ```bash
 ./scripts/video-production/generate-videos.sh \
   --resolution 3840x2160 \
@@ -145,6 +151,7 @@ If you want to improve the video further:
 5. **Closed Captions**: Add subtitles for accessibility and SEO
 
 To implement these enhancements, you can:
+
 - Edit the script and regenerate
 - Use video editing software (DaVinci Resolve, Adobe Premiere)
 - Contract with a professional video producer
@@ -169,6 +176,7 @@ Final MP4 Video
 ```
 
 **Key Technologies:**
+
 - TypeScript for automation logic
 - FFmpeg for video encoding
 - espeak for text-to-speech
@@ -177,6 +185,7 @@ Final MP4 Video
 ## Testing & Validation
 
 The video production system passed all validation tests:
+
 - ✅ Configuration loading
 - ✅ Script directory accessible
 - ✅ Executive script validated (9 scenes)
@@ -186,6 +195,7 @@ The video production system passed all validation tests:
 - ✅ Video successfully rendered
 
 **Render Report:**
+
 - Total scripts: 1
 - Successful: 1
 - Failed: 0
@@ -213,6 +223,7 @@ The video production system passed all validation tests:
 ## Technical Notes
 
 **File Locations:**
+
 - Video output: `video-output/EXECUTIVE_VIDEO_SCRIPT.mp4`
 - Audio narration: `video-output/audio/EXECUTIVE_VIDEO_SCRIPT-narration.mp3`
 - Scene visuals: `video-output/visuals/scene-*.png`
@@ -222,6 +233,7 @@ The video production system passed all validation tests:
 The `video-output/` directory is in `.gitignore`, so generated videos are not committed to the repository. This prevents large binary files from bloating the repo.
 
 **System Requirements Met:**
+
 - FFmpeg 6.1.1 installed ✅
 - espeak 1.48.15 installed ✅
 - Node.js and npm available ✅

@@ -20,11 +20,7 @@
   },
   "processing_recommendations": {
     "visualization_complexity": "advanced",
-    "interactive_features": [
-      "toggle-atomization",
-      "visual-breakdown",
-      "data-export"
-    ],
+    "interactive_features": ["toggle-atomization", "visual-breakdown", "data-export"],
     "ui_style": "glassmorphism",
     "estimated_processing_time": "2 minutes"
   },

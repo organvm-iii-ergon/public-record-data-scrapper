@@ -11,12 +11,15 @@ This reference covers the primary REST API endpoints available for paying custom
 Manage and retrieve MCA lead prospects generated from UCC filings.
 
 ### List Prospects
+
 ```http
 GET /api/prospects
 ```
+
 Retrieves a paginated list of prospects matching your criteria.
 
 **Query Parameters:**
+
 | Parameter    | Type    | Default          | Description                                                |
 | ------------ | ------- | ---------------- | ---------------------------------------------------------- |
 | `page`       | integer | 1                | Page number                                                |
@@ -30,6 +33,7 @@ Retrieves a paginated list of prospects matching your criteria.
 | `sort_order` | string  | `desc`           | Sort direction: `asc`, `desc`                              |
 
 **Response (200 OK):**
+
 ```json
 {
   "prospects": [
@@ -52,9 +56,11 @@ Retrieves a paginated list of prospects matching your criteria.
 ```
 
 ### Get Prospect Details
+
 ```http
 GET /api/prospects/:id
 ```
+
 Returns comprehensive details for a specific prospect, including UCC filings, enrichment data, and growth signals.
 
 ---
@@ -64,12 +70,15 @@ Returns comprehensive details for a specific prospect, including UCC filings, en
 Trigger data enrichment and scoring operations on prospects.
 
 ### Batch Enrich Prospects
+
 ```http
 POST /api/enrichment/batch
 ```
-Enriches up to 100 prospects in a single request. 
+
+Enriches up to 100 prospects in a single request.
 
 **Request Body:**
+
 ```json
 {
   "prospect_ids": ["uuid-1", "uuid-2"]
@@ -77,6 +86,7 @@ Enriches up to 100 prospects in a single request.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "total": 2,
@@ -90,9 +100,11 @@ Enriches up to 100 prospects in a single request.
 ```
 
 ### Get Enrichment Queue Status
+
 ```http
 GET /api/enrichment/queue
 ```
+
 Check the status of ongoing enrichment jobs.
 
 ---
@@ -102,18 +114,21 @@ Check the status of ongoing enrichment jobs.
 Analyze secured parties (competitors) issuing UCC filings.
 
 ### List Competitors
+
 ```http
 GET /api/competitors
 ```
+
 Returns a list of lenders/competitors ordered by filing volume.
 
 **Query Parameters:**
-| Parameter    | Type    | Default        | Description                                  |
-| ------------ | ------- | -------------- | -------------------------------------------- |
-| `page`       | integer | 1              | Page number                                  |
-| `limit`      | integer | 20             | Results per page                             |
-| `state`      | string  | -              | Filter by state                              |
-| `sort_by`    | string  | `filing_count` | Sort: `filing_count`, `total_amount`, `name` |
+
+| Parameter | Type    | Default        | Description                                  |
+| --------- | ------- | -------------- | -------------------------------------------- |
+| `page`    | integer | 1              | Page number                                  |
+| `limit`   | integer | 20             | Results per page                             |
+| `state`   | string  | -              | Filter by state                              |
+| `sort_by` | string  | `filing_count` | Sort: `filing_count`, `total_amount`, `name` |
 
 ---
 
@@ -122,16 +137,19 @@ Returns a list of lenders/competitors ordered by filing volume.
 Monitor the health of your funded portfolio companies.
 
 ### List Portfolio Companies
+
 ```http
 GET /api/portfolio
 ```
 
 **Query Parameters:**
-| Parameter      | Type    | Default       | Description                                         |
-| -------------- | ------- | ------------- | --------------------------------------------------- |
-| `health_grade` | string  | -             | Filter: `A`, `B`, `C`, `D`, `F`                     |
+
+| Parameter      | Type   | Default | Description                     |
+| -------------- | ------ | ------- | ------------------------------- |
+| `health_grade` | string | -       | Filter: `A`, `B`, `C`, `D`, `F` |
 
 **Response (200 OK):**
+
 ```json
 {
   "companies": [
@@ -150,7 +168,9 @@ GET /api/portfolio
 ```
 
 ### Get Health History
+
 ```http
 GET /api/portfolio/:id/health-history
 ```
+
 Returns historical tracking of the portfolio company's health score and sentiment trend.

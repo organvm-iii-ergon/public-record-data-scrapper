@@ -15,17 +15,20 @@ A standalone terminal-based tool for scraping UCC filing data and enriching comp
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/ivi374forivi/public-record-data-scrapper.git
 cd public-record-data-scrapper
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install --legacy-peer-deps
 ```
 
 3. Install Chromium for Puppeteer (if not already installed):
+
 ```bash
 npx puppeteer browsers install chrome
 ```
@@ -35,27 +38,32 @@ npx puppeteer browsers install chrome
 ### Basic Commands
 
 #### 1. List Available States
+
 ```bash
 npm run scrape -- list-states
 ```
 
 #### 2. Scrape UCC Filings
+
 ```bash
 npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA
 ```
 
 Options:
+
 - `-c, --company <name>`: Company name to search (required)
 - `-s, --state <code>`: State code - CA, TX, or FL (required)
 - `-o, --output <file>`: Output file path (default: ./output.json)
 - `--csv`: Export as CSV instead of JSON
 
 Example with CSV output:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Example LLC" -s TX -o results.csv --csv
 ```
 
 #### 3. Enrich Company Data
+
 Fetch additional data from public sources (SEC, OSHA, USPTO, etc.):
 
 ```bash
@@ -63,6 +71,7 @@ npm run scrape -- enrich -c "Acme Corporation" -s CA
 ```
 
 Options:
+
 - `-c, --company <name>`: Company name (required)
 - `-s, --state <code>`: State code (required)
 - `-o, --output <file>`: Output file path (default: ./enriched-data.json)
@@ -70,11 +79,13 @@ Options:
 - `--csv`: Export as CSV instead of JSON
 
 Example:
+
 ```bash
 npm run scrape -- enrich -c "Example LLC" -s TX -o enriched.json --tier free
 ```
 
 #### 4. Normalize Company Name
+
 Standardize company names for better matching:
 
 ```bash
@@ -82,12 +93,14 @@ npm run scrape -- normalize -n "acme corporation, llc"
 ```
 
 Output:
+
 ```
 Original:  acme corporation, llc
 Normalized: Acme Corporation
 ```
 
 #### 5. Batch Processing
+
 Process multiple companies from a CSV file:
 
 ```bash
@@ -95,6 +108,7 @@ npm run scrape -- batch -i companies.csv -o ./results
 ```
 
 Input CSV format:
+
 ```csv
 company,state
 Acme Corporation,CA
@@ -103,17 +117,20 @@ Test Company,FL
 ```
 
 Options:
+
 - `-i, --input <file>`: Input CSV file with company,state columns (required)
 - `-o, --output <dir>`: Output directory (default: ./batch-results)
 - `--enrich`: Also enrich data for each company
 
 The tool will:
+
 - Process each company sequentially
 - Apply rate limiting between requests (15 seconds)
 - Save individual results for each company
 - Generate a summary.json file
 
 #### 6. Export Scored MCA Leads
+
 Export the sellable lead batch from the database as JSON and CSV:
 
 ```bash
@@ -121,6 +138,7 @@ npm run scrape -- lead-export --min-score 70 --limit 100 --output-dir ./lead-exp
 ```
 
 Options:
+
 - `-o, --output-dir <dir>`: Output directory (default: `./lead-export`)
 - `--format <format>`: `json`, `csv`, or `both` (default: `both`)
 - `--min-score <score>`: Minimum MCA score (default: `70`)
@@ -136,6 +154,7 @@ See [MCA Lead Export](./LEAD_EXPORT.md) for API usage and sample files.
 ## Data Sources
 
 ### Free Tier (No API Key Required)
+
 - **SEC EDGAR**: Company filings and financial data
 - **OSHA**: Workplace safety violations and penalties
 - **USPTO**: Trademark registrations
@@ -143,12 +162,14 @@ See [MCA Lead Export](./LEAD_EXPORT.md) for API usage and sample files.
 - **SAM.gov**: Federal contract awards
 
 ### Paid Tiers (Require API Keys)
+
 - **Starter**: D&B, Google Places, Clearbit
 - **Professional**: Experian, ZoomInfo, NewsAPI
 
 ## Output Examples
 
 ### UCC Filing Output (JSON)
+
 ```json
 {
   "state": "CA",
@@ -170,6 +191,7 @@ See [MCA Lead Export](./LEAD_EXPORT.md) for API usage and sample files.
 ```
 
 ### Enriched Data Output (JSON)
+
 ```json
 {
   "companyName": "Acme Corporation",
@@ -199,6 +221,7 @@ See [MCA Lead Export](./LEAD_EXPORT.md) for API usage and sample files.
 ## Rate Limiting
 
 The scraper respects site policies with built-in rate limiting:
+
 - **5 requests per minute** per state
 - **12-15 second delay** between requests
 - Automatic retry with exponential backoff on failures
@@ -214,16 +237,21 @@ The scraper respects site policies with built-in rate limiting:
 ## Troubleshooting
 
 ### CAPTCHA Detected
+
 If you encounter CAPTCHA, the tool will:
+
 1. Return an error message
 2. Provide a manual search URL
 3. You can complete the search manually in a browser
 
 ### No Results Found
+
 The scrapers use CSS selectors that may need adjustment based on website updates. Check the manual search URL to verify the site structure.
 
 ### Installation Issues
+
 If Puppeteer fails to install:
+
 ```bash
 # Install Chromium manually
 npx puppeteer browsers install chrome
@@ -248,6 +276,7 @@ npm pack
 This creates a `.tgz` file that can be shared with field data experts.
 
 To use the package:
+
 ```bash
 npm install -g ucc-mca-intelligence-platform-1.0.0.tgz
 ucc-scraper --help
@@ -256,17 +285,21 @@ ucc-scraper --help
 ## Examples
 
 ### Example 1: Quick Single Company Lookup
+
 ```bash
 npm run scrape -- scrape-ucc -c "Restaurant Holdings LLC" -s CA -o restaurant.json
 ```
 
 ### Example 2: Enrich and Export to CSV
+
 ```bash
 npm run scrape -- enrich -c "Tech Startup Inc" -s TX --csv -o startup-data.csv
 ```
 
 ### Example 3: Batch Process Multiple Companies
+
 Create `companies.csv`:
+
 ```csv
 company,state
 Restaurant A,CA
@@ -275,11 +308,13 @@ Restaurant C,FL
 ```
 
 Run batch:
+
 ```bash
 npm run scrape -- batch -i companies.csv -o ./batch-output
 ```
 
 ### Example 4: Full Pipeline
+
 ```bash
 # 1. Scrape UCC filings
 npm run scrape -- scrape-ucc -c "Company Name" -s CA -o ucc.json
@@ -301,6 +336,7 @@ npm run scrape -- normalize -n "Company Name, LLC"
 ## Support
 
 For issues or questions:
+
 - Check the main README.md
 - Review the ENRICHMENT_PIPELINE.md documentation
 - See API_SPEC.md for technical details

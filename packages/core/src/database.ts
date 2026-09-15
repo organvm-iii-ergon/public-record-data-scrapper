@@ -30,9 +30,7 @@ function envInt(name: string, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-function resolveSsl(
-  config: DatabaseConfig
-): PoolConfig['ssl'] {
+function resolveSsl(config: DatabaseConfig): PoolConfig['ssl'] {
   if (config.ssl !== undefined) {
     return config.ssl === true ? { rejectUnauthorized: true } : config.ssl
   }
@@ -127,8 +125,7 @@ export class DatabaseClient {
     })
     this.logger = logger
     // Query text can contain PII; gate it behind an explicit flag / env.
-    this.logQueryText =
-      config.logQueryText ?? process.env.DATABASE_LOG_QUERY_TEXT === 'true'
+    this.logQueryText = config.logQueryText ?? process.env.DATABASE_LOG_QUERY_TEXT === 'true'
   }
 
   async ping(): Promise<boolean> {
@@ -244,8 +241,7 @@ export class DatabaseClient {
           await client.query('ROLLBACK')
         } catch (rollbackError) {
           this.logger.error('Database transaction rollback failed', {
-            error:
-              rollbackError instanceof Error ? rollbackError.message : String(rollbackError)
+            error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError)
           })
         }
         throw error

@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import {
-  mapPriceToTier,
-  mapTierToPrice,
-  normalizeCheckoutTier
-} from '../../integrations/stripe'
+import { mapPriceToTier, mapTierToPrice, normalizeCheckoutTier } from '../../integrations/stripe'
 
 const PRICE_ENV = [
   'STRIPE_PRICE_ID',

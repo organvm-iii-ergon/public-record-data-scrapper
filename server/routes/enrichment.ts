@@ -9,17 +9,23 @@ const router = Router()
 
 // Validation schemas (`.strict()` rejects unknown keys to prevent
 // mass-assignment of unexpected fields into enrichment/job inputs).
-const enrichProspectSchema = z.object({
-  prospect_id: z.string().uuid()
-}).strict()
+const enrichProspectSchema = z
+  .object({
+    prospect_id: z.string().uuid()
+  })
+  .strict()
 
-const batchEnrichSchema = z.object({
-  prospect_ids: z.array(z.string().uuid()).min(1).max(100)
-}).strict()
+const batchEnrichSchema = z
+  .object({
+    prospect_ids: z.array(z.string().uuid()).min(1).max(100)
+  })
+  .strict()
 
-const triggerRefreshSchema = z.object({
-  force: z.boolean().default(false)
-}).strict()
+const triggerRefreshSchema = z
+  .object({
+    force: z.boolean().default(false)
+  })
+  .strict()
 
 // POST /api/enrichment/prospect - Enrich single prospect
 router.post(

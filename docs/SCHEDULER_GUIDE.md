@@ -86,14 +86,14 @@ SCRAPER_SCHEDULE="0 9-17 * * 1-5"
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SCRAPER_SCHEDULE` | `0 2 * * *` | Cron expression for schedule |
-| `SCRAPER_STATES` | `CA,TX,FL,NY,IL` | Comma-separated state codes |
-| `SCRAPER_IMPLEMENTATION` | `mock` | Scraper type: `mock`, `puppeteer`, or `api` |
-| `ENABLE_NOTIFICATIONS` | `false` | Send notifications for high-value prospects |
-| `NOTIFICATION_THRESHOLD` | `80` | Minimum priority score (0-100) for notifications |
-| `RUN_IMMEDIATELY` | `false` | Run once immediately on startup |
+| Variable                 | Default          | Description                                      |
+| ------------------------ | ---------------- | ------------------------------------------------ |
+| `SCRAPER_SCHEDULE`       | `0 2 * * *`      | Cron expression for schedule                     |
+| `SCRAPER_STATES`         | `CA,TX,FL,NY,IL` | Comma-separated state codes                      |
+| `SCRAPER_IMPLEMENTATION` | `mock`           | Scraper type: `mock`, `puppeteer`, or `api`      |
+| `ENABLE_NOTIFICATIONS`   | `false`          | Send notifications for high-value prospects      |
+| `NOTIFICATION_THRESHOLD` | `80`             | Minimum priority score (0-100) for notifications |
+| `RUN_IMMEDIATELY`        | `false`          | Run once immediately on startup                  |
 
 ### Example Configuration
 
@@ -410,6 +410,7 @@ chmod 755 logs
 **Cause**: Long-running process with memory leaks
 
 **Fix**:
+
 1. Restart scheduler regularly (PM2 does this automatically)
 2. Monitor with `pm2 monit`
 3. Set max memory limit:
@@ -430,9 +431,7 @@ The scheduler scrapes all states concurrently using `Promise.all`:
 
 ```typescript
 // Parallel execution
-const results = await Promise.all(
-  states.map(state => scrapeState(state))
-)
+const results = await Promise.all(states.map((state) => scrapeState(state)))
 ```
 
 **Result**: 5 states in ~3 seconds vs 15 seconds sequential
@@ -452,7 +451,7 @@ Respect API/website rate limits:
 Uses connection pooling (configured in database client):
 
 ```typescript
-poolSize: 20  // Max concurrent connections
+poolSize: 20 // Max concurrent connections
 ```
 
 ### Disk Space Management

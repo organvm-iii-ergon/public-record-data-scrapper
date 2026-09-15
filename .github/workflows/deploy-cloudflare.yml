@@ -113,6 +113,9 @@ jobs:
           status=0
           python3 scripts/provision-cloudflare-staging.py --apply || status=$?
           echo "exit_status=$status" >> "$GITHUB_OUTPUT"
+          if [ -f cloudflare/.generated/staging.wrangler.json ]; then
+            echo "CLOUDFLARE_ACCOUNT_ID=$(jq -r .account_id cloudflare/.generated/staging.wrangler.json)" >> "$GITHUB_ENV"
+          fi
       - name: Classify provisioning result
         id: provision_result
         run: python3 scripts/classify-cloudflare-staging-provisioning.py

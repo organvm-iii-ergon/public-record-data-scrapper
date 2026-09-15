@@ -100,9 +100,7 @@ describe('Contacts API', () => {
     it('should fail closed (403) when the token has no org', async () => {
       const noOrgHeader = createAuthHeader('test-user-123', { orgId: null })
 
-      const response = await request(app)
-        .get('/api/contacts')
-        .set('Authorization', noOrgHeader)
+      const response = await request(app).get('/api/contacts').set('Authorization', noOrgHeader)
 
       expect(response.status).toBe(403)
       expect(response.body.error.code).toBe('FORBIDDEN')

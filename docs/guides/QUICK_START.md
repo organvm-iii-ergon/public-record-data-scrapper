@@ -11,12 +11,14 @@ This guide is designed for field experts who need to quickly collect UCC filing 
 ## Installation (One-Time Setup)
 
 1. **Clone or download the repository:**
+
    ```bash
    git clone https://github.com/ivi374forivi/public-record-data-scrapper.git
    cd public-record-data-scrapper
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install --legacy-peer-deps
    ```
@@ -38,10 +40,12 @@ npm run scrape -- scrape-ucc -c "Company Name" -s CA
 ```
 
 Replace:
+
 - `"Company Name"` with the actual company name
 - `CA` with the state code (CA, TX, or FL)
 
 Example:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA
 ```
@@ -49,11 +53,13 @@ npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA
 ### 2. Save Results to File
 
 To save results as JSON:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA -o results.json
 ```
 
 To save results as CSV:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA -o results.csv --csv
 ```
@@ -61,6 +67,7 @@ npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA -o results.csv --csv
 ### 3. Enrich Company Data
 
 To get additional data from public sources (SEC, OSHA, etc.):
+
 ```bash
 npm run scrape -- enrich -c "Acme Corporation" -s CA -o enriched.json
 ```
@@ -70,6 +77,7 @@ npm run scrape -- enrich -c "Acme Corporation" -s CA -o enriched.json
 If you have multiple companies to check:
 
 1. **Create a CSV file** named `companies.csv`:
+
    ```csv
    company,state
    Acme Corporation,CA
@@ -78,6 +86,7 @@ If you have multiple companies to check:
    ```
 
 2. **Run batch processing:**
+
    ```bash
    npm run scrape -- batch -i companies.csv -o ./batch-results
    ```
@@ -90,11 +99,13 @@ If you have multiple companies to check:
 ## Supported States
 
 Currently supported:
+
 - **CA** - California
 - **TX** - Texas
 - **FL** - Florida
 
 To check available states:
+
 ```bash
 npm run scrape -- list-states
 ```
@@ -102,6 +113,7 @@ npm run scrape -- list-states
 ## Common Scenarios
 
 ### Scenario 1: Quick Field Check
+
 You're in the field and need to quickly check one company:
 
 ```bash
@@ -111,6 +123,7 @@ npm run scrape -- scrape-ucc -c "Restaurant Name" -s CA
 Results appear in your terminal immediately.
 
 ### Scenario 2: Daily Batch Run
+
 You have a list of 20 companies to check every day:
 
 ```bash
@@ -121,6 +134,7 @@ npm run scrape -- batch -i companies.csv -o ./daily-$(date +%Y%m%d)
 This creates a dated folder with all results.
 
 ### Scenario 3: Comprehensive Research
+
 You need full details on a company:
 
 ```bash
@@ -134,6 +148,7 @@ npm run scrape -- enrich -c "Company Name" -s CA -o enriched.json
 ## Understanding Output
 
 ### UCC Filing Output
+
 ```json
 {
   "state": "CA",
@@ -154,11 +169,13 @@ npm run scrape -- enrich -c "Company Name" -s CA -o enriched.json
 ```
 
 **Key Fields:**
+
 - `filingCount`: How many UCC filings were found
 - `filings`: Array of filing details
 - `searchUrl`: Direct link to verify manually
 
 ### Enrichment Output
+
 ```json
 {
   "companyName": "Acme Corporation",
@@ -173,6 +190,7 @@ npm run scrape -- enrich -c "Company Name" -s CA -o enriched.json
 ```
 
 **Key Fields:**
+
 - `sources`: Which databases were checked
 - `enrichedData`: Data from each source
 
@@ -193,26 +211,34 @@ npm run scrape -- enrich -c "Company Name" -s CA -o enriched.json
 ## Troubleshooting
 
 ### "Command not found"
+
 Make sure you're in the correct directory:
+
 ```bash
 cd public-record-data-scrapper
 npm run scrape -- --help
 ```
 
 ### "Cannot find module"
+
 Reinstall dependencies:
+
 ```bash
 npm install --legacy-peer-deps
 ```
 
 ### "CAPTCHA detected"
+
 The site is blocking automated access. Options:
+
 1. Wait 30 minutes and try again
 2. Use the provided manual URL to complete the search
 3. Try a different state's database
 
 ### "No results found"
+
 This could mean:
+
 - The company has no UCC filings in that state
 - The company name needs to be adjusted (try without LLC/Inc)
 - Use the normalize command first:
@@ -223,13 +249,17 @@ This could mean:
 ## Advanced Usage
 
 ### Using the Wrapper Script
+
 Instead of typing `npm run scrape --`, you can use:
+
 ```bash
 ./scraper.sh scrape-ucc -c "Company Name" -s CA
 ```
 
 ### Normalization for Better Results
+
 Before searching, normalize the company name:
+
 ```bash
 npm run scrape -- normalize -n "ACME CORPORATION, LLC"
 # Output: Acme Corporation
@@ -238,6 +268,7 @@ npm run scrape -- normalize -n "ACME CORPORATION, LLC"
 Then use the normalized name in your search.
 
 ### Checking Scraper Status
+
 ```bash
 npm run scrape -- list-states
 ```
@@ -245,13 +276,17 @@ npm run scrape -- list-states
 ## Export for Analysis
 
 ### For Excel/Google Sheets
+
 Export as CSV:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Company" -s CA -o data.csv --csv
 ```
 
 ### For CRM/Database Import
+
 Export as JSON:
+
 ```bash
 npm run scrape -- scrape-ucc -c "Company" -s CA -o data.json
 ```
@@ -259,11 +294,13 @@ npm run scrape -- scrape-ucc -c "Company" -s CA -o data.json
 ## Getting Help
 
 View all commands:
+
 ```bash
 npm run scrape -- --help
 ```
 
 View help for specific command:
+
 ```bash
 npm run scrape -- scrape-ucc --help
 npm run scrape -- enrich --help

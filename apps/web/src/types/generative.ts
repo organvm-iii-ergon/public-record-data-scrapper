@@ -157,10 +157,7 @@ export interface Visualization {
 // ==================== DEAL PROPOSALS ====================
 
 export type DealStructureType =
-  | 'merchant_cash_advance'
-  | 'revenue_based'
-  | 'term_loan'
-  | 'line_of_credit'
+  'merchant_cash_advance' | 'revenue_based' | 'term_loan' | 'line_of_credit'
 export type PaymentFrequency = 'daily' | 'weekly' | 'monthly'
 export type CompetitivePosition = 'aggressive' | 'market' | 'premium'
 
@@ -253,13 +250,7 @@ export interface CompetitiveIntelligence {
 
 export type MessageRole = 'user' | 'assistant' | 'system'
 export type IntentType =
-  | 'query'
-  | 'analysis'
-  | 'recommendation'
-  | 'export'
-  | 'action'
-  | 'clarification'
-  | 'feedback'
+  'query' | 'analysis' | 'recommendation' | 'export' | 'action' | 'clarification' | 'feedback'
 
 export interface Message {
   messageId: string

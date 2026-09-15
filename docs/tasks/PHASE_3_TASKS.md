@@ -10,14 +10,17 @@
 ## Week 9-10: Database & API Server
 
 ### Task 3.1: PostgreSQL Database Setup
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: CRITICAL
 
 #### Subtask 3.1.1: Cloud Database Provisioning
+
 **Time**: 1 day
 
 **Option A: AWS RDS PostgreSQL**
+
 ```bash
 # Using AWS CLI
 aws rds create-db-instance \
@@ -39,6 +42,7 @@ aws rds create-db-instance \
 ```
 
 **Option B: Google Cloud SQL**
+
 ```bash
 # Using gcloud CLI
 gcloud sql instances create ucc-intelligence-prod \
@@ -56,6 +60,7 @@ gcloud sql instances create ucc-intelligence-prod \
 ```
 
 **Configuration Parameters:**
+
 ```sql
 -- PostgreSQL Configuration (postgresql.conf)
 max_connections = 200
@@ -76,6 +81,7 @@ max_parallel_workers = 4
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Database instance provisioned
 - [ ] Multi-AZ/Regional setup for high availability
 - [ ] Encryption at rest enabled
@@ -86,9 +92,11 @@ max_parallel_workers = 4
 ---
 
 #### Subtask 3.1.2: PgBouncer Connection Pooling
+
 **Time**: 0.5 days
 
 **Install PgBouncer:**
+
 ```bash
 # On application server
 sudo apt-get install pgbouncer
@@ -118,6 +126,7 @@ client_idle_timeout = 0
 ```
 
 **Acceptance Criteria:**
+
 - [ ] PgBouncer installed and configured
 - [ ] Connection pooling working (25 pool size)
 - [ ] Transaction pooling mode
@@ -126,6 +135,7 @@ client_idle_timeout = 0
 ---
 
 #### Subtask 3.1.3: Database Schema Migration
+
 **File**: `database/migrations/001_initial_schema.sql`
 **Time**: 1 day
 
@@ -207,26 +217,25 @@ class MigrationRunner {
   }
 
   async getAppliedMigrations(): Promise<number[]> {
-    const result = await this.client.query(
-      'SELECT version FROM schema_migrations ORDER BY version'
-    )
-    return result.rows.map(row => row.version)
+    const result = await this.client.query('SELECT version FROM schema_migrations ORDER BY version')
+    return result.rows.map((row) => row.version)
   }
 
   async getPendingMigrations(): Promise<Migration[]> {
     const appliedVersions = await this.getAppliedMigrations()
     const allMigrations = this.loadMigrations()
 
-    return allMigrations.filter(m => !appliedVersions.includes(m.version))
+    return allMigrations.filter((m) => !appliedVersions.includes(m.version))
   }
 
   private loadMigrations(): Migration[] {
     const migrationsDir = path.join(__dirname, 'migrations')
-    const files = fs.readdirSync(migrationsDir)
-      .filter(f => f.endsWith('.sql'))
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter((f) => f.endsWith('.sql'))
       .sort()
 
-    return files.map(file => {
+    return files.map((file) => {
       const match = file.match(/^(\d+)_(.+)\.sql$/)
       if (!match) throw new Error(`Invalid migration filename: ${file}`)
 
@@ -252,14 +261,13 @@ class MigrationRunner {
       try {
         await this.client.query('BEGIN')
         await this.client.query(migration.sql)
-        await this.client.query(
-          'INSERT INTO schema_migrations (version, name) VALUES ($1, $2)',
-          [migration.version, migration.name]
-        )
+        await this.client.query('INSERT INTO schema_migrations (version, name) VALUES ($1, $2)', [
+          migration.version,
+          migration.name
+        ])
         await this.client.query('COMMIT')
 
         console.log(`✓ Migration ${migration.version} applied successfully`)
-
       } catch (error) {
         await this.client.query('ROLLBACK')
         console.error(`✗ Migration ${migration.version} failed:`, error)
@@ -285,14 +293,10 @@ class MigrationRunner {
       try {
         await this.client.query('BEGIN')
         await this.client.query(sql)
-        await this.client.query(
-          'DELETE FROM schema_migrations WHERE version = $1',
-          [version]
-        )
+        await this.client.query('DELETE FROM schema_migrations WHERE version = $1', [version])
         await this.client.query('COMMIT')
 
         console.log(`✓ Migration ${version} rolled back successfully`)
-
       } catch (error) {
         await this.client.query('ROLLBACK')
         console.error(`✗ Rollback of migration ${version} failed:`, error)
@@ -329,7 +333,7 @@ if (require.main === module) {
         case 'status':
           const pending = await runner.getPendingMigrations()
           console.log(`Pending migrations: ${pending.length}`)
-          pending.forEach(m => console.log(`  ${m.version}: ${m.name}`))
+          pending.forEach((m) => console.log(`  ${m.version}: ${m.name}`))
           break
         default:
           console.log('Usage: npm run migrate [up|down|status]')
@@ -342,6 +346,7 @@ if (require.main === module) {
 ```
 
 **Update package.json:**
+
 ```json
 {
   "scripts": {
@@ -353,6 +358,7 @@ if (require.main === module) {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Schema migration run successfully
 - [ ] All 11 tables created
 - [ ] All 35+ indexes created
@@ -364,11 +370,13 @@ if (require.main === module) {
 ---
 
 ### Task 3.2: Express API Server
+
 **Assignee**: TBD
 **Effort**: 5 days
 **Priority**: CRITICAL
 
 #### Subtask 3.2.1: Express Server Setup
+
 **File**: `server/index.ts`
 **Time**: 1 day
 
@@ -401,7 +409,7 @@ export class Server {
       connectionString: config.database.url,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 2000
     })
 
     this.setupMiddleware()
@@ -412,10 +420,12 @@ export class Server {
   private setupMiddleware(): void {
     // Security
     this.app.use(helmet())
-    this.app.use(cors({
-      origin: config.cors.origin,
-      credentials: true
-    }))
+    this.app.use(
+      cors({
+        origin: config.cors.origin,
+        credentials: true
+      })
+    )
 
     // Parsing
     this.app.use(express.json({ limit: '10mb' }))
@@ -521,6 +531,7 @@ export const config = {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Express server runs
 - [ ] Database connection verified
 - [ ] Middleware configured
@@ -532,6 +543,7 @@ export const config = {
 ---
 
 #### Subtask 3.2.2: Prospects API Routes
+
 **File**: `server/routes/prospects.ts`
 **Time**: 2 days
 
@@ -548,7 +560,15 @@ const prospectsService = new ProspectsService()
 const createProspectSchema = z.object({
   company_name: z.string().min(1),
   state: z.string().length(2),
-  industry: z.enum(['restaurant', 'retail', 'construction', 'healthcare', 'manufacturing', 'services', 'technology']),
+  industry: z.enum([
+    'restaurant',
+    'retail',
+    'construction',
+    'healthcare',
+    'manufacturing',
+    'services',
+    'technology'
+  ]),
   lien_amount: z.number().positive().optional(),
   filing_date: z.string().datetime().optional()
 })
@@ -631,32 +651,40 @@ router.get('/:id', async (req: Request, res: Response) => {
 })
 
 // POST /api/prospects - Create prospect
-router.post('/', validateRequest({ body: createProspectSchema }), async (req: Request, res: Response) => {
-  try {
-    const prospect = await prospectsService.create(req.body)
-    res.status(201).json(prospect)
-  } catch (error) {
-    throw error
+router.post(
+  '/',
+  validateRequest({ body: createProspectSchema }),
+  async (req: Request, res: Response) => {
+    try {
+      const prospect = await prospectsService.create(req.body)
+      res.status(201).json(prospect)
+    } catch (error) {
+      throw error
+    }
   }
-})
+)
 
 // PATCH /api/prospects/:id - Update prospect
-router.patch('/:id', validateRequest({ body: updateProspectSchema }), async (req: Request, res: Response) => {
-  try {
-    const prospect = await prospectsService.update(req.params.id, req.body)
+router.patch(
+  '/:id',
+  validateRequest({ body: updateProspectSchema }),
+  async (req: Request, res: Response) => {
+    try {
+      const prospect = await prospectsService.update(req.params.id, req.body)
 
-    if (!prospect) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: `Prospect ${req.params.id} not found`
-      })
+      if (!prospect) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: `Prospect ${req.params.id} not found`
+        })
+      }
+
+      res.json(prospect)
+    } catch (error) {
+      throw error
     }
-
-    res.json(prospect)
-  } catch (error) {
-    throw error
   }
-})
+)
 
 // DELETE /api/prospects/:id - Delete prospect
 router.delete('/:id', async (req: Request, res: Response) => {
@@ -709,8 +737,8 @@ router.post('/claim', async (req: Request, res: Response) => {
     const results = await prospectsService.batchClaim(prospect_ids, req.user.id)
 
     res.json({
-      claimed: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
+      claimed: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
       results
     })
   } catch (error) {
@@ -791,9 +819,7 @@ export class ProspectsService {
       values.push(filters.status)
     }
 
-    const whereClause = conditions.length > 0
-      ? `WHERE ${conditions.join(' AND ')}`
-      : ''
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
     // Query prospects
     const query = `
@@ -819,10 +845,7 @@ export class ProspectsService {
   }
 
   async getById(id: string): Promise<Prospect | null> {
-    const result = await this.pool.query(
-      'SELECT * FROM prospects WHERE id = $1',
-      [id]
-    )
+    const result = await this.pool.query('SELECT * FROM prospects WHERE id = $1', [id])
     return result.rows[0] || null
   }
 
@@ -840,7 +863,7 @@ export class ProspectsService {
     // Build SET clause dynamically
     const fields = Object.keys(data)
     const setClause = fields.map((field, i) => `${field} = $${i + 2}`).join(', ')
-    const values = [id, ...fields.map(f => data[f])]
+    const values = [id, ...fields.map((f) => data[f])]
 
     const result = await this.pool.query(
       `UPDATE prospects SET ${setClause} WHERE id = $1 RETURNING *`,
@@ -850,10 +873,7 @@ export class ProspectsService {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.pool.query(
-      'DELETE FROM prospects WHERE id = $1',
-      [id]
-    )
+    const result = await this.pool.query('DELETE FROM prospects WHERE id = $1', [id])
     return result.rowCount! > 0
   }
 
@@ -881,6 +901,7 @@ export class ProspectsService {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All CRUD operations working
 - [ ] Pagination implemented
 - [ ] Filtering by multiple criteria
@@ -900,6 +921,7 @@ export class ProspectsService {
 ## Phase 3 Completion Checklist
 
 ### Week 9-10: Database & API Server ✓
+
 - [ ] PostgreSQL provisioned (RDS/Cloud SQL)
 - [ ] PgBouncer connection pooling
 - [ ] Schema migration successful
@@ -915,6 +937,7 @@ export class ProspectsService {
 - [ ] API documentation (OpenAPI)
 
 ### Week 11-12: Job Queue & Scheduling ✓
+
 - [ ] Redis cluster provisioned
 - [ ] BullMQ job queue setup
 - [ ] Worker processes running
@@ -926,6 +949,7 @@ export class ProspectsService {
 - [ ] Job metrics tracking
 
 ### Deliverables
+
 - [ ] Production database operational
 - [ ] REST API with 20+ endpoints
 - [ ] Job queue processing tasks
@@ -935,6 +959,7 @@ export class ProspectsService {
 - [ ] Deployment scripts
 
 ### Metrics
+
 - **API Response Time**: Target <500ms P95
 - **Database Queries**: Target <100ms P95
 - **Job Processing**: 1000+ jobs/hour

@@ -55,6 +55,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Browser automation server for robust web scraping using Puppeteer
 
 **Key Features**:
+
 - Navigation and data extraction
 - JavaScript execution
 - Click automation
@@ -72,6 +73,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Powerful web scraping with crawling and structured content extraction
 
 **Key Features**:
+
 - Web crawling capabilities
 - Screenshot functionality
 - Structured content extraction
@@ -89,6 +91,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Commercial-grade scraping with enterprise features
 
 **Key Features**:
+
 - Proxy rotation for anti-blocking
 - Scalable data collection
 - AI-ready output formats
@@ -106,6 +109,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Community-maintained reference implementations
 
 **Key Features**:
+
 - Multiple language support (TypeScript/Python)
 - Database integrations (PostgreSQL, SQLite)
 - API connections
@@ -120,6 +124,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Data querying with agent-based extraction
 
 **Key Features**:
+
 - Natural language queries
 - Document intelligence
 - Multi-source data support
@@ -145,6 +150,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: AI-ready access to PostgreSQL databases
 
 **Key Features**:
+
 - Schema inspection
 - SQL query execution (read-only or full)
 - Schema management
@@ -152,6 +158,7 @@ MCP operates on a client-server architecture with three main components:
 - Natural language interface support
 
 **Use Cases**:
+
 - Structured data storage for UCC filings
 - Relational queries across entities
 - ACID-compliant transactions
@@ -160,6 +167,7 @@ MCP operates on a client-server architecture with three main components:
 **Tech Stack**: Multiple implementations (Python, TypeScript, Go)
 
 **Sources**:
+
 - Official Model Context Protocol reference implementation
 - Community implementations on GitHub
 - Docker MCP Catalog
@@ -169,6 +177,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: NoSQL database access for document-based data
 
 **Key Features**:
+
 - Query execution
 - Document inspection
 - Database management
@@ -176,6 +185,7 @@ MCP operates on a client-server architecture with three main components:
 - Atlas cluster support
 
 **Use Cases**:
+
 - Semi-structured public record data
 - Flexible schema for varying record formats
 - Real-time data ingestion
@@ -190,6 +200,7 @@ MCP operates on a client-server architecture with three main components:
 **Description**: Lightweight embedded database with AI integration
 
 **Key Features**:
+
 - Local analytics engine
 - Text/vector search
 - Workflow automation
@@ -197,6 +208,7 @@ MCP operates on a client-server architecture with three main components:
 - Zero configuration
 
 **Use Cases**:
+
 - Development and testing
 - Local data caching
 - Embedded analytics
@@ -209,11 +221,13 @@ MCP operates on a client-server architecture with three main components:
 ### Multi-Database MCP Servers
 
 Some MCP servers support multiple databases in a single implementation:
+
 - Unified interface for SQLite, PostgreSQL, MySQL, MongoDB
 - Language options: Python, TypeScript, Go, Rust
 - Open SDKs for custom extensions
 
 **Discovery Resources**:
+
 - Model Context Protocol GitHub: https://github.com/modelcontextprotocol/servers
 - Docker MCP Catalog: https://hub.docker.com/mcp/explore?categories=database
 - Glama MCP Servers: https://glama.ai/mcp/servers?query=database
@@ -230,6 +244,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Industry-standard Python scraping framework
 
 **Strengths**:
+
 - Asynchronous processing for speed
 - CSS/XPath selectors
 - Built-in data export (JSON, CSV, XML)
@@ -238,10 +253,12 @@ Some MCP servers support multiple databases in a single implementation:
 - Strong community support
 
 **Weaknesses**:
+
 - Complex setup for JavaScript-heavy sites
 - Steeper learning curve
 
 **Best For**:
+
 - Scalable UCC filing scrapers
 - Multi-state portal aggregation
 - Scheduled data collection
@@ -254,16 +271,19 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: HTML/XML parsing library
 
 **Strengths**:
+
 - Simple API, easy learning curve
 - Great for quick prototypes
 - Works well with requests library
 - Excellent documentation
 
 **Weaknesses**:
+
 - Slower for large-scale operations
 - No built-in crawling
 
 **Best For**:
+
 - Small-scale data extraction
 - Rapid prototyping
 - Simple table scraping
@@ -274,17 +294,20 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Browser automation framework
 
 **Strengths**:
+
 - Full browser automation
 - JavaScript execution
 - Form interaction and login handling
 - Multiple browser support
 
 **Weaknesses**:
+
 - Resource-intensive
 - Slower than HTTP-based scrapers
 - Harder to scale
 
 **Best For**:
+
 - Login-protected portals
 - JavaScript-heavy sites
 - Form submissions
@@ -295,16 +318,19 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Distributed web crawling framework
 
 **Strengths**:
+
 - Built-in UI
 - Task scheduling
 - Distributed architecture
 - Monitoring capabilities
 
 **Weaknesses**:
+
 - Less active development
 - More complex setup
 
 **Best For**:
+
 - Periodic monitoring of filings
 - Distributed crawling
 - Change detection
@@ -314,16 +340,19 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Modern browser automation
 
 **Strengths**:
+
 - Multiple browser support (Chrome, Firefox, WebKit)
 - Modern API design
 - Network interception
 - Auto-waiting for elements
 
 **Weaknesses**:
+
 - Resource overhead
 - Learning curve
 
 **Best For**:
+
 - Modern government portals
 - Complex interaction flows
 - Cross-browser testing
@@ -335,6 +364,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Modern, scalable scraping library
 
 **Strengths**:
+
 - TypeScript-first design
 - Anti-blocking features built-in
 - Proxy rotation support
@@ -343,9 +373,11 @@ Some MCP servers support multiple databases in a single implementation:
 - Excellent documentation
 
 **Weaknesses**:
+
 - Newer framework (smaller ecosystem than Scrapy)
 
 **Best For**:
+
 - Production UCC scraping systems
 - Anti-bot measures bypass
 - Scalable crawlers
@@ -358,6 +390,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Chrome DevTools Protocol implementation
 
 **Strengths**:
+
 - Official Google project
 - Excellent Chrome/Chromium support
 - PDF generation
@@ -365,10 +398,12 @@ Some MCP servers support multiple databases in a single implementation:
 - Active development
 
 **Weaknesses**:
+
 - Chrome/Chromium only
 - Resource intensive
 
 **Best For**:
+
 - Chrome-based scraping
 - PDF exports
 - Screenshots of records
@@ -378,6 +413,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Cross-browser automation
 
 **Strengths**:
+
 - Multi-browser support
 - Modern API
 - Auto-waiting
@@ -385,10 +421,12 @@ Some MCP servers support multiple databases in a single implementation:
 - TypeScript support
 
 **Weaknesses**:
+
 - Resource overhead
 - Complex for simple tasks
 
 **Best For**:
+
 - Cross-browser compatibility
 - Modern web applications
 - Testing and scraping
@@ -398,30 +436,33 @@ Some MCP servers support multiple databases in a single implementation:
 **Description**: Concurrent request handler
 
 **Strengths**:
+
 - Simple API
 - Good for tabular data
 - Efficient for structured pages
 
 **Weaknesses**:
+
 - Limited for dynamic content
 - Smaller community
 
 **Best For**:
+
 - Simple structured data
 - Concurrent requests
 - Quick implementations
 
 ### Framework Comparison Table
 
-| Framework        | Language   | Async | Browser | Scalability | Learning Curve | Best Use Case                |
-|------------------|------------|-------|---------|-------------|----------------|------------------------------|
-| Scrapy           | Python     | Yes   | No      | Excellent   | Medium         | Production scraping at scale |
-| Beautiful Soup   | Python     | No    | No      | Poor        | Easy           | Quick prototypes             |
-| Selenium         | Python     | No    | Yes     | Medium      | Medium         | JavaScript-heavy sites       |
-| PySpider         | Python     | Yes   | No      | Excellent   | Hard           | Distributed crawling         |
-| Playwright       | Python/TS  | Yes   | Yes     | Good        | Medium         | Modern web apps              |
-| Crawlee          | TypeScript | Yes   | Yes     | Excellent   | Medium         | Enterprise scraping          |
-| Puppeteer        | TypeScript | Yes   | Yes     | Good        | Medium         | Chrome automation            |
+| Framework      | Language   | Async | Browser | Scalability | Learning Curve | Best Use Case                |
+| -------------- | ---------- | ----- | ------- | ----------- | -------------- | ---------------------------- |
+| Scrapy         | Python     | Yes   | No      | Excellent   | Medium         | Production scraping at scale |
+| Beautiful Soup | Python     | No    | No      | Poor        | Easy           | Quick prototypes             |
+| Selenium       | Python     | No    | Yes     | Medium      | Medium         | JavaScript-heavy sites       |
+| PySpider       | Python     | Yes   | No      | Excellent   | Hard           | Distributed crawling         |
+| Playwright     | Python/TS  | Yes   | Yes     | Good        | Medium         | Modern web apps              |
+| Crawlee        | TypeScript | Yes   | Yes     | Excellent   | Medium         | Enterprise scraping          |
+| Puppeteer      | TypeScript | Yes   | Yes     | Good        | Medium         | Chrome automation            |
 
 ---
 
@@ -434,6 +475,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Storage Model**: Row-based (with columnar extensions available)
 
 **Strengths**:
+
 - ACID compliance for data integrity
 - Rich SQL support with advanced features
 - JSON/JSONB for semi-structured data
@@ -444,10 +486,12 @@ Some MCP servers support multiple databases in a single implementation:
 - Strong cloud-native support (AWS RDS, Azure, Google Cloud SQL)
 
 **Weaknesses**:
+
 - Row-based storage can be slower for analytical queries on massive datasets
 - Requires tuning for optimal analytical performance
 
 **Use Cases for UCC-MCA Platform**:
+
 - Primary storage for UCC filings
 - Secured party information
 - Business entity records
@@ -456,6 +500,7 @@ Some MCP servers support multiple databases in a single implementation:
 - Audit logs
 
 **Extensions to Consider**:
+
 - **TimescaleDB**: Time-series optimization for tracking filing dates, health scores over time
 - **Citus**: Horizontal scaling for multi-state data partitioning
 - **pg_vector**: Vector similarity search for entity matching
@@ -470,6 +515,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Storage Model**: Columnar
 
 **Strengths**:
+
 - Extremely fast aggregation queries
 - Sub-second query latency even on massive datasets
 - Excellent compression ratios
@@ -480,11 +526,13 @@ Some MCP servers support multiple databases in a single implementation:
 - High concurrency support
 
 **Weaknesses**:
+
 - Limited transactional integrity (analytics-focused)
 - Unique SQL dialect (minor learning curve)
 - Not suitable for transactional workloads
 
 **Use Cases for UCC-MCA Platform**:
+
 - Real-time dashboard queries
 - Market intelligence aggregations
 - Competitor analysis (lender market share)
@@ -501,6 +549,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Storage Model**: Optimized row-based with time-series partitioning
 
 **Strengths**:
+
 - Built on PostgreSQL (familiar tools and ecosystem)
 - Hypertables for automatic partitioning
 - Continuous aggregations
@@ -510,10 +559,12 @@ Some MCP servers support multiple databases in a single implementation:
 - Excellent for temporal queries
 
 **Weaknesses**:
+
 - Best suited for time-series data
 - Not as fast as pure columnar for non-temporal analytics
 
 **Use Cases for UCC-MCA Platform**:
+
 - Health score tracking over time
 - Filing date analysis
 - Signal timeline tracking
@@ -530,6 +581,7 @@ Some MCP servers support multiple databases in a single implementation:
 **Storage Model**: Columnar
 
 **Strengths**:
+
 - Zero configuration required
 - Embedded (no server needed)
 - Extremely fast for local analytics
@@ -539,11 +591,13 @@ Some MCP servers support multiple databases in a single implementation:
 - Excellent for ETL processes
 
 **Weaknesses**:
+
 - Not designed for multi-user concurrent access
 - No distributed clustering
 - Not suitable for production multi-tenant systems
 
 **Use Cases for UCC-MCA Platform**:
+
 - Data processing pipelines
 - ETL transformations
 - Ad-hoc analysis during development
@@ -570,7 +624,7 @@ Some MCP servers support multiple databases in a single implementation:
    - Entity records
    - User data
    - Relational integrity
-   
+
 3. Analytics Layer (ClickHouse):
    - Denormalized views
    - Aggregated metrics
@@ -581,7 +635,7 @@ Some MCP servers support multiple databases in a single implementation:
    - Health scores over time
    - Signal timelines
    - Historical trends
-   
+
 5. Processing Layer (DuckDB):
    - ETL transformations
    - Data quality checks
@@ -590,12 +644,12 @@ Some MCP servers support multiple databases in a single implementation:
 
 ### Database Comparison Table
 
-| Database    | Storage   | Scale      | Query Speed | Transactions | Best For                      |
-|-------------|-----------|------------|-------------|--------------|-------------------------------|
-| PostgreSQL  | Row       | High (TBs) | Good        | Full ACID    | Primary operational data      |
-| ClickHouse  | Columnar  | Massive    | Excellent   | Limited      | Real-time analytics/BI        |
-| TimescaleDB | Row+TS    | High       | Good        | Full ACID    | Time-series analysis          |
-| DuckDB      | Columnar  | Local      | Excellent   | Limited      | Embedded analytics/ETL        |
+| Database    | Storage  | Scale      | Query Speed | Transactions | Best For                 |
+| ----------- | -------- | ---------- | ----------- | ------------ | ------------------------ |
+| PostgreSQL  | Row      | High (TBs) | Good        | Full ACID    | Primary operational data |
+| ClickHouse  | Columnar | Massive    | Excellent   | Limited      | Real-time analytics/BI   |
+| TimescaleDB | Row+TS   | High       | Good        | Full ACID    | Time-series analysis     |
+| DuckDB      | Columnar | Local      | Excellent   | Limited      | Embedded analytics/ETL   |
 
 ---
 
@@ -608,12 +662,14 @@ Some MCP servers support multiple databases in a single implementation:
 **Recommendation**: Implement Scrapy for Python-based scraping
 
 **Why**:
+
 - Production-proven for large-scale projects
 - Extensive middleware for handling edge cases
 - Built-in retry mechanisms and error handling
 - Strong community support
 
 **Implementation Steps**:
+
 1. Create Scrapy project structure
 2. Develop spiders for each state's UCC portal
 3. Implement middleware for rate limiting, CAPTCHA detection
@@ -621,6 +677,7 @@ Some MCP servers support multiple databases in a single implementation:
 5. Set up data pipelines for PostgreSQL storage
 
 **Alternative**: Crawlee for TypeScript-based systems
+
 - Use if existing codebase is TypeScript-heavy
 - Better integration with modern Node.js applications
 
@@ -629,12 +686,14 @@ Some MCP servers support multiple databases in a single implementation:
 **Recommendation**: PostgreSQL 15+ as primary database
 
 **Why**:
+
 - Handles relational data integrity critical for financial records
 - JSONB support for flexible data schemas
 - Mature replication and backup solutions
 - Cost-effective
 
 **Configuration**:
+
 ```sql
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -644,6 +703,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 ```
 
 **Schema Design**:
+
 - Normalized tables for UCC filings, debtors, secured parties
 - JSONB columns for varying state-specific fields
 - Proper indexing on search fields (debtor name, filing date, state)
@@ -653,11 +713,13 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 **Recommendation**: Start with PostgreSQL MCP Server
 
 **Why**:
+
 - Provides AI-ready access to structured data
 - Enables future LLM-based features
 - Standardized interface for multiple clients
 
 **Implementation**:
+
 1. Deploy official PostgreSQL MCP server
 2. Configure read-only access for AI queries
 3. Set up authentication and access controls
@@ -668,11 +730,13 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 2.1 Add ClickHouse for Analytics
 
 **Why**:
+
 - Dashboard queries need sub-second response times
 - Market intelligence requires fast aggregations
 - Real-time prospect scoring demands performance
 
 **Implementation**:
+
 1. Set up ClickHouse cluster
 2. Create ETL pipeline from PostgreSQL to ClickHouse
 3. Design denormalized tables for analytics queries
@@ -681,11 +745,13 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 2.2 Implement TimescaleDB Extension
 
 **Why**:
+
 - Health scores, signals, and trends are time-series data
 - Automatic partitioning improves query performance
 - Continuous aggregations reduce computation
 
 **Implementation**:
+
 1. Enable TimescaleDB on existing PostgreSQL
 2. Convert relevant tables to hypertables
 3. Create continuous aggregates for common time-based queries
@@ -696,11 +762,13 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 **Recommendation**: Implement Puppeteer MCP Server
 
 **Why**:
+
 - Standardized interface for browser automation
 - Reusable across different scraping tasks
 - AI agent integration for adaptive scraping
 
 **Implementation**:
+
 1. Deploy Puppeteer MCP server
 2. Create tools for common scraping operations
 3. Integrate with existing Scrapy/Crawlee infrastructure
@@ -711,11 +779,13 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 3.1 DuckDB for ETL and Processing
 
 **Why**:
+
 - Fast data transformations
 - Efficient for data quality checks
 - Great for preparing exports
 
 **Implementation**:
+
 1. Integrate DuckDB into data processing pipelines
 2. Use for CSV/Parquet file processing
 3. Implement data quality validation
@@ -724,6 +794,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 3.2 Additional MCP Servers
 
 **Recommendations**:
+
 - **Firecrawl MCP**: For broad web crawling of related sources
 - **MongoDB MCP** (if needed): For document-oriented data
 - **SQLite MCP**: For development and testing environments
@@ -733,6 +804,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 4.1 Monitoring and Observability
 
 **Tools**:
+
 - Prometheus + Grafana for database metrics
 - Scrapy telemetry for scraping health
 - Custom dashboards for pipeline monitoring
@@ -740,6 +812,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 4.2 Security Hardening
 
 **Measures**:
+
 - MCP server authentication and authorization
 - Database encryption at rest and in transit
 - Audit logging for sensitive operations
@@ -748,6 +821,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 #### 4.3 Scalability Planning
 
 **Strategies**:
+
 - PostgreSQL read replicas for reporting
 - ClickHouse cluster expansion
 - Horizontal scraping distribution
@@ -816,7 +890,7 @@ CREATE EXTENSION IF NOT EXISTS "timescaledb"; -- Time-series
 
 1. **Scraping**: State portals → Scrapy/Crawlee → Raw data
 2. **Processing**: DuckDB ETL → Data validation → Normalization
-3. **Storage**: 
+3. **Storage**:
    - PostgreSQL: Normalized operational data
    - TimescaleDB: Time-series metrics
    - ClickHouse: Denormalized analytics data
@@ -861,17 +935,20 @@ Example configuration for Claude Desktop (can be adapted for other MCP clients):
 ### Deployment Architecture
 
 **Development Environment**:
+
 - Local PostgreSQL + TimescaleDB
 - Local DuckDB for processing
 - Docker containers for MCP servers
 
 **Staging Environment**:
+
 - Managed PostgreSQL (AWS RDS / Azure Database)
 - TimescaleDB Cloud
 - ClickHouse cluster (self-hosted or cloud)
 - Kubernetes for MCP servers
 
 **Production Environment**:
+
 - Multi-region database replication
 - ClickHouse distributed cluster
 - Load-balanced MCP servers
@@ -923,6 +1000,7 @@ Example configuration for Claude Desktop (can be adapted for other MCP clients):
 This research identifies a comprehensive technology stack for the UCC-MCA Intelligence Platform:
 
 **Core Recommendations**:
+
 1. **Scraping**: Scrapy (Python) or Crawlee (TypeScript) with Puppeteer MCP server
 2. **Primary Storage**: PostgreSQL 15+ with TimescaleDB extension
 3. **Analytics**: ClickHouse for real-time dashboards and market intelligence
@@ -930,6 +1008,7 @@ This research identifies a comprehensive technology stack for the UCC-MCA Intell
 5. **AI Integration**: MCP servers for standardized data access
 
 **Next Steps**:
+
 1. Set up development environment with PostgreSQL and Scrapy
 2. Implement initial scraper for a single state
 3. Deploy PostgreSQL MCP server for testing
@@ -937,6 +1016,7 @@ This research identifies a comprehensive technology stack for the UCC-MCA Intell
 5. Begin ClickHouse integration for analytics
 
 **Success Metrics**:
+
 - Scraping reliability: 99%+ success rate
 - Query performance: < 1s for dashboard queries
 - Data freshness: Real-time or near-real-time updates
