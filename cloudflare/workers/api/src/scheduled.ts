@@ -15,6 +15,8 @@
  */
 import { all, run } from './db'
 import type { Env } from './types'
+import { drainWebhookDeliveries, sendWebhookDelivery } from './webhooks'
+import { pushProspectToCrm } from './crm'
 
 interface JobRow {
   id: string
@@ -48,17 +50,40 @@ async function runHealthScores(env: Env): Promise<void> {
 }
 
 /**
- * Process a single dequeued job. Dispatch by `job.type` as routes are ported.
- *
- * No handlers are implemented yet, so the default path THROWS rather than
- * returning — otherwise the drain would mark unhandled jobs `done` and silently
- * discard real work (telos invariant #5: no silent failure). Add a `case` for
- * each job type at the same time you port the route that enqueues it.
+ * Process a single dequeued job. Dispatch by `job.type`.
  */
 async function processJob(env: Env, job: JobRow): Promise<void> {
+  let parsedPayload: Record<string, unknown> = {}
+  if (job.payload) {
+    try {
+      parsedPayload = JSON.parse(job.payload)
+    } catch {
+      // ignore
+    }
+  }
+
   switch (job.type) {
-    // case 'enrichment':  return runEnrichmentJob(env, job)   // when ported
-    // case 'ingestion':   return runIngestionJob(env, job)
+    case 'webhook_delivery': {
+      const deliveryId = parsedPayload.deliveryId as string
+      if (!deliveryId) throw new Error(`Missing deliveryId in webhook_delivery job ${job.id}`)
+      const res = await sendWebhookDelivery(env, deliveryId)
+      if (!res.success) {
+        throw new Error(res.error ?? `Webhook delivery failed with status ${res.status}`)
+      }
+      return
+    }
+    case 'crm_push': {
+      const prospectId = parsedPayload.prospectId as string
+      const orgId = job.org_id
+      if (!prospectId || !orgId) {
+        throw new Error(`Missing prospectId or org_id in crm_push job ${job.id}`)
+      }
+      const res = await pushProspectToCrm(env, orgId, prospectId)
+      if (!res.success) {
+        throw new Error(res.error ?? 'CRM push failed')
+      }
+      return
+    }
     default:
       throw new Error(
         `No handler for job type "${job.type}" — not yet ported (org=${job.org_id ?? 'none'})`
@@ -149,8 +174,9 @@ export async function scheduled(
       console.error(`[cron] scheduled task error for ${event.cron}`, err)
     }
 
-    // The $0 queue: always drain pending jobs regardless of which cron fired.
+    // The $0 queue: always drain pending jobs and webhook retries regardless of which cron fired.
     await drainJobs(env)
+    await drainWebhookDeliveries(env)
   })()
 
   ctx.waitUntil(task)

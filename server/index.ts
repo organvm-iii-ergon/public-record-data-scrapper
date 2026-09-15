@@ -43,6 +43,7 @@ import metricsRouter from './routes/metrics'
 import agenticRouter from './routes/agentic'
 import scrapeRouter from './routes/scrape'
 import underwritingRouter from './routes/underwriting'
+import webhookSubscriptionsRouter from './routes/webhookSubscriptions'
 
 // Import queue infrastructure
 import {
@@ -273,6 +274,15 @@ export class Server {
     // scrape authenticates via API key OR JWT — either way req.user carries the
     // org/tier context by the time dataTierRouter resolves.
     this.app.use('/api/scrape', apiKeyOrJwtAuth, dataTierRouter, scrapeRouter)
+
+    // Outbound webhook subscription management (authenticated — requires org context)
+    this.app.use(
+      '/api/webhooks/subscriptions',
+      authMiddleware,
+      orgContextMiddleware,
+      dataTierRouter,
+      webhookSubscriptionsRouter
+    )
 
     // Root endpoint
     this.app.get('/', dataTierRouter, (req, res) => {
