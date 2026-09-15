@@ -74,3 +74,5 @@ server/services/calibration/*.private.json
 vault/
 playwright-report/
 test-results/
+.wrangler/
+.quality/
