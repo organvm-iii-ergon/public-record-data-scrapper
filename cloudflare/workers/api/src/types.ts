@@ -131,3 +131,82 @@ export interface AppBindings {
   Bindings: Env
   Variables: Variables
 }
+
+// ============================================================================
+// Webhook & CRM Integration Types (Issue #485)
+// ============================================================================
+
+export type WebhookStatus = 'active' | 'paused' | 'disabled'
+export type WebhookDeliveryStatus =
+  'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
+export type CrmProvider = 'hubspot' | 'salesforce' | 'gohighlevel'
+export type CrmStatus = 'active' | 'disabled' | 'error'
+
+export interface WebhookEndpointRow {
+  id: string
+  org_id: string
+  url: string
+  secret: string
+  description: string | null
+  events: string
+  status: WebhookStatus
+  consecutive_failures: number
+  created_at: string
+  updated_at: string
+}
+
+export interface WebhookDeliveryRow {
+  id: string
+  org_id: string
+  webhook_id: string
+  event: string
+  payload: string
+  status: WebhookDeliveryStatus
+  attempts: number
+  max_attempts: number
+  next_retry_at: string | null
+  response_status: number | null
+  response_body: string | null
+  error_message: string | null
+  delivered_at: string | null
+  created_at: string
+}
+
+export interface CrmIntegrationRow {
+  id: string
+  org_id: string
+  provider: CrmProvider
+  status: CrmStatus
+  api_key: string
+  config: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CrmPushLogRow {
+  id: string
+  org_id: string
+  crm_id: string
+  prospect_id: string
+  provider: string
+  external_id: string | null
+  status: 'success' | 'failed'
+  error_message: string | null
+  created_at: string
+}
+
+/** Standard webhook envelope format adhering to issue #485 requirements */
+export interface WebhookPayload<T = unknown> {
+  id: string
+  event: string
+  created_at: string
+  api_version: string
+  data: T
+}
+
+export interface CrmPushResult {
+  success: boolean
+  externalId?: string
+  provider: CrmProvider
+  error?: string
+}

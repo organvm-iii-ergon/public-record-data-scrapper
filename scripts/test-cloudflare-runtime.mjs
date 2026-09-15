@@ -90,6 +90,11 @@ try {
     await db.prepare(stmt).run()
   }
 
+  const rawMigration3 = fs.readFileSync(new URL('migrations/0003_webhooks_crm.sql', edge), 'utf8')
+  for (const stmt of splitSqlStatements(rawMigration3)) {
+    await db.prepare(stmt).run()
+  }
+
   const tables = await db
     .prepare(
       "SELECT name FROM sqlite_master WHERE name IN ('organizations', 'prospects', 'jobs', 'prospects_fts') ORDER BY name"
@@ -102,6 +107,16 @@ try {
     .prepare("SELECT name FROM sqlite_master WHERE name = 'api_keys'")
     .first()
   assert.equal(apiKeysTable?.name, 'api_keys')
+
+  const webhookEndpointsTable = await db
+    .prepare("SELECT name FROM sqlite_master WHERE name = 'webhook_endpoints'")
+    .first()
+  assert.equal(webhookEndpointsTable?.name, 'webhook_endpoints')
+
+  const webhookDeliveriesTable = await db
+    .prepare("SELECT name FROM sqlite_master WHERE name = 'webhook_deliveries'")
+    .first()
+  assert.equal(webhookDeliveriesTable?.name, 'webhook_deliveries')
 
   // Verify HTTP endpoints and security boundaries
   const health = await worker.dispatchFetch('http://localhost/health')

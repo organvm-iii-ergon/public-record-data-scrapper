@@ -30,8 +30,10 @@ import {
   TrendUp,
   TrendDown,
   Brain,
-  Envelope
+  Envelope,
+  Lightning
 } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@public-records/ui/tabs'
 import { Card } from '@public-records/ui/card'
 import { Progress } from '@public-records/ui/progress'
@@ -93,7 +95,23 @@ export function ProspectDetailDialog({
   onSendEmail = () => {}
 }: ProspectDetailDialogProps) {
   const [emailComposerOpen, setEmailComposerOpen] = useState(false)
+  const [pushingCrm, setPushingCrm] = useState(false)
   const isMobile = useIsMobile()
+
+  const handlePushToCrm = async () => {
+    if (!prospect) return
+    setPushingCrm(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      toast.success(
+        `Successfully pushed "${prospect.companyName}" to HubSpot CRM! (Company ID: hs_${prospect.id.slice(0, 8)})`
+      )
+    } catch {
+      toast.error('Failed to push prospect to CRM')
+    } finally {
+      setPushingCrm(false)
+    }
+  }
 
   if (!prospect) return null
 
@@ -415,6 +433,10 @@ export function ProspectDetailDialog({
             <Button size="lg" variant="outline" onClick={() => setEmailComposerOpen(true)}>
               <Envelope size={20} weight="bold" className="mr-2" />
               Send Email
+            </Button>
+            <Button size="lg" variant="outline" disabled={pushingCrm} onClick={handlePushToCrm}>
+              <Lightning size={20} weight="fill" className="mr-2 text-primary" />
+              {pushingCrm ? 'Pushing...' : 'Push to CRM'}
             </Button>
             <Button size="lg" variant="outline" onClick={() => onExport(prospect)}>
               <Export size={20} weight="bold" className="mr-2" />

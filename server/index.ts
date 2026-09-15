@@ -43,6 +43,7 @@ import metricsRouter from './routes/metrics'
 import agenticRouter from './routes/agentic'
 import scrapeRouter from './routes/scrape'
 import underwritingRouter from './routes/underwriting'
+import webhookSubscriptionsRouter from './routes/webhookSubscriptions'
 import v1Router from './routes/v1/index'
 
 // Import queue infrastructure
@@ -275,6 +276,15 @@ export class Server {
     // org/tier context by the time dataTierRouter resolves.
     this.app.use('/api/scrape', apiKeyOrJwtAuth, dataTierRouter, scrapeRouter)
 
+    // Outbound webhook subscription management (authenticated — requires org context)
+    this.app.use(
+      '/api/webhooks/subscriptions',
+      authMiddleware,
+      orgContextMiddleware,
+      dataTierRouter,
+      webhookSubscriptionsRouter
+    )
+
     // Versioned public REST API (v1).
     // Auth, rate-limiting, org-context, and data-tier are applied inside the
     // v1Router itself — see server/routes/v1/index.ts.
@@ -282,7 +292,6 @@ export class Server {
     // serve both /api/* (dashboard/JWT) and /v1/* (external API-key callers)
     // without duplication.
     this.app.use('/v1', v1Router)
-
     // Root endpoint
     this.app.get('/', dataTierRouter, (req, res) => {
       res.json({
