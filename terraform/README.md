@@ -28,15 +28,15 @@ This Terraform configuration provisions a complete production-ready infrastructu
 
 ### Resources Created
 
-| Resource Type | Purpose | High Availability |
-|---------------|---------|-------------------|
-| VPC | Network isolation | Multi-AZ |
-| RDS PostgreSQL | Primary database | Multi-AZ |
-| ElastiCache Redis | Caching layer | Multi-AZ with replication |
-| S3 Buckets | Data exports & backups | Cross-region replication ready |
-| Security Groups | Network security | N/A |
-| CloudWatch | Monitoring & alerting | Regional |
-| SNS Topics | Alert notifications | Regional |
+| Resource Type     | Purpose                | High Availability              |
+| ----------------- | ---------------------- | ------------------------------ |
+| VPC               | Network isolation      | Multi-AZ                       |
+| RDS PostgreSQL    | Primary database       | Multi-AZ                       |
+| ElastiCache Redis | Caching layer          | Multi-AZ with replication      |
+| S3 Buckets        | Data exports & backups | Cross-region replication ready |
+| Security Groups   | Network security       | N/A                            |
+| CloudWatch        | Monitoring & alerting  | Regional                       |
+| SNS Topics        | Alert notifications    | Regional                       |
 
 ## 🏗️ Architecture
 
@@ -83,6 +83,7 @@ This Terraform configuration provisions a complete production-ready infrastructu
 ### AWS Permissions
 
 The AWS user/role needs the following permissions:
+
 - VPC management (EC2)
 - RDS instance creation and management
 - ElastiCache cluster creation and management
@@ -146,6 +147,7 @@ terraform init
 ```
 
 This will:
+
 - Download required provider plugins (AWS, Random)
 - Download required modules (VPC, Security Groups, S3)
 - Configure HCP Terraform backend
@@ -170,22 +172,22 @@ Type `yes` when prompted. Infrastructure provisioning takes approximately 15-20 
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable             | Description                | Example          |
+| -------------------- | -------------------------- | ---------------- |
 | `db_master_password` | PostgreSQL master password | `SecurePass123!` |
-| `redis_auth_token` | Redis authentication token | `RedisToken456!` |
+| `redis_auth_token`   | Redis authentication token | `RedisToken456!` |
 
 ### Important Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `environment` | `production` | Environment name (dev/staging/production) |
-| `aws_region` | `us-east-1` | AWS region for resources |
-| `vpc_cidr` | `10.0.0.0/16` | VPC CIDR block |
-| `db_instance_class` | `db.t3.large` | RDS instance type |
-| `db_allocated_storage` | `100` | RDS storage in GB |
-| `redis_node_type` | `cache.t3.medium` | Redis node type |
-| `alert_email` | `""` | Email for CloudWatch alerts |
+| Variable               | Default           | Description                               |
+| ---------------------- | ----------------- | ----------------------------------------- |
+| `environment`          | `production`      | Environment name (dev/staging/production) |
+| `aws_region`           | `us-east-1`       | AWS region for resources                  |
+| `vpc_cidr`             | `10.0.0.0/16`     | VPC CIDR block                            |
+| `db_instance_class`    | `db.t3.large`     | RDS instance type                         |
+| `db_allocated_storage` | `100`             | RDS storage in GB                         |
+| `redis_node_type`      | `cache.t3.medium` | Redis node type                           |
+| `alert_email`          | `""`              | Email for CloudWatch alerts               |
 
 ### Environment-Specific Configurations
 
@@ -238,13 +240,13 @@ terraform output redis_endpoint
 
 ### Key Outputs
 
-| Output | Description | Usage |
-|--------|-------------|-------|
-| `database_endpoint` | PostgreSQL connection string | Application DATABASE_URL |
-| `redis_endpoint` | Redis primary endpoint | Application REDIS_URL |
-| `data_exports_bucket_name` | S3 bucket for exports | Data export destination |
-| `vpc_id` | VPC identifier | Network reference |
-| `nat_gateway_ips` | NAT Gateway IPs | Whitelist for external APIs |
+| Output                     | Description                  | Usage                       |
+| -------------------------- | ---------------------------- | --------------------------- |
+| `database_endpoint`        | PostgreSQL connection string | Application DATABASE_URL    |
+| `redis_endpoint`           | Redis primary endpoint       | Application REDIS_URL       |
+| `data_exports_bucket_name` | S3 bucket for exports        | Data export destination     |
+| `vpc_id`                   | VPC identifier               | Network reference           |
+| `nat_gateway_ips`          | NAT Gateway IPs              | Whitelist for external APIs |
 
 ### Environment Variables for Application
 
@@ -276,15 +278,15 @@ EOF
 
 ### Monthly Cost Breakdown (Production Configuration)
 
-| Resource | Configuration | Estimated Monthly Cost |
-|----------|---------------|------------------------|
-| RDS PostgreSQL | db.t3.large, 100GB, Multi-AZ | ~$220 |
-| ElastiCache Redis | cache.t3.medium x2, Multi-AZ | ~$120 |
-| VPC | NAT Gateways x3 | ~$100 |
-| S3 Storage | 100GB | ~$2.50 |
-| CloudWatch | Logs + Alarms | ~$20 |
-| Data Transfer | Varies | ~$50 |
-| **Total** | | **~$512.50/month** |
+| Resource          | Configuration                | Estimated Monthly Cost |
+| ----------------- | ---------------------------- | ---------------------- |
+| RDS PostgreSQL    | db.t3.large, 100GB, Multi-AZ | ~$220                  |
+| ElastiCache Redis | cache.t3.medium x2, Multi-AZ | ~$120                  |
+| VPC               | NAT Gateways x3              | ~$100                  |
+| S3 Storage        | 100GB                        | ~$2.50                 |
+| CloudWatch        | Logs + Alarms                | ~$20                   |
+| Data Transfer     | Varies                       | ~$50                   |
+| **Total**         |                              | **~$512.50/month**     |
 
 ### Cost Optimization Tips
 
@@ -303,26 +305,31 @@ With `db.t3.medium` (no Multi-AZ) and `cache.t3.micro`: **~$150/month**
 ### Security Features Implemented
 
 ✅ **Encryption at Rest**
+
 - RDS: Encrypted storage with AWS KMS
 - ElastiCache: Encryption enabled
 - S3: Server-side encryption (AES-256)
 
 ✅ **Encryption in Transit**
+
 - Redis: TLS/SSL enabled
 - RDS: SSL/TLS enforced
 - S3: HTTPS required
 
 ✅ **Network Security**
+
 - Private subnets for databases
 - Security groups with least privilege
 - No public access to databases
 
 ✅ **Access Control**
+
 - IAM roles with minimal permissions
 - Redis authentication enabled
 - PostgreSQL password authentication
 
 ✅ **Monitoring**
+
 - CloudWatch logs for all services
 - Alarms for critical metrics
 - SNS notifications for alerts
@@ -355,6 +362,7 @@ Error: Failed to install provider
 ```
 
 **Solution**: Ensure you have internet access and run:
+
 ```bash
 terraform init -upgrade
 ```
@@ -366,6 +374,7 @@ Error: error configuring Terraform AWS Provider
 ```
 
 **Solution**: Configure AWS credentials:
+
 ```bash
 aws configure
 # OR
@@ -380,6 +389,7 @@ Error: error creating DB Instance: DBInstanceAlreadyExists
 ```
 
 **Solution**: Import existing resource or use different identifier:
+
 ```bash
 terraform import aws_db_instance.postgresql existing-db-identifier
 ```
@@ -399,6 +409,7 @@ Error: Error loading state
 ```
 
 **Solution**: Authenticate with HCP Terraform:
+
 ```bash
 terraform login
 ```
@@ -431,16 +442,19 @@ terraform apply
 ## 📖 Additional Resources
 
 ### Terraform Documentation
+
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [HCP Terraform](https://developer.hashicorp.com/terraform/cloud-docs)
 - [Terraform Best Practices](https://www.terraform-best-practices.com/)
 
 ### AWS Documentation
+
 - [RDS PostgreSQL](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html)
 - [ElastiCache Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/)
 - [VPC Best Practices](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-best-practices.html)
 
 ### Project Documentation
+
 - [Main README](../README.md)
 - [Deployment Guide](../docs/technical/DEPLOYMENT.md)
 - [Database Schema](../database/README.md)
@@ -481,6 +495,7 @@ terraform destroy
 ```
 
 Before destroying production:
+
 1. Backup all data
 2. Export critical logs
 3. Notify stakeholders

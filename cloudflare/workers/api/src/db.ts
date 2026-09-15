@@ -34,11 +34,7 @@ export async function first<T = Record<string, unknown>>(
 }
 
 /** Run an INSERT/UPDATE/DELETE and return D1's run metadata. */
-export async function run(
-  env: Env,
-  sql: string,
-  ...params: unknown[]
-): Promise<D1Result> {
+export async function run(env: Env, sql: string, ...params: unknown[]): Promise<D1Result> {
   const stmt = env.DB.prepare(sql).bind(...params)
   return stmt.run()
 }

@@ -3,6 +3,7 @@
 ## Layout Architecture
 
 ### Overall Structure
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ HEADER (Mica Effect - Sticky)                              │
@@ -42,12 +43,14 @@
 ## Hero Stats Section (Enhanced)
 
 ### Visual Design
+
 - **Layout**: 6-column responsive bento grid
 - **Style**: Glass cards with gradient overlays
 - **Animation**: Count-up numbers on mount, pulsing borders for alerts
 - **Hover**: Lift effect (translateY -4px) + increased glow
 
 ### Stat Card Anatomy
+
 ```
 ┌──────────────────────────────┐
 │ ⚡ Icon (animated float)     │
@@ -108,6 +111,7 @@
    - Color accent: Success (green)
 
 ### Responsive Behavior
+
 - **Desktop (>1280px)**: 6 columns, 24px gaps
 - **Tablet (768-1279px)**: 3 columns, 16px gaps
 - **Mobile (<768px)**: 2 columns, 12px gaps, reduced padding
@@ -115,6 +119,7 @@
 ## Filter Sidebar (Improved)
 
 ### Visual Design
+
 - **Position**: Sticky sidebar (left on desktop, drawer on mobile)
 - **Style**: Glass panel with higher opacity (0.8)
 - **Width**: 280px (desktop), full-width (mobile drawer)
@@ -123,6 +128,7 @@
 ### Filter Groups
 
 #### 1. Quick Filters (Always Visible)
+
 ```
 ┌────────────────────────┐
 │ [×] Clear All          │
@@ -135,6 +141,7 @@
 ```
 
 #### 2. Industry (Checkbox Group)
+
 ```
 ┌────────────────────────┐
 │ ▼ Industry (5 selected)│
@@ -152,6 +159,7 @@
 ```
 
 #### 3. Geographic (Multi-select)
+
 ```
 ┌────────────────────────┐
 │ ▼ State / Region       │
@@ -168,6 +176,7 @@
 ```
 
 #### 4. Score Range (Dual Slider)
+
 ```
 ┌────────────────────────┐
 │ ▼ Priority Score       │
@@ -181,6 +190,7 @@
 ```
 
 #### 5. Health Grade (Pill Buttons)
+
 ```
 ┌────────────────────────┐
 │ ▼ Health Grade         │
@@ -193,6 +203,7 @@
 ```
 
 #### 6. Growth Signals (Checkbox + Badge)
+
 ```
 ┌────────────────────────┐
 │ ▼ Growth Indicators    │
@@ -208,6 +219,7 @@
 ```
 
 #### 7. Advanced (Collapsible)
+
 ```
 ┌────────────────────────┐
 │ ▼ Advanced Filters     │
@@ -225,6 +237,7 @@
 ```
 
 ### Filter Actions
+
 ```
 ┌────────────────────────┐
 │ [Apply Filters]  (256) │
@@ -237,6 +250,7 @@
 ## Prospect Grid (Enhanced)
 
 ### Layout Options (Toggle)
+
 ```
 ┌─────────────────────────────────┐
 │ View: [Grid ●] [List ○] [Table]│
@@ -246,6 +260,7 @@
 ```
 
 ### Grid Mode
+
 - 3 columns on desktop (1280px+)
 - 2 columns on tablet (768-1279px)
 - 1 column on mobile (<768px)
@@ -253,6 +268,7 @@
 - Masonry layout (varying heights)
 
 ### List Mode (Alternative)
+
 - Single column with horizontal layout
 - Company info on left, metrics on right
 - Expandable detail panel
@@ -260,6 +276,7 @@
 - Better for scanning many records
 
 ### Table Mode (Alternative)
+
 - Dense spreadsheet view
 - Sortable columns
 - Inline editing
@@ -269,11 +286,13 @@
 ## Quick Actions Bar
 
 ### Position
+
 - Floating above prospect grid
 - Sticky when scrolling
 - Appears when any prospect selected
 
 ### Actions
+
 ```
 ┌──────────────────────────────────────────┐
 │ 3 prospects selected                     │
@@ -285,11 +304,13 @@
 ## Real-Time Activity Feed (New Feature)
 
 ### Position
+
 - Right sidebar (desktop)
 - Bottom sheet drawer (mobile)
 - Collapsible / expandable
 
 ### Content
+
 ```
 ┌────────────────────────┐
 │ 🔴 Live Activity       │
@@ -313,6 +334,7 @@
 ## Navigation Tabs (Improved)
 
 ### Visual Design
+
 ```
 ┌─────────────────────────────────────────┐
 │ [🎯 Prospects] [❤️ Portfolio]          │
@@ -323,6 +345,7 @@
 ```
 
 ### States
+
 - **Active**: Bold text, bottom border (2px amber), icon highlighted
 - **Hover**: Slight lift, background glow
 - **Inactive**: Muted text, no border
@@ -331,6 +354,7 @@
 ## Key Improvements Over Current Design
 
 ### Visual Hierarchy
+
 1. ✅ Larger, bolder hero stats with trends
 2. ✅ Sparklines in stat cards for context
 3. ✅ Improved filter organization with counts
@@ -338,6 +362,7 @@
 5. ✅ Consistent card styling throughout
 
 ### Information Density
+
 1. ✅ More data visible above the fold
 2. ✅ Collapsible sections to reduce clutter
 3. ✅ Inline metrics on cards
@@ -345,6 +370,7 @@
 5. ✅ Progressive disclosure of details
 
 ### Interactivity
+
 1. ✅ Live activity feed for awareness
 2. ✅ Bulk selection and actions
 3. ✅ Inline quick actions
@@ -352,6 +378,7 @@
 5. ✅ Drag-to-reorder capabilities
 
 ### Modern Design Trends
+
 1. ✅ Bento grid layouts (asymmetric)
 2. ✅ Kinetic typography (animated counters)
 3. ✅ Micro-interactions everywhere
@@ -361,6 +388,7 @@
 7. ✅ Gradient meshes for depth
 
 ### Accessibility
+
 1. ✅ High contrast mode compatible
 2. ✅ Keyboard navigation throughout
 3. ✅ Screen reader labels
@@ -370,18 +398,21 @@
 ## Implementation Priority
 
 ### Phase 1: Core Dashboard
+
 - [ ] Hero stats with animations
 - [ ] Improved stat cards
 - [ ] Filter sidebar enhancement
 - [ ] Grid layout optimization
 
 ### Phase 2: Advanced Features
+
 - [ ] Real-time activity feed
 - [ ] Live data updates
 - [ ] Bulk operations
 - [ ] View mode toggles
 
 ### Phase 3: Polish
+
 - [ ] Micro-interactions
 - [ ] Loading states
 - [ ] Empty states
@@ -391,30 +422,35 @@
 ## Design Specifications
 
 ### Spacing
+
 - Base: 4px
 - Card padding: 24px
 - Grid gaps: 16px
 - Section margins: 32px
 
 ### Typography
+
 - Hero numbers: 40px / 700 / Tabular
 - Card titles: 20px / 600
 - Body: 14px / 400
 - Labels: 12px / 500
 
 ### Colors (Enhanced)
+
 - Glass: oklch(1 0 0 / 0.75) [increased opacity]
 - Border: oklch(1 0 0 / 0.20) [increased contrast]
 - Glow: Drop shadow with blur 20px, spread 0px
 - Accent: Gradient overlays on hover
 
 ### Animations
+
 - Duration: 200ms (micro), 300ms (standard), 500ms (emphasis)
 - Easing: ease-out (enter), ease-in (exit), ease-in-out (attention)
 - Count-up: 1000ms with exponential easing
 - Pulse: 2000ms infinite
 
 ### Accessibility
+
 - Contrast: AAA level (7:1 minimum)
 - Focus: 2px solid ring with 2px offset
 - Touch: 44px minimum target size

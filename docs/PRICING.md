@@ -17,32 +17,35 @@ Each lead is delivered as a structured record (CSV, JSON, or pushed to your CRM)
 Fields below are standard on every record unless noted.
 
 ### Filing & business identity
-| Field | Description |
-| --- | --- |
-| `debtor_name` | Business name on the UCC filing (normalized + raw) |
-| `secured_party` | Existing lender / funder on file |
-| `filing_date` | Date the UCC-1 was recorded |
-| `state` | Filing jurisdiction (CA, TX, FL, NY today — more on request) |
-| `status` | Filing status (active / lapsed / terminated) |
-| `industry` | Classified vertical (restaurant, retail, construction, healthcare, manufacturing, services, technology) |
-| `estimated_revenue` | Modeled annual revenue band |
+
+| Field               | Description                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------- |
+| `debtor_name`       | Business name on the UCC filing (normalized + raw)                                                      |
+| `secured_party`     | Existing lender / funder on file                                                                        |
+| `filing_date`       | Date the UCC-1 was recorded                                                                             |
+| `state`             | Filing jurisdiction (CA, TX, FL, NY today — more on request)                                            |
+| `status`            | Filing status (active / lapsed / terminated)                                                            |
+| `industry`          | Classified vertical (restaurant, retail, construction, healthcare, manufacturing, services, technology) |
+| `estimated_revenue` | Modeled annual revenue band                                                                             |
 
 ### Scoring & intelligence
-| Field | Description |
-| --- | --- |
-| `priority_score` | 0–100 MCA-likelihood / opportunity score |
-| `default_date` / `time_since_default` | Default event and days elapsed (recency drives conversion) |
-| `growth_signals` | Detected expansion / distress signals attached to the business |
-| `narrative` | Plain-English "why this lead, why now" summary for reps |
-| `enrichment_confidence` | 0.00–1.00 confidence on the appended contact/firmographic data |
 
-### Contact enrichment *(Enriched / Verified tiers)*
-| Field | Description |
-| --- | --- |
-| Owner / principal name | Decision-maker where available |
-| Phone | Business phone, suppression-checked against DNC |
-| Email | Business email where available |
-| Website / address | Firmographic completion |
+| Field                                 | Description                                                    |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `priority_score`                      | 0–100 MCA-likelihood / opportunity score                       |
+| `default_date` / `time_since_default` | Default event and days elapsed (recency drives conversion)     |
+| `growth_signals`                      | Detected expansion / distress signals attached to the business |
+| `narrative`                           | Plain-English "why this lead, why now" summary for reps        |
+| `enrichment_confidence`               | 0.00–1.00 confidence on the appended contact/firmographic data |
+
+### Contact enrichment _(Enriched / Verified tiers)_
+
+| Field                  | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| Owner / principal name | Decision-maker where available                  |
+| Phone                  | Business phone, suppression-checked against DNC |
+| Email                  | Business email where available                  |
+| Website / address      | Firmographic completion                         |
 
 ---
 
@@ -65,20 +68,20 @@ Pricing is per qualified lead and steps down with volume. "Qualified" = a dedupe
 suppression-cleared record meeting your filters (state, industry, score floor,
 recency). Illustrative rate card — final pricing set on the order form.
 
-| Tier | Monthly volume | Standard (filing + score) | Enriched (+ contact data) | Verified (+ phone/email QA) |
-| --- | --- | --- | --- | --- |
-| **Starter** | up to 500 leads | $4.00 / lead | $7.00 / lead | $11.00 / lead |
-| **Growth** | 500–2,500 | $3.00 / lead | $5.50 / lead | $9.00 / lead |
-| **Scale** | 2,500–10,000 | $2.25 / lead | $4.25 / lead | $7.00 / lead |
-| **Enterprise** | 10,000+ | Custom | Custom | Custom |
+| Tier           | Monthly volume  | Standard (filing + score) | Enriched (+ contact data) | Verified (+ phone/email QA) |
+| -------------- | --------------- | ------------------------- | ------------------------- | --------------------------- |
+| **Starter**    | up to 500 leads | $4.00 / lead              | $7.00 / lead              | $11.00 / lead               |
+| **Growth**     | 500–2,500       | $3.00 / lead              | $5.50 / lead              | $9.00 / lead                |
+| **Scale**      | 2,500–10,000    | $2.25 / lead              | $4.25 / lead              | $7.00 / lead                |
+| **Enterprise** | 10,000+         | Custom                    | Custom                    | Custom                      |
 
 **Example orders**
 
-- *Starter — Enriched:* 500 FL restaurant leads, score ≥ 70, weekly batch →
+- _Starter — Enriched:_ 500 FL restaurant leads, score ≥ 70, weekly batch →
   **$3,500 / mo**.
-- *Growth — Verified:* 2,000 multi-state leads (CA + TX), score ≥ 60, daily drip with
+- _Growth — Verified:_ 2,000 multi-state leads (CA + TX), score ≥ 60, daily drip with
   phone/email QA → **~$18,000 / mo**.
-- *Scale — Standard:* 8,000 leads/mo via API, all covered states → **$18,000 / mo**.
+- _Scale — Standard:_ 8,000 leads/mo via API, all covered states → **$18,000 / mo**.
 
 **Add-ons**
 
@@ -113,6 +116,6 @@ return a quote and sample.
 
 ---
 
-*Rates on this page are illustrative and subject to a signed order form. Volume,
+_Rates on this page are illustrative and subject to a signed order form. Volume,
 exclusivity, and enrichment depth affect final pricing. All data is sourced from
-public UCC records and delivered subject to applicable TCPA/DNC suppression.*
+public UCC records and delivered subject to applicable TCPA/DNC suppression._

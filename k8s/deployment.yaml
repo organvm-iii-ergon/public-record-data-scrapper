@@ -24,7 +24,7 @@ spec:
         app.kubernetes.io/component: api
       annotations:
         # Restart pods when config changes
-        checksum/config: "{{ include (print $.Template.BasePath \"/configmap.yaml\") . | sha256sum }}"
+        checksum/config: '{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}'
     spec:
       serviceAccountName: ucc-mca-api
       securityContext:
@@ -53,15 +53,15 @@ spec:
 
           env:
             - name: CORS_ORIGIN
-              value: "https://your-domain.com"
+              value: 'https://your-domain.com'
 
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: '100m'
+              memory: '256Mi'
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: '500m'
+              memory: '512Mi'
 
           livenessProbe:
             httpGet:
@@ -142,7 +142,7 @@ spec:
           # via your deploy tooling (kustomize/helm/CI image substitution).
           image: ghcr.io/your-org/ucc-mca-platform:${IMAGE_TAG}
           imagePullPolicy: IfNotPresent
-          command: ["node", "dist/server/worker.js"]
+          command: ['node', 'dist/server/worker.js']
 
           envFrom:
             - configMapRef:
@@ -152,11 +152,11 @@ spec:
 
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: '100m'
+              memory: '256Mi'
             limits:
-              cpu: "1000m"
-              memory: "1Gi"
+              cpu: '1000m'
+              memory: '1Gi'
 
           securityContext:
             allowPrivilegeEscalation: false

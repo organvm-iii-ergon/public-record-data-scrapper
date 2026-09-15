@@ -854,11 +854,7 @@ export class StackAnalysisService {
    * word boundaries. A multi-word key must appear as a contiguous phrase; a
    * single-word key must appear as a full token (not a mid-word substring).
    */
-  private keyMatchesAsWords(
-    key: string,
-    normalizedName: string,
-    nameTokens: Set<string>
-  ): boolean {
+  private keyMatchesAsWords(key: string, normalizedName: string, nameTokens: Set<string>): boolean {
     if (!key) return false
     if (key.includes(' ')) {
       // Multi-word alias: match as a bounded phrase within the name.

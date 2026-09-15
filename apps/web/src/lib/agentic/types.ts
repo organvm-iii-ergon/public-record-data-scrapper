@@ -36,13 +36,7 @@ export type ImprovementCategory =
 export type ImprovementPriority = 'critical' | 'high' | 'medium' | 'low'
 
 export type ImprovementStatus =
-  | 'detected'
-  | 'analyzing'
-  | 'approved'
-  | 'implementing'
-  | 'testing'
-  | 'completed'
-  | 'rejected'
+  'detected' | 'analyzing' | 'approved' | 'implementing' | 'testing' | 'completed' | 'rejected'
 
 export interface Agent {
   id: string

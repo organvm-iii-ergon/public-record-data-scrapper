@@ -1,4 +1,5 @@
 # Portfolio Video Production System
+
 ## Executive Hiring Video for Non-Technical Audiences
 
 **Purpose:** Transform this repository into a compelling 3-5 minute portfolio video that demonstrates your value to non-technical executives, hiring managers, and decision-makers.
@@ -12,6 +13,7 @@
 This system provides everything needed to create a professional hiring portfolio video:
 
 ### Core Deliverables
+
 1. **[Executive Video Script](./EXECUTIVE_VIDEO_SCRIPT.md)** - Complete 3-5 minute narration script with timecodes
 2. **[Visual Production Guide](./VISUAL_PRODUCTION_GUIDE.md)** - Scene-by-scene animation and visual design specifications
 3. **[B-Roll Prompts](./BROLL_PROMPTS.md)** - 20+ text-to-image/video prompts for cinematic visuals
@@ -24,7 +26,9 @@ This system provides everything needed to create a professional hiring portfolio
 ## 🎯 Quick Start
 
 ### Step 1: Understand Your Audience (5 minutes)
+
 Your viewer is:
+
 - ✅ **Smart** but not technical
 - ✅ **Busy** and needs clarity fast
 - ✅ **Risk-averse** and needs credibility signals
@@ -32,6 +36,7 @@ Your viewer is:
 - ❌ Not interested in code, frameworks, or implementation details
 
 ### Step 2: Configure Your Video (15 minutes)
+
 1. Copy `ENVIRONMENT_CONFIG.md` to `.env.portfolio`
 2. Fill in your personal information:
    - Name, target role, contact URL
@@ -40,6 +45,7 @@ Your viewer is:
 3. Validate all URLs and paths work
 
 ### Step 3: Record Voiceover (1-2 hours)
+
 1. Read through `EXECUTIVE_VIDEO_SCRIPT.md` several times
 2. Record in quiet environment with good microphone
 3. Speak at 150-160 words per minute (calm, confident)
@@ -47,6 +53,7 @@ Your viewer is:
 5. Export as high-quality audio (WAV or FLAC preferred)
 
 ### Step 4: Create Visuals (2-4 days)
+
 1. Review `VISUAL_PRODUCTION_GUIDE.md` for scene-by-scene plan
 2. Use `BROLL_PROMPTS.md` to generate abstract visuals (Midjourney, Runway, etc.)
 3. Create diagrams and animations (Keynote, After Effects, Canva)
@@ -54,6 +61,7 @@ Your viewer is:
 5. Ensure all visuals use your brand colors from config
 
 ### Step 5: Assemble & Edit (1-2 days)
+
 1. Import voiceover audio into video editor
 2. Sync visuals to audio using timecodes from script
 3. Add text overlays at specified moments
@@ -62,6 +70,7 @@ Your viewer is:
 6. Color grade for consistency
 
 ### Step 6: Export & Distribute (1 hour)
+
 1. Export as 1080p or 4K (H.264 codec)
 2. Upload to hosting platform (Vimeo, YouTube, personal site)
 3. Create compelling thumbnail image
@@ -75,16 +84,19 @@ Your viewer is:
 ## 🎬 Project Summary for Video
 
 ### The Problem (What you solved)
+
 Merchant cash advance providers waste enormous time manually searching 50 different state websites for UCC filing data, with no way to predict which businesses actually need financing. Sales teams pursue wrong leads, miss opportunities, and lose to competitors.
 
 **Stakes:** Time wasted (40+ hours per prospect), money lost (thousands in sales resources), competitive disadvantage (slower than competitors), risk (poor lead quality).
 
 ### Your Insight (How you thought about it)
+
 "This isn't a data problem—it's a decision-making problem disguised as a data problem."
 
 Public records already contain everything needed (financing history, health indicators, growth signals), but they're designed for lawyers, not sales intelligence. You saw an opportunity to transform legal infrastructure into competitive advantage.
 
 ### The Solution (What you built)
+
 A three-layer intelligence platform:
 
 1. **Collection Layer:** Autonomous agents (one per state) that continuously monitor UCC filings, respect rate limits, adapt to changes
@@ -94,12 +106,14 @@ A three-layer intelligence platform:
 **Result:** Sales teams go from 40 hours of research to 10 minutes of action.
 
 ### The Impact (Business outcomes)
+
 - **60% faster** sales cycles (weeks → days)
 - **40% higher** lead quality (focused on real opportunities)
 - **15% revived** from "dead" leads (detected new growth signals)
 - **Compound advantage:** Smarter predictions as more data accumulates
 
 ### Why You (Differentiators)
+
 - **Systems thinker:** Built infrastructure that scales and improves over time
 - **Strategic communicator:** Can explain complex work to non-technical stakeholders
 - **Quality focus:** 526 tests, zero vulnerabilities, production-ready with documentation
@@ -162,24 +176,29 @@ CALL-TO-ACTION (4:50-5:00)
 ## 🎨 Visual Style Guide
 
 ### Color Palette (Default - customize in config)
+
 - **Primary Navy:** `#1e2b5c` - Trust, authority, stability
-- **Accent Amber:** `#e0a825` - Opportunity, attention, action  
+- **Accent Amber:** `#e0a825` - Opportunity, attention, action
 - **Secondary Cyan:** `#3daeb8` - Data, analytics, intelligence
 - **Background:** `#f9fafb` - Clean, professional
 
 ### Typography
+
 - **Font:** IBM Plex Sans (or geometric sans-serif)
 - **Hierarchy:** SemiBold headlines, Medium body, Regular captions
 - **Sizes:** 48-72pt headlines, 24-32pt body, 18-20pt captions
 
 ### Animation Principles
+
 - **Purposeful:** Every animation reinforces understanding
 - **Subtle:** Professional, not distracting
 - **Timed:** Fast transitions (0.2-0.3s), medium scenes (0.5-0.8s), slow complex (1.0-1.5s)
 - **Consistent:** Use same easing and timing throughout
 
 ### Visual Metaphors
+
 Focus on concepts, not code:
+
 - Complexity → Clarity (tangled threads straightening)
 - Systems Working Together (gears meshing, networks forming)
 - Chaos → Order (particles organizing, puzzle assembling)
@@ -191,12 +210,14 @@ Focus on concepts, not code:
 ## 🎙️ Voiceover Guidelines
 
 ### Recording Setup
+
 - **Environment:** Quiet room, minimal echo
 - **Microphone:** USB condenser (Blue Yeti, Audio-Technica AT2020) or dynamic (Shure SM7B)
 - **Distance:** 6-12 inches from mic, slightly off-axis
 - **Processing:** Normalize to -3dB, gentle compression, noise reduction
 
 ### Delivery Style
+
 - **Pace:** 150-160 words per minute (calm, measured)
 - **Tone:** Confident professional (not salesy, not academic)
 - **Emphasis:** Natural stress on key words ("decision-making problem", "competitive advantage")
@@ -204,6 +225,7 @@ Focus on concepts, not code:
 - **Energy:** Consistent throughout—don't trail off at ends of sentences
 
 ### Common Mistakes to Avoid
+
 - ❌ Reading robotically from script
 - ❌ Rushing through complex ideas
 - ❌ Sounding apologetic or uncertain
@@ -211,6 +233,7 @@ Focus on concepts, not code:
 - ❌ Inconsistent volume or pacing
 
 ### Pro Tips
+
 - ✅ Stand while recording (better breath control)
 - ✅ Smile slightly (warmer vocal tone)
 - ✅ Record in short sections (easier to fix mistakes)
@@ -222,18 +245,21 @@ Focus on concepts, not code:
 ## 🛠️ Production Tools
 
 ### Budget-Friendly Options
+
 - **Animation:** Keynote (Mac), PowerPoint (Windows), Canva Pro
 - **Video Editing:** iMovie, DaVinci Resolve (free)
 - **Audio Recording:** Audacity (free), GarageBand (Mac)
 - **B-Roll Generation:** Stable Diffusion (free), Pexels (stock footage)
 
 ### Professional Options
+
 - **Animation:** Adobe After Effects, Motion, Cinema 4D
 - **Video Editing:** Adobe Premiere Pro, Final Cut Pro
 - **Audio Recording:** Logic Pro, Adobe Audition
 - **B-Roll Generation:** Midjourney, Runway ML, Artgrid (subscription)
 
 ### Recommended Workflow
+
 1. **Script → Audio:** Record voiceover first (establishes timing)
 2. **Audio → Storyboard:** Sketch key visuals matched to timecodes
 3. **Storyboard → Assets:** Create/generate all visual elements
@@ -248,6 +274,7 @@ Focus on concepts, not code:
 Before publishing your video, verify:
 
 ### Content
+
 - [ ] Every claim is accurate and verifiable
 - [ ] No technical jargon without translation
 - [ ] Business value stated before technical details
@@ -255,6 +282,7 @@ Before publishing your video, verify:
 - [ ] Call-to-action is clear and prominent
 
 ### Visuals
+
 - [ ] All text is readable (high contrast, large enough)
 - [ ] Brand colors used consistently
 - [ ] Animations reinforce meaning (not decorative)
@@ -262,6 +290,7 @@ Before publishing your video, verify:
 - [ ] Dashboard screenshots blur sensitive data
 
 ### Audio
+
 - [ ] Voiceover is clear and easily understood
 - [ ] Background music is subtle (doesn't compete)
 - [ ] No audio clipping or distortion
@@ -269,6 +298,7 @@ Before publishing your video, verify:
 - [ ] Consistent volume throughout
 
 ### Technical
+
 - [ ] Exported at correct resolution (1080p minimum)
 - [ ] Closed captions included or generated
 - [ ] File size reasonable for web streaming
@@ -276,6 +306,7 @@ Before publishing your video, verify:
 - [ ] Thumbnail is compelling and on-brand
 
 ### Effectiveness
+
 - [ ] Opening hook grabs attention in first 10 seconds
 - [ ] Value proposition is clear by 1-minute mark
 - [ ] Viewer understands "why you" by end
@@ -287,21 +318,25 @@ Before publishing your video, verify:
 ## 🎯 Target Audience Profiles
 
 ### Non-Technical Executive
+
 **Cares About:** ROI, competitive advantage, risk mitigation, strategic value  
 **Doesn't Care About:** Technical implementation, framework choices, code quality  
 **Video Adjustments:** Maximize business outcomes, minimize technical detail, focus on strategic thinking
 
 ### Hiring Manager (Technical)
+
 **Cares About:** Problem-solving approach, execution quality, communication skills  
 **Also Values:** Some technical credibility signals (tests, architecture decisions)  
 **Video Adjustments:** Include light technical context, show judgment in design choices
 
 ### Client / Buyer
+
 **Cares About:** Can you solve their problem? Are you reliable? Easy to work with?  
 **Doesn't Care About:** Internal implementation unless it affects their experience  
 **Video Adjustments:** Emphasize outcome delivery, user experience, professional communication
 
 ### Venture Investor
+
 **Cares About:** Market opportunity, scalability, execution speed, strategic vision  
 **Values:** Evidence of momentum, growth metrics, market understanding  
 **Video Adjustments:** Shorten to 2-3 minutes, lead with business impact, show scale potential
@@ -313,24 +348,29 @@ Before publishing your video, verify:
 After distributing your video, track:
 
 ### Engagement
+
 - **View count** - How many people watched
 - **Watch time** - Average % completed (target: >75%)
 - **Completion rate** - % who watched to end (target: >60%)
 - **Rewatch rate** - Viewers returning for second view
 
 ### Action
+
 - **Click-through rate** - % who clicked CTA link (target: >10%)
 - **Response rate** - % who actually booked call/sent message (target: >5%)
 - **Time to response** - How quickly viewers reached out (faster = more compelling)
 
 ### Feedback
+
 - **Qualitative comments** - What viewers say about clarity, value
 - **Questions asked** - What needed more explanation
 - **Objections raised** - What concerns weren't addressed
 - **Misunderstandings** - What was unclear or confusing
 
 ### Iterate
+
 Use feedback to:
+
 1. Refine messaging in next version
 2. Address common questions proactively
 3. Adjust length if attention drops
@@ -341,12 +381,14 @@ Use feedback to:
 ## 🔗 Related Resources
 
 ### In This Repository
+
 - `README.md` - Project overview and technical details
 - `docs/PRD.md` - Product requirements and features
 - `docs/AGENTIC_FORCES.md` - Autonomous agent system
 - `docs/COMPETITIVE_ANALYSIS.md` - Market context
 
 ### External References
+
 - [How to Present Technical Work to Non-Technical Audiences](https://www.youtube.com/results?search_query=presenting+technical+work)
 - [Storytelling for Engineers](https://www.amazon.com/s?k=storytelling+for+engineers)
 - [Apple Product Videos](https://www.apple.com) - Style reference for clarity
@@ -357,13 +399,16 @@ Use feedback to:
 ## 🤝 Getting Help
 
 ### If You're Stuck:
+
 1. **Script Writing:** Review `TRANSLATION_GLOSSARY.md` to convert technical terms
 2. **Visual Design:** Check `BROLL_PROMPTS.md` for ready-to-use concepts
 3. **Credibility:** Review `CREDIBILITY_SIGNALS.md` for trust-building moments
 4. **Production:** Consult `VISUAL_PRODUCTION_GUIDE.md` for technical specs
 
 ### Test Your Video:
+
 Show draft to 2-3 non-technical friends/colleagues and ask:
+
 - "What value would I bring to a company?" (Should clearly articulate)
 - "What problem did I solve?" (Should be specific)
 - "Would you hire me?" (Should be yes, with reasons)
@@ -375,16 +420,19 @@ If answers are unclear, revise script/visuals and test again.
 ## 📝 Customization Examples
 
 ### Example 1: Shorten to 2 Minutes (Social Media)
+
 - Keep: Hook, Problem, Solution (condensed), Impact, CTA
 - Remove: Technical sophistication deep-dive, differentiators detail
 - Adjust: Faster pacing, punchier language, one key visual per section
 
 ### Example 2: Technical Leadership Role
+
 - Keep: All sections as-is
 - Add: Brief technical architecture diagram, mention key technologies
 - Adjust: Include "Show technical metrics" flag in config
 
 ### Example 3: Consultant Pitch
+
 - Keep: Problem, Insight, Solution, Impact
 - Emphasize: Similar problems solved, process approach, collaboration
 - Adjust: Change CTA to "Discuss your project" instead of "Hire me"
@@ -408,11 +456,13 @@ If answers are unclear, revise script/visuals and test again.
 This portfolio video production system is part of the UCC-MCA Intelligence Platform repository.
 
 **You may:**
+
 - Use this system to create your own portfolio video
 - Customize all templates and scripts for your needs
 - Adapt the framework for different projects
 
 **Please:**
+
 - Maintain accuracy when describing your work
 - Respect intellectual property when using assets
 - Give credit where due for collaborative projects
@@ -422,6 +472,7 @@ This portfolio video production system is part of the UCC-MCA Intelligence Platf
 **Ready to begin?** Start with `ENVIRONMENT_CONFIG.md` to personalize your video, then proceed to `EXECUTIVE_VIDEO_SCRIPT.md` to understand the narrative flow.
 
 **Questions?** Review the documentation files in order:
+
 1. This README (overview)
 2. ENVIRONMENT_CONFIG (personalization)
 3. EXECUTIVE_VIDEO_SCRIPT (narrative)

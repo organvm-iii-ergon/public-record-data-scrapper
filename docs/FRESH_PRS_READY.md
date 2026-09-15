@@ -6,11 +6,11 @@ Created 3 clean feature branches from `main`, each with a single cherry-picked c
 
 ### Branches Created Locally
 
-| Branch Name | Commit | Files Changed | Status |
-|-------------|--------|---------------|--------|
+| Branch Name                           | Commit  | Files Changed      | Status   |
+| ------------------------------------- | ------- | ------------------ | -------- |
 | `feature/portfolio-companies-fetcher` | 02a22c2 | 3 files (+325/-92) | ✅ Ready |
-| `feature/academic-affiliations` | 214154f | 2 files (+82/-8) | ✅ Ready |
-| `feature/academic-institutions` | a17c401 | 1 file (+94/-3) | ✅ Ready |
+| `feature/academic-affiliations`       | 214154f | 2 files (+82/-8)   | ✅ Ready |
+| `feature/academic-institutions`       | a17c401 | 1 file (+94/-3)    | ✅ Ready |
 
 ---
 
@@ -24,7 +24,7 @@ cd /home/runner/work/public-record-data-scrapper/public-record-data-scrapper
 
 # Push all three branches
 git push -u origin feature/portfolio-companies-fetcher
-git push -u origin feature/academic-affiliations  
+git push -u origin feature/academic-affiliations
 git push -u origin feature/academic-institutions
 
 # Create PRs using GitHub CLI
@@ -50,6 +50,7 @@ gh pr create \
 ### Option 2: Using GitHub Web UI
 
 1. **Push branches:**
+
    ```bash
    cd /home/runner/work/public-record-data-scrapper/public-record-data-scrapper
    git push -u origin feature/portfolio-companies-fetcher
@@ -74,12 +75,14 @@ gh pr create \
 **Description:** Implements `fetchPortfolioCompanies` functionality
 
 **Key Changes:**
+
 - Added `getPortfolioCompanies` method to QueryBuilder
 - Improved database client robustness
 - Implemented service layer method
 - Proper TypeScript typing and error handling
 
 **Files:**
+
 - `src/lib/database/client.ts` - Enhanced error handling
 - `src/lib/database/queries.ts` - New query method
 - `src/lib/services/databaseService.ts` - Service implementation
@@ -93,6 +96,7 @@ gh pr create \
 **Description:** Extracts researcher affiliations and links to institutions
 
 **Key Changes:**
+
 - Implemented `getOrCreateInstitution` helper
 - Extracts affiliations from Author objects
 - Normalizes institution names
@@ -100,6 +104,7 @@ gh pr create \
 - Links researchers and papers to institutions
 
 **Files:**
+
 - `scripts/academic/network-analyzer.ts` - Affiliation extraction logic
 - `package.json` - Dependencies (no changes, kept current)
 
@@ -112,6 +117,7 @@ gh pr create \
 **Description:** Populates institutional metrics and collaboration data
 
 **Key Changes:**
+
 - Extracts unique institutions from affiliations
 - Calculates institutional metrics (papers, citations, h-index)
 - Links researchers to institutions
@@ -119,6 +125,7 @@ gh pr create \
 - Builds institutional collaboration network
 
 **Files:**
+
 - `scripts/academic/network-analyzer.ts` - Institution metrics and network
 
 ---
@@ -128,6 +135,7 @@ gh pr create \
 ### Conflict Resolution Strategy
 
 All branches had `pnpm-lock.yaml` conflicts due to grafted history. Resolved by:
+
 - Taking source code changes (`--theirs`)
 - Keeping current package files (`--ours`)
 - No functional code was lost
@@ -136,6 +144,7 @@ All branches had `pnpm-lock.yaml` conflicts due to grafted history. Resolved by:
 ### Clean Cherry-Picks
 
 Each branch contains exactly 1 commit:
+
 - No merge commits
 - No conflict markers
 - Clean git history
@@ -143,11 +152,11 @@ Each branch contains exactly 1 commit:
 
 ### Original Sources
 
-| New Branch | Original Branch |
-|------------|-----------------|
+| New Branch                            | Original Branch                                            |
+| ------------------------------------- | ---------------------------------------------------------- |
 | `feature/portfolio-companies-fetcher` | `implement-fetch-portfolio-companies-13136014294268381082` |
-| `feature/academic-affiliations` | `academic-affiliation-extraction-638925578143232858` |
-| `feature/academic-institutions` | `academic-institutions-extraction-18020468117599993822` |
+| `feature/academic-affiliations`       | `academic-affiliation-extraction-638925578143232858`       |
+| `feature/academic-institutions`       | `academic-institutions-extraction-18020468117599993822`    |
 
 ---
 
@@ -159,7 +168,7 @@ git branch | grep feature/
 
 # Check commit history
 git log --oneline feature/portfolio-companies-fetcher -2
-git log --oneline feature/academic-affiliations -2  
+git log --oneline feature/academic-affiliations -2
 git log --oneline feature/academic-institutions -2
 
 # Verify clean state
@@ -167,6 +176,7 @@ git status
 ```
 
 **Expected Output:**
+
 - All branches show 1 commit ahead of main
 - No merge conflicts
 - Clean working tree
@@ -192,6 +202,7 @@ After PRs are created and CI passes:
 ## 📁 PR Body Files
 
 PR descriptions are ready in:
+
 - `/tmp/pr1-body.md` - Portfolio companies PR
 - `/tmp/pr2-body.md` - Academic affiliations PR
 - `/tmp/pr3-body.md` - Academic institutions PR

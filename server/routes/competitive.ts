@@ -10,7 +10,10 @@ import { database } from '../database/connection'
 const router = Router()
 
 const stateParamSchema = z.object({
-  state: z.string().length(2).transform((s) => s.toUpperCase())
+  state: z
+    .string()
+    .length(2)
+    .transform((s) => s.toUpperCase())
 })
 
 const funderParamSchema = z.object({
@@ -26,11 +29,20 @@ const saturationQuerySchema = z.object({
 })
 
 const eventsQuerySchema = z.object({
-  hours: z.coerce.number().int().positive().max(24 * 90).default(168)
+  hours: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(24 * 90)
+    .default(168)
 })
 
 const acceleratingQuerySchema = z.object({
-  state: z.string().length(2).transform((s) => s.toUpperCase()).optional()
+  state: z
+    .string()
+    .length(2)
+    .transform((s) => s.toUpperCase())
+    .optional()
 })
 
 // GET /api/competitive/saturation/:state — market saturation + HHI for a state

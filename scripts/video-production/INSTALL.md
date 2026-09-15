@@ -5,11 +5,13 @@ Complete guide for setting up the autonomous video production agent on your syst
 ## Quick Start
 
 1. **Install System Dependencies**
+
    ```bash
    # See platform-specific instructions below
    ```
 
 2. **Validate Setup**
+
    ```bash
    npm run video:validate
    ```
@@ -234,6 +236,7 @@ Expected output:
 **Symptom:** `⚠️ FFmpeg not found` in validation
 
 **Solution:**
+
 1. Verify FFmpeg is installed: `which ffmpeg` or `where ffmpeg`
 2. Check PATH includes FFmpeg location
 3. Restart terminal after installation
@@ -244,6 +247,7 @@ Expected output:
 **Symptom:** `⚠️ No TTS engine found` in validation
 
 **Solution:**
+
 - **macOS:** `say` should be built-in. Try: `say "test"`
 - **Linux:** Install eSpeak: `sudo apt-get install espeak`
 - **Windows:** Use Docker or modify generator for Windows Speech API
@@ -255,6 +259,7 @@ Expected output:
 **Symptom:** Cannot write to output directory
 
 **Solution:**
+
 ```bash
 # Create output directory with correct permissions
 mkdir -p video-output
@@ -269,6 +274,7 @@ chmod 755 video-output
 **Symptom:** Video generation takes very long
 
 **Solution:**
+
 - Use lower resolution: `--resolution 1280x720`
 - Reduce FPS: `--fps 24`
 - Close other applications to free CPU
@@ -324,16 +330,19 @@ sudo apt-get install ffmpeg-nvidia
 After successful installation:
 
 1. **Run validation:**
+
    ```bash
    npm run video:validate
    ```
 
 2. **Generate demo video:**
+
    ```bash
    npm run video:generate -- --pattern "DEMO_VIDEO_SCRIPT.md"
    ```
 
 3. **Generate executive video:**
+
    ```bash
    npm run video:generate -- --pattern "EXECUTIVE_VIDEO_SCRIPT.md"
    ```

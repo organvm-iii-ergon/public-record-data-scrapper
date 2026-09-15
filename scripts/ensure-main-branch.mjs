@@ -53,7 +53,9 @@ if (runCommand('git fetch origin main:main')) {
   process.exit(0)
 }
 
-console.log('[ensure-main-branch] Direct fetch failed. Attempting to fetch all branches and create local tracking branch...')
+console.log(
+  '[ensure-main-branch] Direct fetch failed. Attempting to fetch all branches and create local tracking branch...'
+)
 
 if (runCommand('git fetch origin')) {
   if (!commandSucceeds('git rev-parse --verify main')) {

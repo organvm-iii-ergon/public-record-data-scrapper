@@ -1,11 +1,11 @@
 ---
-title: "ADR-0001: React SPA with Client-Side State Management Architecture"
-status: "Accepted"
-date: "2025-11-20"
-authors: "Development Team"
-tags: ["architecture", "decision", "frontend", "state-management"]
-supersedes: ""
-superseded_by: ""
+title: 'ADR-0001: React SPA with Client-Side State Management Architecture'
+status: 'Accepted'
+date: '2025-11-20'
+authors: 'Development Team'
+tags: ['architecture', 'decision', 'frontend', 'state-management']
+supersedes: ''
+superseded_by: ''
 ---
 
 # ADR-0001: React SPA with Client-Side State Management Architecture

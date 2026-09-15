@@ -29,18 +29,21 @@ All MCP servers listed below are **100% free and open source**.
 **Repository**: https://github.com/modelcontextprotocol/servers
 
 **Features**:
+
 - Schema inspection
 - SQL query execution
 - Read-only and full access modes
 - Natural language interface support
 
 **Installation**:
+
 ```bash
 # Free installation via npm
 npm install -g @modelcontextprotocol/server-postgres
 ```
 
 **Usage**:
+
 ```bash
 # Run locally for free
 npx @modelcontextprotocol/server-postgres "postgresql://localhost/your_db"
@@ -53,12 +56,14 @@ npx @modelcontextprotocol/server-postgres "postgresql://localhost/your_db"
 **Repository**: Community implementations on GitHub
 
 **Features**:
+
 - Browser automation
 - Web scraping
 - JavaScript execution
 - Screenshot capture
 
 **Installation**:
+
 ```bash
 # Create your own free MCP server
 npm install @modelcontextprotocol/sdk puppeteer
@@ -71,12 +76,14 @@ npm install @modelcontextprotocol/sdk puppeteer
 **Repository**: https://github.com/modelcontextprotocol/servers
 
 **Features**:
+
 - Lightweight embedded database
 - Zero configuration
 - Local file-based storage
 - Full SQL support
 
 **Installation**:
+
 ```bash
 # Free installation
 npm install -g @modelcontextprotocol/server-sqlite
@@ -89,6 +96,7 @@ npm install -g @modelcontextprotocol/server-sqlite
 **Repository**: https://github.com/modelcontextprotocol/servers
 
 **Features**:
+
 - File system access
 - Directory browsing
 - File reading/writing
@@ -100,15 +108,17 @@ npm install -g @modelcontextprotocol/server-sqlite
 **Cost**: $0 (build your own)
 
 **Build Your Own**:
+
 ```bash
 # Free MCP SDK
 npm install @modelcontextprotocol/sdk
 ```
 
 **Example**:
+
 ```typescript
 // Free to implement custom MCP servers
-import { Server } from '@modelcontextprotocol/sdk/server';
+import { Server } from '@modelcontextprotocol/sdk/server'
 // Your custom implementation
 ```
 
@@ -128,17 +138,20 @@ All scraping frameworks below are **completely free** with no licensing costs.
 **Website**: https://scrapy.org
 
 **Why It's Free**:
+
 - Open source since 2008
 - No enterprise version required
 - All features available for free
 - Commercial use allowed
 
 **Installation**:
+
 ```bash
 pip install scrapy  # Free
 ```
 
 **Features (All Free)**:
+
 - Asynchronous processing
 - Built-in data export
 - Middleware system
@@ -153,6 +166,7 @@ pip install scrapy  # Free
 **Repository**: https://www.crummy.com/software/BeautifulSoup/
 
 **Installation**:
+
 ```bash
 pip install beautifulsoup4  # Free
 ```
@@ -164,6 +178,7 @@ pip install beautifulsoup4  # Free
 **Repository**: https://github.com/SeleniumHQ/selenium
 
 **Installation**:
+
 ```bash
 pip install selenium  # Free
 ```
@@ -177,6 +192,7 @@ pip install selenium  # Free
 **Repository**: https://github.com/microsoft/playwright-python
 
 **Installation**:
+
 ```bash
 pip install playwright  # Free
 playwright install  # Free browser downloads
@@ -188,6 +204,7 @@ playwright install  # Free browser downloads
 **Cost**: $0
 
 **Installation**:
+
 ```bash
 pip install requests lxml  # Free
 ```
@@ -202,12 +219,14 @@ pip install requests lxml  # Free
 **Website**: https://crawlee.dev
 
 **Why It's Free**:
+
 - Open source by Apify
 - All features free
 - No paid tier required
 - Commercial use allowed
 
 **Installation**:
+
 ```bash
 npm install crawlee  # Free
 ```
@@ -219,6 +238,7 @@ npm install crawlee  # Free
 **Repository**: https://github.com/puppeteer/puppeteer
 
 **Installation**:
+
 ```bash
 npm install puppeteer  # Free
 ```
@@ -230,6 +250,7 @@ npm install puppeteer  # Free
 **Repository**: https://github.com/microsoft/playwright
 
 **Installation**:
+
 ```bash
 npm install playwright  # Free
 ```
@@ -241,6 +262,7 @@ npm install playwright  # Free
 **Repository**: https://github.com/cheeriojs/cheerio
 
 **Installation**:
+
 ```bash
 npm install cheerio  # Free
 ```
@@ -251,6 +273,7 @@ npm install cheerio  # Free
 **Cost**: $0
 
 **Installation**:
+
 ```bash
 npm install axios cheerio  # Free
 ```
@@ -268,6 +291,7 @@ All database systems below are **completely free** with full enterprise features
 **Website**: https://www.postgresql.org
 
 **Why It's Completely Free**:
+
 - No enterprise version
 - All features free
 - No commercial restrictions
@@ -275,6 +299,7 @@ All database systems below are **completely free** with full enterprise features
 - No paid support required
 
 **Installation**:
+
 ```bash
 # Ubuntu/Debian (Free)
 sudo apt install postgresql postgresql-contrib
@@ -287,6 +312,7 @@ brew install postgresql
 ```
 
 **All Features Included (Free)**:
+
 - ACID compliance
 - Advanced indexing (B-tree, Hash, GiST, GIN)
 - Full-text search
@@ -299,6 +325,7 @@ brew install postgresql
 - Extensions ecosystem
 
 **No Hidden Costs**:
+
 - No licensing fees
 - No per-core charges
 - No user limits
@@ -312,6 +339,7 @@ brew install postgresql
 **Website**: https://www.timescale.com
 
 **Free Community Edition Includes**:
+
 - Hypertables (time-series optimization)
 - Continuous aggregations
 - Compression
@@ -319,6 +347,7 @@ brew install postgresql
 - All core time-series features
 
 **Installation**:
+
 ```bash
 # Free installation as PostgreSQL extension
 sudo apt install timescaledb-2-postgresql-15
@@ -334,12 +363,14 @@ sudo apt install timescaledb-2-postgresql-15
 **Website**: https://clickhouse.com
 
 **Why It's Completely Free**:
+
 - Open source columnar database
 - All features available for free
 - No enterprise edition
 - Used by Uber, Cloudflare, eBay (free version)
 
 **Installation**:
+
 ```bash
 # Ubuntu/Debian (Free)
 sudo apt install clickhouse-server clickhouse-client
@@ -349,6 +380,7 @@ docker run -d --name clickhouse clickhouse/clickhouse-server
 ```
 
 **All Features Included (Free)**:
+
 - Columnar storage
 - Real-time query processing
 - Distributed queries
@@ -366,12 +398,14 @@ docker run -d --name clickhouse clickhouse/clickhouse-server
 **Website**: https://duckdb.org
 
 **Why It's Free**:
+
 - Fully open source
 - No paid versions
 - All features free
 - Embedded database
 
 **Installation**:
+
 ```bash
 # Python (Free)
 pip install duckdb
@@ -390,6 +424,7 @@ npm install duckdb
 **Website**: https://www.mongodb.com/try/download/community
 
 **Free Community Edition Includes**:
+
 - Document database
 - Flexible schema
 - Indexing
@@ -398,6 +433,7 @@ npm install duckdb
 - Sharding
 
 **Installation**:
+
 ```bash
 # Ubuntu (Free)
 sudo apt install mongodb-org
@@ -415,12 +451,14 @@ docker run -d -p 27017:27017 mongo
 **Website**: https://www.sqlite.org
 
 **Why It's Free**:
+
 - Public domain - completely free
 - No licensing at all
 - Used by Apple, Google, Microsoft
 - Most deployed database
 
 **Installation**:
+
 ```bash
 # Usually pre-installed, or:
 sudo apt install sqlite3  # Free
@@ -439,6 +477,7 @@ sudo apt install sqlite3  # Free
 **Website**: https://www.docker.com
 
 **Installation**:
+
 ```bash
 # Free installation
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -451,6 +490,7 @@ sudo sh get-docker.sh
 **Cost**: $0
 
 **Installation**:
+
 ```bash
 # Free installation
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -463,6 +503,7 @@ nvm install 18  # Free
 **Cost**: $0
 
 **Installation**:
+
 ```bash
 # Free installation
 sudo apt install python3 python3-pip  # Free
@@ -474,6 +515,7 @@ sudo apt install python3 python3-pip  # Free
 **Cost**: $0
 
 **Installation**:
+
 ```bash
 sudo apt install git  # Free
 ```
@@ -569,28 +611,30 @@ TOTAL SOFTWARE LICENSING COST: $0
 
 ### Software Costs: FREE vs PAID
 
-| Component | Free Version | Paid Alternative | Savings |
-|-----------|-------------|------------------|---------|
-| PostgreSQL | $0 (100% free) | Oracle: $17,500/processor | $17,500+ |
-| ClickHouse | $0 (100% free) | Snowflake: $2-3/TB/month | Variable |
-| Scrapy/Crawlee | $0 (100% free) | ScrapingBee: $49-449/month | $588-5,388/year |
-| TimescaleDB | $0 (community) | TimescaleDB Cloud: $50+/month | $600+/year |
-| Docker | $0 (engine) | Docker Enterprise: $2,000/year | $2,000/year |
-| Grafana | $0 (OSS) | Grafana Cloud: $49+/month | $588+/year |
-| Prometheus | $0 (100% free) | Datadog: $15-23/host/month | $180-276/year |
-| **TOTAL** | **$0** | **$20,000+/year** | **$20,000+** |
+| Component      | Free Version   | Paid Alternative               | Savings         |
+| -------------- | -------------- | ------------------------------ | --------------- |
+| PostgreSQL     | $0 (100% free) | Oracle: $17,500/processor      | $17,500+        |
+| ClickHouse     | $0 (100% free) | Snowflake: $2-3/TB/month       | Variable        |
+| Scrapy/Crawlee | $0 (100% free) | ScrapingBee: $49-449/month     | $588-5,388/year |
+| TimescaleDB    | $0 (community) | TimescaleDB Cloud: $50+/month  | $600+/year      |
+| Docker         | $0 (engine)    | Docker Enterprise: $2,000/year | $2,000/year     |
+| Grafana        | $0 (OSS)       | Grafana Cloud: $49+/month      | $588+/year      |
+| Prometheus     | $0 (100% free) | Datadog: $15-23/host/month     | $180-276/year   |
+| **TOTAL**      | **$0**         | **$20,000+/year**              | **$20,000+**    |
 
 ### Infrastructure Costs (Self-Hosted)
 
 This is the **only cost** when using all free/open-source software:
 
 #### Minimum Setup (Development/Small Scale)
+
 - **VPS/Cloud Server**: $20-50/month
 - **Storage**: $5-10/month
 - **Bandwidth**: Included or $5-10/month
 - **Total**: ~$30-70/month ($360-840/year)
 
 #### Production Setup (Medium Scale)
+
 - **Application Server**: $40-80/month
 - **Database Server**: $40-80/month
 - **Analytics Server**: $40-80/month
@@ -601,6 +645,7 @@ This is the **only cost** when using all free/open-source software:
 - **Total**: ~$170-350/month ($2,040-4,200/year)
 
 #### Large Scale Setup
+
 - **Multiple application servers**: $200-500/month
 - **Database cluster**: $200-500/month
 - **ClickHouse cluster**: $200-500/month
@@ -618,12 +663,14 @@ This is the **only cost** when using all free/open-source software:
 ### Minimum Server Requirements (Free Stack)
 
 #### Development Environment
+
 - **CPU**: 2 cores
 - **RAM**: 4 GB
 - **Storage**: 20 GB SSD
 - **Cost**: $10-20/month (DigitalOcean, Linode, Vultr)
 
 #### Production Environment
+
 - **Application Server**: 4 cores, 8 GB RAM, 50 GB SSD
 - **Database Server**: 4 cores, 16 GB RAM, 100 GB SSD
 - **Analytics Server**: 4 cores, 16 GB RAM, 200 GB SSD
@@ -670,21 +717,25 @@ All offer free tiers for testing:
 **Option**: Use your own hardware = $0/month (after initial investment)
 
 **Requirements**:
+
 - Old PC or server
 - Stable internet connection
 - Dynamic DNS service (free)
 
 **Free Tools**:
+
 - **Ubuntu Server**: Free OS
 - **Cloudflare Tunnel**: Free secure access (no port forwarding)
 - **DuckDNS**: Free dynamic DNS
 
 **Advantages**:
+
 - Zero monthly costs
 - Full control
 - Learn system administration
 
 **Disadvantages**:
+
 - Electricity costs
 - Internet reliability
 - No SLA
@@ -698,15 +749,16 @@ All offer free tiers for testing:
 
 Most free/open-source tools are production-ready, but here are scenarios where you might consider paid alternatives:
 
-| Need | Free Solution | When You Might Pay |
-|------|---------------|-------------------|
-| Web Scraping | Scrapy/Crawlee (100% free) | Need turnkey proxy rotation: ScrapingBee, Bright Data |
-| PostgreSQL | PostgreSQL (100% free) | Want managed DB with zero admin: AWS RDS, Azure Database |
-| ClickHouse | ClickHouse (100% free) | Need managed service: ClickHouse Cloud, Altinity.Cloud |
-| Monitoring | Prometheus + Grafana (free) | Want SaaS with zero setup: Datadog, New Relic |
-| MCP Servers | Open source (100% free) | Need enterprise support: Anthropic Claude Enterprise |
+| Need         | Free Solution               | When You Might Pay                                       |
+| ------------ | --------------------------- | -------------------------------------------------------- |
+| Web Scraping | Scrapy/Crawlee (100% free)  | Need turnkey proxy rotation: ScrapingBee, Bright Data    |
+| PostgreSQL   | PostgreSQL (100% free)      | Want managed DB with zero admin: AWS RDS, Azure Database |
+| ClickHouse   | ClickHouse (100% free)      | Need managed service: ClickHouse Cloud, Altinity.Cloud   |
+| Monitoring   | Prometheus + Grafana (free) | Want SaaS with zero setup: Datadog, New Relic            |
+| MCP Servers  | Open source (100% free)     | Need enterprise support: Anthropic Claude Enterprise     |
 
 **Important**: In all cases above, the **free version has the same features**. You only pay for:
+
 - Managed hosting/administration
 - Enterprise support
 - SLA guarantees
@@ -719,12 +771,14 @@ Most free/open-source tools are production-ready, but here are scenarios where y
 ### Complete Free Stack Setup ($0 Software)
 
 #### Step 1: Install Free Operating System
+
 ```bash
 # Ubuntu Server (FREE)
 # Download from ubuntu.com - $0
 ```
 
 #### Step 2: Install Free Databases
+
 ```bash
 # PostgreSQL (FREE)
 sudo apt install postgresql postgresql-contrib
@@ -740,6 +794,7 @@ sudo apt install clickhouse-server clickhouse-client
 ```
 
 #### Step 3: Install Free Scraping Tools
+
 ```bash
 # Python + Scrapy (FREE)
 sudo apt install python3 python3-pip
@@ -755,6 +810,7 @@ npm install crawlee puppeteer playwright
 ```
 
 #### Step 4: Install Free MCP Servers
+
 ```bash
 # PostgreSQL MCP (FREE)
 npm install -g @modelcontextprotocol/server-postgres
@@ -766,6 +822,7 @@ npm install -g @modelcontextprotocol/server-sqlite
 ```
 
 #### Step 5: Install Free Monitoring
+
 ```bash
 # Prometheus (FREE)
 sudo apt install prometheus
@@ -777,6 +834,7 @@ sudo apt install grafana
 ```
 
 #### Step 6: Install Free Application Stack
+
 ```bash
 # React, Vite, Tailwind (FREE)
 npm create vite@latest my-app -- --template react-ts
@@ -834,6 +892,7 @@ npm install -D tailwindcss
 ### What "Free" Means
 
 **All software in this guide is free to**:
+
 - ✅ Download and install
 - ✅ Use commercially
 - ✅ Modify source code
@@ -844,6 +903,7 @@ npm install -D tailwindcss
 - ✅ Use without time limits
 
 **No hidden costs**:
+
 - ❌ No per-user fees
 - ❌ No per-server fees
 - ❌ No data volume fees
@@ -870,6 +930,7 @@ This guide proves you can build a **production-grade UCC-MCA Intelligence Platfo
 ### Only Cost: Infrastructure
 
 The **only expense** is infrastructure:
+
 - **Minimum**: $30-70/month (small VPS)
 - **Production**: $170-350/month (dedicated servers)
 - **Large Scale**: $800-1,900/month (cluster)
@@ -881,7 +942,7 @@ Or **$0/month** if self-hosting at home.
 **Final recommendation remains the same, just emphasized that it's FREE**:
 
 ```
-Scrapy (FREE) + PostgreSQL (FREE) + TimescaleDB (FREE) 
+Scrapy (FREE) + PostgreSQL (FREE) + TimescaleDB (FREE)
 + ClickHouse (FREE) + DuckDB (FREE) + MCP Servers (FREE)
 + Prometheus (FREE) + Grafana (FREE) + React (FREE)
 

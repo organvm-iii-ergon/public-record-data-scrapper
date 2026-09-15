@@ -53,23 +53,23 @@ This document outlines an exhaustive expansion of the UCC Intelligence Platform 
 
 ```typescript
 interface RecursiveEnrichmentConfig {
-  maxDepth: number; // Maximum recursion depth (default: 5)
-  confidenceThreshold: number; // Minimum confidence to recurse (0-1)
-  expansionStrategies: EnrichmentStrategy[];
-  learningEnabled: boolean; // Learn which paths are most valuable
+  maxDepth: number // Maximum recursion depth (default: 5)
+  confidenceThreshold: number // Minimum confidence to recurse (0-1)
+  expansionStrategies: EnrichmentStrategy[]
+  learningEnabled: boolean // Learn which paths are most valuable
 }
 
 interface EnrichmentNode {
-  id: string;
-  prospectId: string;
-  enrichmentType: string;
-  depth: number;
-  parentNodeId?: string;
-  data: any;
-  confidence: number;
-  valueScore: number; // How valuable this enrichment proved
-  childNodes: EnrichmentNode[];
-  discoveredAt: Date;
+  id: string
+  prospectId: string
+  enrichmentType: string
+  depth: number
+  parentNodeId?: string
+  data: any
+  confidence: number
+  valueScore: number // How valuable this enrichment proved
+  childNodes: EnrichmentNode[]
+  discoveredAt: Date
 }
 ```
 
@@ -96,6 +96,7 @@ interface EnrichmentNode {
    - Recursive temporal analysis
 
 **Self-Learning Component:**
+
 - Track which enrichment paths lead to successful deals
 - Automatically adjust recursion depth and strategies based on ROI
 - A/B test different enrichment sequences
@@ -108,23 +109,23 @@ interface EnrichmentNode {
 
 ```typescript
 interface CompetitorNode {
-  id: string;
-  name: string;
-  depth: number; // 0 = direct competitor, 1 = competitor's competitor, etc.
-  marketShare: number;
-  filingVolume: number;
-  averageDealSize: number;
-  competitiveThreats: CompetitorNode[];
-  opportunities: OpportunityAnalysis[];
-  strategicPosition: 'dominant' | 'growing' | 'declining' | 'niche';
+  id: string
+  name: string
+  depth: number // 0 = direct competitor, 1 = competitor's competitor, etc.
+  marketShare: number
+  filingVolume: number
+  averageDealSize: number
+  competitiveThreats: CompetitorNode[]
+  opportunities: OpportunityAnalysis[]
+  strategicPosition: 'dominant' | 'growing' | 'declining' | 'niche'
 }
 
 interface OpportunityAnalysis {
-  type: 'white_space' | 'underserved_segment' | 'pricing_gap' | 'service_gap';
-  description: string;
-  estimatedValue: number;
-  confidence: number;
-  actionableSteps: string[];
+  type: 'white_space' | 'underserved_segment' | 'pricing_gap' | 'service_gap'
+  description: string
+  estimatedValue: number
+  confidence: number
+  actionableSteps: string[]
 }
 ```
 
@@ -144,31 +145,31 @@ interface OpportunityAnalysis {
 
 ```typescript
 interface LearningModel {
-  modelId: string;
-  modelType: 'conversion_prediction' | 'deal_size_prediction' | 'time_to_close' | 'churn_risk';
-  version: number;
-  accuracy: number;
-  trainingDataSize: number;
-  lastTrainedAt: Date;
-  features: ModelFeature[];
-  outcomes: ModelOutcome[];
-  improvementHistory: ModelVersion[];
+  modelId: string
+  modelType: 'conversion_prediction' | 'deal_size_prediction' | 'time_to_close' | 'churn_risk'
+  version: number
+  accuracy: number
+  trainingDataSize: number
+  lastTrainedAt: Date
+  features: ModelFeature[]
+  outcomes: ModelOutcome[]
+  improvementHistory: ModelVersion[]
 }
 
 interface ModelOutcome {
-  prospectId: string;
-  prediction: number;
-  actualOutcome: number;
-  error: number;
-  features: Record<string, any>;
-  recordedAt: Date;
+  prospectId: string
+  prediction: number
+  actualOutcome: number
+  error: number
+  features: Record<string, any>
+  recordedAt: Date
 }
 
 interface RetrainingConfig {
-  automaticRetraining: boolean;
-  minNewOutcomes: number; // Retrain after N new outcomes
-  minAccuracyImprovement: number; // Only deploy if accuracy improves by X%
-  abTestNewModels: boolean; // A/B test before full deployment
+  automaticRetraining: boolean
+  minNewOutcomes: number // Retrain after N new outcomes
+  minAccuracyImprovement: number // Only deploy if accuracy improves by X%
+  abTestNewModels: boolean // A/B test before full deployment
 }
 ```
 
@@ -189,30 +190,30 @@ interface RetrainingConfig {
 
 ```typescript
 interface DataSourceDiscovery {
-  discoveryMethods: DiscoveryMethod[];
-  evaluationCriteria: SourceEvaluationCriteria;
-  autoIntegration: boolean; // Automatically integrate high-value sources
-  humanApprovalRequired: boolean;
+  discoveryMethods: DiscoveryMethod[]
+  evaluationCriteria: SourceEvaluationCriteria
+  autoIntegration: boolean // Automatically integrate high-value sources
+  humanApprovalRequired: boolean
 }
 
 interface DiscoveryMethod {
-  type: 'web_crawl' | 'api_directory' | 'competitor_analysis' | 'academic_research';
-  enabled: boolean;
-  schedule: string; // Cron expression
+  type: 'web_crawl' | 'api_directory' | 'competitor_analysis' | 'academic_research'
+  enabled: boolean
+  schedule: string // Cron expression
 }
 
 interface DiscoveredSource {
-  sourceId: string;
-  name: string;
-  url: string;
-  dataType: string[];
-  estimatedValue: number; // Calculated by discovery engine
-  costEstimate: number;
-  integrationComplexity: 'low' | 'medium' | 'high';
-  reliabilityScore: number;
-  freshnessScore: number;
-  coverageScore: number;
-  status: 'discovered' | 'evaluating' | 'integrating' | 'active' | 'rejected';
+  sourceId: string
+  name: string
+  url: string
+  dataType: string[]
+  estimatedValue: number // Calculated by discovery engine
+  costEstimate: number
+  integrationComplexity: 'low' | 'medium' | 'high'
+  reliabilityScore: number
+  freshnessScore: number
+  coverageScore: number
+  status: 'discovered' | 'evaluating' | 'integrating' | 'active' | 'rejected'
 }
 ```
 
@@ -236,32 +237,36 @@ interface DiscoveredSource {
 
 ```typescript
 interface OutreachTemplate {
-  templateId: string;
-  prospectId: string;
-  channel: 'email' | 'sms' | 'phone_script' | 'linkedin' | 'direct_mail';
-  subject?: string; // For email
-  body: string;
-  callToAction: string;
-  personalizationTokens: Record<string, string>;
-  tonality: 'professional' | 'casual' | 'urgent' | 'consultative';
-  lengthPreference: 'brief' | 'moderate' | 'detailed';
-  generatedAt: Date;
-  performanceMetrics?: TemplatePerformance;
+  templateId: string
+  prospectId: string
+  channel: 'email' | 'sms' | 'phone_script' | 'linkedin' | 'direct_mail'
+  subject?: string // For email
+  body: string
+  callToAction: string
+  personalizationTokens: Record<string, string>
+  tonality: 'professional' | 'casual' | 'urgent' | 'consultative'
+  lengthPreference: 'brief' | 'moderate' | 'detailed'
+  generatedAt: Date
+  performanceMetrics?: TemplatePerformance
 }
 
 interface TemplatePerformance {
-  openRate?: number;
-  responseRate: number;
-  conversionRate: number;
-  averageResponseTime: number;
-  sentimentScore: number; // How positively recipients responded
+  openRate?: number
+  responseRate: number
+  conversionRate: number
+  averageResponseTime: number
+  sentimentScore: number // How positively recipients responded
 }
 
 interface GenerativeOutreachEngine {
-  generateTemplate(prospect: Prospect, channel: string, context: OutreachContext): Promise<OutreachTemplate>;
-  generateFollowUp(previousMessages: Message[], outcome: string): Promise<OutreachTemplate>;
-  generateObjectionHandler(objection: string, prospect: Prospect): Promise<string>;
-  optimizeTemplate(template: OutreachTemplate, feedback: string): Promise<OutreachTemplate>;
+  generateTemplate(
+    prospect: Prospect,
+    channel: string,
+    context: OutreachContext
+  ): Promise<OutreachTemplate>
+  generateFollowUp(previousMessages: Message[], outcome: string): Promise<OutreachTemplate>
+  generateObjectionHandler(objection: string, prospect: Prospect): Promise<string>
+  optimizeTemplate(template: OutreachTemplate, feedback: string): Promise<OutreachTemplate>
 }
 ```
 
@@ -297,36 +302,41 @@ interface GenerativeOutreachEngine {
 
 ```typescript
 interface GenerativeReport {
-  reportId: string;
-  reportType: 'executive_summary' | 'market_analysis' | 'portfolio_health' |
-               'competitor_intelligence' | 'prospect_deep_dive' | 'performance_review';
-  generatedFor: string; // User ID
-  generatedAt: Date;
-  format: 'markdown' | 'pdf' | 'powerpoint' | 'html';
-  sections: ReportSection[];
-  insights: GeneratedInsight[];
-  recommendations: Recommendation[];
-  visualizations: Visualization[];
+  reportId: string
+  reportType:
+    | 'executive_summary'
+    | 'market_analysis'
+    | 'portfolio_health'
+    | 'competitor_intelligence'
+    | 'prospect_deep_dive'
+    | 'performance_review'
+  generatedFor: string // User ID
+  generatedAt: Date
+  format: 'markdown' | 'pdf' | 'powerpoint' | 'html'
+  sections: ReportSection[]
+  insights: GeneratedInsight[]
+  recommendations: Recommendation[]
+  visualizations: Visualization[]
 }
 
 interface GeneratedInsight {
-  insightId: string;
-  type: 'trend' | 'anomaly' | 'opportunity' | 'risk' | 'pattern';
-  title: string;
-  description: string;
-  confidence: number;
-  impact: 'low' | 'medium' | 'high' | 'critical';
-  supportingData: any[];
-  actionable: boolean;
-  suggestedActions?: string[];
+  insightId: string
+  type: 'trend' | 'anomaly' | 'opportunity' | 'risk' | 'pattern'
+  title: string
+  description: string
+  confidence: number
+  impact: 'low' | 'medium' | 'high' | 'critical'
+  supportingData: any[]
+  actionable: boolean
+  suggestedActions?: string[]
 }
 
 interface ReportSection {
-  title: string;
-  content: string; // Generated narrative
-  dataPoints: any[];
-  visualizations: string[]; // Chart IDs
-  keyTakeaways: string[];
+  title: string
+  content: string // Generated narrative
+  dataPoints: any[]
+  visualizations: string[] // Chart IDs
+  keyTakeaways: string[]
 }
 ```
 
@@ -375,37 +385,37 @@ interface ReportSection {
 
 ```typescript
 interface GeneratedDealProposal {
-  proposalId: string;
-  prospectId: string;
-  generatedAt: Date;
-  dealStructure: DealStructure;
-  rationale: string; // AI explanation of why this structure
-  alternatives: DealStructure[]; // Alternative structures
-  riskAssessment: RiskAssessment;
-  expectedOutcome: OutcomePredictin;
-  presentationFormat: 'term_sheet' | 'full_proposal' | 'verbal_script';
+  proposalId: string
+  prospectId: string
+  generatedAt: Date
+  dealStructure: DealStructure
+  rationale: string // AI explanation of why this structure
+  alternatives: DealStructure[] // Alternative structures
+  riskAssessment: RiskAssessment
+  expectedOutcome: OutcomePredictin
+  presentationFormat: 'term_sheet' | 'full_proposal' | 'verbal_script'
 }
 
 interface DealStructure {
-  advanceAmount: number;
-  factorRate: number;
-  paybackAmount: number;
-  term: number; // days
-  paymentFrequency: 'daily' | 'weekly' | 'monthly';
-  percentageOfRevenue?: number; // For revenue-based deals
-  collateralRequired: boolean;
-  personalGuarantee: boolean;
-  covenants: string[];
-  fees: Fee[];
-  pricing: PricingBreakdown;
+  advanceAmount: number
+  factorRate: number
+  paybackAmount: number
+  term: number // days
+  paymentFrequency: 'daily' | 'weekly' | 'monthly'
+  percentageOfRevenue?: number // For revenue-based deals
+  collateralRequired: boolean
+  personalGuarantee: boolean
+  covenants: string[]
+  fees: Fee[]
+  pricing: PricingBreakdown
 }
 
 interface PricingBreakdown {
-  competitivePosition: 'aggressive' | 'market' | 'premium';
-  profitMargin: number;
-  riskAdjustment: number;
-  volumeDiscount?: number;
-  rationale: string;
+  competitivePosition: 'aggressive' | 'market' | 'premium'
+  profitMargin: number
+  riskAdjustment: number
+  volumeDiscount?: number
+  rationale: string
 }
 ```
 
@@ -444,34 +454,34 @@ interface PricingBreakdown {
 
 ```typescript
 interface ConversationAI {
-  sessionId: string;
-  userId: string;
-  conversationHistory: Message[];
-  context: ConversationContext;
-  capabilities: AICapability[];
+  sessionId: string
+  userId: string
+  conversationHistory: Message[]
+  context: ConversationContext
+  capabilities: AICapability[]
 }
 
 interface AICapability {
-  name: string;
-  description: string;
-  examples: string[];
+  name: string
+  description: string
+  examples: string[]
 }
 
 interface Message {
-  messageId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  intent?: DetectedIntent;
-  entities?: ExtractedEntity[];
-  actionTaken?: Action;
-  results?: any;
+  messageId: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  intent?: DetectedIntent
+  entities?: ExtractedEntity[]
+  actionTaken?: Action
+  results?: any
 }
 
 interface DetectedIntent {
-  primary: 'query' | 'analysis' | 'recommendation' | 'export' | 'action';
-  specific: string; // e.g., "find_prospects", "analyze_competitor", "generate_report"
-  confidence: number;
+  primary: 'query' | 'analysis' | 'recommendation' | 'export' | 'action'
+  specific: string // e.g., "find_prospects", "analyze_competitor", "generate_report"
+  confidence: number
 }
 ```
 
@@ -511,57 +521,57 @@ interface DetectedIntent {
 
 ```typescript
 interface UserProfile {
-  userId: string;
-  role: 'sales_rep' | 'sales_manager' | 'analyst' | 'executive' | 'underwriter';
-  preferences: UserPreferences;
-  behavior: UserBehavior;
-  performance: UserPerformance;
-  learningModel: PersonalizationModel;
+  userId: string
+  role: 'sales_rep' | 'sales_manager' | 'analyst' | 'executive' | 'underwriter'
+  preferences: UserPreferences
+  behavior: UserBehavior
+  performance: UserPerformance
+  learningModel: PersonalizationModel
 }
 
 interface UserPreferences {
   // Explicit preferences
-  preferredIndustries: string[];
-  preferredStates: string[];
-  dealSizeRange: [number, number];
-  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  preferredIndustries: string[]
+  preferredStates: string[]
+  dealSizeRange: [number, number]
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive'
 
   // UI preferences
-  dashboardLayout: 'compact' | 'detailed' | 'visual';
-  defaultSortField: string;
-  defaultFilters: FilterState;
-  notificationPreferences: NotificationSettings;
+  dashboardLayout: 'compact' | 'detailed' | 'visual'
+  defaultSortField: string
+  defaultFilters: FilterState
+  notificationPreferences: NotificationSettings
 
   // Communication preferences
-  preferredOutreachChannel: 'email' | 'phone' | 'sms';
-  communicationStyle: 'formal' | 'casual';
-  followUpCadence: number; // days
+  preferredOutreachChannel: 'email' | 'phone' | 'sms'
+  communicationStyle: 'formal' | 'casual'
+  followUpCadence: number // days
 }
 
 interface UserBehavior {
   // Tracked implicitly
-  prospectViewPatterns: ProspectViewPattern[];
-  filterUsageFrequency: Record<string, number>;
-  timeOfDayPatterns: TimePattern[];
-  conversionPatterns: ConversionPattern[];
-  successfulDealCharacteristics: DealCharacteristics[];
+  prospectViewPatterns: ProspectViewPattern[]
+  filterUsageFrequency: Record<string, number>
+  timeOfDayPatterns: TimePattern[]
+  conversionPatterns: ConversionPattern[]
+  successfulDealCharacteristics: DealCharacteristics[]
 
   // Interaction patterns
-  averageTimePerProspect: number;
-  clickPatterns: ClickPattern[];
-  searchQueries: SearchQuery[];
-  exportFrequency: number;
+  averageTimePerProspect: number
+  clickPatterns: ClickPattern[]
+  searchQueries: SearchQuery[]
+  exportFrequency: number
 }
 
 interface UserPerformance {
-  conversionRate: number;
-  averageDealSize: number;
-  averageTimeToClose: number;
-  portfolioHealthScore: number;
-  prospectQuality: number; // How good are their selections
-  activityLevel: number;
-  strengths: string[]; // AI-identified strengths
-  improvementAreas: string[]; // AI-identified areas for growth
+  conversionRate: number
+  averageDealSize: number
+  averageTimeToClose: number
+  portfolioHealthScore: number
+  prospectQuality: number // How good are their selections
+  activityLevel: number
+  strengths: string[] // AI-identified strengths
+  improvementAreas: string[] // AI-identified areas for growth
 }
 ```
 
@@ -597,38 +607,38 @@ interface UserPerformance {
 
 ```typescript
 interface RecommendationEngine {
-  generateRecommendations(userId: string, context: RecommendationContext): Promise<Recommendation[]>;
-  explainRecommendation(recommendationId: string): Promise<RecommendationExplanation>;
-  recordFeedback(recommendationId: string, feedback: Feedback): Promise<void>;
-  learnFromOutcomes(userId: string, outcomes: Outcome[]): Promise<void>;
+  generateRecommendations(userId: string, context: RecommendationContext): Promise<Recommendation[]>
+  explainRecommendation(recommendationId: string): Promise<RecommendationExplanation>
+  recordFeedback(recommendationId: string, feedback: Feedback): Promise<void>
+  learnFromOutcomes(userId: string, outcomes: Outcome[]): Promise<void>
 }
 
 interface Recommendation {
-  recommendationId: string;
-  type: 'prospect' | 'action' | 'strategy' | 'timing' | 'pricing';
-  title: string;
-  description: string;
-  confidence: number;
-  expectedValue: number; // Estimated impact
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  reasoning: string[];
-  data: any;
-  expiresAt?: Date; // Time-sensitive recommendations
+  recommendationId: string
+  type: 'prospect' | 'action' | 'strategy' | 'timing' | 'pricing'
+  title: string
+  description: string
+  confidence: number
+  expectedValue: number // Estimated impact
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  reasoning: string[]
+  data: any
+  expiresAt?: Date // Time-sensitive recommendations
 }
 
 interface RecommendationContext {
-  timeOfDay: Date;
-  userActivity: string; // What user is currently doing
-  recentActions: Action[];
-  currentGoals: Goal[];
-  constraints: Constraint[];
+  timeOfDay: Date
+  userActivity: string // What user is currently doing
+  recentActions: Action[]
+  currentGoals: Goal[]
+  constraints: Constraint[]
 }
 
 interface RecommendationExplanation {
-  factors: ExplanationFactor[];
-  similarCases: Case[];
-  confidenceBreakdown: Record<string, number>;
-  alternatives: Recommendation[];
+  factors: ExplanationFactor[]
+  similarCases: Case[]
+  confidenceBreakdown: Record<string, number>
+  alternatives: Recommendation[]
 }
 ```
 
@@ -655,24 +665,28 @@ interface RecommendationExplanation {
 ### 3.3 Role-Based Personalization
 
 **Sales Rep View:**
+
 - Focus on actionable prospects
 - Daily task list auto-generated
 - Outreach templates ready to use
 - Simple, action-oriented UI
 
 **Sales Manager View:**
+
 - Team performance dashboard
 - Pipeline health monitoring
 - Rep-level coaching insights
 - Territory/industry analysis
 
 **Analyst View:**
+
 - Deep data exploration tools
 - Market trend analysis
 - Competitive intelligence focus
 - Data quality monitoring
 
 **Executive View:**
+
 - High-level KPIs
 - Strategic insights
 - Market opportunity sizing
@@ -730,54 +744,57 @@ src/components/
 ```typescript
 // Extended Prospect type
 interface EnhancedProspect extends Prospect {
-  enrichmentTree: EnrichmentNode;
-  generatedTemplates: OutreachTemplate[];
-  dealProposals: GeneratedDealProposal[];
-  insights: GeneratedInsight[];
-  recommendationScore: number; // Personalized score per user
-  personalizedRanking: Record<string, number>; // Score per user
-  conversationHistory: Message[];
-  outcomeHistory: OutcomeRecord[];
+  enrichmentTree: EnrichmentNode
+  generatedTemplates: OutreachTemplate[]
+  dealProposals: GeneratedDealProposal[]
+  insights: GeneratedInsight[]
+  recommendationScore: number // Personalized score per user
+  personalizedRanking: Record<string, number> // Score per user
+  conversationHistory: Message[]
+  outcomeHistory: OutcomeRecord[]
 }
 
 // New data types
 interface OutcomeRecord {
-  outcomeId: string;
-  prospectId: string;
-  userId: string;
-  timestamp: Date;
-  action: string;
-  result: 'success' | 'failure' | 'pending';
-  dealSize?: number;
-  conversionTime?: number;
-  feedback: string;
-  learningPoints: Record<string, any>; // Fed back to ML models
+  outcomeId: string
+  prospectId: string
+  userId: string
+  timestamp: Date
+  action: string
+  result: 'success' | 'failure' | 'pending'
+  dealSize?: number
+  conversionTime?: number
+  feedback: string
+  learningPoints: Record<string, any> // Fed back to ML models
 }
 
 interface LearningDataset {
-  datasetId: string;
-  modelType: string;
-  features: FeatureVector[];
-  labels: any[];
-  createdAt: Date;
-  size: number;
-  quality: number;
+  datasetId: string
+  modelType: string
+  features: FeatureVector[]
+  labels: any[]
+  createdAt: Date
+  size: number
+  quality: number
 }
 ```
 
 ### 4.3 External Services Integration
 
 **LLM Integration:**
+
 - OpenAI GPT-4 for template generation, insights, conversation
 - Anthropic Claude for complex analysis, report writing
 - Local models for fast, low-cost operations (classification, extraction)
 
 **Vector Database:**
+
 - Pinecone or Weaviate for semantic search
 - Store embeddings of all prospects, templates, reports
 - Enable similarity search and RAG (Retrieval Augmented Generation)
 
 **ML Platform:**
+
 - TensorFlow.js for client-side predictions
 - Python microservice for heavy ML training
 - Model versioning and A/B testing infrastructure
@@ -787,30 +804,35 @@ interface LearningDataset {
 ## 5. IMPLEMENTATION ROADMAP
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 - [ ] User profile system with behavioral tracking
 - [ ] LLM integration service (OpenAI/Anthropic)
 - [ ] Vector store setup for embeddings
 - [ ] Conversation AI basic interface
 
 ### Phase 2: Generative Features (Weeks 3-4)
+
 - [ ] Outreach template generation
 - [ ] Insight generation engine
 - [ ] Basic report generation
 - [ ] Deal proposal generator
 
 ### Phase 3: Personalization (Weeks 5-6)
+
 - [ ] Recommendation engine
 - [ ] Personalized dashboards
 - [ ] Behavioral learning models
 - [ ] Role-based views
 
 ### Phase 4: Recursive Systems (Weeks 7-9)
+
 - [ ] Recursive enrichment engine
 - [ ] Self-learning prediction models
 - [ ] Recursive competitor analysis
 - [ ] Data source discovery
 
 ### Phase 5: Advanced Features (Weeks 10-12)
+
 - [ ] Advanced conversation AI with actions
 - [ ] Full report generation suite
 - [ ] Model performance tracking and auto-retraining
@@ -848,6 +870,7 @@ interface LearningDataset {
 ## 7. TECHNICAL CONSIDERATIONS
 
 ### Privacy & Security:
+
 - User behavior data encrypted at rest
 - GDPR-compliant data retention policies
 - Opt-in for behavioral tracking
@@ -855,6 +878,7 @@ interface LearningDataset {
 - No PII in ML training datasets
 
 ### Performance:
+
 - LLM caching for repeated queries
 - Background generation of templates/reports
 - Progressive loading of recursive data
@@ -862,6 +886,7 @@ interface LearningDataset {
 - Efficient vector similarity search
 
 ### Cost Optimization:
+
 - Tier LLM usage (GPT-4 for complex, GPT-3.5 for simple)
 - Cache generated content
 - Batch API calls
@@ -869,6 +894,7 @@ interface LearningDataset {
 - Rate limiting to prevent abuse
 
 ### Scalability:
+
 - Horizontal scaling of ML services
 - Queue-based generation for large batch operations
 - CDN for static generated reports

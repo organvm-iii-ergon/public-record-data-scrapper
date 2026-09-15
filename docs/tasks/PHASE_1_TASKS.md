@@ -9,12 +9,14 @@
 ## Week 1-2: Testing Infrastructure
 
 ### Task 1.1: Service Layer Unit Tests
+
 **Assignee**: TBD
 **Effort**: 5 days
 **Dependencies**: None
 **Priority**: CRITICAL
 
 #### Subtask 1.1.1: DataIngestionService Tests
+
 **File**: `src/lib/services/__tests__/DataIngestionService.test.ts`
 **Time**: 2 days
 
@@ -125,6 +127,7 @@ describe('DataIngestionService', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All rate limiting tests pass
 - [ ] Circuit breaker state transitions verified
 - [ ] Retry logic with backoff confirmed
@@ -134,6 +137,7 @@ describe('DataIngestionService', () => {
 - [ ] Coverage: 80%+ for DataIngestionService
 
 **Commands:**
+
 ```bash
 # Create test file
 touch src/lib/services/__tests__/DataIngestionService.test.ts
@@ -148,6 +152,7 @@ npm run test:coverage -- src/lib/services/DataIngestionService.ts
 ---
 
 #### Subtask 1.1.2: DataEnrichmentService Tests
+
 **File**: `src/lib/services/__tests__/DataEnrichmentService.test.ts`
 **Time**: 2 days
 
@@ -165,7 +170,7 @@ describe('DataEnrichmentService', () => {
     mockProspect = {
       id: 'test-1',
       companyName: 'Acme Corp',
-      state: 'NY',
+      state: 'NY'
       // ... other fields
     }
   })
@@ -257,7 +262,7 @@ describe('DataEnrichmentService', () => {
 
   describe('Industry Classification', () => {
     it('should classify restaurant industry', async () => {
-      mockProspect.companyName = 'Joe\'s Pizza & Grill'
+      mockProspect.companyName = "Joe's Pizza & Grill"
       const industry = await service.classifyIndustry(mockProspect)
       expect(industry).toBe('restaurant')
     })
@@ -311,10 +316,12 @@ describe('DataEnrichmentService', () => {
 
   describe('Batch Enrichment', () => {
     it('should enrich 5 prospects concurrently', async () => {
-      const prospects = Array(10).fill(null).map((_, i) => ({
-        ...mockProspect,
-        id: `test-${i}`
-      }))
+      const prospects = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          ...mockProspect,
+          id: `test-${i}`
+        }))
 
       const startTime = Date.now()
       await service.enrichBatch(prospects)
@@ -348,6 +355,7 @@ describe('DataEnrichmentService', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All 5 growth signal types tested
 - [ ] Health score calculation verified
 - [ ] Revenue estimation accuracy confirmed
@@ -358,6 +366,7 @@ describe('DataEnrichmentService', () => {
 - [ ] Coverage: 80%+ for DataEnrichmentService
 
 **Commands:**
+
 ```bash
 touch src/lib/services/__tests__/DataEnrichmentService.test.ts
 npm test DataEnrichmentService
@@ -367,6 +376,7 @@ npm run test:coverage -- src/lib/services/DataEnrichmentService.ts
 ---
 
 #### Subtask 1.1.3: DataRefreshScheduler Tests
+
 **File**: `src/lib/services/__tests__/DataRefreshScheduler.test.ts`
 **Time**: 1 day
 
@@ -432,9 +442,7 @@ describe('DataRefreshScheduler', () => {
 
       await scheduler.triggerIngestion()
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ingestion:started' })
-      )
+      expect(handler).toHaveBeenCalledWith(expect.objectContaining({ type: 'ingestion:started' }))
     })
 
     it('should emit ingestion:completed event with stats', async () => {
@@ -513,6 +521,7 @@ describe('DataRefreshScheduler', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Scheduling intervals verified (24h, 6h)
 - [ ] Event system tested (6 event types)
 - [ ] Manual triggers working
@@ -523,11 +532,13 @@ describe('DataRefreshScheduler', () => {
 ---
 
 ### Task 1.2: Utility Tests
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Dependencies**: None
 
 #### Subtask 1.2.1: Retry Utilities Tests
+
 **File**: `src/lib/utils/__tests__/retry.test.ts`
 **Time**: 1 day
 
@@ -538,7 +549,8 @@ import { retryWithBackoff, CircuitBreaker } from '../retry'
 describe('Retry Utilities', () => {
   describe('retryWithBackoff', () => {
     it('should retry 3 times with exponential backoff', async () => {
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValueOnce('Success')
@@ -585,9 +597,9 @@ describe('Retry Utilities', () => {
     })
 
     it('should not retry on non-retryable errors', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        Object.assign(new Error('Bad Request'), { statusCode: 400 })
-      )
+      const fn = vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error('Bad Request'), { statusCode: 400 }))
 
       try {
         await retryWithBackoff(fn, {
@@ -606,7 +618,9 @@ describe('Retry Utilities', () => {
 
       // Trigger 3 failures
       for (let i = 0; i < 3; i++) {
-        try { await cb.execute(fn) } catch {}
+        try {
+          await cb.execute(fn)
+        } catch {}
       }
 
       expect(cb.state).toBe('open')
@@ -632,7 +646,9 @@ describe('Retry Utilities', () => {
 
       // Open circuit
       for (let i = 0; i < 2; i++) {
-        try { await cb.execute(fn) } catch {}
+        try {
+          await cb.execute(fn)
+        } catch {}
       }
 
       expect(cb.state).toBe('open')
@@ -647,14 +663,17 @@ describe('Retry Utilities', () => {
 
     it('should close on successful half-open request', async () => {
       const cb = new CircuitBreaker({ failureThreshold: 2 })
-      const fn = vi.fn()
+      const fn = vi
+        .fn()
         .mockRejectedValueOnce(new Error('Fail 1'))
         .mockRejectedValueOnce(new Error('Fail 2'))
         .mockResolvedValueOnce('Success')
 
       // Open circuit
       for (let i = 0; i < 2; i++) {
-        try { await cb.execute(fn) } catch {}
+        try {
+          await cb.execute(fn)
+        } catch {}
       }
 
       // Transition to half-open (mock timeout)
@@ -670,6 +689,7 @@ describe('Retry Utilities', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Retry logic tested (exponential backoff)
 - [ ] Jitter implementation verified
 - [ ] Circuit breaker states tested
@@ -679,11 +699,13 @@ describe('Retry Utilities', () => {
 ---
 
 ### Task 1.3: Integration Tests
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Dependencies**: Task 1.1, 1.2
 
 #### Subtask 1.3.1: E2E Pipeline Test
+
 **File**: `tests/integration/pipeline.test.ts`
 **Time**: 2 days
 
@@ -706,7 +728,7 @@ describe('Data Pipeline Integration', () => {
 
     // 2. Enrich prospects
     const enrichmentService = new DataEnrichmentService()
-    const prospects = ingestionResult.records.map(r => ({
+    const prospects = ingestionResult.records.map((r) => ({
       id: r.id,
       companyName: r.debtorName,
       state: 'NY',
@@ -720,7 +742,7 @@ describe('Data Pipeline Integration', () => {
     expect(enrichedProspects[0].healthScore).toBeDefined()
 
     // 3. Verify priority scores calculated
-    enrichedProspects.forEach(prospect => {
+    enrichedProspects.forEach((prospect) => {
       expect(prospect.priorityScore).toBeGreaterThanOrEqual(0)
       expect(prospect.priorityScore).toBeLessThanOrEqual(100)
     })
@@ -737,6 +759,7 @@ describe('Data Pipeline Integration', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Full pipeline tested end-to-end
 - [ ] Error recovery verified
 - [ ] Rate limiting coordination
@@ -745,11 +768,13 @@ describe('Data Pipeline Integration', () => {
 ---
 
 ### Task 1.4: E2E Tests with Playwright
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Dependencies**: None
 
 #### Subtask 1.4.1: Setup Playwright
+
 **Time**: 0.5 days
 
 ```bash
@@ -761,6 +786,7 @@ npx playwright install
 ```
 
 Create `playwright.config.ts`:
+
 ```typescript
 import { defineConfig, devices } from '@playwright/test'
 
@@ -773,27 +799,28 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
+    trace: 'on-first-retry'
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+      use: { ...devices['Desktop Firefox'] }
+    }
   ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+    reuseExistingServer: !process.env.CI
+  }
 })
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Playwright installed
 - [ ] Configuration created
 - [ ] Test directory set up
@@ -801,6 +828,7 @@ export default defineConfig({
 ---
 
 #### Subtask 1.4.2: Prospect Claiming Workflow
+
 **File**: `tests/e2e/prospect-claiming.spec.ts`
 **Time**: 1 day
 
@@ -860,6 +888,7 @@ test.describe('Prospect Claiming Workflow', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Single claim workflow tested
 - [ ] Unclaim workflow tested
 - [ ] Batch claim tested
@@ -868,6 +897,7 @@ test.describe('Prospect Claiming Workflow', () => {
 ---
 
 #### Subtask 1.4.3: Export Functionality
+
 **File**: `tests/e2e/export.spec.ts`
 **Time**: 1 day
 
@@ -924,6 +954,7 @@ test.describe('Export Functionality', () => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] CSV export tested
 - [ ] JSON export tested
 - [ ] Excel export tested
@@ -933,11 +964,13 @@ test.describe('Export Functionality', () => {
 ---
 
 ### Task 1.5: CI/CD Integration
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Dependencies**: Task 1.1-1.4
 
 #### Update GitHub Actions
+
 **File**: `.github/workflows/ci.yml`
 
 ```yaml
@@ -1017,6 +1050,7 @@ jobs:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] CI runs on all pushes
 - [ ] Coverage threshold enforced (80%)
 - [ ] E2E tests run in CI
@@ -1028,15 +1062,18 @@ jobs:
 ## Week 3-4: Type Safety & Code Quality
 
 ### Task 1.6: Fix TypeScript Errors
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: HIGH
 
 #### Subtask 1.6.1: Fix App.tsx Type Errors
+
 **File**: `src/App.tsx`
 **Time**: 1 day
 
 **Current Issues:**
+
 ```typescript
 // Line ~350: Type error in handleClaim
 const handleClaim = (id: string) => {
@@ -1050,14 +1087,13 @@ const handleExport = (format: string) => {
 ```
 
 **Fix:**
+
 ```typescript
 import type { Prospect, ExportFormat } from './lib/types'
 
 // Add proper types
 const handleClaim = (id: string): void => {
-  setProspects(prev => prev.map(p =>
-    p.id === id ? { ...p, status: 'claimed' as const } : p
-  ))
+  setProspects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'claimed' as const } : p)))
 }
 
 const handleExport = (format: ExportFormat): void => {
@@ -1077,6 +1113,7 @@ const [filter, setFilter] = useState<ProspectFilter>({
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All type errors in App.tsx resolved
 - [ ] Proper type annotations added
 - [ ] No `any` types remain
@@ -1085,22 +1122,21 @@ const [filter, setFilter] = useState<ProspectFilter>({
 ---
 
 #### Subtask 1.6.2: Fix use-agentic-engine.ts
+
 **File**: `src/hooks/use-agentic-engine.ts`
 **Time**: 0.5 days
 
 **Current Issues:**
+
 ```typescript
 // Undefined type imports
 import { AgentAnalysis } from '../lib/agentic/types' // May not exist
 ```
 
 **Fix:**
+
 ```typescript
-import type {
-  AgentAnalysis,
-  CouncilReview,
-  ImprovementCategory
-} from '@/lib/agentic/types'
+import type { AgentAnalysis, CouncilReview, ImprovementCategory } from '@/lib/agentic/types'
 
 interface UseAgenticEngineReturn {
   runCycle: () => Promise<CouncilReview>
@@ -1115,6 +1151,7 @@ export const useAgenticEngine = (): UseAgenticEngineReturn => {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All type imports resolved
 - [ ] Return type properly defined
 - [ ] Hook type-safe
@@ -1122,16 +1159,19 @@ export const useAgenticEngine = (): UseAgenticEngineReturn => {
 ---
 
 #### Subtask 1.6.3: Fix CompetitorAgent.ts
+
 **File**: `src/lib/agentic/agents/CompetitorAgent.ts`
 **Time**: 0.5 days
 
 **Current Issues:**
+
 ```typescript
 // ImprovementCategory type mismatch
 category: 'competitive-intelligence' // Error: not in union type
 ```
 
 **Fix:**
+
 ```typescript
 // Update types.ts
 export type ImprovementCategory =
@@ -1147,6 +1187,7 @@ category: 'business-intelligence' as const
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Category type updated
 - [ ] No type errors
 - [ ] Consistent with other agents
@@ -1154,11 +1195,13 @@ category: 'business-intelligence' as const
 ---
 
 ### Task 1.7: Enable Strict Mode
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Dependencies**: Task 1.6
 
 #### Subtask 1.7.1: Update tsconfig.json
+
 **File**: `tsconfig.json`
 **Time**: 0.5 days
 
@@ -1182,6 +1225,7 @@ category: 'business-intelligence' as const
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Strict mode enabled
 - [ ] All strict flags configured
 - [ ] Build succeeds
@@ -1189,16 +1233,18 @@ category: 'business-intelligence' as const
 ---
 
 #### Subtask 1.7.2: Fix Strict Mode Errors
+
 **Time**: 1.5 days
 
 **Common fixes needed:**
+
 ```typescript
 // 1. Fix implicit any
 // Before:
-function process(data) { } // Error: Parameter 'data' implicitly has 'any' type
+function process(data) {} // Error: Parameter 'data' implicitly has 'any' type
 
 // After:
-function process(data: unknown): void { }
+function process(data: unknown): void {}
 
 // 2. Fix null checks
 // Before:
@@ -1220,6 +1266,7 @@ if (element) {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] All strict mode errors fixed
 - [ ] No type assertion circumventions
 - [ ] Proper null/undefined handling
@@ -1227,11 +1274,13 @@ if (element) {
 ---
 
 ### Task 1.8: Code Quality Setup
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Dependencies**: None
 
 #### Subtask 1.8.1: Prettier Configuration
+
 **File**: `.prettierrc`
 **Time**: 0.5 days
 
@@ -1248,6 +1297,7 @@ if (element) {
 ```
 
 Create `.prettierignore`:
+
 ```
 node_modules
 dist
@@ -1258,12 +1308,14 @@ coverage
 ```
 
 **Commands:**
+
 ```bash
 npm install -D prettier
 npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
 ```
 
 **Update package.json:**
+
 ```json
 {
   "scripts": {
@@ -1274,6 +1326,7 @@ npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Prettier configured
 - [ ] All files formatted
 - [ ] Format script working
@@ -1281,6 +1334,7 @@ npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
 ---
 
 #### Subtask 1.8.2: Husky Pre-commit Hooks
+
 **File**: `.husky/pre-commit`
 **Time**: 0.5 days
 
@@ -1290,6 +1344,7 @@ npx husky init
 ```
 
 Create `.husky/pre-commit`:
+
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -1298,20 +1353,16 @@ npx lint-staged
 ```
 
 Create `.lintstagedrc.json`:
+
 ```json
 {
-  "*.{ts,tsx}": [
-    "eslint --fix",
-    "prettier --write",
-    "vitest related --run"
-  ],
-  "*.{json,css,md}": [
-    "prettier --write"
-  ]
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write", "vitest related --run"],
+  "*.{json,css,md}": ["prettier --write"]
 }
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Husky installed
 - [ ] Pre-commit hook runs
 - [ ] Lint-staged configured
@@ -1320,6 +1371,7 @@ Create `.lintstagedrc.json`:
 ---
 
 #### Subtask 1.8.3: ESLint Strict Rules
+
 **File**: `eslint.config.js`
 **Time**: 1 day
 
@@ -1345,9 +1397,12 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_'
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_'
+        }
+      ],
       '@typescript-eslint/explicit-function-return-type': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
@@ -1358,6 +1413,7 @@ export default [
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Strict ESLint rules configured
 - [ ] No `any` types allowed
 - [ ] React hooks rules enforced
@@ -1368,6 +1424,7 @@ export default [
 ## Phase 1 Completion Checklist
 
 ### Week 1-2: Testing Infrastructure ✓
+
 - [ ] DataIngestionService tests (80%+ coverage)
 - [ ] DataEnrichmentService tests (80%+ coverage)
 - [ ] DataRefreshScheduler tests (80%+ coverage)
@@ -1377,6 +1434,7 @@ export default [
 - [ ] CI/CD pipeline with coverage gates
 
 ### Week 3-4: Type Safety & Code Quality ✓
+
 - [ ] All TypeScript errors fixed (0 errors)
 - [ ] Strict mode enabled
 - [ ] Prettier configured and all files formatted
@@ -1385,6 +1443,7 @@ export default [
 - [ ] No `any` types in codebase
 
 ### Deliverables
+
 - [ ] Test coverage report (80%+ overall)
 - [ ] CI/CD pipeline passing
 - [ ] Type-safe codebase
@@ -1392,6 +1451,7 @@ export default [
 - [ ] Documentation updated
 
 ### Metrics
+
 - **Test Coverage**: Target 80%+, Current ~60%
 - **TypeScript Errors**: Target 0, Current 5-10
 - **Build Time**: Target <20s, Current ~30s

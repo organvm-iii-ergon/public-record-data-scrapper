@@ -18,7 +18,9 @@ Use the Dynatrace Expert Agent when you need to:
 ## Key Capabilities
 
 ### 1. Incident Response & Root Cause Analysis
+
 The agent can investigate service failures by:
+
 - Querying Davis AI problems
 - Analyzing exceptions from spans
 - Correlating logs and metrics
@@ -26,35 +28,45 @@ The agent can investigate service failures by:
 - Providing detailed root cause analysis
 
 ### 2. Deployment Impact Analysis
+
 Validate deployments by comparing:
+
 - Error rates before and after
 - Performance metrics (P50, P95, P99)
 - Throughput and traffic patterns
 - New problems post-deployment
 
 ### 3. Production Error Triage
+
 Monitor and categorize errors:
+
 - Backend exceptions from traces
 - Frontend JavaScript errors
 - Error severity classification
 - Affected user counts
 
 ### 4. Performance Regression Detection
+
 Track golden signals:
+
 - Latency (P50, P95, P99)
 - Traffic (requests per second)
 - Errors (error rate)
 - Saturation (CPU, memory)
 
 ### 5. Release Validation
+
 Automated health checks:
+
 - Pre-deployment validation
 - Post-deployment monitoring
 - SLO validation
 - Go/no-go decisions
 
 ### 6. Security Vulnerability Response
+
 Security and compliance:
+
 - Latest vulnerability scans
 - Severity prioritization
 - Compliance framework mapping
@@ -63,6 +75,7 @@ Security and compliance:
 ## Example Queries
 
 ### Get Exception Details
+
 ```dql
 fetch spans, from:now() - 4h
 | filter request.is_failed == true and isNotNull(span.events)
@@ -76,6 +89,7 @@ fetch spans, from:now() - 4h
 ```
 
 ### Compare Deployment Metrics
+
 ```dql
 timeseries {
   total_requests = sum(dt.service.request.count, scalar: true),
@@ -87,6 +101,7 @@ from: "2024-01-15T14:00:00Z", to: "2024-01-15T16:00:00Z"
 ```
 
 ### Monitor Golden Signals
+
 ```dql
 timeseries {
   p95_response_time = percentile(dt.service.request.response_time, 95, scalar: true),
@@ -109,6 +124,7 @@ from: now()-2h
 ## Complete Documentation
 
 For the complete agent capabilities, workflows, and DQL reference, see:
+
 - [Dynatrace Expert Agent Full Documentation](./.github/agents/dynatrace-expert.md)
 - [Custom Agents Guide](./.github/agents/README.md)
 

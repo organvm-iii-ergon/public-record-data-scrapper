@@ -95,7 +95,11 @@ function decodeJwtPayload(token: string): Record<string, unknown> | undefined {
   }
 }
 
-function findClaim(payload: Record<string, unknown>, claimName: string, suffixes: string[]): unknown {
+function findClaim(
+  payload: Record<string, unknown>,
+  claimName: string,
+  suffixes: string[]
+): unknown {
   if (typeof payload[claimName] === 'string' && payload[claimName]) {
     return payload[claimName]
   }
@@ -183,7 +187,9 @@ async function checkDatabase(state: CheckState): Promise<void> {
     const appliedVersions = new Set(
       migrations.rows.map((row) => normalizeMigrationVersion(row.version))
     )
-    const missingMigrations = HARDENING_MIGRATIONS.filter((version) => !appliedVersions.has(version))
+    const missingMigrations = HARDENING_MIGRATIONS.filter(
+      (version) => !appliedVersions.has(version)
+    )
     if (missingMigrations.length > 0) {
       addError(
         state,

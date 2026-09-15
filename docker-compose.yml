@@ -12,7 +12,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/ucc_mca
@@ -38,7 +38,7 @@ services:
   db:
     image: postgres:15-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -48,7 +48,7 @@ services:
       # Initialize with schema
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ucc_mca"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d ucc_mca']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -60,12 +60,12 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -78,7 +78,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["node", "dist/worker.cjs"]
+    command: ['node', 'dist/worker.cjs']
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/ucc_mca
@@ -102,7 +102,7 @@ services:
     working_dir: /app
     command: npm run dev -- --host 0.0.0.0
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       - VITE_API_BASE_URL=http://localhost:3000/api
     volumes:

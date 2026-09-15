@@ -1,5 +1,3 @@
 {
-    "recommendations": [
-        "vscjava.migrate-java-to-azure"
-    ]
+  "recommendations": ["vscjava.migrate-java-to-azure"]
 }

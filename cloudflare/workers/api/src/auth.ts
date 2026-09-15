@@ -41,7 +41,11 @@ function getJwks(teamDomain: string): ReturnType<typeof createRemoteJWKSet> {
  */
 function extractOrgId(payload: JWTPayload): string | undefined {
   for (const [key, value] of Object.entries(payload)) {
-    if ((key === 'org_id' || key.endsWith('/org_id')) && typeof value === 'string' && value.length > 0) {
+    if (
+      (key === 'org_id' || key.endsWith('/org_id')) &&
+      typeof value === 'string' &&
+      value.length > 0
+    ) {
       return value
     }
   }
@@ -50,7 +54,11 @@ function extractOrgId(payload: JWTPayload): string | undefined {
 
 function extractRole(payload: JWTPayload): string | undefined {
   for (const [key, value] of Object.entries(payload)) {
-    if ((key === 'role' || key.endsWith('/role')) && typeof value === 'string' && value.length > 0) {
+    if (
+      (key === 'role' || key.endsWith('/role')) &&
+      typeof value === 'string' &&
+      value.length > 0
+    ) {
       return value
     }
   }
@@ -76,7 +84,7 @@ export async function verifyAccessJwt(
   try {
     const result = await jwtVerify(token, getJwks(teamDomain), {
       issuer: `https://${teamDomain}`,
-      audience,
+      audience
     })
     payload = result.payload
   } catch {
@@ -116,7 +124,9 @@ export const accessAuth = createMiddleware<AppBindings>(async (c, next) => {
  * Read a client-supplied org_id from query string or JSON body without
  * consuming the body for downstream handlers.
  */
-async function readSuppliedOrgId(c: Parameters<Parameters<typeof createMiddleware<AppBindings>>[0]>[0]): Promise<string | undefined> {
+async function readSuppliedOrgId(
+  c: Parameters<Parameters<typeof createMiddleware<AppBindings>>[0]>[0]
+): Promise<string | undefined> {
   const fromQuery = c.req.query('org_id')
   if (fromQuery !== undefined) return fromQuery
 
@@ -151,7 +161,13 @@ export const orgScope = createMiddleware<AppBindings>(async (c, next) => {
   // Defensive: should never happen if accessAuth ran first. Fail closed.
   if (!identity?.orgId) {
     return c.json(
-      { error: { message: 'No organization associated with this account', code: 'FORBIDDEN', statusCode: 403 } },
+      {
+        error: {
+          message: 'No organization associated with this account',
+          code: 'FORBIDDEN',
+          statusCode: 403
+        }
+      },
       403
     )
   }
@@ -159,7 +175,13 @@ export const orgScope = createMiddleware<AppBindings>(async (c, next) => {
   const supplied = await readSuppliedOrgId(c)
   if (supplied !== undefined && supplied !== identity.orgId) {
     return c.json(
-      { error: { message: 'org_id does not match authenticated organization', code: 'FORBIDDEN', statusCode: 403 } },
+      {
+        error: {
+          message: 'org_id does not match authenticated organization',
+          code: 'FORBIDDEN',
+          statusCode: 403
+        }
+      },
       403
     )
   }

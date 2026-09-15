@@ -106,10 +106,9 @@ describe('ScrapeJobService', () => {
     it('issues the correct UPDATE', async () => {
       mockQuery.mockResolvedValue([])
       await service.markProcessing(TEST_JOB_ID)
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("status = 'processing'"),
-        [TEST_JOB_ID]
-      )
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("status = 'processing'"), [
+        TEST_JOB_ID
+      ])
     })
   })
 
@@ -124,10 +123,10 @@ describe('ScrapeJobService', () => {
         timestamp: '2026-06-26T00:00:00Z'
       }
       await service.markCompleted(TEST_JOB_ID, result)
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("status = 'completed'"),
-        [TEST_JOB_ID, JSON.stringify(result)]
-      )
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("status = 'completed'"), [
+        TEST_JOB_ID,
+        JSON.stringify(result)
+      ])
     })
   })
 
@@ -135,10 +134,10 @@ describe('ScrapeJobService', () => {
     it('stores the error message', async () => {
       mockQuery.mockResolvedValue([])
       await service.markFailed(TEST_JOB_ID, 'Collector timeout')
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining("status = 'failed'"),
-        [TEST_JOB_ID, 'Collector timeout']
-      )
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining("status = 'failed'"), [
+        TEST_JOB_ID,
+        'Collector timeout'
+      ])
     })
   })
 

@@ -9,6 +9,7 @@
 ## 📊 Branch Inventory
 
 ### ✅ Recently Merged (DELETE)
+
 1. `claude/ingest-011CV5QdKEje5tQXRcESTTS6` - **MERGED** via PR #99 ✅
    - Status: Fully merged to main
    - Action: **DELETE**
@@ -19,6 +20,7 @@
 ## 🔍 Branches Requiring Review
 
 ### Claude AI Branches (1)
+
 1. `claude/consolidate-branches-merge-011CUfePc5QPn8x5MQctWBej`
    - **Action Required**: REVIEW
    - Purpose: Previous branch consolidation attempt
@@ -37,6 +39,7 @@
 ### Copilot Branches (34) - REVIEW REQUIRED
 
 #### High Priority - Likely Valuable
+
 1. `copilot/implement-agentic-forces`
    - **Priority**: HIGH
    - Reason: May have alternative agentic implementation
@@ -58,6 +61,7 @@
    - Action: Review for UX enhancements
 
 #### Medium Priority - Potential Value
+
 5. `copilot/add-dark-light-theme-toggle`
    - Action: Review and merge if complete
 
@@ -71,6 +75,7 @@
    - Action: Review for UI improvements
 
 #### Documentation/Organization Branches
+
 9. `copilot/create-docs-directory`
 10. `copilot/create-docs-directory-again`
 11. `copilot/document-ui-changes-dashboard`
@@ -79,6 +84,7 @@
     - Action: Review for docs improvements, likely delete if redundant
 
 #### Bug Fix Branches
+
 14. `copilot/fix-all-dependencies-in-one-sweep`
 15. `copilot/fix-ci-feedback-issues`
 16. `copilot/fix-markdown-language-identifier`
@@ -87,6 +93,7 @@
     - Action: Review if fixes still needed, otherwise delete
 
 #### Merge/Cleanup Branches (Likely Stale)
+
 19. `copilot/clean-disparate-branches`
 20. `copilot/merge-multiple-approved-branches`
 21. `copilot/merge-open-prs-and-organize-repo`
@@ -98,6 +105,7 @@
     - Action: **DELETE** - Cleanup branches likely obsolete
 
 #### Feature/Research Branches
+
 27. `copilot/brainstorm-cash-advance-leads`
 28. `copilot/filter-small-business-leads`
 29. `copilot/gather-user-team-feedback`
@@ -114,6 +122,7 @@
 ### Codex Branches (11) - GitHub Actions Related
 
 #### Code Scanning Branches (5 - Likely Duplicates)
+
 1. `codex/enable-code-scanning-with-github-actions-2025-11-1221-47-54`
 2. `codex/enable-code-scanning-with-github-actions-2025-11-1222-03-35`
 3. `codex/enable-code-scanning-with-github-actions-2025-11-1222-03-46`
@@ -122,6 +131,7 @@
    - Note: May be superseded by existing workflows
 
 #### Bug Fix Branches (6)
+
 5. `codex/fix-typeerror-and-git-workflow-errors-2025-11-1221-06-21`
 6. `codex/fix-typeerror-and-git-workflow-errors-2025-11-1222-04-41`
 7. `codex/fix-typeerror-and-git-workflow-errors-2025-11-1222-05-18`
@@ -130,6 +140,7 @@
    - Merge relevant fixes, delete others
 
 #### Feature Branches
+
 9. `codex/extend-improvementcategory-to-include-competitor-categories-2025-11-1222-05-58`
    - **Action**: **REVIEW** - Fixes ImprovementCategory type error (in TODO)
 
@@ -147,6 +158,7 @@
 5. `dependabot/npm_and_yarn/react-resizable-panels-3.0.6`
 
 **Action for all**:
+
 - Check if updates already in package.json
 - Run `npm outdated` to see current versions
 - Merge if beneficial and tested
@@ -260,11 +272,13 @@ git checkout dependabot/npm_and_yarn/eslint-plugin-react-refresh-0.4.24
 ## 🎯 Success Criteria
 
 ### Target State
+
 - **Active Branches**: 3-5 (main + active development)
 - **Archived Branches**: 0 (all merged or deleted)
 - **Stale Branches**: 0
 
 ### Completion Checklist
+
 - [ ] All valuable code merged to main
 - [ ] All duplicate branches deleted
 - [ ] All stale branches deleted
@@ -276,17 +290,20 @@ git checkout dependabot/npm_and_yarn/eslint-plugin-react-refresh-0.4.24
 ## 📊 Estimated Cleanup Results
 
 ### Before Cleanup
+
 - Total Branches: 52
 - Active: 1 (main)
 - Stale: 51
 
 ### After Cleanup (Estimated)
+
 - Total Branches: 3-5
 - Active: 1 (main)
 - Development: 2-4 (active features)
 - Stale: 0
 
 ### Breakdown
+
 - **DELETE Immediately**: ~10 branches (merged, accidental, cleanup)
 - **REVIEW & MERGE**: ~15 branches (valuable features, fixes)
 - **REVIEW & DELETE**: ~25 branches (stale, superseded)
@@ -325,11 +342,13 @@ git checkout dependabot/npm_and_yarn/eslint-plugin-react-refresh-0.4.24
 ## 📅 Recommended Timeline
 
 ### Week 1: High Priority
+
 - Day 1: Delete obvious branches (merged, accidental)
 - Day 2-3: Review and merge high priority branches
 - Day 4-5: Review and merge medium priority branches
 
 ### Week 2: Cleanup
+
 - Day 1-2: Review remaining branches
 - Day 3: Batch delete reviewed branches
 - Day 4: Verify cleanup

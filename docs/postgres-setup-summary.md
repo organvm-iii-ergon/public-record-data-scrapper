@@ -9,21 +9,25 @@ This document summarizes the PostgreSQL database setup implementation for the UC
 ### 1. Database Dependencies
 
 **Installed packages:**
+
 - `pg` (v8.16.3) - PostgreSQL client for Node.js
 - `@types/pg` (v8.15.6) - TypeScript type definitions
 - `dotenv` (v17.2.3) - Environment variable management
 
 **Added to package.json:**
+
 - Database-related npm scripts
 
 ### 2. Database Connection Layer
 
 **Created files:**
+
 - `src/lib/db/connection.ts` - Database connection pooling and query utilities
 - `src/lib/db/types.ts` - TypeScript interfaces for all database tables
 - `src/lib/db/index.ts` - Public exports
 
 **Features:**
+
 - Connection pool management with configurable settings
 - Query execution with logging and error handling
 - Connection testing utility
@@ -32,11 +36,13 @@ This document summarizes the PostgreSQL database setup implementation for the UC
 ### 3. Database Schema
 
 **Updated file:**
+
 - `database/migrations/001_initial_schema.sql` - Complete initial schema
 
 **Schema includes:**
 
 **Tables (13 total):**
+
 1. `schema_migrations` - Migration tracking
 2. `ucc_filings` - UCC filing records
 3. `prospects` - Business prospects
@@ -50,18 +56,21 @@ This document summarizes the PostgreSQL database setup implementation for the UC
 11. `enrichment_logs` - Enrichment tracking
 
 **Views (4 total):**
+
 1. `latest_health_scores` - Most recent health per prospect
 2. `prospects_with_health` - Prospects + health data
 3. `high_priority_prospects` - High-priority targets
 4. `stale_prospects` - Data needing refresh
 
 **Functions & Triggers:**
+
 - Auto-update `updated_at` timestamps
 - Auto-calculate `time_since_default`
 - Auto-normalize company names
 - Full-text search vector updates
 
 **Indexes:**
+
 - 30+ optimized indexes for queries
 - GIN indexes for fuzzy text search (pg_trgm)
 - GiST indexes for full-text search
@@ -71,16 +80,19 @@ This document summarizes the PostgreSQL database setup implementation for the UC
 ### 4. Migration System
 
 **Created files:**
+
 - `scripts/migrate.ts` - Migration runner script
 - `scripts/db-test.ts` - Database connection test script
 
 **Features:**
+
 - Automatic migration tracking
 - Sequential migration execution
 - Error handling and rollback
 - Migration status reporting
 
 **npm scripts:**
+
 ```json
 {
   "db:migrate": "tsx scripts/migrate.ts",
@@ -91,10 +103,12 @@ This document summarizes the PostgreSQL database setup implementation for the UC
 ### 5. Configuration
 
 **Updated files:**
+
 - `.env.example` - Template with all database variables
 - `.env` - Local development configuration
 
 **Environment variables:**
+
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -110,10 +124,12 @@ DB_LOG_QUERIES=false
 ### 6. Documentation
 
 **Created files:**
+
 - `DATABASE_SETUP.md` - Comprehensive setup guide
 - `docs/postgres-setup-summary.md` - This file
 
 **Documentation includes:**
+
 - Installation instructions for macOS, Linux, Windows
 - Database creation and user setup
 - Configuration guide
@@ -127,6 +143,7 @@ DB_LOG_QUERIES=false
 ### Initial Setup
 
 1. **Install PostgreSQL** (if not already installed):
+
    ```bash
    # macOS
    brew install postgresql@14
@@ -138,6 +155,7 @@ DB_LOG_QUERIES=false
    ```
 
 2. **Create database**:
+
    ```bash
    psql -U postgres
    CREATE DATABASE ucc_mca;
@@ -145,12 +163,14 @@ DB_LOG_QUERIES=false
    ```
 
 3. **Configure environment**:
+
    ```bash
    # Update .env with your database credentials
    nano .env
    ```
 
 4. **Run migrations**:
+
    ```bash
    npm run db:migrate
    ```
@@ -163,23 +183,23 @@ DB_LOG_QUERIES=false
 ### Using in Code
 
 ```typescript
-import { query, getClient } from './src/lib/db';
+import { query, getClient } from './src/lib/db'
 
 // Simple query
-const result = await query('SELECT * FROM prospects WHERE status = $1', ['new']);
+const result = await query('SELECT * FROM prospects WHERE status = $1', ['new'])
 
 // Using a client (for transactions)
-const client = await getClient();
+const client = await getClient()
 try {
-  await client.query('BEGIN');
-  await client.query('INSERT INTO prospects ...');
-  await client.query('INSERT INTO growth_signals ...');
-  await client.query('COMMIT');
+  await client.query('BEGIN')
+  await client.query('INSERT INTO prospects ...')
+  await client.query('INSERT INTO growth_signals ...')
+  await client.query('COMMIT')
 } catch (e) {
-  await client.query('ROLLBACK');
-  throw e;
+  await client.query('ROLLBACK')
+  throw e
 } finally {
-  client.release();
+  client.release()
 }
 ```
 
@@ -286,6 +306,7 @@ After setting up the database:
 ## Files Changed/Created
 
 ### New Files
+
 - `src/lib/db/connection.ts`
 - `src/lib/db/types.ts`
 - `src/lib/db/index.ts`
@@ -296,11 +317,13 @@ After setting up the database:
 - `.env`
 
 ### Modified Files
+
 - `database/migrations/001_initial_schema.sql` (complete schema)
 - `.env.example` (updated DB config)
 - `package.json` (added dependencies and scripts)
 
 ### Dependencies Added
+
 - pg@8.16.3
 - @types/pg@8.15.6
 - dotenv@17.2.3 (already present)
@@ -308,6 +331,7 @@ After setting up the database:
 ## Support
 
 For issues or questions:
+
 - See `DATABASE_SETUP.md` for detailed setup instructions
 - Check troubleshooting section for common issues
 - Review PostgreSQL logs for connection issues

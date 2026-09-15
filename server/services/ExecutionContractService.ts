@@ -166,11 +166,7 @@ export class ExecutionContractService {
         source: input.evidenceRef
       },
       scope: {
-        refs: [
-          `jurisdiction://${state}`,
-          `collector://${state}/${strategy}`,
-          input.evidenceRef
-        ],
+        refs: [`jurisdiction://${state}`, `collector://${state}/${strategy}`, input.evidenceRef],
         forbidden: ['unrelated jurisdictions', 'raw credentials', 'unapproved activation'],
         retrieved_at: occurredAt,
         redacted: true
@@ -220,11 +216,7 @@ export class ExecutionContractService {
       ],
       verification: {
         status: 'pending',
-        checks: [
-          `collector test:${state}`,
-          'provenance completeness',
-          'duplicate-safe upsert'
-        ]
+        checks: [`collector test:${state}`, 'provenance completeness', 'duplicate-safe upsert']
       },
       rollback: {
         strategy: 'Keep the collector disabled and retain the last verified dataset.',

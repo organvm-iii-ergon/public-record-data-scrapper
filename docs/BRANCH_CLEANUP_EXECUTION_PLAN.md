@@ -7,6 +7,7 @@
 ## Current State
 
 ### Branches (23 total)
+
 1. `main` (base branch)
 2. `copilot/merge-all-prs-and-branches` (current working branch - THIS WORK)
 3. `claude/pick-implementation-016NMwaaexJYbyDuHajpV91B`
@@ -38,12 +39,14 @@
 **Branch**: `copilot/merge-all-prs-and-branches`  
 **Action**: Merge into `main`  
 **Contents**:
+
 - Repository reorganization (46 files moved)
 - Updated README with new structure
 - Documentation consolidation
 - Scripts organization
 
 **Command**:
+
 ```bash
 # From main branch
 git checkout main
@@ -58,7 +61,9 @@ Use the existing script: `scripts/cleanup-branches.sh`
 This script will delete:
 
 #### Group A: Duplicate CodeQL Branches (4)
+
 These are duplicates - CodeQL is already configured:
+
 ```bash
 git push origin --delete codex/enable-code-scanning-with-github-actions-2025-11-1221-47-54
 git push origin --delete codex/enable-code-scanning-with-github-actions-2025-11-1222-03-35
@@ -67,7 +72,9 @@ git push origin --delete codex/enable-code-scanning-with-github-actions-2025-11-
 ```
 
 #### Group B: Duplicate TypeError Fix Branches (3)
+
 Multiple attempts at same fix:
+
 ```bash
 git push origin --delete codex/fix-typeerror-and-git-workflow-errors-2025-11-1221-06-21
 git push origin --delete codex/fix-typeerror-and-git-workflow-errors-2025-11-1222-04-41
@@ -75,7 +82,9 @@ git push origin --delete codex/fix-typeerror-and-git-workflow-errors-2025-11-122
 ```
 
 #### Group C: Planning/WIP Branches (7)
+
 Coordination branches that are no longer needed:
+
 ```bash
 git push origin --delete claude/pick-implementation-016NMwaaexJYbyDuHajpV91B
 git push origin --delete claude/pr-consolidation-docs-01T7PkKwVUqzxhquL2TR3JvL
@@ -88,7 +97,9 @@ git push origin --delete copilot/resolve-pr-comment-issue
 ```
 
 #### Group D: Dependabot Branches (5)
+
 If dependencies have been updated in main:
+
 ```bash
 git push origin --delete dependabot/npm_and_yarn/eslint/js-9.39.1
 git push origin --delete dependabot/npm_and_yarn/github/spark-0.44.5
@@ -98,12 +109,15 @@ git push origin --delete dependabot/npm_and_yarn/zod-4.1.13
 ```
 
 #### Group E: Other (1)
+
 ```bash
 git push origin --delete pr135
 ```
 
 #### Group F: Current Working Branch (1)
+
 After merge is complete:
+
 ```bash
 git push origin --delete copilot/merge-all-prs-and-branches
 ```
@@ -117,6 +131,7 @@ Use the existing script: `scripts/close-superseded-prs.sh`
 This requires GitHub CLI (`gh`) or manual action via GitHub web interface.
 
 The script will close PRs with appropriate messages explaining they were:
+
 - Duplicates
 - Superseded by consolidation
 - No longer needed
@@ -124,6 +139,7 @@ The script will close PRs with appropriate messages explaining they were:
 ### Phase 4: Verification
 
 After cleanup:
+
 ```bash
 # Should show only 'main'
 git ls-remote --heads origin
@@ -138,15 +154,18 @@ git log --oneline -20
 ## Expected Final State
 
 ### Branches
+
 - ✅ **1 branch**: `main` only
 - ✅ **0 feature branches**
 - ✅ **0 WIP branches**
 
 ### PRs
+
 - ✅ **0 open PRs**
 - ✅ All superseded PRs closed with explanations
 
 ### Repository Structure
+
 - ✅ Clean root directory (31 files, down from 67)
 - ✅ Organized docs/ hierarchy
 - ✅ Consolidated scripts/ directory
@@ -166,13 +185,16 @@ Since this requires elevated permissions and GitHub access:
 ## Risk Mitigation
 
 ### Before Deletion
+
 - ✅ All important work is merged into main
 - ✅ Scripts are preserved for reference (`scripts/cleanup-branches.sh`)
 - ✅ Documentation exists explaining what was consolidated
 - ✅ This execution plan documents all actions
 
 ### Rollback Plan
+
 If something goes wrong:
+
 - Branches can be restored from reflog within 30-90 days
 - GitHub maintains deleted branch history
 - Repository organization can be reverted via git

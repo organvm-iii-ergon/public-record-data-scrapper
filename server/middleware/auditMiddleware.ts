@@ -247,8 +247,7 @@ export const auditMiddleware = (
   }
 
   // Generate or use existing request ID
-  const requestId =
-    (req as Request & { correlationId?: string }).correlationId || uuidv4()
+  const requestId = (req as Request & { correlationId?: string }).correlationId || uuidv4()
 
   // Build audit context
   const auditContext: AuditContext = {

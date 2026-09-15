@@ -50,8 +50,7 @@ export class ACHClient {
       apiKey: customConfig?.apiKey || process.env.ACH_API_KEY || '',
       merchantId: customConfig?.merchantId || process.env.ACH_MERCHANT_ID || '',
       environment: (customConfig?.environment || process.env.ACH_ENVIRONMENT || 'sandbox') as
-        | 'sandbox'
-        | 'production',
+        'sandbox' | 'production',
       webhookBaseUrl: customConfig?.webhookBaseUrl || process.env.ACH_WEBHOOK_BASE_URL
     }
   }

@@ -94,19 +94,48 @@ const BLANKET_COLLATERAL_PATTERNS = [
  * reported category list; a description can match several categories.
  */
 const EQUIPMENT_CATEGORIES: { category: string; keywords: string[] }[] = [
-  { category: 'vehicle', keywords: ['vehicle', 'truck', 'trailer', 'tractor', 'van', 'fleet', 'automobile'] },
+  {
+    category: 'vehicle',
+    keywords: ['vehicle', 'truck', 'trailer', 'tractor', 'van', 'fleet', 'automobile']
+  },
   {
     category: 'construction',
-    keywords: ['excavator', 'bulldozer', 'forklift', 'backhoe', 'loader', 'crane', 'skid steer', 'compactor']
+    keywords: [
+      'excavator',
+      'bulldozer',
+      'forklift',
+      'backhoe',
+      'loader',
+      'crane',
+      'skid steer',
+      'compactor'
+    ]
   },
   { category: 'machinery', keywords: ['machinery', 'machine', 'cnc', 'lathe', 'press', 'mill'] },
   {
     category: 'restaurant',
-    keywords: ['oven', 'refrigerator', 'freezer', 'kitchen equipment', 'point of sale', 'pos system', 'fryer']
+    keywords: [
+      'oven',
+      'refrigerator',
+      'freezer',
+      'kitchen equipment',
+      'point of sale',
+      'pos system',
+      'fryer'
+    ]
   },
-  { category: 'medical', keywords: ['medical equipment', 'imaging', 'x-ray', 'xray', 'dental', 'ultrasound', 'mri'] },
-  { category: 'office', keywords: ['copier', 'printer', 'computer', 'server', 'workstation', 'phone system'] },
-  { category: 'general', keywords: ['equipment', 'machinery', 'tools', 'apparatus', 'furniture and fixtures'] }
+  {
+    category: 'medical',
+    keywords: ['medical equipment', 'imaging', 'x-ray', 'xray', 'dental', 'ultrasound', 'mri']
+  },
+  {
+    category: 'office',
+    keywords: ['copier', 'printer', 'computer', 'server', 'workstation', 'phone system']
+  },
+  {
+    category: 'general',
+    keywords: ['equipment', 'machinery', 'tools', 'apparatus', 'furniture and fixtures']
+  }
 ]
 
 /**
@@ -182,11 +211,17 @@ const KNOWN_SECURED_PARTIES: { type: SecuredPartyType; patterns: string[] }[] = 
  * imply it. More specific types are listed first.
  */
 const SECURED_PARTY_HEURISTICS: { type: SecuredPartyType; tokens: string[] }[] = [
-  { type: 'equipment', tokens: ['equipment finance', 'equipment leasing', 'leasing', 'credit corp'] },
+  {
+    type: 'equipment',
+    tokens: ['equipment finance', 'equipment leasing', 'leasing', 'credit corp']
+  },
   { type: 'auto', tokens: ['motor credit', 'auto finance', 'truck financial'] },
   { type: 'factor', tokens: ['factoring', 'factors', 'receivables funding'] },
   { type: 'sba', tokens: ['sba'] },
-  { type: 'bank', tokens: ['bank', 'national association', 'n a', 'credit union', 'savings', 'trust company'] },
+  {
+    type: 'bank',
+    tokens: ['bank', 'national association', 'n a', 'credit union', 'savings', 'trust company']
+  },
   // MCA heuristics last: "capital"/"funding"/"advance" are noisy and also occur
   // in equipment/bank names, so only fall back to MCA when nothing else fits.
   { type: 'mca', tokens: ['merchant cash', 'cash advance', 'merchant funding', 'working capital'] }
@@ -279,7 +314,8 @@ export class EquipmentLifecycleDetector {
       const { isEquipment, categories } = this.detectEquipment(filing.collateralDescription)
       if (!isEquipment) continue
 
-      const date = filing.filingDate instanceof Date ? filing.filingDate : new Date(filing.filingDate)
+      const date =
+        filing.filingDate instanceof Date ? filing.filingDate : new Date(filing.filingDate)
       if (Number.isNaN(date.getTime())) continue
 
       const ageDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
@@ -408,7 +444,8 @@ export class EquipmentLifecycleDetector {
       return 'Equipment financing on file but none within the recency window; no MCA-adjacency boost.'
     }
     const cats = categories.length > 0 ? categories.join(', ') : 'equipment'
-    const via = securedPartyType === 'unknown' ? 'an unidentified lender' : `a(n) ${securedPartyType} lender`
+    const via =
+      securedPartyType === 'unknown' ? 'an unidentified lender' : `a(n) ${securedPartyType} lender`
     if (isMcaAdjacent) {
       return `${recentCount} recent equipment purchase(s) (${cats}) financed via ${via} — business is expanding and likely has working-capital appetite. MCA-adjacent: +score boost.`
     }
@@ -420,7 +457,11 @@ export class EquipmentLifecycleDetector {
    * patterns must appear as a contiguous phrase; single-word patterns must be a
    * whole token (so "cit" matches "cit group" but not "capacity").
    */
-  private matchesAsWords(pattern: string, normalizedName: string, nameTokens: Set<string>): boolean {
+  private matchesAsWords(
+    pattern: string,
+    normalizedName: string,
+    nameTokens: Set<string>
+  ): boolean {
     if (!pattern) return false
     if (pattern.includes(' ')) {
       return new RegExp(`(^|\\s)${this.escapeRegExp(pattern)}(\\s|$)`).test(normalizedName)

@@ -14,4 +14,4 @@ trends:
   - API-first pricing models replacing per-search fee structures
   - Tiered subscriptions (individual / firm / enterprise API) becoming standard
   - Bundled analytics (trend detection, lien monitoring) commanding premium tiers
-notes: "Initial snapshot — baseline for staleness tracking"
+notes: 'Initial snapshot — baseline for staleness tracking'

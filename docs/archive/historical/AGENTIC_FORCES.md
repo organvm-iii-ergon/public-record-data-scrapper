@@ -9,9 +9,11 @@ The Agentic Forces system implements autonomous decision-making and continuous i
 ### Core Components
 
 #### 1. **AgenticEngine**
+
 The central orchestrator that manages autonomous operations and improvement cycles.
 
 **Key Features:**
+
 - Autonomous cycle execution
 - Safety threshold enforcement
 - Improvement tracking and execution
@@ -19,6 +21,7 @@ The central orchestrator that manages autonomous operations and improvement cycl
 - System health monitoring
 
 **Configuration:**
+
 ```typescript
 {
   enabled: boolean                    // Enable/disable agentic system
@@ -31,9 +34,11 @@ The central orchestrator that manages autonomous operations and improvement cycl
 ```
 
 #### 2. **AgenticCouncil**
+
 Implements the AI Council pattern with sequential agent handoff mechanism.
 
 **Council Flow:**
+
 ```
 System Analysis → Data Analyzer → Optimizer → Security Agent → UX Enhancer → Review Complete
                       ↓              ↓            ↓               ↓
@@ -41,6 +46,7 @@ System Analysis → Data Analyzer → Optimizer → Security Agent → UX Enhanc
 ```
 
 Each agent:
+
 1. Analyzes the current system state
 2. Identifies findings and suggests improvements
 3. Hands off to the next agent
@@ -49,6 +55,7 @@ Each agent:
 #### 3. **Specialized Agents**
 
 ##### **DataAnalyzerAgent**
+
 - **Role:** Data quality assessment and monitoring
 - **Capabilities:**
   - Data freshness monitoring
@@ -58,6 +65,7 @@ Each agent:
   - Anomaly detection
 
 ##### **OptimizerAgent**
+
 - **Role:** Performance optimization
 - **Capabilities:**
   - Performance metrics analysis
@@ -67,6 +75,7 @@ Each agent:
   - Load time improvements
 
 ##### **SecurityAgent**
+
 - **Role:** Security monitoring and hardening
 - **Capabilities:**
   - Vulnerability detection
@@ -76,6 +85,7 @@ Each agent:
   - Compliance checking
 
 ##### **UXEnhancerAgent**
+
 - **Role:** User experience improvements
 - **Capabilities:**
   - Interaction pattern analysis
@@ -147,22 +157,28 @@ import { AgenticDashboard } from '@/components/AgenticDashboard'
 ## Safety Mechanisms
 
 ### 1. **Safety Score (0-100)**
+
 Each improvement has a safety score indicating execution risk:
+
 - **90-100:** Very Safe - Minimal risk, well-tested patterns
 - **80-89:** Safe - Low risk, standard improvements
 - **70-79:** Moderate - Requires validation
 - **Below 70:** Risky - Always requires manual review
 
 ### 2. **Daily Limits**
+
 Maximum number of autonomous improvements per day to prevent runaway changes.
 
 ### 3. **Required Review Categories**
+
 Certain categories (e.g., security, data-quality) always require manual approval.
 
 ### 4. **Rollback Plans**
+
 Every improvement includes a documented rollback plan.
 
 ### 5. **Validation Criteria**
+
 Success criteria must be met before marking improvements as complete.
 
 ## Feedback Loops
@@ -178,6 +194,7 @@ Feedback is processed to inform future improvement suggestions.
 ## Example Improvements
 
 ### Data Quality Enhancement
+
 ```typescript
 {
   category: 'data-quality',
@@ -199,6 +216,7 @@ Feedback is processed to inform future improvement suggestions.
 ```
 
 ### Performance Optimization
+
 ```typescript
 {
   category: 'performance',
@@ -213,6 +231,7 @@ Feedback is processed to inform future improvement suggestions.
 ## Monitoring
 
 ### System Health Metrics
+
 - **Total Improvements:** Count of all detected improvements
 - **Implemented:** Successfully executed improvements
 - **Pending:** Awaiting review or execution
@@ -220,7 +239,9 @@ Feedback is processed to inform future improvement suggestions.
 - **Average Safety Score:** Overall safety rating
 
 ### Execution History
+
 Track all autonomous executions with:
+
 - Improvement details
 - Execution timestamp
 - Before/after metrics
@@ -230,18 +251,23 @@ Track all autonomous executions with:
 ## Best Practices
 
 ### 1. **Start Conservative**
+
 Begin with `autonomousExecutionEnabled: false` and manually review improvements.
 
 ### 2. **Monitor Actively**
+
 Regularly check the Agentic dashboard for new suggestions and execution results.
 
 ### 3. **Adjust Safety Threshold**
+
 Start with a high threshold (80+) and lower gradually as confidence builds.
 
 ### 4. **Review Categories**
+
 Add critical categories to `reviewRequired` for manual oversight.
 
 ### 5. **Track Feedback**
+
 Use feedback loops to improve agent accuracy over time.
 
 ## Extension
@@ -254,18 +280,15 @@ import { AgentAnalysis, SystemContext } from '@/lib/agentic/types'
 
 export class CustomAgent extends BaseAgent {
   constructor() {
-    super('custom-role', 'Custom Agent', [
-      'Capability 1',
-      'Capability 2'
-    ])
+    super('custom-role', 'Custom Agent', ['Capability 1', 'Capability 2'])
   }
 
   async analyze(context: SystemContext): Promise<AgentAnalysis> {
     const findings = []
     const improvements = []
-    
+
     // Your analysis logic here
-    
+
     return this.createAnalysis(findings, improvements)
   }
 }
@@ -289,17 +312,20 @@ council.addAgent(new CustomAgent())
 ## Acceptance Criteria Met
 
 ✅ **Mechanisms for agentic/autonomous operations are documented and implemented**
+
 - Complete type system and agent architecture
 - AgenticEngine with autonomous execution capabilities
 - Safety mechanisms and configuration system
 
 ✅ **Continuous improvement and revision workflows are established and demonstrable**
+
 - AgenticCouncil with handoff mechanism
 - Feedback loop system
 - Improvement lifecycle management
 - Execution history tracking
 
 ✅ **System can independently initiate and apply at least one meaningful enhancement or revision**
+
 - Multiple agents detect real improvements
 - Autonomous execution with safety checks
 - Real-time monitoring and approval workflow
