@@ -10,11 +10,7 @@ import type {
   StateCollector,
   UCCFiling as CollectedUCCFiling
 } from '../../../apps/web/src/lib/collectors/types'
-import { createCAApiCollector } from '../../../apps/web/src/lib/collectors/state-collectors/CAApiCollector'
-import { createTXBulkCollector } from '../../../apps/web/src/lib/collectors/state-collectors/TXBulkCollector'
-import { createFLVendorCollector } from '../../../apps/web/src/lib/collectors/state-collectors/FLVendorCollector'
-import { createNYScraperCollector } from '../../../apps/web/src/lib/collectors/state-collectors/NYScraperCollector'
-import { createNJScraperCollector } from '../../../apps/web/src/lib/collectors/state-collectors/NJScraperCollector'
+import { stateIngestionRegistry, NonRetryableIngestionError } from '../stateIngestionRegistry'
 import {
   evaluateIngestionRecoveryAction,
   getIngestionQueue,
@@ -25,13 +21,6 @@ import {
   recordIngestionFallbackEscalated,
   resolveStateIngestionStrategyChain
 } from '../queues'
-
-class NonRetryableIngestionError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'NonRetryableIngestionError'
-  }
-}
 
 async function processIngestion(job: Job<IngestionJobData>): Promise<void> {
   const { state, startDate, endDate, batchSize = 1000, dataTier } = job.data
@@ -287,67 +276,11 @@ function normalizeDbFilingType(filingType: string): 'UCC-1' | 'UCC-3' {
   return filingType === 'UCC-1' ? 'UCC-1' : 'UCC-3'
 }
 
-function resolveCollectorForJob(
+export function resolveCollectorForJob(
   state: string,
   strategy: IngestionJobData['strategy']
 ): StateCollector {
-  switch (`${state}:${strategy}`) {
-    case 'CA:api': {
-      const collector = createCAApiCollector()
-      if (!collector) {
-        throw new NonRetryableIngestionError(
-          'CA API collector is not configured in this environment.'
-        )
-      }
-      return collector
-    }
-    case 'TX:bulk': {
-      const collector = createTXBulkCollector()
-      if (!collector) {
-        throw new NonRetryableIngestionError(
-          'TX bulk collector is not configured in this environment.'
-        )
-      }
-      return collector
-    }
-    case 'FL:vendor': {
-      const collector = createFLVendorCollector()
-      if (!collector || !collector.isReady()) {
-        throw new NonRetryableIngestionError(
-          'FL vendor collector is not ready because the contract is not active.'
-        )
-      }
-      return collector
-    }
-    case 'NY:scrape': {
-      const collector = createNYScraperCollector()
-      // NY needs no credentials but is portal-driven: the collector can only run
-      // with a configured debtor-seed list (NY_UCC_DEBTOR_SEEDS). Gate on
-      // isReady() exactly like FL so an unconfigured environment fails closed
-      // instead of running an empty collection.
-      if (!collector || !collector.isReady()) {
-        throw new NonRetryableIngestionError(
-          'NY scraper collector is not ready because no debtor seeds are configured (set NY_UCC_DEBTOR_SEEDS).'
-        )
-      }
-      return collector
-    }
-    case 'NJ:scrape': {
-      const collector = createNJScraperCollector()
-      if (!collector || !collector.isReady()) {
-        throw new NonRetryableIngestionError(
-          'NJ scraper collector is not ready because credentials or debtor seeds are not configured.'
-        )
-      }
-      return collector
-    }
-    default:
-      throw new NonRetryableIngestionError(
-        strategy
-          ? `No production ingestion collector is implemented for ${state} using ${strategy}.`
-          : `No production ingestion strategy is configured for ${state}.`
-      )
-  }
+  return stateIngestionRegistry.resolveCollector(state, strategy)
 }
 
 function resolveLastAmendmentDate(amendments: CollectedUCCFiling['amendments']): string | null {
