@@ -28,6 +28,15 @@ export const TIER_LIMITS: Record<SubscriptionTier, number> = {
   enterprise: 10000
 } as const
 
+/** Monthly included request allowances per subscription tier. */
+export const TIER_MONTHLY_QUOTAS: Record<SubscriptionTier, number> = {
+  free: 100,
+  starter: 10000,
+  growth: 50000,
+  pro: 100000,
+  enterprise: 1000000
+} as const
+
 const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
   free: 0,
   starter: 1,
@@ -158,12 +167,39 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
     )
   }
 
-  // 4. Inject rate-limit headers and the resolved tier for the origin server
+  // 4. Inject rate-limit and usage headers for API clients & origin server
   c.header('X-RateLimit-Limit', String(limit))
   c.header('X-RateLimit-Remaining', String(remaining))
   c.header('X-RateLimit-Reset', String(resetEpoch))
   // Signal resolved tier to Express so it can skip its own DB org lookup
   c.header('X-Forwarded-Tier', tier)
+  c.header('X-Usage-Tier', tier)
+  c.header('X-Usage-Limit-RPM', String(limit))
+  c.header('X-Usage-Quota-Monthly', String(TIER_MONTHLY_QUOTAS[tier] ?? TIER_MONTHLY_QUOTAS.free))
+
+  // Asynchronously record metered usage event in D1 if available
+  if (c.env.DB && identity?.orgId && identity.orgId !== 'anonymous') {
+    c.executionCtx?.waitUntil?.(
+      (async () => {
+        try {
+          await c.env.DB.prepare(
+            `INSERT INTO api_usage_events (id, org_id, key_id, endpoint, method, status_code, request_count, created_at)
+             VALUES (?, ?, ?, ?, ?, 200, 1, datetime('now'))`
+          )
+            .bind(
+              crypto.randomUUID(),
+              identity.orgId,
+              identity.keyId ?? null,
+              c.req.path,
+              c.req.method
+            )
+            .run()
+        } catch {
+          // ignore D1 logging failure on edge
+        }
+      })()
+    )
+  }
 
   await next()
 })

@@ -33,6 +33,8 @@ import {
   markBillingSignupSubscribed,
   type BillingSignupPlan
 } from '../services/BillingSignupService'
+import { stripeMeteringService } from '../services/StripeMeteringService'
+import { USAGE_BILLING_TIERS } from '../config/billingTiers'
 
 const router = Router()
 
@@ -347,6 +349,61 @@ router.get('/status', (_req: Request, res: Response) => {
     provider: 'stripe'
   })
 })
+
+router.get('/tiers', (_req: Request, res: Response) => {
+  res.json({
+    tiers: Object.values(USAGE_BILLING_TIERS)
+  })
+})
+
+router.get(
+  '/usage',
+  asyncHandler(async (req: Request, res: Response) => {
+    const orgId =
+      (req.query.orgId as string | undefined) ||
+      (req.headers['x-org-id'] as string | undefined) ||
+      (req as Request & { user?: { orgId?: string } }).user?.orgId
+
+    if (!orgId) {
+      res
+        .status(400)
+        .json({ error: 'Organization ID is required (pass ?orgId= or X-Org-Id header)' })
+      return
+    }
+
+    const summary = await stripeMeteringService.getOrgUsageSummary(orgId)
+    res.json(summary)
+  })
+)
+
+router.post(
+  '/usage/report',
+  asyncHandler(async (req: Request, res: Response) => {
+    let parsedBody: { orgId?: string; quantity?: number } = {}
+    try {
+      parsedBody = (parseRawJsonBody(req) ?? {}) as { orgId?: string; quantity?: number }
+    } catch {
+      // ignore
+    }
+
+    const orgId =
+      parsedBody.orgId ||
+      (req.query.orgId as string | undefined) ||
+      (req as Request & { user?: { orgId?: string } }).user?.orgId
+
+    if (orgId) {
+      const result = await stripeMeteringService.reportUsageToStripe({
+        orgId,
+        quantity: parsedBody.quantity
+      })
+      res.json(result)
+      return
+    }
+
+    const syncResult = await stripeMeteringService.syncUnreportedUsage()
+    res.json(syncResult)
+  })
+)
 
 router.post(
   '/signup',
