@@ -13,6 +13,11 @@
 import { Router, Request, Response } from 'express'
 import type Stripe from 'stripe'
 import { asyncHandler } from '../middleware/errorHandler'
+import {
+  authMiddleware,
+  requireRole,
+  type AuthenticatedRequest
+} from '../middleware/authMiddleware'
 import { validateRequest } from '../middleware/validateRequest'
 import { config } from '../config'
 import { z } from 'zod'
@@ -358,16 +363,12 @@ router.get('/tiers', (_req: Request, res: Response) => {
 
 router.get(
   '/usage',
+  authMiddleware,
   asyncHandler(async (req: Request, res: Response) => {
-    const orgId =
-      (req.query.orgId as string | undefined) ||
-      (req.headers['x-org-id'] as string | undefined) ||
-      (req as Request & { user?: { orgId?: string } }).user?.orgId
+    const orgId = (req as AuthenticatedRequest).user?.orgId
 
     if (!orgId) {
-      res
-        .status(400)
-        .json({ error: 'Organization ID is required (pass ?orgId= or X-Org-Id header)' })
+      res.status(403).json({ error: 'Authenticated organization context is required' })
       return
     }
 
@@ -378,6 +379,8 @@ router.get(
 
 router.post(
   '/usage/report',
+  authMiddleware,
+  requireRole('admin'),
   asyncHandler(async (req: Request, res: Response) => {
     let parsedBody: { orgId?: string; quantity?: number } = {}
     try {
@@ -386,10 +389,15 @@ router.post(
       // ignore
     }
 
-    const orgId =
-      parsedBody.orgId ||
-      (req.query.orgId as string | undefined) ||
-      (req as Request & { user?: { orgId?: string } }).user?.orgId
+    const authenticatedOrgId = (req as AuthenticatedRequest).user?.orgId
+    const requestedOrgId = parsedBody.orgId || (req.query.orgId as string | undefined)
+
+    if (requestedOrgId && requestedOrgId !== authenticatedOrgId) {
+      res.status(403).json({ error: 'Cannot report usage for another organization' })
+      return
+    }
+
+    const orgId = authenticatedOrgId
 
     if (orgId) {
       const result = await stripeMeteringService.reportUsageToStripe({
@@ -400,8 +408,7 @@ router.post(
       return
     }
 
-    const syncResult = await stripeMeteringService.syncUnreportedUsage()
-    res.json(syncResult)
+    res.status(403).json({ error: 'Authenticated organization context is required' })
   })
 )
 

@@ -200,6 +200,36 @@ describe('StripeMeteringService', () => {
       expect(result.reportedToStripe).toBe(false)
       expect(result.error).toBe('Organization not found')
     })
+
+    it('keeps usage pending when Stripe rejects the meter event', async () => {
+      vi.mocked(database.query)
+        .mockResolvedValueOnce([
+          {
+            stripe_customer_id: 'cus_failed',
+            stripe_subscription_id: 'sub_failed',
+            subscription_tier: 'starter'
+          }
+        ])
+        .mockResolvedValueOnce([{ count: '25' }])
+      vi.mocked(stripeIntegration.recordStripeMeterEvent).mockRejectedValueOnce(
+        new Error('Stripe unavailable')
+      )
+
+      const result = await service.reportUsageToStripe({ orgId: 'org-failed' })
+
+      expect(result).toMatchObject({
+        orgId: 'org-failed',
+        quantity: 25,
+        reportedToStripe: false,
+        error: 'Stripe unavailable'
+      })
+      expect(database.query).toHaveBeenCalledTimes(2)
+      expect(
+        vi
+          .mocked(database.query)
+          .mock.calls.some(([sql]) => String(sql).includes('SET reported_to_stripe = true'))
+      ).toBe(false)
+    })
   })
 
   describe('syncUnreportedUsage', () => {

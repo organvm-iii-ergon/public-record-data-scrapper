@@ -11,6 +11,7 @@
 
 import type { Request, Response, NextFunction } from 'express'
 import type { AuthenticatedRequest } from './authMiddleware'
+import { getResolvedDataTier } from './dataTier'
 import { stripeMeteringService } from '../services/StripeMeteringService'
 import { getBillingTierConfig } from '../config/billingTiers'
 
@@ -26,7 +27,10 @@ export function usageMeteringMiddleware(req: Request, res: Response, next: NextF
     : undefined
 
   // Stamp tier and rate limit metadata headers
-  const resolvedTier = authReq.dataTier || 'free'
+  // dataTierRouter stores a context object; normalize only its trusted
+  // resolved value so authenticated v1 requests cannot crash here.
+  const resolvedDataTier = getResolvedDataTier(req)
+  const resolvedTier = resolvedDataTier === 'starter-tier' ? 'starter' : 'free'
   const tierConfig = getBillingTierConfig(resolvedTier)
 
   res.setHeader('X-Usage-Tier', tierConfig.tier)

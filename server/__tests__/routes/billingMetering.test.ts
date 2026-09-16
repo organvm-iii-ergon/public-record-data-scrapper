@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import express, { Express } from 'express'
 import request from 'supertest'
+import jwt from 'jsonwebtoken'
 import billingRouter from '../../routes/billing'
 import v1BillingRouter from '../../routes/v1/billing'
 import { usageMeteringMiddleware } from '../../middleware/usageMetering'
@@ -51,6 +52,9 @@ vi.mock('../../integrations/stripe', async () => {
 
 describe('Billing & Metering Routes', () => {
   let app: Express
+  const jwtSecret = process.env.JWT_SECRET || 'test-secret'
+  const tokenFor = (claims: { role?: string; org_id?: string } = {}) =>
+    jwt.sign({ sub: 'billing-test-user', ...claims }, jwtSecret, { algorithm: 'HS256' })
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -82,14 +86,15 @@ describe('Billing & Metering Routes', () => {
   })
 
   describe('GET /api/billing/usage', () => {
-    it('returns 400 when organization ID is missing', async () => {
+    it('rejects unauthenticated requests', async () => {
       const res = await request(app).get('/api/billing/usage')
-      expect(res.status).toBe(400)
-      expect(res.body.error).toContain('Organization ID is required')
+      expect(res.status).toBe(401)
     })
 
-    it('returns usage statistics when orgId is provided via query param', async () => {
-      const res = await request(app).get('/api/billing/usage?orgId=org-test-123')
+    it('uses only the authenticated organization context', async () => {
+      const res = await request(app)
+        .get('/api/billing/usage?orgId=org-attacker')
+        .set('Authorization', `Bearer ${tokenFor({ org_id: 'org-test-123' })}`)
       expect(res.status).toBe(200)
       expect(res.body.orgId).toBe('org-test-123')
       expect(res.body.rateLimitRpm).toBe(100)
@@ -98,19 +103,36 @@ describe('Billing & Metering Routes', () => {
       expect(stripeMeteringService.getOrgUsageSummary).toHaveBeenCalledWith('org-test-123')
     })
 
-    it('returns usage statistics when orgId is provided via X-Org-Id header', async () => {
-      const res = await request(app).get('/api/billing/usage').set('X-Org-Id', 'org-header-456')
-
-      expect(res.status).toBe(200)
-      expect(res.body.orgId).toBe('org-header-456')
-      expect(stripeMeteringService.getOrgUsageSummary).toHaveBeenCalledWith('org-header-456')
+    it('rejects authenticated users without an organization', async () => {
+      const res = await request(app)
+        .get('/api/billing/usage')
+        .set('Authorization', `Bearer ${tokenFor()}`)
+      expect(res.status).toBe(403)
     })
   })
 
   describe('POST /api/billing/usage/report', () => {
+    it('rejects unauthenticated reporting without calling Stripe', async () => {
+      const res = await request(app).post('/api/billing/usage/report').send({})
+      expect(res.status).toBe(401)
+      expect(stripeMeteringService.reportUsageToStripe).not.toHaveBeenCalled()
+      expect(stripeMeteringService.syncUnreportedUsage).not.toHaveBeenCalled()
+    })
+
+    it('never grants cross-tenant batch access to an admin without an organization', async () => {
+      const res = await request(app)
+        .post('/api/billing/usage/report')
+        .set('Authorization', `Bearer ${tokenFor({ role: 'admin' })}`)
+        .send({})
+      expect(res.status).toBe(403)
+      expect(stripeMeteringService.reportUsageToStripe).not.toHaveBeenCalled()
+      expect(stripeMeteringService.syncUnreportedUsage).not.toHaveBeenCalled()
+    })
+
     it('triggers Stripe meter sync for a specific org', async () => {
       const res = await request(app)
         .post('/api/billing/usage/report')
+        .set('Authorization', `Bearer ${tokenFor({ role: 'admin', org_id: 'org-test-123' })}`)
         .send({ orgId: 'org-test-123', quantity: 500 })
 
       expect(res.status).toBe(200)
@@ -121,11 +143,22 @@ describe('Billing & Metering Routes', () => {
       })
     })
 
-    it('triggers batch sync across all orgs when no orgId is specified', async () => {
-      const res = await request(app).post('/api/billing/usage/report').send({})
-      expect(res.status).toBe(200)
-      expect(res.body.syncedOrgsCount).toBe(1)
-      expect(stripeMeteringService.syncUnreportedUsage).toHaveBeenCalledTimes(1)
+    it('rejects cross-tenant reporting even for an admin', async () => {
+      const res = await request(app)
+        .post('/api/billing/usage/report')
+        .set('Authorization', `Bearer ${tokenFor({ role: 'admin', org_id: 'org-test-123' })}`)
+        .send({ orgId: 'org-other', quantity: 500 })
+      expect(res.status).toBe(403)
+      expect(stripeMeteringService.reportUsageToStripe).not.toHaveBeenCalled()
+    })
+
+    it('rejects non-admin reporting', async () => {
+      const res = await request(app)
+        .post('/api/billing/usage/report')
+        .set('Authorization', `Bearer ${tokenFor({ role: 'user', org_id: 'org-test-123' })}`)
+        .send({})
+      expect(res.status).toBe(403)
+      expect(stripeMeteringService.syncUnreportedUsage).not.toHaveBeenCalled()
     })
   })
 
@@ -137,6 +170,12 @@ describe('Billing & Metering Routes', () => {
           orgId: 'org-meter-test',
           id: 'apikey:key-xyz'
         }
+        ;(
+          req as express.Request & { dataTier?: { requested: string; resolved: string } }
+        ).dataTier = {
+          requested: 'paid',
+          resolved: 'starter-tier'
+        }
         next()
       })
       testApp.use(usageMeteringMiddleware)
@@ -147,9 +186,9 @@ describe('Billing & Metering Routes', () => {
       const res = await request(testApp).get('/v1/test-endpoint')
 
       expect(res.status).toBe(200)
-      expect(res.headers['x-usage-tier']).toBe('free')
-      expect(res.headers['x-usage-limit-rpm']).toBe('10')
-      expect(res.headers['x-usage-quota-monthly']).toBe('100')
+      expect(res.headers['x-usage-tier']).toBe('starter')
+      expect(res.headers['x-usage-limit-rpm']).toBe('100')
+      expect(res.headers['x-usage-quota-monthly']).toBe('10000')
 
       expect(stripeMeteringService.recordApiUsage).toHaveBeenCalledWith({
         orgId: 'org-meter-test',

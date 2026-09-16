@@ -207,15 +207,8 @@ export class StripeMeteringService {
     }
 
     if (!isStripeConfigured() || !customerId) {
-      // Stripe not active or tenant has no customer ID (e.g. Free plan)
-      // Mark events recorded locally without calling external Stripe API
-      await database.query(
-        `UPDATE api_usage_events
-           SET reported_to_stripe = true,
-               reported_at = $2
-         WHERE org_id = $1 AND reported_to_stripe = false`,
-        [orgId, timestamp.toISOString()]
-      )
+      // Keep usage pending until a real external acknowledgement exists.
+      // Local persistence is not equivalent to successful Stripe reporting.
       return {
         orgId,
         quantity: quantityToReport,
@@ -238,12 +231,17 @@ export class StripeMeteringService {
       })
       eventId = meterEvent.identifier
     } catch (err) {
-      // Fallback: if meterEvents is not available, try subscription item usage record
+      const message = err instanceof Error ? err.message : String(err)
       console.warn(
-        `[StripeMeteringService] Billing meter event failed, attempting fallback:`,
-        err instanceof Error ? err.message : err
+        `[StripeMeteringService] Billing meter event failed; retaining pending usage:`,
+        message
       )
-      eventId = `local_${Date.now()}`
+      return {
+        orgId,
+        quantity: quantityToReport,
+        reportedToStripe: false,
+        error: message
+      }
     }
 
     // 3. Mark events as reported in database
