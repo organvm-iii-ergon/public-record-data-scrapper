@@ -113,8 +113,8 @@ export class StateRuleEngine {
       hasTransmittingUtilityExemption: true,
       disclosureLawEffectiveDate: '2022-12-09', // CA SB 1235 Commercial Financing Disclosures
       normalizeFilingNumber: (raw) => {
-        const digits = raw.replace(/\D/g, '')
-        if (digits.length === 10) {
+        const digits = raw.trim()
+        if (/^\d{10}$/.test(digits)) {
           return `${digits.slice(0, 2)}-${digits.slice(2)}`
         }
         return raw.trim().toUpperCase()
@@ -355,7 +355,7 @@ export class StateRuleEngine {
    * Normalize street address, state postal code, and zip.
    */
   normalizeAddress(
-    addressStr?: string,
+    addressStr?: string | CollectedParty['address'],
     defaultState?: string
   ): {
     street?: string
@@ -364,6 +364,22 @@ export class StateRuleEngine {
     postalCode?: string
     formatted: string
   } {
+    if (addressStr && typeof addressStr === 'object') {
+      const street = addressStr.street ? this.normalizeAddress(addressStr.street).street : undefined
+      const city = addressStr.city?.trim()
+      const state = addressStr.state?.trim().toUpperCase() || defaultState?.toUpperCase()
+      const postalCode = addressStr.zipCode?.trim()
+      return {
+        street,
+        city,
+        state,
+        postalCode,
+        formatted: [street, city, state, postalCode, addressStr.country?.trim()]
+          .filter(Boolean)
+          .join(', ')
+          .toUpperCase()
+      }
+    }
     if (!addressStr) {
       return {
         state: defaultState ? defaultState.toUpperCase() : undefined,
@@ -478,8 +494,7 @@ export class StateRuleEngine {
     }
 
     return {
-      normalizedDescription:
-        text || (isAllAssets ? 'ALL ASSETS OF THE DEBTOR.' : 'COMMERCIAL COLLATERAL.'),
+      normalizedDescription: text,
       isAllAssets,
       hasFutureReceivables,
       hasEquipment,
@@ -501,7 +516,7 @@ export class StateRuleEngine {
     const warnings: ValidationWarning[] = []
 
     // 1. Filing number validation
-    if (!filing.filingNumber) {
+    if (!filing.filingNumber?.trim()) {
       errors.push({
         field: 'filingNumber',
         code: 'REQUIRED_FIELD_MISSING',
@@ -513,7 +528,8 @@ export class StateRuleEngine {
         ? rule.normalizeFilingNumber(filing.filingNumber)
         : filing.filingNumber.trim()
 
-      if (!rule.filingNumberPattern.test(normalizedNumber)) {
+      const pattern = new RegExp(rule.filingNumberPattern.source, rule.filingNumberPattern.flags)
+      if (!pattern.test(normalizedNumber)) {
         warnings.push({
           field: 'filingNumber',
           code: 'NON_STANDARD_FORMAT',
@@ -636,15 +652,37 @@ export class StateRuleEngine {
       })
 
     const normalizedDebtor: CollectedParty = {
+      ...filing.debtor,
       name: debtorDetails.clean,
-      address: debtorAddress.formatted || undefined,
-      organizationType: debtorDetails.isOrganization ? 'corporation' : 'individual'
+      address: filing.debtor.address
+        ? {
+            ...filing.debtor.address,
+            street: debtorAddress.street,
+            city: debtorAddress.city,
+            state: debtorAddress.state,
+            zipCode: debtorAddress.postalCode
+          }
+        : undefined,
+      organizationType:
+        filing.debtor.organizationType ||
+        (debtorDetails.isOrganization ? 'organization' : 'individual')
     }
 
     const normalizedSecuredParty: CollectedParty = {
+      ...filing.securedParty,
       name: securedDetails.clean,
-      address: securedAddress.formatted || undefined,
-      organizationType: securedDetails.isOrganization ? 'corporation' : 'individual'
+      address: filing.securedParty.address
+        ? {
+            ...filing.securedParty.address,
+            street: securedAddress.street,
+            city: securedAddress.city,
+            state: securedAddress.state,
+            zipCode: securedAddress.postalCode
+          }
+        : undefined,
+      organizationType:
+        filing.securedParty.organizationType ||
+        (securedDetails.isOrganization ? 'organization' : 'individual')
     }
 
     const normalizedFiling: CollectedUCCFiling = {

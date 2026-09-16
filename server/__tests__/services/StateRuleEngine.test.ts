@@ -181,11 +181,17 @@ describe('StateRuleEngine (#478)', () => {
         status: 'active',
         debtor: {
           name: 'Sunshine State Bakeries L.L.C. dba Sunshine Pastries',
-          address: '123 Palm Way, Miami, FL 33101'
+          address: {
+            street: '123 Palm Way',
+            city: 'Miami',
+            state: 'FL',
+            zipCode: '33101',
+            country: 'US'
+          }
         },
         securedParty: {
           name: 'First Florida Financial Corporation',
-          address: '456 Brickell Ave, Miami, FL 33131'
+          address: { street: '456 Brickell Ave', city: 'Miami', state: 'FL', zipCode: '33131' }
         },
         collateral: 'All accounts, inventory, and equipment now owned or hereafter acquired.'
       }
@@ -194,6 +200,9 @@ describe('StateRuleEngine (#478)', () => {
 
       expect(processed.validation.valid).toBe(true)
       expect(processed.normalized.debtor.name).toBe('SUNSHINE STATE BAKERIES LLC')
+      expect(processed.normalized.debtor.address).toEqual(rawFiling.debtor.address)
+      expect(processed.normalized.debtor.organizationType).toBe('organization')
+      expect(processed.normalized.securedParty.organizationType).toBe('organization')
       expect(processed.entityDetails.debtor.dba).toBe('SUNSHINE PASTRIES')
       expect(processed.normalized.securedParty.name).toBe('FIRST FLORIDA FINANCIAL CORP')
       expect(processed.normalized.expirationDate).toBe('2029-03-01')
@@ -255,6 +264,50 @@ describe('StateRuleEngine (#478)', () => {
   describe('Singleton Instance', () => {
     it('exports stateRuleEngine singleton instance', () => {
       expect(stateRuleEngine).toBeInstanceOf(StateRuleEngine)
+    })
+  })
+
+  describe('review regressions', () => {
+    const filing: CollectedUCCFiling = {
+      filingNumber: 'UCC-1234567890',
+      filingType: 'UCC-1',
+      filingDate: '2024-03-01',
+      state: 'CA',
+      status: 'active',
+      debtor: { name: 'DEBTOR LLC' },
+      securedParty: { name: 'BANK CORP' },
+      collateral: ''
+    }
+
+    it('preserves prefixed California IDs and absent source collateral', () => {
+      const result = engine.process(filing)
+      expect(result.normalized.filingNumber).toBe(filing.filingNumber)
+      expect(result.normalized.collateral).toBe('')
+      expect(result.validation.warnings.some((w) => w.code === 'EMPTY_COLLATERAL')).toBe(true)
+    })
+
+    it('rejects whitespace-only identifiers', () => {
+      const result = engine.validate({ ...filing, filingNumber: '   ' })
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({ field: 'filingNumber', code: 'REQUIRED_FIELD_MISSING' })
+      )
+    })
+
+    it('does not alternate validation for a stateful custom regex', () => {
+      const local = new StateRuleEngine()
+      local.registerRule({
+        ...local.getRule('CA'),
+        state: 'WA',
+        filingNumberPattern: /^WA-\d{8}$/g,
+        normalizeFilingNumber: (raw) => raw
+      })
+      const input = { ...filing, state: 'WA', filingNumber: 'WA-12345678' }
+      for (let i = 0; i < 3; i++) {
+        expect(local.validate(input).warnings.some((w) => w.code === 'NON_STANDARD_FORMAT')).toBe(
+          false
+        )
+      }
     })
   })
 })
