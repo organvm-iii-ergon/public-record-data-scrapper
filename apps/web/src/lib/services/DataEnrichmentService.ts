@@ -22,10 +22,7 @@ export interface EnrichmentSource {
   name: string
   type: 'web-scraping' | 'api' | 'ml-inference'
   capabilities: (
-    | 'growth-signals'
-    | 'health-score'
-    | 'revenue-estimate'
-    | 'industry-classification'
+    'growth-signals' | 'health-score' | 'revenue-estimate' | 'industry-classification'
   )[]
   endpoint?: string
   apiKey?: string

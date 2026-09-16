@@ -47,13 +47,7 @@ interface AuditLogViewerProps {
 }
 
 type EntityTypeFilter =
-  | 'all'
-  | 'prospect'
-  | 'contact'
-  | 'deal'
-  | 'communication'
-  | 'disclosure'
-  | 'other'
+  'all' | 'prospect' | 'contact' | 'deal' | 'communication' | 'disclosure' | 'other'
 type ActionFilter = 'all' | 'create' | 'update' | 'delete' | 'view' | 'send' | 'sign'
 
 const actionColors: Record<string, string> = {

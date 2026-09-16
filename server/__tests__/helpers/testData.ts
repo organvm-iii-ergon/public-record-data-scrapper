@@ -80,7 +80,8 @@ export class TestDataFactory {
   static async createPortfolioCompany(params: CreatePortfolioCompanyParams = {}) {
     const companyData = {
       id: uuidv4(),
-      company_name: params.companyName || `Portfolio Company ${Math.random().toString(36).substring(7)}`,
+      company_name:
+        params.companyName || `Portfolio Company ${Math.random().toString(36).substring(7)}`,
       funded_amount: params.fundedAmount || 1000000,
       funded_date: new Date(),
       current_health_score: params.healthScore || 85,

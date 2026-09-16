@@ -211,10 +211,7 @@ export class ConsentService {
 
       return { hasConsent: false }
     } catch (error) {
-      throw new DatabaseError(
-        'Failed to check consent',
-        error instanceof Error ? error : undefined
-      )
+      throw new DatabaseError('Failed to check consent', error instanceof Error ? error : undefined)
     }
   }
 
@@ -276,10 +273,7 @@ export class ConsentService {
       // Revoke active grants that explicitly match the requested channel.
       // When revoking a broad 'all' opt-out, also revoke every active grant
       // regardless of channel.
-      const channelMatch =
-        channel === 'all'
-          ? `cr.channel IS NOT NULL`
-          : `cr.channel = $3`
+      const channelMatch = channel === 'all' ? `cr.channel IS NOT NULL` : `cr.channel = $3`
 
       const updateResults = await database.query(
         `UPDATE consent_records AS cr
@@ -323,11 +317,7 @@ export class ConsentService {
   /**
    * Revoke all consents for a contact (full opt-out)
    */
-  async revokeAllConsent(
-    orgId: string,
-    contactId: string,
-    reason?: string
-  ): Promise<number> {
+  async revokeAllConsent(orgId: string, contactId: string, reason?: string): Promise<number> {
     return this.revokeConsent(orgId, contactId, 'all', reason)
   }
 

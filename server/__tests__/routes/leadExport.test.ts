@@ -92,7 +92,9 @@ describe('Lead export API', () => {
   it('returns a CSV lead export batch', async () => {
     const batch = leadExportBatch()
     mockExportLeads.mockResolvedValueOnce(batch)
-    mockSerializeLeadExportCsv.mockReturnValueOnce('prospect_id,company_name\nprospect-1,Acme Bistro')
+    mockSerializeLeadExportCsv.mockReturnValueOnce(
+      'prospect_id,company_name\nprospect-1,Acme Bistro'
+    )
 
     const response = await request(app)
       .get('/api/prospects/export/leads?format=csv')

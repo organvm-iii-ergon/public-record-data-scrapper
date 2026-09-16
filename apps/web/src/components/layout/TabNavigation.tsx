@@ -27,11 +27,7 @@ export function TabNavigation() {
         <Pulse size={18} weight="fill" />
         <span>Status</span>
       </TabsTrigger>
-      <TabsTrigger
-        value="prospects"
-        data-tour="prospects-tab"
-        className={triggerClass}
-      >
+      <TabsTrigger value="prospects" data-tour="prospects-tab" className={triggerClass}>
         <Target size={18} weight="fill" />
         <span>Prospects</span>
       </TabsTrigger>
@@ -39,19 +35,11 @@ export function TabNavigation() {
         <Heart size={18} weight="fill" />
         <span>Portfolio</span>
       </TabsTrigger>
-      <TabsTrigger
-        value="intelligence"
-        data-tour="intelligence-tab"
-        className={triggerClass}
-      >
+      <TabsTrigger value="intelligence" data-tour="intelligence-tab" className={triggerClass}>
         <ChartBar size={18} weight="fill" />
         <span>Intelligence</span>
       </TabsTrigger>
-      <TabsTrigger
-        value="analytics"
-        data-tour="analytics-tab"
-        className={triggerClass}
-      >
+      <TabsTrigger value="analytics" data-tour="analytics-tab" className={triggerClass}>
         <ChartLineUp size={18} weight="fill" />
         <span>Analytics</span>
       </TabsTrigger>

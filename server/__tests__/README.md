@@ -26,21 +26,25 @@ server/__tests__/
 ## Running Tests
 
 ### Run all backend tests
+
 ```bash
 npm run test:server
 ```
 
 ### Run tests in watch mode
+
 ```bash
 npm run test:server:watch
 ```
 
 ### Generate coverage report
+
 ```bash
 npm run test:server:coverage
 ```
 
 Coverage reports are generated in `./coverage/` directory:
+
 - `coverage/index.html` - Interactive HTML report
 - `coverage/lcov.info` - LCOV format for CI/CD
 - `coverage/coverage-final.json` - JSON format
@@ -52,12 +56,14 @@ Coverage reports are generated in `./coverage/` directory:
 Tests use a separate test database to avoid contaminating development data.
 
 **Environment Variables:**
+
 ```env
 TEST_DATABASE_URL=postgresql://localhost:5432/ucc_intelligence_test
 DATABASE_URL=postgresql://localhost:5432/ucc_intelligence_test
 ```
 
 **Setup:**
+
 ```bash
 # Create test database
 createdb ucc_intelligence_test
@@ -81,6 +87,7 @@ redis-server
 ### Cleanup
 
 The test setup automatically:
+
 - Cleans up all test data after each test
 - Ensures tests don't interfere with each other
 - Disconnects from database after all tests complete
@@ -206,8 +213,8 @@ const filing = await TestDataFactory.createUCCFiling({
 ```typescript
 await TestDataFactory.createGrowthSignal(
   prospectId,
-  'hiring',  // or 'permits', 'contracts', 'expansion', 'equipment'
-  false      // isPortfolioCompany
+  'hiring', // or 'permits', 'contracts', 'expansion', 'equipment'
+  false // isPortfolioCompany
 )
 ```
 
@@ -216,8 +223,8 @@ await TestDataFactory.createGrowthSignal(
 ```typescript
 await TestDataFactory.createHealthScore(
   prospectId,
-  85,    // score
-  false  // isPortfolioCompany
+  85, // score
+  false // isPortfolioCompany
 )
 ```
 
@@ -271,10 +278,12 @@ Coverage is automatically checked in CI/CD pipeline.
 ### GitHub Actions
 
 Tests run automatically on:
+
 - Every push to any branch
 - Pull requests to `main`, `master`, or `develop`
 
 The workflow:
+
 1. Sets up PostgreSQL and Redis
 2. Installs dependencies
 3. Runs database migrations
@@ -306,6 +315,7 @@ npm run test:server:coverage
 ### 1. Test Isolation
 
 Each test should be independent:
+
 - Don't rely on test execution order
 - Clean up test data (automatic with setup.ts)
 - Don't share mutable state between tests
@@ -351,10 +361,10 @@ Cover happy path AND edge cases:
 
 ```typescript
 describe('update', () => {
-  it('should update prospect fields')  // Happy path
-  it('should return null for non-existent id')  // Edge case
-  it('should validate update data')  // Edge case
-  it('should handle partial updates')  // Edge case
+  it('should update prospect fields') // Happy path
+  it('should return null for non-existent id') // Edge case
+  it('should validate update data') // Edge case
+  it('should handle partial updates') // Edge case
 })
 ```
 

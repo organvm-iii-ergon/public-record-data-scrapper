@@ -47,13 +47,7 @@ interface CallInterfaceProps {
 
 type CallState = 'idle' | 'connecting' | 'ringing' | 'connected' | 'ended'
 type CallOutcome =
-  | 'answered'
-  | 'no_answer'
-  | 'voicemail'
-  | 'busy'
-  | 'wrong_number'
-  | 'do_not_call'
-  | 'call_back'
+  'answered' | 'no_answer' | 'voicemail' | 'busy' | 'wrong_number' | 'do_not_call' | 'call_back'
 
 const callOutcomeConfig: Record<
   CallOutcome,

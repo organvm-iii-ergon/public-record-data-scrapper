@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { AuditService } from '../../services/AuditService'
+import {
+  AuditService,
+  computeRecordHash,
+  canonicalizeJson,
+  cleanIp,
+  GENESIS_HASH
+} from '../../services/AuditService'
 import { DatabaseError, ValidationError } from '../../errors'
 
 // Mock the database module
@@ -405,6 +411,300 @@ describe('AuditService', () => {
       mockQuery.mockRejectedValueOnce(new Error('Query failed'))
 
       await expect(service.getHighVolumeAlerts('org-1')).rejects.toThrow(DatabaseError)
+    })
+  })
+
+  describe('Cryptographic helpers', () => {
+    it('canonicalizeJson produces deterministic output regardless of key insertion order', () => {
+      const objA = { b: 2, a: 1, nested: { y: 20, x: 10 } }
+      const objB = { a: 1, nested: { x: 10, y: 20 }, b: 2 }
+
+      expect(canonicalizeJson(objA)).toBe(canonicalizeJson(objB))
+      expect(canonicalizeJson(null)).toBe('')
+      expect(canonicalizeJson([3, 2, 1])).toBe('[3,2,1]')
+    })
+
+    it('cleanIp normalizes and validates IP addresses', () => {
+      expect(cleanIp('127.0.0.1')).toBe('127.0.0.1')
+      expect(cleanIp('192.168.1.1, 10.0.0.1')).toBe('192.168.1.1')
+      expect(cleanIp('::1')).toBe('::1')
+      expect(cleanIp('not-an-ip')).toBeNull()
+      expect(cleanIp(undefined)).toBeNull()
+    })
+
+    it('computeRecordHash generates stable SHA-256 bound to prevHash', () => {
+      const hash1 = computeRecordHash({
+        prevHash: GENESIS_HASH,
+        orgId: 'org-1',
+        action: 'create',
+        entityType: 'deal',
+        createdAt: '2025-01-01T00:00:00.000Z'
+      })
+
+      const hash2 = computeRecordHash({
+        prevHash: GENESIS_HASH,
+        orgId: 'org-1',
+        action: 'create',
+        entityType: 'deal',
+        createdAt: '2025-01-01T00:00:00.000Z'
+      })
+
+      expect(hash1).toBe(hash2)
+      expect(hash1).toHaveLength(64)
+
+      // Different prevHash produces completely different hash
+      const hashDifferentPrev = computeRecordHash({
+        prevHash: '1'.repeat(64),
+        orgId: 'org-1',
+        action: 'create',
+        entityType: 'deal',
+        createdAt: '2025-01-01T00:00:00.000Z'
+      })
+      expect(hashDifferentPrev).not.toBe(hash1)
+    })
+  })
+
+  describe('createAuditEntry', () => {
+    it('links to GENESIS_HASH on initial log in org', async () => {
+      // Query for preceding hash returns empty (no previous records)
+      mockQuery.mockResolvedValueOnce([])
+      // Insert returns inserted row
+      const mockInserted = {
+        id: 'new-log-1',
+        org_id: 'org-1',
+        user_id: 'user-1',
+        action: 'create',
+        entity_type: 'deal',
+        entity_id: 'deal-1',
+        prev_hash: GENESIS_HASH,
+        record_hash: 'abc123hash',
+        created_at: '2025-01-01T00:00:00.000Z'
+      }
+      mockQuery.mockResolvedValueOnce([mockInserted])
+
+      const entry = await service.createAuditEntry({
+        orgId: 'org-1',
+        userId: 'user-1',
+        action: 'create',
+        entityType: 'deal',
+        entityId: 'deal-1'
+      })
+
+      expect(entry.id).toBe('new-log-1')
+      expect(mockQuery).toHaveBeenCalledTimes(2)
+      // First call checks previous record
+      expect(mockQuery.mock.calls[0][0]).toContain('SELECT record_hash FROM audit_logs')
+      // Second call inserts with prev_hash
+      expect(mockQuery.mock.calls[1][1]).toContain(GENESIS_HASH)
+    })
+
+    it('chains to preceding record_hash when prior records exist', async () => {
+      const priorHash = 'f'.repeat(64)
+      mockQuery.mockResolvedValueOnce([{ record_hash: priorHash }])
+      mockQuery.mockResolvedValueOnce([])
+
+      await service.createAuditEntry({
+        orgId: 'org-1',
+        action: 'update',
+        entityType: 'deal'
+      })
+
+      expect(mockQuery.mock.calls[1][1]).toContain(priorHash)
+    })
+
+    it('throws DatabaseError when database query fails', async () => {
+      mockQuery.mockRejectedValueOnce(new Error('DB failure'))
+
+      await expect(
+        service.createAuditEntry({
+          action: 'create',
+          entityType: 'contact'
+        })
+      ).rejects.toThrow(DatabaseError)
+    })
+  })
+
+  describe('logAccess and logModification', () => {
+    it('logAccess creates an audit entry with action access', async () => {
+      mockQuery.mockResolvedValueOnce([]) // previous hash lookup
+      mockQuery.mockResolvedValueOnce([]) // insert
+
+      await service.logAccess({
+        orgId: 'org-1',
+        userId: 'user-1',
+        entityType: 'contact',
+        entityId: 'contact-1',
+        metadata: { fieldAccessed: ['ssn', 'phone'] }
+      })
+
+      expect(mockQuery.mock.calls[1][1]).toContain('access')
+      expect(mockQuery.mock.calls[1][1]).toContain('contact')
+    })
+
+    it('logModification creates an audit entry with changes', async () => {
+      mockQuery.mockResolvedValueOnce([])
+      mockQuery.mockResolvedValueOnce([])
+
+      await service.logModification({
+        orgId: 'org-1',
+        action: 'security_config_update',
+        entityType: 'system_settings',
+        changes: { mfaRequired: { old: false, new: true } }
+      })
+
+      expect(mockQuery.mock.calls[1][1]).toContain('security_config_update')
+      expect(mockQuery.mock.calls[1][1]).toContain('system_settings')
+    })
+  })
+
+  describe('verifyLogIntegrity', () => {
+    it('verifies a valid hash chain with no violations', async () => {
+      const t1 = '2025-01-01T00:00:00.000Z'
+      const t2 = '2025-01-02T00:00:00.000Z'
+
+      const hash1 = computeRecordHash({
+        prevHash: GENESIS_HASH,
+        orgId: 'org-1',
+        action: 'create',
+        entityType: 'deal',
+        entityId: 'deal-1',
+        createdAt: t1
+      })
+
+      const hash2 = computeRecordHash({
+        prevHash: hash1,
+        orgId: 'org-1',
+        action: 'update',
+        entityType: 'deal',
+        entityId: 'deal-1',
+        createdAt: t2
+      })
+
+      const rows = [
+        {
+          id: 'log-1',
+          org_id: 'org-1',
+          action: 'create',
+          entity_type: 'deal',
+          entity_id: 'deal-1',
+          prev_hash: GENESIS_HASH,
+          record_hash: hash1,
+          created_at: t1
+        },
+        {
+          id: 'log-2',
+          org_id: 'org-1',
+          action: 'update',
+          entity_type: 'deal',
+          entity_id: 'deal-1',
+          prev_hash: hash1,
+          record_hash: hash2,
+          created_at: t2
+        }
+      ]
+
+      mockQuery.mockResolvedValueOnce(rows)
+
+      const result = await service.verifyLogIntegrity({ orgId: 'org-1' })
+
+      expect(result.valid).toBe(true)
+      expect(result.totalChecked).toBe(2)
+      expect(result.violations).toHaveLength(0)
+      expect(result.rootHash).toBe(hash1)
+      expect(result.latestHash).toBe(hash2)
+    })
+
+    it('detects record hash tampering', async () => {
+      const t1 = '2025-01-01T00:00:00.000Z'
+      const rows = [
+        {
+          id: 'log-1',
+          org_id: 'org-1',
+          action: 'create',
+          entity_type: 'deal',
+          prev_hash: GENESIS_HASH,
+          record_hash: 'tampered-hash-value',
+          created_at: t1
+        }
+      ]
+
+      mockQuery.mockResolvedValueOnce(rows)
+
+      const result = await service.verifyLogIntegrity({ orgId: 'org-1' })
+
+      expect(result.valid).toBe(false)
+      expect(result.violations).toHaveLength(1)
+      expect(result.violations[0].reason).toContain('Record hash tampering detected')
+    })
+
+    it('detects broken hash chain linkage between adjacent records', async () => {
+      const t1 = '2025-01-01T00:00:00.000Z'
+      const t2 = '2025-01-02T00:00:00.000Z'
+
+      const hash1 = computeRecordHash({
+        prevHash: GENESIS_HASH,
+        orgId: 'org-1',
+        action: 'create',
+        entityType: 'deal',
+        createdAt: t1
+      })
+
+      const rows = [
+        {
+          id: 'log-1',
+          org_id: 'org-1',
+          action: 'create',
+          entity_type: 'deal',
+          prev_hash: GENESIS_HASH,
+          record_hash: hash1,
+          created_at: t1
+        },
+        {
+          id: 'log-2',
+          org_id: 'org-1',
+          action: 'update',
+          entity_type: 'deal',
+          prev_hash: 'wrong-predecessor-hash',
+          record_hash: 'anything',
+          created_at: t2
+        }
+      ]
+
+      mockQuery.mockResolvedValueOnce(rows)
+
+      const result = await service.verifyLogIntegrity({ orgId: 'org-1' })
+
+      expect(result.valid).toBe(false)
+      expect(result.violations.some((v) => v.reason.includes('Hash chain broken'))).toBe(true)
+    })
+  })
+
+  describe('exportCompliancePackage', () => {
+    it('generates a SOC2 signed compliance package', async () => {
+      // 1. verifyLogIntegrity query
+      mockQuery.mockResolvedValueOnce([])
+      // 2. exportForCompliance query
+      mockQuery.mockResolvedValueOnce([])
+
+      const pkg = await service.exportCompliancePackage('org-1', {
+        startDate: new Date('2025-01-01'),
+        endDate: new Date('2025-01-31')
+      })
+
+      expect(pkg.packageId).toBeDefined()
+      expect(pkg.organizationId).toBe('org-1')
+      expect(pkg.manifest.hashAlgorithm).toBe('SHA-256')
+      expect(pkg.manifest.signature).toHaveLength(64)
+      expect(pkg.integrity.valid).toBe(true)
+    })
+
+    it('throws ValidationError if startDate is after endDate', async () => {
+      await expect(
+        service.exportCompliancePackage('org-1', {
+          startDate: new Date('2025-02-01'),
+          endDate: new Date('2025-01-01')
+        })
+      ).rejects.toThrow(ValidationError)
     })
   })
 })

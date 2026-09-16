@@ -1,24 +1,27 @@
 /**
  * Audit Middleware
  *
- * Intercepts all mutating API requests (POST, PUT, PATCH, DELETE) and logs
- * them to the audit_logs table for compliance tracking. The audit logs are
- * immutable and cannot be modified or deleted after creation.
+ * Intercepts mutating API requests (POST, PUT, PATCH, DELETE) as well as sensitive
+ * data read operations (GET requests accessing PII, disclosures, exports, and financial data)
+ * and logs them with cryptographic hash chaining for SOC2 compliance.
  *
  * Features:
+ * - Cryptographic hash chaining through AuditService
  * - Captures before/after state for entity changes
- * - Records user context (IP, user agent, request ID)
+ * - Intercepts sensitive GET access (contacts, prospects, deals, disclosures, compliance exports)
+ * - Deep recursive redaction of sensitive fields (passwords, tokens, SSNs, credit cards, bank accounts)
+ * - Records user context (IP, user agent, request ID, orgId)
  * - Skips health checks and other non-auditable endpoints
  * - Async logging to avoid blocking requests
  */
 
 import { Request, Response, NextFunction } from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import { database } from '../database/connection'
+import { auditService } from '../services/AuditService'
 import type { AuthenticatedRequest } from './authMiddleware'
 
 // Endpoints that should not be audited
-const SKIP_AUDIT_PATHS = [
+export const SKIP_AUDIT_PATHS = [
   '/api/health',
   '/api/health/ready',
   '/api/health/live',
@@ -28,11 +31,74 @@ const SKIP_AUDIT_PATHS = [
   '/api/auth/logout'
 ]
 
-// HTTP methods that trigger auditing
-const AUDITABLE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
+// HTTP methods that trigger mutation auditing
+export const AUDITABLE_MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
 
-// Map of paths to entity types
-const ENTITY_TYPE_MAP: Record<string, string> = {
+// Paths containing sensitive data where read (GET) operations must be audited
+export const SENSITIVE_READ_PATTERNS: Array<{
+  pattern: RegExp
+  entityType: string
+  action: string
+}> = [
+  {
+    pattern: /^\/api\/compliance\/audit\/export-package/,
+    entityType: 'compliance_package',
+    action: 'export'
+  },
+  {
+    pattern: /^\/api\/compliance\/audit\/export/,
+    entityType: 'compliance_export',
+    action: 'export'
+  },
+  {
+    pattern: /^\/api\/compliance\/audit\/verify/,
+    entityType: 'audit_integrity',
+    action: 'verify'
+  },
+  {
+    pattern: /^\/api\/compliance\/audit/,
+    entityType: 'audit_log',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/compliance\/disclosures/,
+    entityType: 'disclosure',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/compliance\/consents/,
+    entityType: 'consent',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/contacts/,
+    entityType: 'contact',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/prospects/,
+    entityType: 'prospect',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/deals\/[^/]+\/documents/,
+    entityType: 'deal_document',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/deals/,
+    entityType: 'deal',
+    action: 'access'
+  },
+  {
+    pattern: /^\/api\/api-keys/,
+    entityType: 'api_key',
+    action: 'access'
+  }
+]
+
+// Map of paths to entity types for mutations
+export const ENTITY_TYPE_MAP: Record<string, string> = {
   '/api/prospects': 'prospect',
   '/api/contacts': 'contact',
   '/api/deals': 'deal',
@@ -41,18 +107,19 @@ const ENTITY_TYPE_MAP: Record<string, string> = {
   '/api/consent': 'consent',
   '/api/dnc': 'dnc_entry',
   '/api/portfolio': 'portfolio',
-  '/api/competitors': 'competitor'
+  '/api/competitors': 'competitor',
+  '/api/api-keys': 'api_key'
 }
 
 // Map of HTTP methods to action names
-const ACTION_MAP: Record<string, string> = {
+export const ACTION_MAP: Record<string, string> = {
   POST: 'create',
   PUT: 'update',
   PATCH: 'update',
   DELETE: 'delete'
 }
 
-interface AuditContext {
+export interface AuditContext {
   requestId: string
   userId?: string
   orgId?: string
@@ -67,9 +134,23 @@ interface AuditContext {
 }
 
 /**
+ * Check if path matches sensitive read pattern for GET auditing
+ */
+export function getSensitiveReadConfig(
+  path: string
+): { entityType: string; action: string } | null {
+  for (const item of SENSITIVE_READ_PATTERNS) {
+    if (item.pattern.test(path)) {
+      return { entityType: item.entityType, action: item.action }
+    }
+  }
+  return null
+}
+
+/**
  * Extract entity type from request path
  */
-function getEntityType(path: string): string {
+export function getEntityType(path: string): string {
   for (const [prefix, type] of Object.entries(ENTITY_TYPE_MAP)) {
     if (path.startsWith(prefix)) {
       return type
@@ -79,13 +160,12 @@ function getEntityType(path: string): string {
 }
 
 /**
- * Extract entity ID from request path (assumes /api/{resource}/{id} pattern)
+ * Extract entity ID from request path
  */
-function extractEntityId(path: string): string | undefined {
+export function extractEntityId(path: string): string | undefined {
   const parts = path.split('/')
-  // Pattern: /api/resource/:id or /api/resource/:id/action
-  if (parts.length >= 4) {
-    const potentialId = parts[3]
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const potentialId = parts[i]
     // Basic UUID validation
     if (potentialId && /^[0-9a-f-]{36}$/i.test(potentialId)) {
       return potentialId
@@ -97,7 +177,7 @@ function extractEntityId(path: string): string | undefined {
 /**
  * Calculate changes between before and after states
  */
-function calculateChanges(
+export function calculateChanges(
   before: Record<string, unknown> | undefined,
   after: Record<string, unknown> | undefined
 ): Record<string, { old: unknown; new: unknown }> | undefined {
@@ -127,38 +207,31 @@ function calculateChanges(
 }
 
 /**
- * Asynchronously write audit log to database
- * Does not block the response
+ * Asynchronously write audit log through AuditService
+ * Guarantees cryptographic hash chaining and does not block the response
  */
 async function writeAuditLog(context: AuditContext): Promise<void> {
   try {
-    await database.query(
-      `INSERT INTO audit_logs (
-        org_id, user_id, action, entity_type, entity_id,
-        changes, before_state, after_state,
-        ip_address, user_agent, request_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::inet, $10, $11)`,
-      [
-        context.orgId || null,
-        context.userId || null,
-        context.action,
-        context.entityType,
-        context.entityId || null,
-        context.changes ? JSON.stringify(context.changes) : null,
-        context.beforeState ? JSON.stringify(context.beforeState) : null,
-        context.afterState ? JSON.stringify(context.afterState) : null,
-        context.ipAddress || null,
-        context.userAgent || null,
-        context.requestId
-      ]
-    )
+    await auditService.createAuditEntry({
+      orgId: context.orgId,
+      userId: context.userId,
+      action: context.action,
+      entityType: context.entityType,
+      entityId: context.entityId,
+      changes: context.changes,
+      beforeState: context.beforeState,
+      afterState: context.afterState,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      requestId: context.requestId
+    })
   } catch (error) {
     // Log error but don't fail the request
     console.error('[AuditMiddleware] Failed to write audit log:', error)
   }
 }
 
-const SENSITIVE_FIELDS = [
+export const SENSITIVE_FIELDS = [
   'password',
   'ssn',
   'socialSecurityNumber',
@@ -183,7 +256,7 @@ const SENSITIVE_KEY_SET = new Set<string>(
   })
 )
 
-function isSensitiveKey(key: string): boolean {
+export function isSensitiveKey(key: string): boolean {
   return SENSITIVE_KEY_SET.has(key.toLowerCase())
 }
 
@@ -217,11 +290,9 @@ function redactValue(value: unknown, depth: number): unknown {
 /**
  * Redact sensitive fields from audit logs.
  *
- * Recurses into nested objects and arrays so sensitive values are masked at any
- * depth (the previous implementation only redacted top-level keys, leaking e.g.
- * `payment.cardNumber`).
+ * Recurses into nested objects and arrays so sensitive values are masked at any depth.
  */
-function redactSensitiveData(
+export function redactSensitiveData(
   data: Record<string, unknown> | undefined
 ): Record<string, unknown> | undefined {
   if (!data) return undefined
@@ -229,51 +300,62 @@ function redactSensitiveData(
 }
 
 /**
- * Express middleware for auditing API mutations
+ * Express middleware for auditing API mutations and sensitive data reads
  */
 export const auditMiddleware = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): void => {
-  // Skip non-auditable methods
-  if (!AUDITABLE_METHODS.includes(req.method)) {
-    return next()
-  }
-
   // Skip excluded paths
   if (SKIP_AUDIT_PATHS.some((path) => req.path.startsWith(path))) {
     return next()
   }
 
-  // Generate or use existing request ID
-  const requestId =
-    (req as Request & { correlationId?: string }).correlationId || uuidv4()
+  let isAuditable = false
+  let action = ''
+  let entityType = ''
 
-  // Build audit context
+  if (AUDITABLE_MUTATION_METHODS.includes(req.method)) {
+    isAuditable = true
+    action = ACTION_MAP[req.method] || req.method.toLowerCase()
+    entityType = getEntityType(req.path)
+  } else if (req.method === 'GET') {
+    const sensitiveConfig = getSensitiveReadConfig(req.path)
+    if (sensitiveConfig) {
+      isAuditable = true
+      action = sensitiveConfig.action
+      entityType = sensitiveConfig.entityType
+    }
+  }
+
+  if (!isAuditable) {
+    return next()
+  }
+
+  // Generate or use existing request ID
+  const requestId = (req as Request & { correlationId?: string }).correlationId || uuidv4()
+
   const auditContext: AuditContext = {
     requestId,
     userId: req.user?.id,
-    orgId: (req as AuthenticatedRequest & { orgId?: string }).orgId,
-    action: ACTION_MAP[req.method] || req.method.toLowerCase(),
-    entityType: getEntityType(req.path),
+    orgId: (req as AuthenticatedRequest & { orgId?: string }).orgId || req.user?.orgId,
+    action,
+    entityType,
     entityId: extractEntityId(req.path) || req.body?.id,
     ipAddress: req.ip || req.socket.remoteAddress,
     userAgent: req.headers['user-agent']
   }
 
-  // Store original body for before state comparison
+  // Store original body and query for context
   const originalBody = req.body ? { ...req.body } : undefined
+  const originalQuery =
+    req.query && typeof req.query === 'object' && Object.keys(req.query).length > 0
+      ? { ...req.query }
+      : undefined
 
-  // Ensure we only write a single audit record even if both res.json and
-  // res.send are invoked for the same response.
   let audited = false
 
-  /**
-   * Build and persist the audit record from the (optional) response body.
-   * `body` may be a parsed object (from res.json) or undefined (e.g. a 204
-   * res.send() with no payload).
-   */
   const processAudit = (body: unknown): void => {
     if (audited) return
     audited = true
@@ -285,6 +367,16 @@ export const auditMiddleware = (
             ? (body as Record<string, unknown>)
             : undefined
         const isErrorResponse = !!responseObject && 'error' in responseObject
+
+        // For sensitive reads/exports
+        if (['access', 'export', 'verify'].includes(auditContext.action)) {
+          if (responseObject && !isErrorResponse) {
+            auditContext.afterState = redactSensitiveData(responseObject)
+          }
+          if (originalQuery) {
+            auditContext.beforeState = redactSensitiveData(originalQuery as Record<string, unknown>)
+          }
+        }
 
         // For creates, the response body is the after state
         if (auditContext.action === 'create' && responseObject && !isErrorResponse) {
@@ -306,9 +398,7 @@ export const auditMiddleware = (
           )
         }
 
-        // For deletes, the request body or params contain the entity info.
-        // Deletes commonly return 204 with no body (res.send), so this path is
-        // essential to ensure delete mutations are audited.
+        // For deletes, the request body or params contain the entity info
         if (auditContext.action === 'delete') {
           auditContext.beforeState = redactSensitiveData(originalBody)
         }
@@ -327,17 +417,13 @@ export const auditMiddleware = (
   const originalJson = res.json.bind(res)
   const originalSend = res.send.bind(res)
 
-  // Override res.json to capture structured response bodies.
   res.json = function (body: Record<string, unknown>): Response {
     processAudit(body)
     return originalJson(body)
   }
 
-  // Override res.send to capture responses that bypass res.json — notably 204
-  // No Content responses from DELETE handlers, which would otherwise skip audit.
   res.send = function (body?: unknown): Response {
     let parsed: unknown = body
-    // res.send may receive a JSON string; try to parse for richer audit data.
     if (typeof body === 'string') {
       try {
         parsed = JSON.parse(body)

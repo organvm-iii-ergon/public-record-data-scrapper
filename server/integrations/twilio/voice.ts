@@ -47,14 +47,7 @@ export interface CallRecord {
 }
 
 export type CallStatus =
-  | 'queued'
-  | 'ringing'
-  | 'in-progress'
-  | 'completed'
-  | 'busy'
-  | 'no-answer'
-  | 'canceled'
-  | 'failed'
+  'queued' | 'ringing' | 'in-progress' | 'completed' | 'busy' | 'no-answer' | 'canceled' | 'failed'
 
 export interface CallWebhookPayload {
   CallSid: string
@@ -319,7 +312,8 @@ export class TwilioVoice {
         if (r.timeout) recordAttrs += ` timeout="${attr(r.timeout)}"`
         if (r.maxLength) recordAttrs += ` maxLength="${attr(r.maxLength)}"`
         if (r.transcribe !== undefined) recordAttrs += ` transcribe="${attr(r.transcribe)}"`
-        if (r.transcribeCallback) recordAttrs += ` transcribeCallback="${attr(r.transcribeCallback)}"`
+        if (r.transcribeCallback)
+          recordAttrs += ` transcribeCallback="${attr(r.transcribeCallback)}"`
         if (r.playBeep !== undefined) recordAttrs += ` playBeep="${attr(r.playBeep)}"`
         twiml += `<Record${recordAttrs}/>`
       }

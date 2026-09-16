@@ -549,6 +549,66 @@ router.get(
   })
 )
 
+const verifyAuditQuerySchema = z.object({
+  org_id: z.string().uuid().optional(),
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().optional()
+})
+
+// GET /api/compliance/audit/verify — cryptographic integrity verification of audit log chain
+router.get(
+  '/audit/verify',
+  validateRequest({ query: verifyAuditQuerySchema }),
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req as AuthenticatedRequest, res)
+    if (!orgId) return
+
+    const query = req.query as z.infer<typeof verifyAuditQuerySchema>
+
+    const result = await auditService.verifyLogIntegrity({
+      orgId,
+      startDate: query.start_date ? new Date(query.start_date) : undefined,
+      endDate: query.end_date ? new Date(query.end_date) : undefined
+    })
+
+    res.json(result)
+  })
+)
+
+const exportPackageQuerySchema = z.object({
+  org_id: z.string().uuid().optional(),
+  start_date: z.string().datetime(),
+  end_date: z.string().datetime(),
+  format: z.enum(['json', 'csv']).default('json'),
+  entity_type: z.string().optional(),
+  user_id: z.string().optional(),
+  action: z.string().optional()
+})
+
+// GET /api/compliance/audit/export-package — export signed, tamper-evident SOC2 audit package
+router.get(
+  '/audit/export-package',
+  validateRequest({ query: exportPackageQuerySchema }),
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req as AuthenticatedRequest, res)
+    if (!orgId) return
+
+    const query = req.query as z.infer<typeof exportPackageQuerySchema>
+    const format = query.format === 'csv' ? 'csv' : 'json'
+
+    const pkg = await auditService.exportCompliancePackage(orgId, {
+      startDate: new Date(query.start_date),
+      endDate: new Date(query.end_date),
+      format,
+      entityType: query.entity_type,
+      userId: query.user_id,
+      action: query.action
+    })
+
+    res.json(pkg)
+  })
+)
+
 const entityHistoryParamSchema = z.object({
   entityType: z.string().min(1),
   entityId: z.string().min(1)

@@ -326,9 +326,7 @@ test.describe('Main prospect user flow', () => {
 
     await page.goto('/')
 
-    await expect(
-      page.getByRole('heading', { name: 'UCC-MCA Intelligence Platform' })
-    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'UCC-MCA Intelligence Platform' })).toBeVisible()
     await expect(page.getByText('Showing 3 of 3 prospects')).toBeVisible()
     await expect(page.getByText('Total Prospects')).toBeVisible()
     await expect(page.getByText('High-Value Leads')).toBeVisible()
@@ -357,13 +355,11 @@ test.describe('Main prospect user flow', () => {
     await expect(dialog).toHaveCount(0)
     await expect(page.getByText('Lead claimed successfully')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Claimed by Current User' })).toBeVisible()
-    expect(api.getProspects().find((prospect) => prospect.id === 'prospect-acme')).toMatchObject(
-      {
-        status: 'claimed',
-        claimedBy: 'Current User',
-        claimedDate: claimDate
-      }
-    )
+    expect(api.getProspects().find((prospect) => prospect.id === 'prospect-acme')).toMatchObject({
+      status: 'claimed',
+      claimedBy: 'Current User',
+      claimedDate: claimDate
+    })
     expect(api.requests).toContain('POST /api/prospects/prospect-acme/claim')
     expect(api.requests).toContain('POST /api/user-actions')
   })
