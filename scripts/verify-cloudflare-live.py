@@ -132,7 +132,8 @@ def validate_schema(payload, migrations_dir=MIGRATIONS):
 
 def fetch(origin, path, forged=False):
     """Unauthenticated probes only; never follow redirects or print payloads."""
-    headers = {"Accept": "application/json", "Cache-Control": "no-cache"}
+    headers = {"Accept": "application/json", "Cache-Control": "no-cache",
+               "User-Agent": "UCC-Staging-Verifier/1.0"}
     if forged:
         headers["Cf-Access-Jwt-Assertion"] = "invalid-staging-verification-token"
     try:

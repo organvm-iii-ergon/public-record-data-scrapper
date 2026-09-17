@@ -2,6 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import MagicMock, patch
 
 spec = importlib.util.spec_from_file_location("live", Path(__file__).with_name("verify-cloudflare-live.py"))
 live = importlib.util.module_from_spec(spec)
@@ -13,6 +14,20 @@ UNAUTHORIZED = {"error": {"message": "Unauthorized", "code": "UNAUTHORIZED", "st
 
 
 class LiveTests(unittest.TestCase):
+    def test_probe_identifies_itself_without_following_redirects(self):
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = b'{"ok":true}'
+        response.code = 200
+        response.headers = {"Content-Type": "application/json"}
+        with patch.object(live.urllib.request, "build_opener") as opener:
+            opener.return_value.open.return_value = response
+            live.fetch(ORIGIN, "/health")
+            self.assertIsInstance(opener.call_args.args[0], live.NoRedirect)
+            request = opener.return_value.open.call_args.args[0]
+            self.assertEqual(request.get_header("User-agent"), "UCC-Staging-Verifier/1.0")
+            self.assertIsNone(request.get_header("Authorization"))
+
     def responder(self, **overrides):
         responses = {
             "health": (200, {"ok": True, "env": "staging", "revision": SHA}, "", "application/json"),

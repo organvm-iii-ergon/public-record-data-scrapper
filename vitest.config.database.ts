@@ -7,7 +7,7 @@ export default defineConfig({
     name: 'database',
     environment: 'node',
     include: ['database/__tests__/**/*.test.ts'],
-    env: { NODE_ENV: 'test', JWT_SECRET: 'database-test-secret' },
+    env: { NODE_ENV: 'test', JWT_SECRET: 'do-not-use-database-test-secret' },
     fileParallelism: false,
     maxWorkers: 1,
     testTimeout: 10000,
