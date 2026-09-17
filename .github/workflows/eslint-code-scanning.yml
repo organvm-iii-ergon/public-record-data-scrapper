@@ -1,0 +1,78 @@
+name: ESLint code scanning
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+  schedule:
+    - cron: '16 23 * * 0'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  lint-and-upload:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Prepare workspace
+        env:
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          git init
+          git config --global --add safe.directory "$PWD"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}"
+          git fetch --no-tags --prune --depth=1 origin "$REF"
+          git checkout --force FETCH_HEAD
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+      - name: Run ESLint with SARIF output
+        id: eslint
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          npx eslint . --ext .js,.jsx,.ts,.tsx --format sarif --output-file results.sarif
+      - name: Upload SARIF results via API
+        id: upload-sarif
+        env:
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ ! -s results.sarif ]; then
+            echo "uploaded=false" >> "$GITHUB_OUTPUT"
+            echo "No SARIF results produced. Skipping upload."
+            exit 0
+          fi
+          SARIF_CONTENT=$(base64 -w 0 results.sarif)
+          jq -n --arg sarif "$SARIF_CONTENT" --arg ref "$REF" --arg sha "$SHA" '{commit_sha: $sha, ref: $ref, sarif: $sarif}' > payload.json
+          curl -sSf \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/vnd.github+json" \
+            -X POST "https://api.github.com/repos/${REPO}/code-scanning/sarifs" \
+            --data @payload.json
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
+      - name: Fail on ESLint findings
+        if: ${{ steps.eslint.outcome == 'failure' }}
+        env:
+          SARIF_UPLOADED: ${{ steps.upload-sarif.outputs.uploaded }}
+        run: |
+          if [ "$SARIF_UPLOADED" = "true" ]; then
+            echo "::error::ESLint reported findings; see the uploaded SARIF result."
+          else
+            echo "::error::ESLint reported findings; no SARIF result was uploaded."
+          fi
+          exit 1

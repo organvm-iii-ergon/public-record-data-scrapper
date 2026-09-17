@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-01-31T15:31:55.301Z",
+  "summary": {
+    "total": 3,
+    "successful": 0,
+    "failed": 3,
+    "successRate": 0
+  },
+  "results": [
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "IBM",
+        "description": "New York-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:30:55.689Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 13546,
+      "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-ibm.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-ibm.html"
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "Consolidated Edison",
+        "description": "New York utility company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:31:27.201Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 16251,
+      "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-consolidated-edison.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-consolidated-edison.html"
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:31:55.242Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 12938,
+      "error": "Scraper error: page.evaluate: ReferenceError: __name is not defined\n    at eval (eval at evaluate (:290:30), <anonymous>:1:22)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-acme-corporation.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769873442142/artifacts/NY-acme-corporation.html"
+    }
+  ]
+}

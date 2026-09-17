@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-01-31T21:45:32.926Z",
+  "summary": {
+    "total": 3,
+    "completed": 3,
+    "successful": 0,
+    "failed": 3,
+    "skipped": 0,
+    "successRate": 0
+  },
+  "results": [
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Tesla Inc",
+        "description": "Large public company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+        "searchUrl": "https://direct.sos.state.tx.us/acct/acct-login.asp?spage=login1",
+        "timestamp": "2026-01-31T21:44:13.540Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 24629,
+      "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-tesla-inc.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-tesla-inc.html"
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Dell Technologies",
+        "description": "Texas-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+        "searchUrl": "https://direct.sos.state.tx.us/acct/acct-login.asp?spage=login1",
+        "timestamp": "2026-01-31T21:44:53.070Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 24451,
+      "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-dell-technologies.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-dell-technologies.html"
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+        "searchUrl": "https://direct.sos.state.tx.us/acct/acct-login.asp?spage=login1",
+        "timestamp": "2026-01-31T21:45:32.788Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 24655,
+      "error": "Login failed - invalid credentials or portal change. Ensure TX_UCC_USERNAME is the SOSDirect USER ID (client ID), not an email.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-acme-corporation.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769895828911/artifacts/TX-acme-corporation.html"
+    }
+  ]
+}

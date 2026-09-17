@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-01-31T15:27:31.048Z",
+  "summary": {
+    "total": 3,
+    "successful": 3,
+    "failed": 0,
+    "successRate": 1
+  },
+  "results": [
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "IBM",
+        "description": "New York-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:26:34.303Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 14989
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "Consolidated Edison",
+        "description": "New York utility company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:27:02.769Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 13465
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:27:31.048Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 13278
+    }
+  ]
+}

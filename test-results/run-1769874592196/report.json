@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-01-31T15:49:52.198Z",
+  "summary": {
+    "total": 3,
+    "completed": 0,
+    "successful": 0,
+    "failed": 0,
+    "skipped": 3,
+    "successRate": 0
+  },
+  "results": [
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Tesla Inc",
+        "description": "Large public company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+        "timestamp": "2026-01-31T15:49:52.197Z"
+      },
+      "success": false,
+      "duration": 0,
+      "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+      "skipped": true,
+      "skipReason": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests."
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Dell Technologies",
+        "description": "Texas-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+        "timestamp": "2026-01-31T15:49:52.198Z"
+      },
+      "success": false,
+      "duration": 0,
+      "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+      "skipped": true,
+      "skipReason": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests."
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+        "timestamp": "2026-01-31T15:49:52.198Z"
+      },
+      "success": false,
+      "duration": 0,
+      "error": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests.",
+      "skipped": true,
+      "skipReason": "TX_UCC_USERNAME/TX_UCC_PASSWORD not set; skipping TX live portal tests."
+    }
+  ]
+}

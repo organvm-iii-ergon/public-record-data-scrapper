@@ -1,0 +1,857 @@
+{
+  "timestamp": "2026-01-31T15:33:10.686Z",
+  "summary": {
+    "total": 3,
+    "successful": 3,
+    "failed": 0,
+    "successRate": 1
+  },
+  "results": [
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "IBM",
+        "description": "New York-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [
+          {
+            "filingNumber": "011824",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "1998-01-20",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "231989",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2002-10-11",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "231990",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2002-10-11",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "142736",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, L.L.C. FOR ITSELF AND/OR AS AGENT, SUCCESSOR IN INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "1998-07-03",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "081223",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, L.L.C. FOR ITSELF AND/OR AS AGENT, SUCCESSOR IN INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2002-04-08",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "135530",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, L.L.C. FOR ITSELF AND/OR AS AGENT, SUCCESSOR IN INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2002-06-10",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200301070044436",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, L.L.C. FOR ITSELF AND/OR AS AGENT, SUCCESSOR IN INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2003-01-07",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "228774",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "1998-10-28",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200301070044323",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2003-01-07",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200305010913322",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2003-05-01",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "012911",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "IBM CREDIT CORPORATION",
+            "filingDate": "2001-01-18",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200511226025770",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "IBM CREDIT CORPORATION",
+            "filingDate": "2005-11-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200511236028956",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "IBM CREDIT CORPORATION",
+            "filingDate": "2005-11-23",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200511236028970",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "IBM CREDIT CORPORATION",
+            "filingDate": "2005-11-23",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "201012076198699",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "IBM CREDIT CORPORATION",
+            "filingDate": "2010-12-07",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "071554",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "GENERAL ELECTRIC CAPITAL CORPORATION",
+            "filingDate": "2001-04-12",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "075202",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "FIRSTAR BANK, N.A.",
+            "filingDate": "2001-04-18",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "089764",
+            "debtorName": "ENDICOTT INTERCONNECT TECHNOLOGIES, INC.",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2001-05-08",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "090645",
+            "debtorName": "ENDICOTT INTERCONNECT TECHNOLOGIES, INC.",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2001-05-09",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "200211252636050",
+            "debtorName": "ENDICOTT INTERCONNECT TECHNOLOGIES, INC.",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2002-11-25",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200604135355221",
+            "debtorName": "ENDICOTT INTERCONNECT TECHNOLOGIES, INC.",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2006-04-13",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "102240",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "COMMERCE BANK, N.A.",
+            "filingDate": "2001-05-25",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "108666",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2001-06-05",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "113536",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "MELLON US LEASING, A DIVISION OF MELLON LEASING CORPORATION",
+            "filingDate": "2001-06-12",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "170316",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2001-09-06",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "170323",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2001-09-06",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "195456",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "MERIDIAN LEASING CORPORATION",
+            "filingDate": "2001-10-12",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "195884",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2001-10-12",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "233098",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2001-11-28",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "071045",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-03-27",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "022070",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-01-28",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "042893",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-02-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "023993",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-01-30",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "084955",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-04-11",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "170215",
+            "debtorName": "INTERNATIONAL BUSINESS MACHINES CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-07-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "035785",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2002-02-13",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "081220",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, LLC, FOR ITSELF AND/OR AGENT, SUCCESSOR IN INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2002-04-08",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "162345",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "GENERAL ELECTRIC CAPITAL CORPORATION",
+            "filingDate": "2002-07-15",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "170869",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "COMMERCE BANK, N.A.",
+            "filingDate": "2002-07-24",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "252956",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "RELATIONAL FUNDING CORPORATION",
+            "filingDate": "2002-11-08",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200301070044296",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "FLEET BUSINESS CREDIT, LLC, SUCCESSOR-IN-INTEREST TO SANWA BUSINESS CREDIT CORPORATION",
+            "filingDate": "2003-01-07",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200302210387749",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "TEXTRON FINANCIAL CORPORATION",
+            "filingDate": "2003-02-21",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200304090783797",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "GENERAL ELECTRIC CAPITAL CORPORATION",
+            "filingDate": "2003-04-09",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200711296168201",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "GENERAL ELECTRIC CAPITAL CORPORATION",
+            "filingDate": "2007-11-29",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "200308041424568",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2003-08-04",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200403260313471",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-03-26",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200404220419568",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-04-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200405170518052",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-05-17",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200407010683230",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-07-01",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020791790",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200409025740548",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-09-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020792261",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200409275806021",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-09-27",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020792526",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200410205881244",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-10-20",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020792350",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200409025743215",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-09-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020792184",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200408020792235",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-08-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200409025743188",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "AGILENT FINANCIAL SERVICES, INC.",
+            "filingDate": "2004-09-02",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200601265089075",
+            "debtorName": "IBM CORP",
+            "securedParty": "PITNEY BOWES CREDIT CORPORATION",
+            "filingDate": "2006-01-26",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200609225928340",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "WELLS FARGO EQUIPMENT FINANCE, INC.",
+            "filingDate": "2006-09-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200609250775702",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "WELLS FARGO EQUIPMENT FINANCE, INC.",
+            "filingDate": "2006-09-25",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200609250775726",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "WELLS FARGO EQUIPMENT FINANCE, INC.",
+            "filingDate": "2006-09-25",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "201810188478943",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "DATATEC FINANCIAL SERVICES, INC.",
+            "filingDate": "2018-10-18",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "201810188479022",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "DATATEC FINANCIAL SERVICES, INC.",
+            "filingDate": "2018-10-18",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "201810228483905",
+            "debtorName": "IBM CORPORATION",
+            "securedParty": "DATATEC FINANCIAL SERVICES, INC.",
+            "filingDate": "2018-10-22",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          }
+        ],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:32:13.271Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 13414
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "Consolidated Edison",
+        "description": "New York utility company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [
+          {
+            "filingNumber": "200410295909242",
+            "debtorName": "CONSOLIDATED EDISON, INC.",
+            "securedParty": "POPULAR LEASING U.S.A., INC.",
+            "filingDate": "2004-10-29",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "201802288087518",
+            "debtorName": "NOVO BANCO, SA",
+            "securedParty": "YUNGASI, INC.",
+            "filingDate": "2018-02-28",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202112106975243",
+            "debtorName": "CONSOLIDATED EDISON INC",
+            "securedParty": "CANON FINANCIAL SERVICES, INC.",
+            "filingDate": "2021-12-10",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202112238561360",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2021-12-23",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202112318571534",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2021-12-31",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202112318572308",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2021-12-31",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202204110149801",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2022-04-11",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202207318358379",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2022-07-31",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202208020325549",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2022-08-02",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202208038365721",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2022-08-03",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202210078469421",
+            "debtorName": "JARC REALTY COMPANY, INC.",
+            "securedParty": "JARC REALTY COMPANY, INC.",
+            "filingDate": "2022-10-07",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202206228296845",
+            "debtorName": "CONSOLIDATED EDISON INC.",
+            "securedParty": "DIXON, AISHA",
+            "filingDate": "2022-06-22",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202310028470135",
+            "debtorName": "CONSOLIDATED EDISON, INC.",
+            "securedParty": "LAURA E EDWARDS ESTATE",
+            "filingDate": "2023-10-02",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202506308330753",
+            "debtorName": "CONSOLIDATED EDISON",
+            "securedParty": "BARROWS-THOMAS 498 PRIVATE IRREVOCABLE TRUST",
+            "filingDate": "2025-06-30",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "202510178529666",
+            "debtorName": "CON EDISON",
+            "securedParty": "FLOYD MANAGEMENT & REALTY LLC",
+            "filingDate": "2025-10-17",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          }
+        ],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:32:41.514Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 13242
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [
+          {
+            "filingNumber": "200411175965564",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2004-11-17",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "200910085907509",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2009-10-08",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "201410156093840",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2014-10-15",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "201410166101106",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2014-10-16",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "201908216074379",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2019-08-21",
+            "collateral": "",
+            "status": "lapsed",
+            "filingType": "UCC-3"
+          },
+          {
+            "filingNumber": "202409206313366",
+            "debtorName": "TOKEN PRODUCTIONS, INC.",
+            "securedParty": "SCREEN ACTORS GUILD, INC.",
+            "filingDate": "2024-09-20",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-3"
+          }
+        ],
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.inhouse_search",
+        "timestamp": "2026-01-31T15:33:10.685Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 14168
+    }
+  ]
+}

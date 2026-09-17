@@ -1,0 +1,189 @@
+{
+  "timestamp": "2026-01-31T15:47:19.609Z",
+  "summary": {
+    "total": 3,
+    "successful": 3,
+    "failed": 0,
+    "successRate": 1
+  },
+  "results": [
+    {
+      "state": "FL",
+      "testCase": {
+        "companyName": "Publix Super Markets",
+        "description": "Florida-based grocery chain",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "PO BOX 407",
+            "securedParty": "LAKELAND",
+            "filingDate": "20030390026X",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "PO BOX 32013",
+            "securedParty": "LAKELAND",
+            "filingDate": "20030390026X",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PARKWAY",
+            "securedParty": "LAKELAND",
+            "filingDate": "200303324528",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX SUPER MARKETS, INC.",
+            "securedParty": "LAKELAND",
+            "filingDate": "200303673905",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PARKWAY",
+            "securedParty": "LAKELAND",
+            "filingDate": "201606719171",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PKWY",
+            "securedParty": "LAKELAND",
+            "filingDate": "201608350043",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PARKWAY",
+            "securedParty": "LAKELAND",
+            "filingDate": "201701956541",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PKWY",
+            "securedParty": "LAKELAND",
+            "filingDate": "201702193673",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PKWY",
+            "securedParty": "LAKELAND",
+            "filingDate": "201806683154",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PARKWAY",
+            "securedParty": "LAKELAND",
+            "filingDate": "202106973487",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "PO 32014",
+            "securedParty": "LAKELAND",
+            "filingDate": "202107633494",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PARKWAY",
+            "securedParty": "LAKELAND",
+            "filingDate": "202503419036",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORPORATE PKWY",
+            "securedParty": "LAKELAND",
+            "filingDate": "202503510696",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          },
+          {
+            "filingNumber": "PUBLIX SUPER MARKETS, INC.",
+            "debtorName": "3300 PUBLIX CORP PKWY",
+            "securedParty": "LAKELAND",
+            "filingDate": "202503901164",
+            "collateral": "",
+            "status": "active",
+            "filingType": "UCC-1"
+          }
+        ],
+        "searchUrl": "https://floridaucc.com/search?text=Publix+Super+Markets&searchOptionType=OrganizationDebtorName&searchOptionSubOption=FiledCompactDebtorNameList&searchCategory=Exact",
+        "timestamp": "2026-01-31T15:45:20.218Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 46385
+    },
+    {
+      "state": "FL",
+      "testCase": {
+        "companyName": "NextEra Energy",
+        "description": "Large Florida utility company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://floridaucc.com/search?text=NextEra+Energy&searchOptionType=OrganizationDebtorName&searchOptionSubOption=FiledCompactDebtorNameList&searchCategory=Exact",
+        "timestamp": "2026-01-31T15:46:19.740Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 44509
+    },
+    {
+      "state": "FL",
+      "testCase": {
+        "companyName": "Test Company LLC",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": true,
+        "filings": [],
+        "searchUrl": "https://floridaucc.com/search?text=Test+Company+LLC&searchOptionType=OrganizationDebtorName&searchOptionSubOption=FiledCompactDebtorNameList&searchCategory=Exact",
+        "timestamp": "2026-01-31T15:47:19.420Z",
+        "retryCount": 0
+      },
+      "success": true,
+      "duration": 44708
+    }
+  ]
+}

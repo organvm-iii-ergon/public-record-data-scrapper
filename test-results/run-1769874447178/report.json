@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-01-31T15:48:42.405Z",
+  "summary": {
+    "total": 3,
+    "successful": 0,
+    "failed": 3,
+    "successRate": 0
+  },
+  "results": [
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Tesla Inc",
+        "description": "Large public company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+        "searchUrl": "https://www.sos.state.tx.us/corp/sosda/index.shtml",
+        "timestamp": "2026-01-31T15:47:42.779Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 15600,
+      "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-tesla-inc.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-tesla-inc.html"
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "Dell Technologies",
+        "description": "Texas-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+        "searchUrl": "https://www.sos.state.tx.us/corp/sosda/index.shtml",
+        "timestamp": "2026-01-31T15:48:12.145Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 14190,
+      "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-dell-technologies.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-dell-technologies.html"
+    },
+    {
+      "state": "TX",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+        "searchUrl": "https://www.sos.state.tx.us/corp/sosda/index.shtml",
+        "timestamp": "2026-01-31T15:48:41.880Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 14515,
+      "error": "Texas UCC searches now run inside the SOS Portal. Create an SOS Portal account and search there.",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-acme-corporation.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769874447178/artifacts/TX-acme-corporation.html"
+    }
+  ]
+}

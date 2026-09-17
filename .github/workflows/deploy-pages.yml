@@ -1,0 +1,92 @@
+# ============================================================================
+# Deploy the built web bundle to GitHub Pages
+# ----------------------------------------------------------------------------
+# Fixes #345: Pages previously served the raw source tree — the dev index.html
+# pointing at /src/main.tsx (raw TSX, application/octet-stream), which browsers
+# refuse, rendering a blank page behind an HTTP 200.
+#
+# This workflow builds apps/web with the project-pages base path and publishes
+# the compiled bundle. Done-predicate (from the issue): the deployed entry
+# script serves with a JavaScript content-type and the page renders content.
+# ============================================================================
+name: deploy-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'scripts/verify-pages-public-demo.mjs'
+      - 'scripts/verify-pages-public-demo.test.mjs'
+      - 'playwright.pages-demo.config.ts'
+      - 'tests/e2e-pages-demo/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Test public data deployment gate
+        run: node --test scripts/verify-pages-public-demo.test.mjs
+      - name: Verify receipt-bound public data source
+        run: node scripts/verify-pages-public-demo.mjs apps/web/public/data/austin-building-permits.receipt.json
+      - name: Build receipt-bound public data demo
+        env:
+          VITE_PUBLIC_DEMO_RECEIPT_URL: data/austin-building-permits.receipt.json
+        run: npm --workspace apps/web run build -- --base=/public-record-data-scrapper/
+      - name: Install browser for static-demo acceptance
+        env:
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '120000'
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Verify the built public demo in a browser
+        run: npx --no-install playwright test --config playwright.pages-demo.config.ts
+      # Vite's outDir points at the repo root, but with the workspace invocation
+      # the bundle has been observed at apps/web/dist — accept either, fail loud
+      # on neither (never upload a guessed path).
+      - name: Resolve build output
+        id: out
+        run: |
+          if [ -f dist/index.html ]; then
+            echo "dir=dist" >> "$GITHUB_OUTPUT"
+          elif [ -f apps/web/dist/index.html ]; then
+            echo "dir=apps/web/dist" >> "$GITHUB_OUTPUT"
+          else
+            echo "no built index.html found in dist/ or apps/web/dist/" >&2
+            exit 1
+          fi
+      # SPA fallback: Pages serves 404.html for unknown paths; serve the app.
+      - name: Add SPA fallback
+        run: cp "${{ steps.out.outputs.dir }}/index.html" "${{ steps.out.outputs.dir }}/404.html"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ steps.out.outputs.dir }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

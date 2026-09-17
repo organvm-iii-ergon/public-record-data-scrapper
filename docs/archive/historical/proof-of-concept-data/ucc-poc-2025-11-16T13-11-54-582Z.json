@@ -1,0 +1,63 @@
+{
+  "success": true,
+  "totalCollected": 5,
+  "filings": [
+    {
+      "filingNumber": "NY-2024-1234567",
+      "filingDate": "2024-11-15",
+      "debtorName": "ABC Manufacturing Corp",
+      "securedParty": "First National Bank",
+      "status": "Active",
+      "collateral": "Equipment, inventory, and accounts receivable",
+      "sourceUrl": "https://appext20.dos.ny.gov/pls/ucc_public/",
+      "collectedAt": "2025-11-16T13:11:54.582Z"
+    },
+    {
+      "filingNumber": "NY-2024-1234568",
+      "filingDate": "2024-11-14",
+      "debtorName": "Tech Solutions LLC",
+      "securedParty": "Capital Equipment Leasing",
+      "status": "Active",
+      "collateral": "Computer equipment and software licenses",
+      "sourceUrl": "https://appext20.dos.ny.gov/pls/ucc_public/",
+      "collectedAt": "2025-11-16T13:11:54.582Z"
+    },
+    {
+      "filingNumber": "NY-2024-1234569",
+      "filingDate": "2024-11-13",
+      "debtorName": "Restaurant Group Holdings",
+      "securedParty": "MCA Capital Partners",
+      "status": "Active",
+      "collateral": "All assets of debtor",
+      "sourceUrl": "https://appext20.dos.ny.gov/pls/ucc_public/",
+      "collectedAt": "2025-11-16T13:11:54.582Z"
+    },
+    {
+      "filingNumber": "CA-2024-9876543",
+      "filingDate": "2024-11-12",
+      "debtorName": "Silicon Valley Innovations Inc",
+      "securedParty": "Venture Debt Fund II",
+      "status": "Active",
+      "collateral": "Intellectual property, equipment, receivables",
+      "sourceUrl": "https://bizfileonline.sos.ca.gov/api/",
+      "collectedAt": "2025-11-16T13:11:54.582Z"
+    },
+    {
+      "filingNumber": "CA-2024-9876544",
+      "filingDate": "2024-11-11",
+      "debtorName": "Coastal Retail Partners LLC",
+      "securedParty": "Pacific Commercial Bank",
+      "status": "Active",
+      "collateral": "Inventory, fixtures, and tenant improvements",
+      "sourceUrl": "https://bizfileonline.sos.ca.gov/api/",
+      "collectedAt": "2025-11-16T13:11:54.582Z"
+    }
+  ],
+  "errors": [],
+  "metadata": {
+    "source": "Multi-State Public Data Demonstration",
+    "collectionDate": "2025-11-16",
+    "collectionTime": "2025-11-16T13:11:54.582Z",
+    "duration": 0
+  }
+}

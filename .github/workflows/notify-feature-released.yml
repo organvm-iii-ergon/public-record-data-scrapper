@@ -1,0 +1,15 @@
+name: Notify Feature Released
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    uses: organvm-vii-kerygma/.github/.github/workflows/notify-kerygma.yml@main
+    with:
+      event_type: feature-released
+      repo_name: ${{ github.event.repository.name }}
+      channels: mastodon,discord,bluesky,ghost
+    secrets:
+      DISPATCH_TOKEN: ${{ secrets.CROSS_ORG_DISPATCH_TOKEN }}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ucc-mca
+  labels:
+    app.kubernetes.io/name: ucc-mca-platform
+    app.kubernetes.io/component: namespace

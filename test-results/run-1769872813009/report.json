@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-01-31T15:22:55.358Z",
+  "summary": {
+    "total": 3,
+    "successful": 0,
+    "failed": 3,
+    "successRate": 0
+  },
+  "results": [
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "IBM",
+        "description": "New York-based tech company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame?search=IBM",
+        "timestamp": "2026-01-31T15:20:56.315Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 43305,
+      "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-ibm.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-ibm.html"
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "Consolidated Edison",
+        "description": "New York utility company",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame?search=Consolidated%20Edison",
+        "timestamp": "2026-01-31T15:21:57.458Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 46083,
+      "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-consolidated-edison.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-consolidated-edison.html"
+    },
+    {
+      "state": "NY",
+      "testCase": {
+        "companyName": "ACME Corporation",
+        "description": "Generic test name",
+        "expectedMinResults": 0
+      },
+      "result": {
+        "success": false,
+        "filings": [],
+        "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+        "searchUrl": "https://appext20.dos.ny.gov/pls/ucc_public/web_search.main_frame?search=ACME%20Corporation",
+        "timestamp": "2026-01-31T15:22:55.297Z",
+        "retryCount": 0
+      },
+      "success": false,
+      "duration": 42786,
+      "error": "Scraper error: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[name=\"p_debtor_name\"]') to be visible\u001b[22m\n",
+      "screenshotPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-acme-corporation.png",
+      "domPath": "/Users/4jp/Workspace/public-record-data-scrapper/test-results/run-1769872813009/artifacts/NY-acme-corporation.html"
+    }
+  ]
+}

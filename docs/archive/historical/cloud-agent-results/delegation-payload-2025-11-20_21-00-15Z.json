@@ -1,0 +1,21 @@
+{
+  "delegation_id": "F62318AC-03FB-4C80-ACE2-FCD6EEBA771A",
+  "timestamp": "2025-11-20_21-00-15Z",
+  "task": {
+    "type": "atomization",
+    "target_file": "Tomb of the Unknowns.md",
+    "priority": "high"
+  },
+  "content": {
+    "file_size": 1781,
+    "line_count": 69,
+    "word_count": 245
+  },
+  "processing_config": {
+    "atomization_enabled": true,
+    "visualization_enabled": true,
+    "interactive_features": true,
+    "glassmorphism_ui": true
+  },
+  "status": "queued"
+}
