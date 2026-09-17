@@ -351,16 +351,21 @@ def pages_access_application_identity(app, domain):
     return aud
 
 
-def pages_access_identity(api, app, domain):
-    aud = pages_access_application_identity(app, domain)
-    policies = inventory_policies(api, identifier("access", app))
+def validate_pages_access_policies(policies, require_allow):
     if any(policy.get("decision") not in {"deny", "allow", "non_identity"}
            for policy in policies):
         raise Blocked("pages_access_policy_bypasses_authentication_or_is_unknown")
     allow = [policy for policy in policies if policy.get("decision") == "allow"]
-    if not allow or any(not isinstance(policy.get("include"), list) or not policy["include"]
-                        for policy in allow):
+    if require_allow and (not allow or any(
+            not isinstance(policy.get("include"), list) or not policy["include"]
+            for policy in allow)):
         raise Blocked("pages_access_enrollment_policy_required")
+
+
+def pages_access_identity(api, app, domain):
+    aud = pages_access_application_identity(app, domain)
+    policies = inventory_policies(api, identifier("access", app))
+    validate_pages_access_policies(policies, require_allow=True)
     return aud
 
 
@@ -466,6 +471,10 @@ def reconcile(api, root, config, staging, production, report, apply):
         access_identity(api, selected["access"], domain)
     if pages_access:
         pages_access_application_identity(pages_access, pages_domain)
+        validate_pages_access_policies(
+            inventory_policies(api, identifier("access", pages_access)),
+            require_allow=False,
+        )
         production_audiences = {
             value.strip() for value in production.get("vars", {}).get("ACCESS_AUD", "").split(",")
             if value.strip()

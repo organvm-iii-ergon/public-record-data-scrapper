@@ -38,7 +38,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     environment: ${{ github.event_name == 'push' && 'staging' || inputs.target }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -114,7 +114,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for attempt in $(seq 1 60); do
+          for attempt in $(seq 1 360); do
             receipt="$(gh api \
               "repos/$GITHUB_REPOSITORY/actions/workflows/deploy-cloudflare.yml/runs?branch=main&event=push&head_sha=$GITHUB_SHA&per_page=10")"
             conclusion="$(jq -r --arg sha "$GITHUB_SHA" \
@@ -124,7 +124,7 @@ jobs:
               success) break ;;
               failure|cancelled|timed_out|action_required|stale) exit 1 ;;
             esac
-            test "$attempt" -lt 60
+            test "$attempt" -lt 360
             sleep 5
           done
           test "$conclusion" = success

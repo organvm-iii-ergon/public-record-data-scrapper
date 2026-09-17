@@ -294,6 +294,17 @@ class ProvisionTests(unittest.TestCase):
         self.assertTrue(report["access_policy_verified"])
         self.assertEqual([call[0] for call in self.api.writes], ["create_pages_access_policy"])
 
+    def test_existing_pages_bypass_policy_fails_before_any_mutation(self):
+        self.api.rows["access"] = [self.api.created_pages_access]
+        self.api.policies = [{"id": APP, "decision": "bypass", "include": [{"everyone": {}}]}]
+        status, report = self.run_case()
+        self.assertEqual(status, 1)
+        self.assertEqual(
+            report["blocker"]["code"],
+            "pages_access_policy_bypasses_authentication_or_is_unknown",
+        )
+        self.assertEqual(self.api.writes, [])
+
     def test_existing_bypass_policy_does_not_pass_authentication_gate(self):
         self.api.rows["access"] = [self.api.created["access"]]
         self.api.policies = [{"id": APP, "decision": "bypass", "include": [{"everyone": {}}]}]
