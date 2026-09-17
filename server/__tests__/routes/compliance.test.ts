@@ -24,7 +24,8 @@ const {
   // AuditService
   mockAuditSearch,
   mockAuditExport,
-  mockAuditEntityHistory
+  mockAuditEntityHistory,
+  mockAuditVerifyIntegrity
 } = vi.hoisted(() => ({
   mockDisclosureList: vi.fn(),
   mockDisclosureGetById: vi.fn(),
@@ -38,7 +39,8 @@ const {
   mockConsentRevoke: vi.fn(),
   mockAuditSearch: vi.fn(),
   mockAuditExport: vi.fn(),
-  mockAuditEntityHistory: vi.fn()
+  mockAuditEntityHistory: vi.fn(),
+  mockAuditVerifyIntegrity: vi.fn()
 }))
 
 vi.mock('../../services/DisclosureService', () => ({
@@ -65,7 +67,8 @@ vi.mock('../../services/AuditService', () => ({
   auditService: {
     searchAuditLogs: mockAuditSearch,
     exportForCompliance: mockAuditExport,
-    getEntityHistory: mockAuditEntityHistory
+    getEntityHistory: mockAuditEntityHistory,
+    verifyIntegrity: mockAuditVerifyIntegrity
   }
 }))
 
@@ -402,6 +405,36 @@ describe('Compliance API', () => {
         disclosureId,
         expect.objectContaining({ orgId })
       )
+    })
+
+    it('GET /audit/integrity returns only the global chain receipt to admins', async () => {
+      mockAuditVerifyIntegrity.mockResolvedValueOnce({
+        valid: true,
+        totalRecords: 42,
+        brokenRecords: 0,
+        stateMatchesTail: true
+      })
+
+      const res = await request(app)
+        .get('/api/compliance/audit/integrity')
+        .set('Authorization', createAuthHeader('admin-user', { orgId, role: 'admin' }))
+
+      expect(res.status).toBe(200)
+      expect(res.body).toEqual({
+        valid: true,
+        totalRecords: 42,
+        brokenRecords: 0,
+        stateMatchesTail: true
+      })
+    })
+
+    it('GET /audit/integrity rejects non-admin users', async () => {
+      const res = await request(app)
+        .get('/api/compliance/audit/integrity')
+        .set('Authorization', authHeader)
+
+      expect(res.status).toBe(403)
+      expect(mockAuditVerifyIntegrity).not.toHaveBeenCalled()
     })
 
     it('GET /audit requires authentication (401)', async () => {
