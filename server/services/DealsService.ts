@@ -718,8 +718,11 @@ export class DealsService {
    */
   async deleteDocument(documentId: string): Promise<boolean> {
     try {
-      const results = await database.query('DELETE FROM deal_documents WHERE id = $1', [documentId])
-      return (results as { rowCount: number }).rowCount > 0
+      const results = await database.query(
+        'DELETE FROM deal_documents WHERE id = $1 RETURNING 1 AS affected',
+        [documentId]
+      )
+      return results.length > 0
     } catch (error) {
       throw new DatabaseError(
         'Failed to delete document',

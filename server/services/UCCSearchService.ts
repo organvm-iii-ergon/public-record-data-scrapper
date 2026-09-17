@@ -7,7 +7,7 @@
  * @module server/services/UCCSearchService
  */
 
-import type { UCCFiling } from '@public-records/core'
+import type { UCCFiling } from '../../apps/web/src/lib/collectors/types'
 import { StateCollectorFactory } from '../../apps/web/src/lib/collectors/StateCollectorFactory'
 
 export interface UCCSearchRequest {

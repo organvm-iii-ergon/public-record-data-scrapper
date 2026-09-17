@@ -351,10 +351,10 @@ export class SuppressionService {
       // identifier (the broadest removal).
       if (!channel || channel === 'all') {
         const results = await database.query(
-          `DELETE FROM dnc_list WHERE org_id = $1 AND ${identifierColumn} = $2`,
+          `DELETE FROM dnc_list WHERE org_id = $1 AND ${identifierColumn} = $2 RETURNING 1 AS affected`,
           [orgId, normalized]
         )
-        return (results as { rowCount: number }).rowCount > 0
+        return results.length > 0
       }
 
       // Case 2: a specific channel. Remove exact-channel entries AND narrow any
@@ -365,10 +365,10 @@ export class SuppressionService {
 
       const exactDelete = await database.query(
         `DELETE FROM dnc_list
-         WHERE org_id = $1 AND ${identifierColumn} = $2 AND channel = $3`,
+         WHERE org_id = $1 AND ${identifierColumn} = $2 AND channel = $3 RETURNING 1 AS affected`,
         [orgId, normalized, channel]
       )
-      affected += (exactDelete as { rowCount: number }).rowCount
+      affected += exactDelete.length
 
       // Find overlapping 'all' entries and split them into remaining channels.
       const allEntries = await database.query<DNCListRow>(
@@ -619,10 +619,10 @@ export class SuppressionService {
     try {
       const results = await database.query(
         `DELETE FROM dnc_list
-        WHERE org_id = $1 AND expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP`,
+        WHERE org_id = $1 AND expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP RETURNING 1 AS affected`,
         [orgId]
       )
-      return (results as { rowCount: number }).rowCount
+      return results.length
     } catch (error) {
       throw new DatabaseError(
         'Failed to cleanup expired entries',

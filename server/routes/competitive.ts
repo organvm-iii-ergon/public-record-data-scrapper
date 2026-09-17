@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { CompetitiveHeatMapService } from '../services/CompetitiveHeatMapService'
 import { FilingVelocityService } from '../services/FilingVelocityService'
@@ -53,7 +53,7 @@ router.get(
     const service = new CompetitiveHeatMapService(database)
     const saturation = await service.getCompetitiveSaturation(
       req.params.state,
-      (req.query as z.infer<typeof saturationQuerySchema>).industry
+      getValidatedQuery(req, saturationQuerySchema).industry
     )
     res.json(saturation)
   })
@@ -76,7 +76,7 @@ router.get(
   '/events/recent',
   validateRequest({ query: eventsQuerySchema }),
   asyncHandler(async (req, res) => {
-    const { hours } = req.query as z.infer<typeof eventsQuerySchema>
+    const { hours } = getValidatedQuery(req, eventsQuerySchema)
     const events = await database.query(
       `SELECT id, prospect_id as "prospectId", event_type as "eventType",
               filing_id as "filingId", event_date as "eventDate",
@@ -120,7 +120,7 @@ router.get(
   '/accelerating',
   validateRequest({ query: acceleratingQuerySchema }),
   asyncHandler(async (req, res) => {
-    const { state } = req.query as z.infer<typeof acceleratingQuerySchema>
+    const { state } = getValidatedQuery(req, acceleratingQuerySchema)
     const velocityService = new FilingVelocityService(database)
     const prospects = await velocityService.detectAccelerating(state)
     res.json({ prospects, count: prospects.length })

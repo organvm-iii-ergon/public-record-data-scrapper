@@ -70,6 +70,9 @@ jobs:
       - name: Run database migrations
         run: npm run migrate
 
+      - name: Run database integration tests with rollback isolation
+        run: npm run test:database
+
       - name: Run isolated server tests and enforce coverage
         run: npm run test:server:strict -- --run --coverage
 

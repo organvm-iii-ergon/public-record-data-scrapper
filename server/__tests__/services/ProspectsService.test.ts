@@ -375,7 +375,7 @@ describe('ProspectsService', () => {
 
   describe('delete', () => {
     it('should delete a prospect', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.delete('test-id')
 
@@ -383,7 +383,7 @@ describe('ProspectsService', () => {
     })
 
     it('should throw NotFoundError for non-existent id', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
 
       await expect(service.delete('non-existent')).rejects.toThrow(NotFoundError)
     })

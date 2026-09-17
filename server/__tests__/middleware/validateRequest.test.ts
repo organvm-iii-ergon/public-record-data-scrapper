@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../../middleware/validateRequest'
 
 describe('validateRequest middleware', () => {
   let mockReq: Partial<Request>
@@ -287,5 +287,25 @@ describe('validateRequest middleware', () => {
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(Error))
     })
+  })
+})
+
+describe('validated query ownership', () => {
+  it('returns transformed output from the installed schema', () => {
+    const schema = z.object({ page: z.coerce.number().int().positive().default(1) })
+    const req = { query: { page: '3' } } as unknown as Request
+    validateRequest({ query: schema })(req, {} as Response, vi.fn())
+    expect(getValidatedQuery(req, schema)).toEqual({ page: 3 })
+  })
+
+  it('rejects another request or schema instead of trusting a cast', () => {
+    const schema = z.object({ page: z.coerce.number().default(1) })
+    const other = z.object({ page: z.coerce.number().default(1) })
+    const req = { query: {} } as unknown as Request
+    validateRequest({ query: schema })(req, {} as Response, vi.fn())
+    expect(() => getValidatedQuery(req, other)).toThrow('Query validation middleware is missing')
+    expect(() => getValidatedQuery({ query: {} } as Request, schema)).toThrow(
+      'Query validation middleware is missing'
+    )
   })
 })

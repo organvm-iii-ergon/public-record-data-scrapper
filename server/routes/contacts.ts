@@ -1,6 +1,6 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { requireRole, AuthenticatedRequest } from '../middleware/authMiddleware'
 import { ContactsService } from '../services/ContactsService'
@@ -197,7 +197,7 @@ router.get(
     if (!orgId) return
 
     const contactsService = new ContactsService()
-    const query = req.query as z.infer<typeof listContactsQuerySchema>
+    const query = getValidatedQuery(req, listContactsQuerySchema)
 
     const result = await contactsService.list({
       orgId,
@@ -405,7 +405,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const contactsService = new ContactsService()
     const { id } = req.params
-    const query = req.query as z.infer<typeof activitiesQuerySchema>
+    const query = getValidatedQuery(req, activitiesQuerySchema)
 
     const activities = await contactsService.getActivityTimeline(id, {
       limit: query.limit,

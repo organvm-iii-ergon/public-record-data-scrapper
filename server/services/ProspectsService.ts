@@ -338,8 +338,11 @@ export class ProspectsService {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      const results = await database.query('DELETE FROM prospects WHERE id = $1', [id])
-      const deleted = (results as { rowCount: number }).rowCount > 0
+      const results = await database.query(
+        'DELETE FROM prospects WHERE id = $1 RETURNING 1 AS affected',
+        [id]
+      )
+      const deleted = results.length > 0
       if (!deleted) {
         throw new NotFoundError('Prospect', id)
       }
@@ -545,10 +548,10 @@ export class ProspectsService {
     try {
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ')
       const results = await database.query(
-        `DELETE FROM prospects WHERE id IN (${placeholders})`,
+        `DELETE FROM prospects WHERE id IN (${placeholders}) RETURNING 1 AS affected`,
         ids
       )
-      const deleted = (results as { rowCount: number }).rowCount ?? 0
+      const deleted = results.length ?? 0
       return { deleted }
     } catch (error) {
       throw new DatabaseError(

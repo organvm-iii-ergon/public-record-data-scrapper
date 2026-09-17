@@ -1,6 +1,6 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { requireRole, AuthenticatedRequest } from '../middleware/authMiddleware'
 import { disclosureService } from '../services/DisclosureService'
@@ -117,7 +117,7 @@ router.get(
     const orgId = resolveOrgId(req as AuthenticatedRequest, res)
     if (!orgId) return
 
-    const query = req.query as z.infer<typeof listDisclosuresQuerySchema>
+    const query = getValidatedQuery(req, listDisclosuresQuerySchema)
 
     // Express 5's `req.query` is a getter that returns a freshly-parsed object on
     // each access, so the zod `.default()`/`.coerce` values applied by
@@ -316,7 +316,7 @@ router.get(
     const orgId = resolveOrgId(req as AuthenticatedRequest, res)
     if (!orgId) return
 
-    const query = req.query as z.infer<typeof listConsentsQuerySchema>
+    const query = getValidatedQuery(req, listConsentsQuerySchema)
 
     if (!query.contact_id) {
       return res.status(422).json({
@@ -465,7 +465,7 @@ router.get(
     const orgId = resolveOrgId(req as AuthenticatedRequest, res)
     if (!orgId) return
 
-    const query = req.query as z.infer<typeof searchAuditQuerySchema>
+    const query = getValidatedQuery(req, searchAuditQuerySchema)
 
     // See note in GET /disclosures: Express 5 query-getter semantics drop the
     // zod defaults/coercion, so re-apply the pagination contract here.
@@ -522,7 +522,7 @@ router.get(
     const orgId = resolveOrgId(req as AuthenticatedRequest, res)
     if (!orgId) return
 
-    const query = req.query as z.infer<typeof exportAuditQuerySchema>
+    const query = getValidatedQuery(req, exportAuditQuerySchema)
 
     // Express 5 drops the zod default; treat anything other than an explicit
     // 'csv' as the default 'json' format.
@@ -568,7 +568,7 @@ router.get(
     if (!orgId) return
 
     const { entityType, entityId } = req.params
-    const query = req.query as z.infer<typeof entityHistoryQuerySchema>
+    const query = getValidatedQuery(req, entityHistoryQuerySchema)
 
     // Express 5 drops the zod default; re-apply the contract default of 100.
     const limit = query.limit ? Number(query.limit) : 100

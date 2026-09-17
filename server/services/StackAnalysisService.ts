@@ -506,7 +506,7 @@ export class StackAnalysisService {
 
       competitors.push({
         funderName: filing.securedPartyName,
-        normalizedName: normalizeCompanyName(filing.securedPartyName).normalized,
+        normalizedName: normalizeCompanyName(filing.securedPartyName),
         position,
         filingDate: filing.filingDate,
         isActive: filing.status === 'active',

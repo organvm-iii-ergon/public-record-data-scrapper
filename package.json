@@ -65,7 +65,8 @@
     "prepare": "husky",
     "share": "lt --port 5000",
     "typecheck": "tsc --noEmit",
-    "typecheck:server": "tsc --project server/tsconfig.json --noEmit"
+    "typecheck:server": "tsc --project server/tsconfig.json --noEmit",
+    "test:database": "vitest run --config vitest.config.database.ts"
   },
   "dependencies": {
     "@github/spark": "^0.44.5",
@@ -164,6 +165,8 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/compression": "1.8.1",
+    "@types/cors": "2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.2",
     "@types/pg": "^8.16.0",

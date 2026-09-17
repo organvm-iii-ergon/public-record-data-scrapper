@@ -1,6 +1,6 @@
 import { Router, Response } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { requireRole, AuthenticatedRequest } from '../middleware/authMiddleware'
 import { DealsService } from '../services/DealsService'
@@ -190,7 +190,7 @@ router.get(
     if (!orgId) return
 
     const dealsService = new DealsService()
-    const query = req.query as z.infer<typeof listDealsQuerySchema>
+    const query = getValidatedQuery(req, listDealsQuerySchema)
 
     const result = await dealsService.list({
       orgId,

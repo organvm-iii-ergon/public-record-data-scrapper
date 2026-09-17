@@ -2,6 +2,7 @@
 """Run preflight and reject stale, incomplete or dirty-tree submission receipts."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -13,7 +14,8 @@ CHECKS = {
     "typecheck": ["npm", "run", "typecheck"],
     "server-typecheck": ["npm", "run", "typecheck:server"],
     "migration-versions": ["node", "scripts/check-migration-versions.mjs"],
-    "server-tests": ["./node_modules/.bin/vitest", "run", "--config", "vitest.config.server.ts", "--coverage.enabled=false"],
+    "server-tests": ["npm", "run", "test:server:strict", "--", "--run"],
+    "database-tests": ["npm", "run", "test:database"],
     "build:render": ["npm", "run", "build:render"],
 }
 RECEIPT = Path(".quality/agent-receipt.json")
@@ -40,6 +42,10 @@ def fingerprint():
         "branch": output("git", "branch", "--show-current"),
         "installed_lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest(),
         "node": node, "npm": npm,
+        "environment_configuration": {
+            name: hashlib.sha256(os.environ[name].encode()).hexdigest() if name in os.environ else None
+            for name in ("DATABASE_URL", "TEST_DATABASE_URL", "JWT_SECRET", "NODE_ENV", "CI", "ENFORCE_COVERAGE")
+        },
         "local_configuration": {
             name: hashlib.sha256(Path(name).read_bytes()).hexdigest() if Path(name).is_file() else None
             for name in (".env", ".env.local", ".env.test", ".env.production")

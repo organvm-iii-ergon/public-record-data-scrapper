@@ -43,7 +43,7 @@ export default defineConfig({
         : undefined
     },
     pool: 'forks',
-    // Database cleanup truncates shared tables: never overlap test files.
+    // Keep memory and global test adapter use bounded to one file at a time.
     fileParallelism: false,
     maxWorkers: 1,
     testTimeout: 10000,
