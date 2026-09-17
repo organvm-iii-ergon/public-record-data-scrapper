@@ -6,11 +6,12 @@
  * Only the SHA-256 hash is persisted in D1.
  */
 import { Hono } from 'hono'
-import { hashApiKey, API_KEY_PREFIX } from '../auth'
+import { hashApiKey, API_KEY_PREFIX, requireRole } from '../auth'
 import { all, first, run } from '../db'
 import type { ApiKeyPublic, ApiKeyRow, AppBindings } from '../types'
 
 export const keysRoute = new Hono<AppBindings>()
+keysRoute.use('*', requireRole('admin'))
 
 const DISPLAY_PREFIX_LENGTH = 12
 

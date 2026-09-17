@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 
 import {
   drainWebhookDeliveries,
   readBoundedResponseBody,
   replayWebhookDelivery
 } from '../../cloudflare/workers/api/src/webhooks.ts'
+import {
+  isSecureWebhookUrl,
+  publicCrmIntegration,
+  publicWebhookEndpoint
+} from '../../cloudflare/workers/api/src/integrationSafety.ts'
 
 function createEnv({ firstResult = null, allResults = [] } = {}) {
   const calls = []
@@ -77,4 +83,39 @@ test('manual replay selects only failed or dead-letter deliveries', async () => 
   assert.equal(calls[0].operation, 'first')
   assert.match(calls[0].sql, /status IN \('failed', 'dead_letter'\)/)
   assert.deepEqual(calls[0].params, ['delivery-1', 'org-1'])
+})
+
+test('public integration serializers omit signing secrets and provider API keys', () => {
+  const endpoint = publicWebhookEndpoint({
+    id: 'endpoint-1',
+    secret: 'whsec_super-secret-value',
+    events: '["prospect.created"]'
+  })
+  assert.equal('secret' in endpoint, false)
+  assert.equal(endpoint.secret_preview, 'whsec_••••alue')
+  assert.deepEqual(endpoint.events, ['prospect.created'])
+
+  const integration = publicCrmIntegration({
+    id: 'crm-1',
+    api_key: 'provider-secret-value',
+    config: '{"region":"us"}'
+  })
+  assert.equal('api_key' in integration, false)
+  assert.equal(integration.api_key_preview, 'prov••••alue')
+  assert.deepEqual(integration.config, { region: 'us' })
+})
+
+test('webhook destinations require a valid HTTPS URL', () => {
+  assert.equal(isSecureWebhookUrl('https://hooks.example.test/events'), true)
+  assert.equal(isSecureWebhookUrl('http://hooks.example.test/events'), false)
+  assert.equal(isSecureWebhookUrl('ftp://hooks.example.test/events'), false)
+  assert.equal(isSecureWebhookUrl('not a URL'), false)
+})
+
+test('edge API key management requires the admin role guard', () => {
+  const source = readFileSync(
+    new URL('../../cloudflare/workers/api/src/routes/keys.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(source, /keysRoute\.use\('\*', requireRole\('admin'\)\)/)
 })

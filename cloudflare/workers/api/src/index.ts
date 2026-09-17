@@ -14,6 +14,11 @@ import { cors } from 'hono/cors'
 import type { Context } from 'hono'
 import { accessAuth, orgScope, unifiedAuth } from './auth'
 import { all, first, run } from './db'
+import {
+  isSecureWebhookUrl,
+  publicCrmIntegration,
+  publicWebhookEndpoint
+} from './integrationSafety'
 import { rateLimiter } from './rateLimit'
 import { enrichmentRoute } from './routes/enrichment'
 import { jobsRoute } from './routes/jobs'
@@ -123,18 +128,7 @@ app.get('/api/webhooks', accessAuth, orgScope, async (c) => {
   )
 
   // Mask secret keys for safe display (e.g. "whsec_****abc1")
-  const masked = endpoints.map((ep) => ({
-    ...ep,
-    events: (() => {
-      try {
-        return JSON.parse(ep.events)
-      } catch {
-        return [ep.events]
-      }
-    })(),
-    secret_preview:
-      ep.secret.length > 8 ? `${ep.secret.slice(0, 6)}••••${ep.secret.slice(-4)}` : '••••••••'
-  }))
+  const masked = endpoints.map(publicWebhookEndpoint)
 
   return c.json({ endpoints: masked })
 })
@@ -159,24 +153,14 @@ app.post('/api/webhooks', accessAuth, orgScope, async (c) => {
     )
   }
 
-  try {
-    const parsedUrl = new URL(body.url)
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      return c.json(
-        {
-          error: {
-            message: 'URL protocol must be http or https',
-            code: 'BAD_REQUEST',
-            statusCode: 400
-          }
-        },
-        400
-      )
-    }
-  } catch {
+  if (!isSecureWebhookUrl(body.url)) {
     return c.json(
       {
-        error: { message: 'Invalid destination URL format', code: 'BAD_REQUEST', statusCode: 400 }
+        error: {
+          message: 'Webhook destination must be a valid HTTPS URL',
+          code: 'BAD_REQUEST',
+          statusCode: 400
+        }
       },
       400
     )
@@ -242,18 +226,7 @@ app.get('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
     )
   }
 
-  return c.json({
-    endpoint: {
-      ...endpoint,
-      events: (() => {
-        try {
-          return JSON.parse(endpoint.events)
-        } catch {
-          return [endpoint.events]
-        }
-      })()
-    }
-  })
+  return c.json({ endpoint: publicWebhookEndpoint(endpoint) })
 })
 
 /**
@@ -507,20 +480,7 @@ app.get('/api/crm/integrations', accessAuth, orgScope, async (c) => {
   )
 
   // Mask API keys in response
-  const masked = integrations.map((item) => ({
-    ...item,
-    api_key_preview:
-      item.api_key.length > 8
-        ? `${item.api_key.slice(0, 4)}••••${item.api_key.slice(-4)}`
-        : '••••••••',
-    config: (() => {
-      try {
-        return item.config ? JSON.parse(item.config) : {}
-      } catch {
-        return {}
-      }
-    })()
-  }))
+  const masked = integrations.map(publicCrmIntegration)
 
   return c.json({ integrations: masked })
 })
