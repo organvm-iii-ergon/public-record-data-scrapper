@@ -126,6 +126,23 @@ describe('StateRuleEngine (#478)', () => {
         expect.objectContaining({ field: 'filingDate', code: 'INVALID_DATE' })
       )
     })
+
+    it('rejects malformed timestamp suffixes', () => {
+      for (const filingDate of ['2024-02-29Tbogus', '2024-02-29T25:99:99Z']) {
+        expect(engine.calculateExpirationDate(filingDate, 'CA')).toBeUndefined()
+        const result = engine.validate({
+          filingNumber: '24-00123456',
+          filingDate,
+          state: 'CA',
+          debtor: { name: 'DEBTOR LLC' },
+          securedParty: { name: 'BANK CORP' },
+          collateral: 'All assets'
+        })
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({ field: 'filingDate', code: 'INVALID_DATE' })
+        )
+      }
+    })
   })
 
   describe('Collateral Analysis & Disclosure Tagging', () => {
@@ -320,6 +337,24 @@ describe('StateRuleEngine (#478)', () => {
 
       expect(result.normalized.expirationDate).toBeUndefined()
     })
+
+    it.each(['UCC1', 'Initial Financing Statement'])(
+      'calculates a lapse date for recognized initial-filing variant %s',
+      (filingType) => {
+        const result = engine.process({
+          filingNumber: '2024-123456',
+          filingType,
+          filingDate: '2024-01-15',
+          state: 'NY',
+          status: 'active',
+          debtor: { name: 'DEBTOR LLC' },
+          securedParty: { name: 'BANK CORP' },
+          collateral: 'All assets'
+        })
+
+        expect(result.normalized.expirationDate).toBe('2029-01-15')
+      }
+    )
   })
 
   describe('Dynamic Custom Rule Registration', () => {
