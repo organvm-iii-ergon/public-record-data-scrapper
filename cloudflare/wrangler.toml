@@ -50,11 +50,12 @@ binding = "ARTIFACTS"
 bucket_name = "cronus-assets-dev"
 
 # Scheduled triggers — the $0 async pipeline (Cron + a D1 jobs drain).
+#   "*/1 * * * *"  every minute     → D1 jobs + webhook retry drain
 #   "0 2 * * *"    daily 02:00 UTC  → UCC ingestion (was ucc-ingestion queue)
 #   "0 */6 * * *"  every 6 hours    → data enrichment (was data-enrichment queue)
 #   "0 */12 * * *" every 12 hours   → health scoring (was health-scores queue)
 [triggers]
-crons = ["0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
+crons = ["*/1 * * * *", "0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
 
 # Non-secret config. Cloudflare Access supplies org_id in the JWT; these point
 # the verifier at your Zero Trust team + application audience (AUD) tag.
@@ -87,7 +88,7 @@ binding = "ARTIFACTS"
 bucket_name = "cronus-assets-staging"  # TODO: create or rename to your staging bucket
 
 [env.staging.triggers]
-crons = ["0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
+crons = ["*/1 * * * *", "0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
@@ -115,7 +116,7 @@ binding = "ARTIFACTS"
 bucket_name = "cronus-assets"
 
 [env.production.triggers]
-crons = ["0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
+crons = ["*/1 * * * *", "0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
 
 [env.production.vars]
 ENVIRONMENT = "production"

@@ -11,6 +11,16 @@ updates:
       npm-deps:
         applies-to: version-updates
         patterns: ['*']
+  - package-ecosystem: 'npm'
+    directory: '/cloudflare'
+    target-branch: 'lane/heal'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      cloudflare-npm-deps:
+        applies-to: version-updates
+        patterns: ['*']
   - package-ecosystem: 'github-actions'
     directory: '/'
     target-branch: 'lane/heal'

@@ -178,6 +178,9 @@ export async function scheduled(
   const task = (async () => {
     try {
       switch (event.cron) {
+        case '*/1 * * * *':
+          // Queue-only tick so webhook retry deadlines are honored promptly.
+          break
         case '0 2 * * *':
           await runIngestion(env)
           break

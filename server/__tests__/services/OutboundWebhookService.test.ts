@@ -18,6 +18,7 @@ import {
   buildWebhookPayload,
   deliverWebhook,
   readBoundedResponseBody,
+  isPrivateAddress,
   MAX_DELIVERY_ATTEMPTS,
   OutboundWebhookService
 } from '../../services/OutboundWebhookService'
@@ -158,7 +159,7 @@ describe('deliverWebhook', () => {
 
     const payload = buildWebhookPayload('prospect.created', { id: 'abc' })
     const result = await deliverWebhook(payload, {
-      url: 'https://hooks.example.com/wh',
+      url: 'https://1.1.1.1/wh',
       secret: 'test-secret'
     })
 
@@ -179,7 +180,7 @@ describe('deliverWebhook', () => {
 
     const payload = buildWebhookPayload('enrichment.completed', {})
     const result = await deliverWebhook(payload, {
-      url: 'https://hooks.example.com/wh',
+      url: 'https://1.1.1.1/wh',
       secret: 'sec'
     })
 
@@ -206,6 +207,17 @@ describe('deliverWebhook', () => {
     })
     expect(result.success).toBe(false)
     expect(result.error).toMatch(/private/)
+  })
+
+  it('rejects private addresses across IPv4 and IPv6 forms', () => {
+    expect(isPrivateAddress('127.0.0.1')).toBe(true)
+    expect(isPrivateAddress('10.0.0.1')).toBe(true)
+    expect(isPrivateAddress('169.254.1.2')).toBe(true)
+    expect(isPrivateAddress('::1')).toBe(true)
+    expect(isPrivateAddress('fd00::1')).toBe(true)
+    expect(isPrivateAddress('::ffff:7f00:1')).toBe(true)
+    expect(isPrivateAddress('1.1.1.1')).toBe(false)
+    expect(isPrivateAddress('2606:4700:4700::1111')).toBe(false)
   })
 
   it('bounds and cancels subscriber response bodies', async () => {
@@ -236,7 +248,7 @@ describe('OutboundWebhookService.dispatch', () => {
           {
             id: 'sub-1',
             org_id: 'org-1',
-            url: 'https://hooks.example.com/wh',
+            url: 'https://1.1.1.1/wh',
             secret: 'secret',
             events: ['prospect.created'],
             enabled: true
@@ -288,7 +300,7 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
               delivery_id: 'del-1',
               attempt_count: failingAttemptCount,
               payload: buildWebhookPayload('prospect.created', {}),
-              url: 'https://hooks.example.com/wh',
+              url: 'https://1.1.1.1/wh',
               secret: 'sec'
             }
           ]
@@ -329,7 +341,7 @@ describe('OutboundWebhookService.deliver — DLQ lifecycle', () => {
               delivery_id: 'del-2',
               attempt_count: 0,
               payload: buildWebhookPayload('prospect.created', {}),
-              url: 'https://hooks.example.com/wh',
+              url: 'https://1.1.1.1/wh',
               secret: 'sec'
             }
           ]

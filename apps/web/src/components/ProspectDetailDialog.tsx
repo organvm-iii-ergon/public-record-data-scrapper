@@ -40,6 +40,7 @@ import { Progress } from '@public-records/ui/progress'
 import type { ProspectNote, FollowUpReminder, OutreachEmail } from '@public-records/core'
 import { useState } from 'react'
 import { useIsMobile } from '@public-records/ui/use-mobile'
+import { apiRequest } from '@/lib/api/client'
 
 // Normalize a possibly-undefined/out-of-range score into a valid 0-100 Progress value.
 function clampPercent(value: number | undefined | null): number {
@@ -102,12 +103,23 @@ export function ProspectDetailDialog({
     if (!prospect) return
     setPushingCrm(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      const result = await apiRequest<{
+        success: boolean
+        provider?: string
+        externalId?: string
+        error?: string
+      }>('/crm/push', {
+        method: 'POST',
+        body: { prospect_id: prospect.id }
+      })
+      if (!result.success) throw new Error(result.error ?? 'CRM push failed')
       toast.success(
-        `Successfully pushed "${prospect.companyName}" to HubSpot CRM! (Company ID: hs_${prospect.id.slice(0, 8)})`
+        `Pushed "${prospect.companyName}" to ${result.provider ?? 'the configured CRM'}${result.externalId ? ` (${result.externalId})` : ''}.`
       )
-    } catch {
-      toast.error('Failed to push prospect to CRM')
+    } catch (error) {
+      toast.error(
+        `Failed to push prospect to CRM: ${error instanceof Error ? error.message : 'Request failed'}`
+      )
     } finally {
       setPushingCrm(false)
     }

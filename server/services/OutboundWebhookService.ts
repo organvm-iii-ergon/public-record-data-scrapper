@@ -8,6 +8,8 @@
  */
 
 import crypto from 'crypto'
+import { lookup } from 'node:dns/promises'
+import { isIP } from 'node:net'
 import { v4 as uuidv4 } from 'uuid'
 
 // ---------------------------------------------------------------------------
@@ -131,9 +133,52 @@ export function deriveSigningSecret(seed: string): string {
 // URL safety guard (mirrors DeliveryService pattern)
 // ---------------------------------------------------------------------------
 
-function assertSafeUrl(rawUrl: string): URL {
+export function isPrivateAddress(address: string): boolean {
+  const normalized = address.toLowerCase().replace(/^\[|\]$/g, '')
+  if (isIP(normalized) === 4) {
+    const octets = normalized.split('.').map(Number)
+    const [a, b] = octets
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && (b === 0 || b === 168)) ||
+      (a === 198 && (b === 18 || b === 19)) ||
+      a >= 224
+    )
+  }
+  if (isIP(normalized) === 6) {
+    if (normalized.startsWith('::ffff:')) {
+      const mapped = normalized.slice('::ffff:'.length)
+      if (isIP(mapped) === 4) return isPrivateAddress(mapped)
+      const groups = mapped.split(':')
+      if (groups.length === 2) {
+        const high = Number.parseInt(groups[0] ?? '', 16)
+        const low = Number.parseInt(groups[1] ?? '', 16)
+        if (Number.isFinite(high) && Number.isFinite(low)) {
+          return isPrivateAddress(`${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`)
+        }
+      }
+      return true
+    }
+    const first = Number.parseInt(normalized.split(':')[0] || '0', 16)
+    return (
+      normalized === '::' ||
+      normalized === '::1' ||
+      (first & 0xfe00) === 0xfc00 ||
+      (first & 0xffc0) === 0xfe80 ||
+      (first & 0xff00) === 0xff00
+    )
+  }
+  return true
+}
+
+async function assertSafeUrl(rawUrl: string): Promise<URL> {
   const url = new URL(rawUrl)
-  const hostname = url.hostname.toLowerCase()
+  const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
 
   if (url.protocol !== 'https:') {
     throw new Error('Outbound webhook URL must use https')
@@ -141,16 +186,17 @@ function assertSafeUrl(rawUrl: string): URL {
 
   if (
     hostname === 'localhost' ||
-    hostname === '0.0.0.0' ||
-    hostname === '::1' ||
     hostname.endsWith('.local') ||
-    /^127\./.test(hostname) ||
-    /^10\./.test(hostname) ||
-    /^192\.168\./.test(hostname) ||
-    /^169\.254\./.test(hostname) ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    (isIP(hostname) !== 0 && isPrivateAddress(hostname))
   ) {
     throw new Error('Outbound webhook URL must not target local or private hosts')
+  }
+
+  if (isIP(hostname) === 0) {
+    const addresses = await lookup(hostname, { all: true, verbatim: true })
+    if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
+      throw new Error('Outbound webhook hostname resolves to a local or private address')
+    }
   }
 
   return url
@@ -221,7 +267,7 @@ export async function deliverWebhook(
 ): Promise<DeliveryAttemptResult> {
   let url: URL
   try {
-    url = assertSafeUrl(config.url)
+    url = await assertSafeUrl(config.url)
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
   }

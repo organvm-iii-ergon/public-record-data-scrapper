@@ -470,23 +470,27 @@ try {
   // Verify scheduled cron triggers and D1 queue drainage
   const runtimeWorker = await worker.getWorker()
 
-  // 1. Continuous ingestion cron: 0 2 * * *
+  // 1. Queue-only retry drain: every minute
+  const retryDrainOutcome = await runtimeWorker.scheduled({ cron: '*/1 * * * *' })
+  assert.equal(retryDrainOutcome.outcome, 'ok')
+
+  // 2. Continuous ingestion cron: 0 2 * * *
   const ingestOutcome = await runtimeWorker.scheduled({ cron: '0 2 * * *' })
   assert.equal(ingestOutcome.outcome, 'ok')
 
-  // 2. Data enrichment cron: 0 */6 * * *
+  // 3. Data enrichment cron: 0 */6 * * *
   const enrichOutcome = await runtimeWorker.scheduled({ cron: '0 */6 * * *' })
   assert.equal(enrichOutcome.outcome, 'ok')
 
-  // 3. Health scoring cron: 0 */12 * * *
+  // 4. Health scoring cron: 0 */12 * * *
   const healthOutcome = await runtimeWorker.scheduled({ cron: '0 */12 * * *' })
   assert.equal(healthOutcome.outcome, 'ok')
 
-  // 4. Unrecognized schedule fallback (fail-safe)
+  // 5. Unrecognized schedule fallback (fail-safe)
   const unknownOutcome = await runtimeWorker.scheduled({ cron: '0 0 1 1 *' })
   assert.equal(unknownOutcome.outcome, 'ok')
 
-  // 5. Background jobs drainage via D1 on cron tick
+  // 6. Background jobs drainage via D1 on cron tick
   await db
     .prepare('INSERT INTO jobs (id, type, payload, status, org_id) VALUES (?, ?, ?, ?, ?)')
     .bind('smoke-job-1', 'unhandled-test', '{}', 'pending', 'org-smoke')
@@ -501,7 +505,7 @@ try {
   assert.equal(jobRecord.attempts, 1)
   assert.equal(jobRecord.status, 'pending')
 
-  // 6. Max attempts failure transition (attempts >= 5 -> failed)
+  // 7. Max attempts failure transition (attempts >= 5 -> failed)
   await db
     .prepare(
       'INSERT INTO jobs (id, type, payload, status, org_id, attempts) VALUES (?, ?, ?, ?, ?, ?)'
@@ -520,7 +524,7 @@ try {
 
   assert.equal(outboundRequests, 0)
   console.log(
-    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, v1_api=ok, api_keys=ok, tenant_isolation=ok, atomic_rate_limits=ok, single_charge=ok, unavailable_quota=503, tier_entitlements=ok, crons=4 passed, d1_drain=ok; outbound=0'
+    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, v1_api=ok, api_keys=ok, tenant_isolation=ok, atomic_rate_limits=ok, single_charge=ok, unavailable_quota=503, tier_entitlements=ok, crons=5 passed, d1_drain=ok; outbound=0'
   )
 } finally {
   await worker.dispose()

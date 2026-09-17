@@ -71,7 +71,7 @@ test('cloudflare/wrangler.toml binds D1 database and declares cron triggers for 
   assert.match(wranglerContent, /database_id\s*=\s*"REPLACE_WITH_PRODUCTION_D1_ID"/)
 
   // Scheduled triggers across environments
-  const requiredCrons = ['"0 2 * * *"', '"0 */6 * * *"', '"0 */12 * * *"']
+  const requiredCrons = ['"*/1 * * * *"', '"0 2 * * *"', '"0 */6 * * *"', '"0 */12 * * *"']
   for (const cron of requiredCrons) {
     assert.ok(wranglerContent.includes(cron), `wrangler.toml must include cron trigger ${cron}`)
   }

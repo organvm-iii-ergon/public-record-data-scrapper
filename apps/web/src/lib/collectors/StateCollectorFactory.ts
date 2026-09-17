@@ -641,7 +641,9 @@ export class StateCollectorFactory {
     const normalized = stateCode.toUpperCase()
     COLLECTOR_BUILDERS[normalized] = { method, build }
     this.registry.delete(normalized)
-    this.methodRegistries[method].delete(normalized)
+    for (const registry of Object.values(this.methodRegistries)) {
+      registry.delete(normalized)
+    }
   }
 
   /**
