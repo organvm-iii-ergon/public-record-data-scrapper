@@ -131,8 +131,6 @@ interface CreateJobBody {
   payload?: unknown
 }
 
-const INTERNAL_JOB_TYPES = new Set(['webhook_delivery', 'crm_push'])
-
 /**
  * POST /v1/jobs — Enqueue an asynchronous pipeline job.
  */
