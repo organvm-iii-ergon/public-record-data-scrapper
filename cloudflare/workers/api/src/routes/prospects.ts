@@ -7,6 +7,7 @@
 import { Hono } from 'hono'
 import { all, first, run } from '../db'
 import type { AppBindings, ProspectRow } from '../types'
+import { triggerWebhookEvent } from '../webhooks'
 
 export const prospectsRoute = new Hono<AppBindings>()
 
@@ -240,6 +241,16 @@ prospectsRoute.post('/', async (c) => {
       WHERE id = ? AND org_id = ?`,
     id,
     orgId
+  )
+
+  c.executionCtx.waitUntil(
+    triggerWebhookEvent(c.env, orgId, 'prospect.created', {
+      prospect_id: id,
+      company_name: body.company_name.trim(),
+      priority_score: priorityScore,
+      status,
+      created_at: created?.created_at ?? new Date().toISOString()
+    })
   )
 
   return c.json({ data: created }, 201)

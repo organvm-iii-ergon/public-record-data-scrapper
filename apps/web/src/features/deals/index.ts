@@ -1,1 +1,0 @@
-export { DealsTab } from './DealsTab'

@@ -1,1 +1,0 @@
-export { ComplianceTab } from './ComplianceTab'

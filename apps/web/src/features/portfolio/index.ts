@@ -1,1 +1,0 @@
-export { PortfolioTab } from './PortfolioTab'
