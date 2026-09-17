@@ -49,6 +49,7 @@ export interface ResolvedEntityCluster {
   principals: string[]
   crossStateLinksCount: number
   explanation: string
+  associatedEntities?: Array<{ id: string; name: string; type: string }>
   metadata?: Record<string, unknown>
 }
 

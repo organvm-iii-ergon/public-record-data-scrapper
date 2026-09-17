@@ -38,7 +38,7 @@ const keyIdParamSchema = z.object({
 router.post(
   '/',
   validateRequest({ body: createKeySchema }),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest & { params: Record<string, string> }, res) => {
     const orgId = req.user?.orgId
     if (!orgId) {
       return res.status(400).json({
@@ -70,7 +70,7 @@ router.post(
 // GET /api/keys - list the org's keys (metadata only)
 router.get(
   '/',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest & { params: Record<string, string> }, res) => {
     const orgId = req.user?.orgId
     if (!orgId) {
       return res.status(400).json({
@@ -88,7 +88,7 @@ router.get(
 router.delete(
   '/:id',
   validateRequest({ params: keyIdParamSchema }),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest & { params: Record<string, string> }, res) => {
     const orgId = req.user?.orgId
     if (!orgId) {
       return res.status(400).json({

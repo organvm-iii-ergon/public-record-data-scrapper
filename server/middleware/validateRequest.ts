@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { ZodSchema, ZodError, ZodIssue } from 'zod'
+import { ZodSchema, ZodError, ZodIssue, output } from 'zod'
 import { createRequestLogger, logger } from '../utils/logger'
 
 interface ValidationSchemas {
@@ -10,6 +10,15 @@ interface ValidationSchemas {
 
 interface RequestWithCorrelation extends Request {
   correlationId?: string
+}
+
+const parsedQueries = new WeakMap<Request, { schema: ZodSchema; value: unknown }>()
+
+/** Read the output of the exact schema already applied by this middleware. */
+export function getValidatedQuery<T extends ZodSchema>(req: Request, schema: T): output<T> {
+  const parsed = parsedQueries.get(req)
+  if (!parsed || parsed.schema !== schema) throw new Error('Query validation middleware is missing')
+  return parsed.value as output<T>
 }
 
 export const validateRequest = (schemas: ValidationSchemas) => {
@@ -27,6 +36,7 @@ export const validateRequest = (schemas: ValidationSchemas) => {
       // parsed/coerced result so the schema's transforms actually take effect.
       if (schemas.query) {
         const parsedQuery = schemas.query.parse(req.query)
+        parsedQueries.set(req, { schema: schemas.query, value: parsedQuery })
         Object.defineProperty(req, 'query', {
           value: parsedQuery,
           writable: true,

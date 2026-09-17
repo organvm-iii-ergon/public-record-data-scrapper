@@ -71,13 +71,13 @@ async function processHealthScore(job: Job<HealthScoreJobData>): Promise<void> {
     let companies
     if (portfolioCompanyId) {
       // Single company
-      companies = await database.query(
+      companies = await database.query<{ id: string; company_name: string }>(
         'SELECT id, company_name FROM portfolio_companies WHERE id = $1',
         [portfolioCompanyId]
       )
     } else {
       // Batch processing - companies that need health score updates
-      companies = await database.query(
+      companies = await database.query<{ id: string; company_name: string }>(
         `SELECT id, company_name
          FROM portfolio_companies
          WHERE updated_at < NOW() - INTERVAL '12 hours'

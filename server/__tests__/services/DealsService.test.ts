@@ -586,7 +586,7 @@ describe('DealsService', () => {
 
   describe('deleteDocument', () => {
     it('should delete a document', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.deleteDocument('doc-1')
 
@@ -594,7 +594,7 @@ describe('DealsService', () => {
     })
 
     it('should return false when document not found', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
 
       const result = await service.deleteDocument('non-existent')
 

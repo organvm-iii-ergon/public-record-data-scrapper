@@ -152,7 +152,7 @@ router.post(
   requireRole('user', 'admin'),
   paidTierGate,
   validateRequest({ body: enqueueJobSchema }),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest & { params: Record<string, string> }, res) => {
     const body = req.body as z.infer<typeof enqueueJobSchema>
     const orgId = req.user!.orgId!
     const apiKeyId = extractApiKeyId(req.user!.id)
@@ -220,7 +220,7 @@ router.get(
   '/jobs/:jobId',
   requireRole('user', 'admin'),
   validateRequest({ params: jobIdSchema }),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest & { params: Record<string, string> }, res) => {
     const { jobId } = req.params
     const orgId = req.user!.orgId!
 

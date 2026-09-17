@@ -405,10 +405,10 @@ export class ContactsService {
   async delete(id: string, orgId: string): Promise<boolean> {
     try {
       const results = await database.query(
-        'UPDATE contacts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND org_id = $2',
+        'UPDATE contacts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND org_id = $2 RETURNING 1 AS affected',
         [id, orgId]
       )
-      const deleted = (results as { rowCount: number }).rowCount > 0
+      const deleted = results.length > 0
       if (!deleted) {
         throw new NotFoundError('Contact', id)
       }
@@ -531,10 +531,10 @@ export class ContactsService {
   async unlinkFromProspect(prospectId: string, contactId: string): Promise<boolean> {
     try {
       const results = await database.query(
-        'DELETE FROM prospect_contacts WHERE prospect_id = $1 AND contact_id = $2',
+        'DELETE FROM prospect_contacts WHERE prospect_id = $1 AND contact_id = $2 RETURNING 1 AS affected',
         [prospectId, contactId]
       )
-      return (results as { rowCount: number }).rowCount > 0
+      return results.length > 0
     } catch (error) {
       throw new DatabaseError(
         'Failed to unlink contact from prospect',

@@ -5,7 +5,14 @@ on:
   push:
     branches: ['**']
   pull_request:
-    branches: [main, master, develop]
+    branches:
+      - main
+      - master
+      - develop
+      - lane/verify
+      - lane/heal
+      - lane/expand-public-records
+      - lane/evolve-platform
 
 jobs:
   test:

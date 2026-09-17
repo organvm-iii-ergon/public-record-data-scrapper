@@ -13,7 +13,7 @@ import { Router, Request, Response, NextFunction } from 'express'
 import crypto from 'crypto'
 import { z } from 'zod'
 import { asyncHandler } from '../middleware/errorHandler'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import {
   verifyTwilioSignature,
   verifySendGridSignature,
@@ -659,7 +659,7 @@ router.post(
         error: { message: 'Inbound parse token not configured', statusCode: 401 }
       })
     }
-    const { token } = req.query as z.infer<typeof sendgridInboundQuerySchema>
+    const { token } = getValidatedQuery(req, sendgridInboundQuerySchema)
     if (!token || !timingSafeEqualStr(token, expectedToken)) {
       console.error('[webhooks] Invalid inbound parse token')
       return res.status(401).json({

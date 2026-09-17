@@ -151,7 +151,9 @@ export class SendGridClient {
               .join('; ') ||
             rawText ||
             `SendGrid request failed with status ${response.status}`,
-          errors: apiErrors
+          errors: apiErrors?.map((entry) => ({
+            message: entry.message || 'Provider returned an unspecified error'
+          }))
         }
       }
     }

@@ -24,7 +24,7 @@ router.get(
   '/usage',
   asyncHandler(async (req, res) => {
     const authReq = req as AuthenticatedRequest
-    const orgId = authReq.user?.orgId || authReq.orgId
+    const orgId = authReq.user?.orgId
     if (!orgId) {
       res.status(400).json({
         error: {

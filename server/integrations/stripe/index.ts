@@ -19,7 +19,7 @@ export function getStripe(): Stripe {
     if (!key) {
       throw new Error('STRIPE_SECRET_KEY is not configured')
     }
-    stripeClient = new Stripe(key, { apiVersion: '2025-04-30.basil' })
+    stripeClient = new Stripe(key, { apiVersion: '2025-08-27.basil' })
   }
   return stripeClient
 }
@@ -195,25 +195,5 @@ export async function recordStripeMeterEvent(
     },
     timestamp: Math.floor(timestamp.getTime() / 1000),
     ...(options.identifier ? { identifier: options.identifier } : {})
-  })
-}
-
-export interface UsageRecordOptions {
-  subscriptionItemId: string
-  quantity: number
-  timestamp?: Date
-  action?: 'increment' | 'set'
-}
-
-/**
- * Record a subscription item usage record for metered billing.
- */
-export async function recordStripeUsage(options: UsageRecordOptions): Promise<Stripe.UsageRecord> {
-  const stripe = getStripe()
-  const timestamp = options.timestamp ?? new Date()
-  return stripe.subscriptionItems.createUsageRecord(options.subscriptionItemId, {
-    quantity: options.quantity,
-    timestamp: Math.floor(timestamp.getTime() / 1000),
-    action: options.action ?? 'increment'
   })
 }

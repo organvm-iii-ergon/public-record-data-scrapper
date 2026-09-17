@@ -24,14 +24,22 @@ export class ApiTestHelper {
   /**
    * Make a POST request to an endpoint
    */
-  async post(path: string, body: unknown, headers: Record<string, string> = {}) {
+  async post(
+    path: string,
+    body: string | object | undefined,
+    headers: Record<string, string> = {}
+  ) {
     return request(this.app).post(path).send(body).set(headers)
   }
 
   /**
    * Make a PATCH request to an endpoint
    */
-  async patch(path: string, body: unknown, headers: Record<string, string> = {}) {
+  async patch(
+    path: string,
+    body: string | object | undefined,
+    headers: Record<string, string> = {}
+  ) {
     return request(this.app).patch(path).send(body).set(headers)
   }
 

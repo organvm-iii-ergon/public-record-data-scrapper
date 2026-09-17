@@ -2,7 +2,7 @@ name: validate-dependencies
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, lane/verify, lane/heal, lane/expand-public-records, lane/evolve-platform]
   push:
     branches: [main]
   workflow_dispatch:

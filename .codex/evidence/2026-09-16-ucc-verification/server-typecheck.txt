@@ -1,0 +1,107 @@
+server/__tests__/helpers/apiHelper.ts(28,46): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | object | undefined'.
+server/__tests__/helpers/apiHelper.ts(35,47): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | object | undefined'.
+server/index.ts(3,18): error TS7016: Could not find a declaration file for module 'cors'. 'node_modules/cors/lib/index.js' implicitly has an 'any' type.
+server/index.ts(5,25): error TS7016: Could not find a declaration file for module 'compression'. 'node_modules/compression/index.js' implicitly has an 'any' type.
+server/integrations/sendgrid/client.ts(154,11): error TS2322: Type '{ message?: string | undefined; }[] | undefined' is not assignable to type '{ message: string; field?: string | undefined; }[] | undefined'.
+server/integrations/stripe/index.ts(22,38): error TS2322: Type '"2025-04-30.basil"' is not assignable to type '"2025-08-27.basil"'.
+server/queue/workers/healthWorker.ts(101,55): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+server/queue/workers/healthWorker.ts(129,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+server/routes/apiKeys.ts(100,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitive.ts(55,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitive.ts(69,56): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitive.ts(79,23): error TS2352: Conversion of type 'ParsedQs' to type '{ hours: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/competitive.ts(101,59): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitive.ts(113,61): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitors.ts(14,61): error TS2769: No overload matches this call.
+server/routes/competitors.ts(20,14): error TS2769: No overload matches this call.
+server/routes/competitors.ts(39,50): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_by: "name" | "filing_count" | "total_amount"; sort_order: "asc" | "desc"; state?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/competitors.ts(59,57): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/competitors.ts(81,59): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/compliance.ts(120,19): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; org_id?: string | undefined; status?: "generated" | "draft" | "sent" | "viewed" | "signed" | "expired" | "superseded" | undefined; state?: string | undefined; start_date?: string | undefined; end_date?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/compliance.ts(165,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/compliance.ts(181,56): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/compliance.ts(242,59): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/compliance.ts(272,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/compliance.ts(284,7): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+server/routes/compliance.ts(468,19): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_order: "asc" | "desc"; org_id?: string | undefined; user_id?: string | undefined; entity_type?: string | undefined; entity_id?: string | undefined; ... 4 more ...; request_id?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/compliance.ts(571,19): error TS2352: Conversion of type 'ParsedQs' to type '{ limit: number; org_id?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/compliance.ts(576,54): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(200,19): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_by: "created_at" | "first_name" | "last_name" | "last_contacted_at"; sort_order: "asc" | "desc"; org_id?: string | undefined; search?: string | undefined; role?: "manager" | ... 6 more ... | undefined; tags?: string[] | undefined; is_active?: boolean | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/contacts.ts(271,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(284,66): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(307,50): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(338,7): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+server/routes/contacts.ts(339,7): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+server/routes/contacts.ts(357,63): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(384,7): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+server/routes/contacts.ts(408,19): error TS2352: Conversion of type 'ParsedQs' to type '{ limit: number; before?: string | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/contacts.ts(410,66): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/contacts.ts(427,67): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(193,19): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_by: "created_at" | "updated_at" | "amount_requested" | "expected_close_date"; sort_order: "asc" | "desc"; org_id?: string | undefined; stage_id?: string | undefined; assigned_to?: string | undefined; prospect_id?: string | undefined; priority?: "low" | ... 3 more ... | undefined; ...' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/deals.ts(309,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(322,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(323,63): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(347,44): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(389,49): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(412,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(424,7): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+server/routes/deals.ts(451,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(462,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(480,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(491,63): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(560,58): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(564,56): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(582,58): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/deals.ts(586,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/jobs.ts(219,38): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/jobs.ts(235,34): error TS2339: Property 'uccProvider' does not exist on type 'IngestionJobData | EnrichmentJobData | HealthScoreJobData'.
+server/routes/jobs.ts(300,31): error TS2352: Conversion of type 'ParsedQs' to type '{ status: "active" | "failed" | "completed" | "delayed" | "waiting"; limit: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/jobs.ts(382,38): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(32,52): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(35,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(39,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string | undefined'.
+server/routes/outreach.ts(52,66): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(56,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string | undefined'.
+server/routes/outreach.ts(72,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(81,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(96,56): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/outreach.ts(107,34): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/portfolio.ts(13,61): error TS2769: No overload matches this call.
+server/routes/portfolio.ts(19,14): error TS2769: No overload matches this call.
+server/routes/portfolio.ts(37,48): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_by: "company_name" | "funded_date" | "health_score"; sort_order: "asc" | "desc"; health_grade?: "A" | "B" | "C" | "D" | "F" | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/portfolio.ts(57,52): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/portfolio.ts(79,61): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(21,61): error TS2769: No overload matches this call.
+server/routes/prospects.ts(28,14): error TS2769: No overload matches this call.
+server/routes/prospects.ts(45,16): error TS2769: No overload matches this call.
+server/routes/prospects.ts(50,16): error TS2769: No overload matches this call.
+server/routes/prospects.ts(69,68): error TS2769: No overload matches this call.
+server/routes/prospects.ts(254,54): error TS2352: Conversion of type 'ParsedQs' to type '{ page: number; limit: number; sort_by: "created_at" | "priority_score" | "company_name"; sort_order: "asc" | "desc"; state?: string | undefined; industry?: string | undefined; min_score?: number | undefined; max_score?: number | undefined; status?: "claimed" | ... 3 more ... | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/prospects.ts(309,46): error TS2352: Conversion of type 'ParsedQs' to type '{ format: "json" | "csv"; limit: number; offset: number; min_score: number; state?: string | undefined; industry?: string | undefined; status?: "new" | "claimed" | "contacted" | "qualified" | ... 4 more ... | undefined; max_score?: number | undefined; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/routes/prospects.ts(337,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(360,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(404,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(419,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(470,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(488,55): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(496,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(520,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(554,7): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(582,53): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(623,62): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(637,52): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/prospects.ts(659,51): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/scrape.ts(65,45): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/routes/scrape.ts(220,38): error TS2345: Argument of type 'string | string[]' is not assignable to parameter of type 'string'.
+server/services/ConsentService.ts(290,23): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/ConsentService.ts(305,22): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/ContactsService.ts(411,24): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/ContactsService.ts(537,15): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/DealsService.ts(722,15): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/ProspectsService.ts(342,24): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/ProspectsService.ts(551,24): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/StackAnalysisService.ts(509,71): error TS2551: Property 'normalized' does not exist on type 'string'. Did you mean 'normalize'?
+server/services/SuppressionService.ts(357,17): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/SuppressionService.ts(371,20): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/SuppressionService.ts(625,15): error TS2352: Conversion of type 'Record<string, unknown>[]' to type '{ rowCount: number; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+server/services/UCCSearchService.ts(61,7): error TS2322: Type 'import("apps/web/src/lib/collectors/types").UCCFiling[]' is not assignable to type 'import("packages/core/src/types").UCCFiling[]'.

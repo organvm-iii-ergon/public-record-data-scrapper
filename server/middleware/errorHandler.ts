@@ -149,15 +149,23 @@ function isJsonParseError(err: AppError | ServiceError): boolean {
   )
 }
 
+function hasScalarParams(req: Request): req is Request<Record<string, string>> {
+  return Object.values(req.params).every((value) => typeof value === 'string')
+}
+
 // Async error wrapper
 type AsyncRequestHandler = (
-  req: Request,
+  req: Request<Record<string, string>>,
   res: Response,
   next: NextFunction
 ) => Promise<void | Response>
 
 export const asyncHandler = (fn: AsyncRequestHandler): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
+    if (!hasScalarParams(req)) {
+      next(new HttpError(400, 'Route parameters must be single values', 'INVALID_ROUTE_PARAMETER'))
+      return
+    }
     Promise.resolve(fn(req, res, next)).catch(next)
   }
 }

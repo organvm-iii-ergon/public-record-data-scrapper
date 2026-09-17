@@ -206,6 +206,18 @@ describe('ConsentService', () => {
 
       expect(result.hasConsent).toBe(false)
     })
+
+    it('should exclude a broad grant after a channel-specific revocation', async () => {
+      mockQuery.mockResolvedValueOnce([])
+
+      await service.hasConsentOfType('org-1', 'contact-1', 'express_written', 'sms')
+
+      const [query, params] = mockQuery.mock.calls[0]
+      expect(query).toContain('NOT EXISTS')
+      expect(query).toContain("rev.channel = $4 OR rev.channel = 'all'")
+      expect(query).toContain('rev.revoked_at >= cr.granted_at')
+      expect(params).toEqual(['org-1', 'contact-1', 'express_written', 'sms'])
+    })
   })
 
   describe('revokeConsent', () => {
@@ -214,8 +226,8 @@ describe('ConsentService', () => {
       // grants, (2) insert an explicit channel-scoped revocation marker so
       // hasConsent honors the opt-out even against an older 'all' grant.
       mockQuery
-        .mockResolvedValueOnce({ rowCount: 2 } as unknown as [])
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+        .mockResolvedValueOnce(Array.from({ length: 2 }, () => ({ affected: 1 })))
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.revokeConsent(
         'org-1',
@@ -230,7 +242,7 @@ describe('ConsentService', () => {
     })
 
     it('should not insert a marker when revoking all channels', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 4 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 4 }, () => ({ affected: 1 })))
 
       const result = await service.revokeConsent('org-1', 'contact-1', 'all', 'Full opt-out')
 
@@ -243,8 +255,8 @@ describe('ConsentService', () => {
       // Even with no matching active grant, a channel-specific opt-out still
       // records a revocation marker so future sends are blocked.
       mockQuery
-        .mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+        .mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.revokeConsent('org-1', 'contact-1', 'sms')
 
@@ -262,7 +274,7 @@ describe('ConsentService', () => {
 
   describe('revokeAllConsent', () => {
     it('should revoke all consents', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 5 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 5 }, () => ({ affected: 1 })))
 
       const result = await service.revokeAllConsent('org-1', 'contact-1', 'Full opt-out')
 

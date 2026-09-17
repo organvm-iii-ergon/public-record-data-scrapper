@@ -37,7 +37,7 @@ on:
       - '.github/workflows/deploy-pages.yml'
       - '.github/workflows/deploy-cloudflare.yml'
   pull_request:
-    branches: [main]
+    branches: [main, lane/verify, lane/heal, lane/expand-public-records, lane/evolve-platform]
     paths:
       - 'cloudflare/**'
       - 'scripts/*cloudflare*'

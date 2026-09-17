@@ -155,10 +155,8 @@ export class SendGridSend {
       send_at: options.sendAt ? Math.floor(options.sendAt.getTime() / 1000) : undefined,
       tracking_settings: options.trackingSettings
         ? {
-            click_tracking:
-              options.trackingSettings.clickTracking !== false ? { enable: true } : undefined,
-            open_tracking:
-              options.trackingSettings.openTracking !== false ? { enable: true } : undefined,
+            click_tracking: { enable: options.trackingSettings.clickTracking !== false },
+            open_tracking: { enable: options.trackingSettings.openTracking !== false },
             subscription_tracking: options.trackingSettings.subscriptionTracking
               ? { enable: true }
               : undefined

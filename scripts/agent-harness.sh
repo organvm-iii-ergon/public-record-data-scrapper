@@ -105,42 +105,7 @@ cmd_preflight() {
   local target_dir
   target_dir="$(pwd)"
 
-  log "Running multi-agent preflight verification in ${target_dir}..."
-
-  log "1/5 Checking formatting..."
-  npx prettier --check .
-
-  log "2/5 Running ESLint..."
-  npm run lint
-
-  log "3/5 Running TypeScript typecheck..."
-  npm run typecheck
-
-  log "4/5 Running Server Vitest Suite..."
-  ./node_modules/.bin/vitest run --config vitest.config.server.ts --coverage.enabled=false
-
-  log "5/5 Running Production Build..."
-  npm run build:render
-
-  mkdir -p .quality
-  local receipt_file=".quality/agent-receipt.json"
-  cat > "$receipt_file" << EOF
-{
-  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
-  "commit": "$(git rev-parse HEAD)",
-  "branch": "$(git rev-parse --abbrev-ref HEAD)",
-  "status": "GREEN",
-  "checks": [
-    "prettier",
-    "eslint",
-    "typecheck",
-    "server-tests",
-    "build:render"
-  ]
-}
-EOF
-
-  log "✅ Preflight passed 100%! Receipt written to ${receipt_file}"
+  python3 "$target_dir/scripts/agent-receipt.py" run
 }
 
 cmd_submit() {
@@ -152,6 +117,8 @@ cmd_submit() {
     err "No preflight receipt found. You must run '$0 preflight' before submitting."
     exit 1
   fi
+
+  python3 "$target_dir/scripts/agent-receipt.py" verify
 
   local branch
   branch="$(git rev-parse --abbrev-ref HEAD)"

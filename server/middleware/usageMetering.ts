@@ -21,7 +21,7 @@ import { getBillingTierConfig } from '../config/billingTiers'
  */
 export function usageMeteringMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authReq = req as AuthenticatedRequest
-  const orgId = authReq.user?.orgId || authReq.orgId
+  const orgId = authReq.user?.orgId
   const keyId = authReq.user?.id?.startsWith('apikey:')
     ? authReq.user.id.replace('apikey:', '')
     : undefined

@@ -43,6 +43,9 @@ export default defineConfig({
         : undefined
     },
     pool: 'forks',
+    // Keep memory and global test adapter use bounded to one file at a time.
+    fileParallelism: false,
+    maxWorkers: 1,
     singleFork: false,
     testTimeout: 10000,
     hookTimeout: 10000

@@ -18,7 +18,7 @@ import {
   requireRole,
   type AuthenticatedRequest
 } from '../middleware/authMiddleware'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { config } from '../config'
 import { z } from 'zod'
 import {
@@ -516,7 +516,7 @@ router.post(
     // is mounted with express.raw for the webhook, so req.body is a Buffer here,
     // not parsed JSON). Default to 'starter' to preserve the prior single-SKU
     // behavior, which resolves to STRIPE_PRICE_STARTER || STRIPE_PRICE_ID.
-    const query = req.query as z.infer<typeof checkoutQuerySchema>
+    const query = getValidatedQuery(req, checkoutQuerySchema)
     const requestedTier = query.tier ?? query.plan
     const tier = requestedTier === undefined ? 'starter' : normalizeCheckoutTier(requestedTier)
     if (!tier) {

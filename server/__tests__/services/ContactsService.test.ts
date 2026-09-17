@@ -311,7 +311,7 @@ describe('ContactsService', () => {
 
   describe('delete', () => {
     it('should soft delete a contact', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.delete('contact-1', 'org-1')
 
@@ -320,7 +320,7 @@ describe('ContactsService', () => {
     })
 
     it('should throw NotFoundError for non-existent contact', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
 
       await expect(service.delete('non-existent', 'org-1')).rejects.toThrow(NotFoundError)
     })
@@ -493,7 +493,7 @@ describe('ContactsService', () => {
 
   describe('unlinkFromProspect', () => {
     it('should unlink a contact from a prospect', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.unlinkFromProspect('prospect-1', 'contact-1')
 
@@ -501,7 +501,7 @@ describe('ContactsService', () => {
     })
 
     it('should return false when link does not exist', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
 
       const result = await service.unlinkFromProspect('prospect-1', 'contact-1')
 

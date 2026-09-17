@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { ProspectsService } from '../services/ProspectsService'
 import { ScoringService } from '../services/ScoringService'
@@ -18,14 +18,14 @@ const router = Router()
 const MAX_PAGE_LIMIT = 200
 
 const querySchema = z.object({
-  page: z.string().regex(/^\d+$/).transform(Number).default('1'),
+  page: z.string().regex(/^\d+$/).transform(Number).default(1),
   // Clamp limit to a sane maximum before it reaches the DB (tier constraints
   // may reduce it further) to bound query cost.
   limit: z
     .string()
     .regex(/^\d+$/)
     .transform((v) => Math.min(Math.max(Number(v), 1), MAX_PAGE_LIMIT))
-    .default('20'),
+    .default(20),
   state: z.string().length(2).optional(),
   industry: z.string().optional(),
   min_score: z.string().regex(/^\d+$/).transform(Number).optional(),
@@ -42,12 +42,12 @@ const exportQuerySchema = z
       .string()
       .regex(/^\d+$/)
       .transform((v) => Math.min(Math.max(Number(v), 1), 1000))
-      .default('100'),
+      .default(100),
     offset: z
       .string()
       .regex(/^\d+$/)
       .transform((v) => Math.max(Number(v), 0))
-      .default('0'),
+      .default(0),
     state: z
       .string()
       .regex(/^[A-Za-z]{2}$/)
@@ -66,7 +66,7 @@ const exportQuerySchema = z
         'unclaimed'
       ])
       .optional(),
-    min_score: z.string().regex(/^\d+$/).transform(Number).default('70'),
+    min_score: z.string().regex(/^\d+$/).transform(Number).default(70),
     max_score: z.string().regex(/^\d+$/).transform(Number).optional()
   })
   .refine((query) => query.min_score >= 0 && query.min_score <= 100, {
@@ -251,7 +251,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const prospectsService = new ProspectsService()
     const dataTier = getResolvedDataTier(req)
-    const tieredQuery = applyProspectTierConstraints(req.query as ProspectsQuery, dataTier)
+    const tieredQuery = applyProspectTierConstraints(getValidatedQuery(req, querySchema), dataTier)
     const result = await prospectsService.list(tieredQuery)
 
     res.json({
@@ -306,7 +306,10 @@ router.get(
   '/export/leads',
   validateRequest({ query: exportQuerySchema }),
   asyncHandler(async (req, res) => {
-    const query = applyExportTierConstraints(req.query as LeadExportQuery, getResolvedDataTier(req))
+    const query = applyExportTierConstraints(
+      getValidatedQuery(req, exportQuerySchema),
+      getResolvedDataTier(req)
+    )
     const exportService = new LeadExportService()
     const batch = await exportService.exportLeads({
       state: query.state,

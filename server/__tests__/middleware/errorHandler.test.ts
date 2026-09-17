@@ -217,7 +217,7 @@ describe('asyncHandler utility', () => {
   let mockNext: NextFunction
 
   beforeEach(() => {
-    mockReq = {}
+    mockReq = { params: {} }
     mockRes = {
       json: vi.fn()
     }
@@ -246,5 +246,30 @@ describe('asyncHandler utility', () => {
 
     expect(mockRes.json).toHaveBeenCalledWith({ success: true })
     expect(mockNext).not.toHaveBeenCalled()
+  })
+})
+
+describe('scalar route parameter boundary', () => {
+  it('rejects wildcard arrays before the handler runs', () => {
+    const handler = vi.fn(async () => {})
+    const next = vi.fn()
+    asyncHandler(handler)(
+      { params: { id: ['a', 'b'] } } as unknown as Request,
+      {} as Response,
+      next
+    )
+    expect(handler).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 400, code: 'INVALID_ROUTE_PARAMETER' })
+    )
+  })
+
+  it('passes a scalar identifier without changing it', () => {
+    const handler = vi.fn(async () => {})
+    const req = { params: { id: 'a' } } as unknown as Request
+    const next = vi.fn()
+    asyncHandler(handler)(req, {} as Response, next)
+    expect(handler).toHaveBeenCalledWith(req, {}, next)
+    expect(next).not.toHaveBeenCalled()
   })
 })

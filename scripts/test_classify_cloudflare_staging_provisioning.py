@@ -22,7 +22,7 @@ class ClassifyCloudflareProvisioningTests(unittest.TestCase):
         self.assertTrue(ready)
         self.assertEqual(summary, "")
 
-    def test_credential_denial_is_successful_external_block(self):
+    def test_credential_denial_fails_acceptance(self):
         status, ready, summary = C.classify_report(
             {
                 "status": "blocked",
@@ -35,7 +35,7 @@ class ClassifyCloudflareProvisioningTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(status, 0)
+        self.assertEqual(status, 1)
         self.assertFalse(ready)
         self.assertIn("list_d1", summary)
         self.assertIn("HTTP 401", summary)
@@ -77,7 +77,8 @@ class ClassifyCloudflareProvisioningTests(unittest.TestCase):
                 cwd = Path.cwd()
                 try:
                     os.chdir(root)
-                    self.assertEqual(C.main(), 0)
+                    with self.assertRaises(SystemExit):
+                        C.main()
                 finally:
                     os.chdir(cwd)
 

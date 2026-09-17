@@ -29,7 +29,7 @@ export interface LinkTokenCreateRequest {
   /** Redirect URI for OAuth flows */
   redirectUri?: string
   /** Account subtypes to filter */
-  accountFilters?: AccountFilter[]
+  accountFilters?: AccountFilter
   /** Access token for Link update mode */
   accessToken?: string
   /** Link customization name */
@@ -194,13 +194,9 @@ export class PlaidLinkManager {
       language: 'en',
       webhook: options.webhook,
       // Filter to only show checking accounts (most relevant for MCA underwriting)
-      accountFilters: [
-        {
-          depository: {
-            account_subtypes: ['checking', 'savings']
-          }
-        }
-      ]
+      accountFilters: {
+        depository: { account_subtypes: ['checking', 'savings'] }
+      }
     })
   }
 

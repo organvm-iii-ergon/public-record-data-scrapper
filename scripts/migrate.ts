@@ -10,6 +10,7 @@
 import { readFileSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { checkMigrations } from './check-migration-versions.mjs'
 import { Pool } from 'pg'
 import { config } from 'dotenv'
 
@@ -46,8 +47,9 @@ async function getAppliedMigrations(): Promise<Set<string>> {
   try {
     const result = await pool.query('SELECT version FROM schema_migrations ORDER BY version')
     return new Set(result.rows.map((row) => normalizeMigrationVersion(row.version)))
-  } catch {
-    // If table doesn't exist, no migrations have been applied
+  } catch (error) {
+    if ((error as { code?: string }).code !== '42P01') throw error
+    // Only an absent table means no migrations have been applied
     console.log('No migrations table found. Will create on first migration.')
     return new Set()
   }
@@ -124,6 +126,9 @@ async function main() {
   console.log('='.repeat(60))
 
   try {
+    // Reject collisions before any database query or mutation.
+    checkMigrations()
+
     // Test connection
     console.log('\nTesting database connection...')
     const connectionResult = await pool.query('SELECT NOW()')

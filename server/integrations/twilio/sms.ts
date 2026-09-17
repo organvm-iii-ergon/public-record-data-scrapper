@@ -12,6 +12,7 @@
  */
 
 import { TwilioClient } from './client'
+import { z } from 'zod'
 import { createHmac, timingSafeEqual } from 'crypto'
 
 export interface SendSMSOptions {
@@ -122,17 +123,23 @@ export class TwilioSMS {
     const response = await this.client.request<{
       sid: string
       status: SMSStatus
-      dateCreated: string
+      date_created: string
     }>('POST', '/Messages.json', requestData)
 
     if (!response.success || !response.data) {
       throw new Error(response.error?.message || 'Failed to send SMS')
     }
 
+    z.object({
+      sid: z.string().min(1),
+      status: z.string().min(1),
+      date_created: z.string().min(1)
+    }).parse(response.data)
+
     return {
       messageSid: response.data.sid,
       status: response.data.status,
-      dateCreated: response.data.dateCreated
+      dateCreated: response.data.date_created
     }
   }
 

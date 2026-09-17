@@ -373,7 +373,7 @@ export class EntityResolutionModel {
     const featureContributions: Record<string, number> = {}
 
     for (const [key, weight] of Object.entries(this.corporateWeights.weights)) {
-      const val = (features as Record<string, number>)[key] ?? 0
+      const val = (features as unknown as Record<string, number>)[key] ?? 0
       const contribution = weight * val
       z += contribution
       featureContributions[key] = Number(contribution.toFixed(3))
@@ -464,7 +464,7 @@ export class EntityResolutionModel {
     const featureContributions: Record<string, number> = {}
 
     for (const [key, weight] of Object.entries(this.individualWeights.weights)) {
-      const val = (features as Record<string, number>)[key] ?? 0
+      const val = (features as unknown as Record<string, number>)[key] ?? 0
       const contribution = weight * val
       z += contribution
       featureContributions[key] = Number(contribution.toFixed(3))

@@ -289,7 +289,7 @@ describe('SuppressionService', () => {
 
   describe('removeFromSuppressionList', () => {
     it('should remove phone from list', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.removeFromSuppressionList('org-1', '1234567890')
 
@@ -297,7 +297,7 @@ describe('SuppressionService', () => {
     })
 
     it('should remove email from list', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
 
       const result = await service.removeFromSuppressionList('org-1', 'test@example.com')
 
@@ -305,7 +305,7 @@ describe('SuppressionService', () => {
     })
 
     it('should return false when entry not found', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 0 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 })))
 
       const result = await service.removeFromSuppressionList('org-1', '9999999999')
 
@@ -315,7 +315,9 @@ describe('SuppressionService', () => {
     it('should remove for specific channel', async () => {
       // Channel-specific removal: (1) delete exact-channel rows, (2) query for
       // overlapping 'all' entries to narrow (here none exist).
-      mockQuery.mockResolvedValueOnce({ rowCount: 1 } as unknown as []).mockResolvedValueOnce([])
+      mockQuery
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 })))
+        .mockResolvedValueOnce([])
 
       const result = await service.removeFromSuppressionList('org-1', '1234567890', 'sms')
 
@@ -333,11 +335,11 @@ describe('SuppressionService', () => {
         created_at: '2024-01-01T00:00:00Z'
       }
       mockQuery
-        .mockResolvedValueOnce({ rowCount: 0 } as unknown as []) // exact-channel delete
+        .mockResolvedValueOnce(Array.from({ length: 0 }, () => ({ affected: 1 }))) // exact-channel delete
         .mockResolvedValueOnce([allEntry]) // find 'all' entries
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as []) // delete the 'all' row
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as []) // re-insert remaining channel #1
-        .mockResolvedValueOnce({ rowCount: 1 } as unknown as []) // re-insert remaining channel #2
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 }))) // delete the 'all' row
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 }))) // re-insert remaining channel #1
+        .mockResolvedValueOnce(Array.from({ length: 1 }, () => ({ affected: 1 }))) // re-insert remaining channel #2
 
       const result = await service.removeFromSuppressionList('org-1', '1234567890', 'sms')
 
@@ -503,7 +505,7 @@ describe('SuppressionService', () => {
 
   describe('cleanupExpired', () => {
     it('should delete expired entries', async () => {
-      mockQuery.mockResolvedValueOnce({ rowCount: 10 } as unknown as [])
+      mockQuery.mockResolvedValueOnce(Array.from({ length: 10 }, () => ({ affected: 1 })))
 
       const result = await service.cleanupExpired('org-1')
 

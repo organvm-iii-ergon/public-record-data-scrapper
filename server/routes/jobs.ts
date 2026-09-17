@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { validateRequest } from '../middleware/validateRequest'
+import { validateRequest, getValidatedQuery } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { requireRole, AuthenticatedRequest } from '../middleware/authMiddleware'
 import { getResolvedDataTier } from '../middleware/dataTier'
@@ -232,7 +232,7 @@ router.get(
           status: state,
           progress,
           data: job.data,
-          uccProvider: job.data?.uccProvider ?? null,
+          uccProvider: 'uccProvider' in job.data ? (job.data.uccProvider ?? null) : null,
           returnvalue: job.returnvalue,
           failedReason: job.failedReason,
           processedOn: job.processedOn,
@@ -297,7 +297,7 @@ router.get(
   validateRequest({ params: queueNameSchema, query: queueListQuerySchema }),
   asyncHandler(async (req, res) => {
     const { queueName } = req.params
-    const { status, limit } = req.query as z.infer<typeof queueListQuerySchema>
+    const { status, limit } = getValidatedQuery(req, queueListQuerySchema)
 
     const queues = {
       'ucc-ingestion': getIngestionQueue(),
