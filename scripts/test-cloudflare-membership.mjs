@@ -54,7 +54,11 @@ try {
   const db = await worker.getD1Database('DB')
   const initial = readFileSync(new URL('migrations/0001_init.sql', edge), 'utf8')
   await db.prepare(initial.match(/CREATE TABLE IF NOT EXISTS organizations \([\s\S]*?\);/)[0]).run()
-  for (const name of ['0002_api_keys.sql', '0005_access_memberships.sql']) {
+  for (const name of [
+    '0002_api_keys.sql',
+    '0005_access_memberships.sql',
+    '0008_access_enrollment_invites.sql'
+  ]) {
     const sql = readFileSync(new URL('migrations/' + name, edge), 'utf8').replace(/^\s*--.*$/gm, '')
     for (const statement of sql.split(';').filter((value) => value.trim()))
       await db.prepare(statement).run()
@@ -81,7 +85,45 @@ try {
     return response.json()
   }
   const resolve = (value) => invoke({ payload: value })
-  assert.equal(await resolve(payload), null, 'claims cannot create membership')
+  assert.equal(await resolve(payload), null, 'claims without enrollment cannot create membership')
+  await db
+    .prepare(
+      'INSERT INTO access_enrollment_invites(issuer,email,org_id,role,expires_at) VALUES (?,?,?,?,?)'
+    )
+    .bind(issuer, 'test@example.test', 'a', 'user', '2000-01-01T00:00:00Z')
+    .run()
+  assert.equal(await resolve(payload), null, 'expired enrollment fails closed')
+  await db
+    .prepare("UPDATE access_enrollment_invites SET expires_at = NULL, revoked_at = datetime('now')")
+    .run()
+  assert.equal(await resolve(payload), null, 'revoked enrollment fails closed')
+  await db.prepare('UPDATE access_enrollment_invites SET revoked_at = NULL').run()
+  assert.equal(
+    (await resolve({ ...payload, email: ' Test@Example.Test ' })).role,
+    'user',
+    'verified enrollment supplies authority with normalized email'
+  )
+  const claimed = await db
+    .prepare(
+      'SELECT claimed_subject, claimed_at FROM access_enrollment_invites WHERE issuer=? AND email=? AND org_id=?'
+    )
+    .bind(issuer, 'test@example.test', 'a')
+    .first()
+  assert.equal(claimed.claimed_subject, 'subject')
+  assert.equal(typeof claimed.claimed_at, 'string')
+  await db.prepare('DELETE FROM access_memberships').run()
+  assert.equal(
+    (await resolve(payload)).role,
+    'user',
+    'same subject can repair its durable membership'
+  )
+  await db.prepare('DELETE FROM access_memberships').run()
+  assert.equal(
+    await resolve({ ...payload, sub: 'other' }),
+    null,
+    'claimed enrollment cannot be reassigned'
+  )
+  await db.prepare('DELETE FROM access_enrollment_invites').run()
   await db
     .prepare('INSERT INTO access_memberships(issuer,subject,org_id,role) VALUES (?,?,?,?)')
     .bind(issuer, 'subject', 'a', 'user')
@@ -125,7 +167,7 @@ try {
     .run()
   assert.equal(await invoke({ key }), null, 'invalid expiry denied')
   console.log(
-    'D1 membership passed: authoritative roles, tenant isolation, issuer/subject binding, ambiguity and immediate revocation'
+    'D1 membership passed: pre-enrollment claim, authoritative roles, tenant isolation, issuer/subject binding, ambiguity and immediate revocation'
   )
 } finally {
   await worker.dispose()
