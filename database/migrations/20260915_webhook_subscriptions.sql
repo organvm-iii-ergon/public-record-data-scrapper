@@ -4,9 +4,9 @@
 -- Tenant webhook subscriptions
 CREATE TABLE webhook_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id TEXT NOT NULL,
+  org_id UUID NOT NULL REFERENCES organizations(id),
   url TEXT NOT NULL,
-  secret TEXT NOT NULL,  -- stored hashed (SHA-256)
+  secret TEXT NOT NULL,  -- derived HMAC signing key disclosed once to the subscriber
   events TEXT[] NOT NULL DEFAULT '{}',  -- ['prospect.created', '*']
   enabled BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
