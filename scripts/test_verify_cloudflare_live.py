@@ -47,7 +47,19 @@ class LiveTests(unittest.TestCase):
     def test_stale_revision_is_not_deployed(self):
         with self.assertRaisesRegex(live.VerificationError, "live_revision"):
             live.verify_live(ORIGIN, CONFIG, SHA, self.responder(
-                health=(200, {"ok": True, "env": "staging", "revision": "b" * 40}, "", "application/json")))
+                health=(200, {"ok": True, "env": "staging", "revision": "b" * 40}, "", "application/json")),
+                sleeper=lambda _: None)
+
+    def test_health_propagation_is_bounded_and_requires_exact_revision(self):
+        stale = (200, {"ok": True, "env": "staging", "revision": "b" * 40}, "", "application/json")
+        current = (200, {"ok": True, "env": "staging", "revision": SHA}, "", "application/json")
+        responses = iter([stale, stale, current])
+        sleeps = []
+        result = live.require_exact_health(
+            ORIGIN, SHA, "staging", lambda *_args, **_kwargs: next(responses), sleeps.append
+        )
+        self.assertEqual(result, current)
+        self.assertEqual(sleeps, [5, 5])
 
     def test_successful_forged_token_is_rejected(self):
         with self.assertRaisesRegex(live.VerificationError, "authentication_boundary"):
