@@ -1,0 +1,30 @@
+# Pre-existing files exempt from prettier formatting checks
+server/openapi.yaml
+
+# GitHub config files (pre-existing formatting)
+.github/
+
+# Archive and documentation directories (pre-existing formatting)
+docs/
+k8s/
+monitoring/
+playwright-report/
+test-results/
+
+# Database SQL migrations (no SQL parser)
+database/migrations/
+
+# Legacy scripts with pre-existing style
+scripts/academic/
+scripts/audience/
+scripts/scrapers/
+scripts/video-production/
+scripts/ensure-main-branch.mjs
+scripts/proof-of-concept-scraper.ts
+scripts/scheduled-run.ts
+scripts/verify-deploy-prereqs.ts
+
+# Pre-existing files with style deviations
+seed.yaml
+SECURITY.md
+GEMINI.md

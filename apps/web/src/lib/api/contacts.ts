@@ -26,21 +26,10 @@ export interface Contact {
 }
 
 export type ContactRole =
-  | 'owner'
-  | 'ceo'
-  | 'cfo'
-  | 'controller'
-  | 'manager'
-  | 'bookkeeper'
-  | 'other'
+  'owner' | 'ceo' | 'cfo' | 'controller' | 'manager' | 'bookkeeper' | 'other'
 export type ContactMethod = 'email' | 'phone' | 'mobile' | 'sms'
 export type ContactRelationship =
-  | 'owner'
-  | 'decision_maker'
-  | 'influencer'
-  | 'employee'
-  | 'advisor'
-  | 'other'
+  'owner' | 'decision_maker' | 'influencer' | 'employee' | 'advisor' | 'other'
 
 export interface ContactActivity {
   id: string

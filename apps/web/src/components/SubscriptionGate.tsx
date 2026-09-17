@@ -8,10 +8,12 @@ interface SubscriptionGateProps {
 
 export function SubscriptionGate({ children }: SubscriptionGateProps) {
   const { dataTier } = useDataTier()
-  
+
   // Accept any tier that is considered "paid" or premium
-  const isPremium = ['paid', 'starter-tier', 'starter', 'professional', 'enterprise'].includes(dataTier)
-  
+  const isPremium = ['paid', 'starter-tier', 'starter', 'professional', 'enterprise'].includes(
+    dataTier
+  )
+
   if (!isPremium) {
     return (
       <div className="w-full flex flex-col items-center py-8 glass-effect rounded-lg border border-white/10">
@@ -20,7 +22,8 @@ export function SubscriptionGate({ children }: SubscriptionGateProps) {
             Premium Feature
           </h2>
           <p className="text-white/70 max-w-lg mx-auto">
-            This feature requires a premium subscription. Upgrade your plan to unlock advanced analytics, agentic workflows, and deeper intelligence.
+            This feature requires a premium subscription. Upgrade your plan to unlock advanced
+            analytics, agentic workflows, and deeper intelligence.
           </p>
         </div>
         <div className="w-full max-w-5xl bg-black/20 rounded-xl overflow-hidden p-4">

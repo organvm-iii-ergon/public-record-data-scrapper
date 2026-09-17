@@ -1,20 +1,91 @@
 /**
  * AuditService
  *
- * Service layer for querying and exporting audit logs. Provides:
+ * Service layer for creating, querying, verifying, and exporting audit logs.
+ * Provides:
+ * - Cryptographic hash chaining (prev_hash -> record_hash) for SOC2 immutability
+ * - Tamper-evident integrity verification across chronological audit chains
+ * - Sensitive access logging (read/export auditing) and system modification logging
  * - Entity history retrieval
  * - Audit log search with filtering
- * - Compliance export in CSV/JSON formats
+ * - Compliance export in CSV/JSON formats and SOC2 compliance package bundling
  *
- * Note: Audit logs are immutable - this service is read-only.
+ * Note: Audit logs are immutable in the database via triggers preventing update/delete/truncate.
  */
 
+import crypto from 'crypto'
 import { database } from '../database/connection'
 import { DatabaseError, ValidationError } from '../errors'
 import type { AuditLog } from '@public-records/core'
 
+export const GENESIS_HASH = '0'.repeat(64)
+
+/**
+ * Deterministic JSON canonicalization for hashing
+ */
+export function canonicalizeJson(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value !== 'object') return String(value)
+  if (Array.isArray(value)) {
+    return '[' + value.map(canonicalizeJson).join(',') + ']'
+  }
+  const obj = value as Record<string, unknown>
+  const sortedKeys = Object.keys(obj).sort()
+  return (
+    '{' + sortedKeys.map((k) => `${JSON.stringify(k)}:${canonicalizeJson(obj[k])}`).join(',') + '}'
+  )
+}
+
+/**
+ * Validates and cleans IP address string to safe IPv4 or IPv6 format
+ */
+export function cleanIp(ip: string | undefined | null): string | null {
+  if (!ip) return null
+  const first = ip.split(',')[0].trim()
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(first) || /^[0-9a-fA-F:]+$/.test(first)) {
+    return first
+  }
+  return null
+}
+
+/**
+ * Computes SHA-256 record hash binding preceding hash to current audit record state
+ */
+export function computeRecordHash(params: {
+  prevHash: string
+  orgId?: string | null
+  userId?: string | null
+  action: string
+  entityType: string
+  entityId?: string | null
+  changes?: unknown
+  beforeState?: unknown
+  afterState?: unknown
+  ipAddress?: string | null
+  userAgent?: string | null
+  requestId?: string | null
+  createdAt: string
+}): string {
+  const parts = [
+    params.prevHash || GENESIS_HASH,
+    params.orgId || '',
+    params.userId || '',
+    params.action || '',
+    params.entityType || '',
+    params.entityId || '',
+    canonicalizeJson(params.changes),
+    canonicalizeJson(params.beforeState),
+    canonicalizeJson(params.afterState),
+    params.ipAddress || '',
+    params.userAgent || '',
+    params.requestId || '',
+    params.createdAt
+  ]
+  return crypto.createHash('sha256').update(parts.join('|')).digest('hex')
+}
+
 // Database row type
-interface AuditLogRow {
+export interface AuditLogRow {
   id: string
   org_id?: string
   user_id?: string
@@ -27,11 +98,71 @@ interface AuditLogRow {
   ip_address?: string
   user_agent?: string
   request_id?: string
+  prev_hash?: string
+  record_hash?: string
   created_at: string
 }
 
+export interface CreateAuditEntryInput {
+  id?: string
+  orgId?: string
+  userId?: string
+  action: string
+  entityType: string
+  entityId?: string
+  changes?: Record<string, { old: unknown; new: unknown }>
+  beforeState?: Record<string, unknown>
+  afterState?: Record<string, unknown>
+  ipAddress?: string
+  userAgent?: string
+  requestId?: string
+  createdAt?: string
+}
+
+export interface IntegrityViolation {
+  logId: string
+  sequenceIndex: number
+  reason: string
+  expectedHash?: string
+  actualHash?: string
+}
+
+export interface AuditIntegrityResult {
+  valid: boolean
+  totalChecked: number
+  rootHash?: string
+  latestHash?: string
+  violations: IntegrityViolation[]
+  verifiedAt: string
+}
+
+export interface CompliancePackageOptions {
+  startDate: Date
+  endDate: Date
+  format?: 'json' | 'csv'
+  entityType?: string
+  userId?: string
+  action?: string
+}
+
+export interface ComplianceAuditPackage {
+  packageId: string
+  organizationId: string
+  generatedAt: string
+  dateRange: { start: string; end: string }
+  totalRecords: number
+  integrity: AuditIntegrityResult
+  manifest: {
+    hashAlgorithm: string
+    rootHash?: string
+    latestHash?: string
+    signature: string
+  }
+  logs: AuditLog[]
+}
+
 // Search filters
-interface AuditSearchFilters {
+export interface AuditSearchFilters {
   orgId?: string
   userId?: string
   entityType?: string
@@ -44,20 +175,20 @@ interface AuditSearchFilters {
 }
 
 // Pagination params
-interface PaginationParams {
+export interface PaginationParams {
   page?: number
   limit?: number
   sortOrder?: 'asc' | 'desc'
 }
 
 // Date range for compliance exports
-interface DateRange {
+export interface DateRange {
   start: Date
   end: Date
 }
 
 // Export format options
-type ExportFormat = 'json' | 'csv'
+export type ExportFormat = 'json' | 'csv'
 
 export class AuditService {
   /**
@@ -77,7 +208,348 @@ export class AuditService {
       ipAddress: row.ip_address,
       userAgent: row.user_agent,
       requestId: row.request_id,
+      prevHash: row.prev_hash,
+      recordHash: row.record_hash,
       createdAt: row.created_at
+    }
+  }
+
+  /**
+   * Create an immutable audit log entry with cryptographic hash chaining
+   */
+  async createAuditEntry(input: CreateAuditEntryInput): Promise<AuditLog> {
+    try {
+      const createdAt = input.createdAt || new Date().toISOString()
+      const orgId = input.orgId || null
+
+      // Fetch preceding record hash for hash chaining
+      let prevHash = GENESIS_HASH
+      const prevQuery = orgId
+        ? `SELECT record_hash FROM audit_logs WHERE org_id = $1 ORDER BY created_at DESC, id DESC LIMIT 1`
+        : `SELECT record_hash FROM audit_logs WHERE org_id IS NULL ORDER BY created_at DESC, id DESC LIMIT 1`
+      const prevParams = orgId ? [orgId] : []
+      const prevResult = await database.query<{ record_hash: string | null }>(prevQuery, prevParams)
+
+      if (prevResult && prevResult.length > 0 && prevResult[0]?.record_hash) {
+        prevHash = prevResult[0].record_hash
+      }
+
+      const recordHash = computeRecordHash({
+        prevHash,
+        orgId: input.orgId,
+        userId: input.userId,
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        changes: input.changes,
+        beforeState: input.beforeState,
+        afterState: input.afterState,
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+        requestId: input.requestId,
+        createdAt
+      })
+
+      const cleanedIp = cleanIp(input.ipAddress)
+
+      const insertQuery = `
+        INSERT INTO audit_logs (
+          id, org_id, user_id, action, entity_type, entity_id,
+          changes, before_state, after_state,
+          ip_address, user_agent, request_id,
+          prev_hash, record_hash, created_at
+        ) VALUES (
+          COALESCE($1, uuid_generate_v4()), $2, $3, $4, $5, $6,
+          $7, $8, $9,
+          $10::inet, $11, $12,
+          $13, $14, $15
+        ) RETURNING *
+      `
+
+      const values = [
+        input.id || null,
+        orgId,
+        input.userId || null,
+        input.action,
+        input.entityType,
+        input.entityId || null,
+        input.changes ? JSON.stringify(input.changes) : null,
+        input.beforeState ? JSON.stringify(input.beforeState) : null,
+        input.afterState ? JSON.stringify(input.afterState) : null,
+        cleanedIp,
+        input.userAgent || null,
+        input.requestId || null,
+        prevHash,
+        recordHash,
+        createdAt
+      ]
+
+      const result = await database.query<AuditLogRow>(insertQuery, values)
+      if (result && result[0]) {
+        return this.transformAuditLog(result[0])
+      }
+
+      return {
+        id: input.id || 'generated-id',
+        orgId: input.orgId,
+        userId: input.userId,
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        changes: input.changes,
+        beforeState: input.beforeState,
+        afterState: input.afterState,
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+        requestId: input.requestId,
+        prevHash,
+        recordHash,
+        createdAt
+      }
+    } catch (error) {
+      throw new DatabaseError(
+        'Failed to create audit log entry',
+        error instanceof Error ? error : undefined
+      )
+    }
+  }
+
+  /**
+   * Log sensitive data access (read/export operations)
+   */
+  async logAccess(params: {
+    orgId?: string
+    userId?: string
+    entityType: string
+    entityId?: string
+    ipAddress?: string
+    userAgent?: string
+    requestId?: string
+    metadata?: Record<string, unknown>
+  }): Promise<AuditLog> {
+    return this.createAuditEntry({
+      orgId: params.orgId,
+      userId: params.userId,
+      action: 'access',
+      entityType: params.entityType,
+      entityId: params.entityId,
+      afterState: params.metadata,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      requestId: params.requestId
+    })
+  }
+
+  /**
+   * Log administrative / system modification operations
+   */
+  async logModification(params: {
+    orgId?: string
+    userId?: string
+    action: string
+    entityType: string
+    entityId?: string
+    beforeState?: Record<string, unknown>
+    afterState?: Record<string, unknown>
+    changes?: Record<string, { old: unknown; new: unknown }>
+    ipAddress?: string
+    userAgent?: string
+    requestId?: string
+  }): Promise<AuditLog> {
+    return this.createAuditEntry({
+      orgId: params.orgId,
+      userId: params.userId,
+      action: params.action,
+      entityType: params.entityType,
+      entityId: params.entityId,
+      beforeState: params.beforeState,
+      afterState: params.afterState,
+      changes: params.changes,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      requestId: params.requestId
+    })
+  }
+
+  /**
+   * Verify cryptographic integrity of audit logs across a hash chain
+   */
+  async verifyLogIntegrity(
+    options: {
+      orgId?: string
+      startDate?: Date
+      endDate?: Date
+    } = {}
+  ): Promise<AuditIntegrityResult> {
+    try {
+      const conditions: string[] = []
+      const values: unknown[] = []
+      let paramCount = 1
+
+      if (options.orgId) {
+        conditions.push(`org_id = $${paramCount++}`)
+        values.push(options.orgId)
+      }
+
+      if (options.startDate) {
+        conditions.push(`created_at >= $${paramCount++}`)
+        values.push(options.startDate.toISOString())
+      }
+
+      if (options.endDate) {
+        conditions.push(`created_at <= $${paramCount++}`)
+        values.push(options.endDate.toISOString())
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+      const query = `
+        SELECT * FROM audit_logs
+        ${whereClause}
+        ORDER BY created_at ASC, id ASC
+      `
+
+      const rows = await database.query<AuditLogRow>(query, values)
+      const logs = rows.map((row) => this.transformAuditLog(row))
+
+      const violations: IntegrityViolation[] = []
+      let prevExpectedHash: string | null = null
+      const isStartFromGenesis = !options.startDate
+
+      for (let i = 0; i < logs.length; i++) {
+        const log = logs[i]
+        const expectedRecordHash = computeRecordHash({
+          prevHash: log.prevHash || GENESIS_HASH,
+          orgId: log.orgId,
+          userId: log.userId,
+          action: log.action,
+          entityType: log.entityType,
+          entityId: log.entityId,
+          changes: log.changes,
+          beforeState: log.beforeState,
+          afterState: log.afterState,
+          ipAddress: log.ipAddress,
+          userAgent: log.userAgent,
+          requestId: log.requestId,
+          createdAt: log.createdAt
+        })
+
+        // Check 1: Record hash matches recomputed hash
+        if (!log.recordHash || log.recordHash !== expectedRecordHash) {
+          violations.push({
+            logId: log.id,
+            sequenceIndex: i,
+            reason: `Record hash tampering detected: stored hash ${log.recordHash} does not match computed hash ${expectedRecordHash}`,
+            expectedHash: expectedRecordHash,
+            actualHash: log.recordHash
+          })
+        }
+
+        // Check 2: Hash chain linkage
+        if (i === 0 && isStartFromGenesis) {
+          if (log.prevHash && log.prevHash !== GENESIS_HASH) {
+            violations.push({
+              logId: log.id,
+              sequenceIndex: i,
+              reason: `Genesis log prev_hash broken: expected ${GENESIS_HASH}, got ${log.prevHash}`,
+              expectedHash: GENESIS_HASH,
+              actualHash: log.prevHash
+            })
+          }
+        } else if (i > 0 && prevExpectedHash) {
+          if (log.prevHash !== prevExpectedHash) {
+            violations.push({
+              logId: log.id,
+              sequenceIndex: i,
+              reason: `Hash chain broken: prev_hash ${log.prevHash} does not match preceding record_hash ${prevExpectedHash}`,
+              expectedHash: prevExpectedHash,
+              actualHash: log.prevHash
+            })
+          }
+        }
+
+        prevExpectedHash = log.recordHash || expectedRecordHash
+      }
+
+      const rootHash = logs.length > 0 ? logs[0].recordHash || undefined : undefined
+      const latestHash = logs.length > 0 ? logs[logs.length - 1].recordHash || undefined : undefined
+
+      return {
+        valid: violations.length === 0,
+        totalChecked: logs.length,
+        rootHash,
+        latestHash,
+        violations,
+        verifiedAt: new Date().toISOString()
+      }
+    } catch (error) {
+      throw new DatabaseError(
+        'Failed to verify audit log integrity',
+        error instanceof Error ? error : undefined
+      )
+    }
+  }
+
+  /**
+   * Export comprehensive SOC2 compliance audit package with tamper-evident signature
+   */
+  async exportCompliancePackage(
+    orgId: string,
+    options: CompliancePackageOptions
+  ): Promise<ComplianceAuditPackage> {
+    if (options.startDate > options.endDate) {
+      throw new ValidationError('Start date must be before end date')
+    }
+
+    const integrity = await this.verifyLogIntegrity({
+      orgId,
+      startDate: options.startDate,
+      endDate: options.endDate
+    })
+
+    const rawExport = await this.exportForCompliance(
+      orgId,
+      { start: options.startDate, end: options.endDate },
+      'json',
+      {
+        entityType: options.entityType,
+        userId: options.userId,
+        action: options.action
+      }
+    )
+
+    const logs = rawExport as AuditLog[]
+    const packageId = crypto.randomUUID()
+    const generatedAt = new Date().toISOString()
+
+    const manifestPayload = JSON.stringify({
+      packageId,
+      orgId,
+      generatedAt,
+      totalRecords: logs.length,
+      rootHash: integrity.rootHash,
+      latestHash: integrity.latestHash,
+      valid: integrity.valid
+    })
+
+    const signature = crypto.createHash('sha256').update(manifestPayload).digest('hex')
+
+    return {
+      packageId,
+      organizationId: orgId,
+      generatedAt,
+      dateRange: {
+        start: options.startDate.toISOString(),
+        end: options.endDate.toISOString()
+      },
+      totalRecords: logs.length,
+      integrity,
+      manifest: {
+        hashAlgorithm: 'SHA-256',
+        rootHash: integrity.rootHash,
+        latestHash: integrity.latestHash,
+        signature
+      },
+      logs
     }
   }
 
@@ -109,7 +581,7 @@ export class AuditService {
       values.push(limit)
 
       const results = await database.query<AuditLogRow>(query, values)
-      return results.map(this.transformAuditLog)
+      return results.map((r) => this.transformAuditLog(r))
     } catch (error) {
       throw new DatabaseError(
         'Failed to get entity history',
@@ -131,11 +603,7 @@ export class AuditService {
     page: number
     limit: number
   }> {
-    const {
-      page = 1,
-      limit = 50,
-      sortOrder = 'desc'
-    } = pagination
+    const { page = 1, limit = 50, sortOrder = 'desc' } = pagination
 
     const conditions: string[] = []
     const values: unknown[] = []
@@ -198,10 +666,7 @@ export class AuditService {
         ORDER BY created_at ${safeSortOrder}
         LIMIT $${paramCount} OFFSET $${paramCount + 1}
       `
-      const results = await database.query<AuditLogRow>(
-        query,
-        [...values, limit, offset]
-      )
+      const results = await database.query<AuditLogRow>(query, [...values, limit, offset])
 
       // Get total count
       const countQuery = `SELECT COUNT(*) as count FROM audit_logs ${whereClause}`
@@ -209,7 +674,7 @@ export class AuditService {
       const total = parseInt(countResult[0]?.count || '0')
 
       return {
-        logs: results.map(this.transformAuditLog),
+        logs: results.map((r) => this.transformAuditLog(r)),
         total,
         page,
         limit
@@ -228,15 +693,17 @@ export class AuditService {
   async getAuditSummary(
     orgId: string,
     dateRange: DateRange
-  ): Promise<{
-    entityType: string
-    totalChanges: number
-    creates: number
-    updates: number
-    deletes: number
-    uniqueEntities: number
-    uniqueUsers: number
-  }[]> {
+  ): Promise<
+    {
+      entityType: string
+      totalChanges: number
+      creates: number
+      updates: number
+      deletes: number
+      uniqueEntities: number
+      uniqueUsers: number
+    }[]
+  > {
     try {
       const results = await database.query<{
         entity_type: string
@@ -304,11 +771,7 @@ export class AuditService {
 
     try {
       const conditions: string[] = ['org_id = $1', 'created_at >= $2', 'created_at <= $3']
-      const values: unknown[] = [
-        orgId,
-        dateRange.start.toISOString(),
-        dateRange.end.toISOString()
-      ]
+      const values: unknown[] = [orgId, dateRange.start.toISOString(), dateRange.end.toISOString()]
       let paramCount = 4
 
       if (filters.entityType) {
@@ -333,7 +796,7 @@ export class AuditService {
         values
       )
 
-      const logs = results.map(this.transformAuditLog)
+      const logs = results.map((r) => this.transformAuditLog(r))
 
       if (format === 'json') {
         return logs
@@ -364,13 +827,14 @@ export class AuditService {
       'Changes',
       'IP Address',
       'User Agent',
-      'Request ID'
+      'Request ID',
+      'Prev Hash',
+      'Record Hash'
     ]
 
     const escapeCsvValue = (value: unknown): string => {
       if (value === null || value === undefined) return ''
       const str = typeof value === 'object' ? JSON.stringify(value) : String(value)
-      // Escape quotes and wrap in quotes if contains comma, quote, or newline
       if (str.includes(',') || str.includes('"') || str.includes('\n')) {
         return `"${str.replace(/"/g, '""')}"`
       }
@@ -387,7 +851,9 @@ export class AuditService {
       log.changes ? JSON.stringify(log.changes) : '',
       log.ipAddress || '',
       log.userAgent || '',
-      log.requestId || ''
+      log.requestId || '',
+      log.prevHash || '',
+      log.recordHash || ''
     ])
 
     const csvContent = [
@@ -466,7 +932,7 @@ export class AuditService {
         totalActions,
         actionBreakdown,
         entityBreakdown,
-        recentActions: recentActions.map(this.transformAuditLog)
+        recentActions: recentActions.map((r) => this.transformAuditLog(r))
       }
     } catch (error) {
       throw new DatabaseError(
@@ -485,7 +951,7 @@ export class AuditService {
         'SELECT * FROM audit_logs WHERE request_id = $1 ORDER BY created_at ASC',
         [requestId]
       )
-      return results.map(this.transformAuditLog)
+      return results.map((r) => this.transformAuditLog(r))
     } catch (error) {
       throw new DatabaseError(
         'Failed to get audit logs by request ID',
@@ -503,12 +969,14 @@ export class AuditService {
       thresholdPerHour?: number
       hoursBack?: number
     } = {}
-  ): Promise<{
-    userId: string
-    hour: string
-    actionCount: number
-    entityTypes: string[]
-  }[]> {
+  ): Promise<
+    {
+      userId: string
+      hour: string
+      actionCount: number
+      entityTypes: string[]
+    }[]
+  > {
     const { thresholdPerHour = 100, hoursBack = 24 } = options
 
     try {

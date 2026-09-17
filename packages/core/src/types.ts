@@ -168,12 +168,7 @@ export interface OutreachEmail {
 
 // Recursive & Advanced Feature Types
 export type RelationshipType =
-  | 'parent'
-  | 'subsidiary'
-  | 'affiliate'
-  | 'common_secured_party'
-  | 'guarantor'
-  | 'same_industry'
+  'parent' | 'subsidiary' | 'affiliate' | 'common_secured_party' | 'guarantor' | 'same_industry'
 
 export interface CompanyRelationship {
   fromCompanyId: string
@@ -365,12 +360,7 @@ export interface GenerativeReport {
 }
 
 export type EnrichmentStepType =
-  | 'revenue'
-  | 'industry'
-  | 'signals'
-  | 'health'
-  | 'relationships'
-  | 'market'
+  'revenue' | 'industry' | 'signals' | 'health' | 'relationships' | 'market'
 
 export interface EnrichmentStep {
   id: string
@@ -563,21 +553,10 @@ export interface User {
 
 // CRM / Contacts
 export type ContactRole =
-  | 'owner'
-  | 'ceo'
-  | 'cfo'
-  | 'controller'
-  | 'manager'
-  | 'bookkeeper'
-  | 'other'
+  'owner' | 'ceo' | 'cfo' | 'controller' | 'manager' | 'bookkeeper' | 'other'
 export type ContactMethod = 'email' | 'phone' | 'mobile' | 'sms'
 export type ContactRelationship =
-  | 'owner'
-  | 'decision_maker'
-  | 'influencer'
-  | 'employee'
-  | 'advisor'
-  | 'other'
+  'owner' | 'decision_maker' | 'influencer' | 'employee' | 'advisor' | 'other'
 
 export interface Contact {
   id: string
@@ -856,13 +835,7 @@ export type CollectionMethod =
   | 'imported'
 
 export type DisclosureStatus =
-  | 'draft'
-  | 'generated'
-  | 'sent'
-  | 'viewed'
-  | 'signed'
-  | 'expired'
-  | 'superseded'
+  'draft' | 'generated' | 'sent' | 'viewed' | 'signed' | 'expired' | 'superseded'
 
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical'
 export type AlertStatus = 'open' | 'acknowledged' | 'investigating' | 'resolved' | 'false_positive'
@@ -953,6 +926,8 @@ export interface AuditLog {
   ipAddress?: string
   userAgent?: string
   requestId?: string
+  prevHash?: string
+  recordHash?: string
   createdAt: string
 }
 

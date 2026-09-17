@@ -167,7 +167,7 @@ export class TXBulkCollector implements StateCollector {
     const headers: Record<string, string> = {
       'X-SOSDirect-API-Key': this.config.apiKey,
       'X-SOSDirect-Account-ID': this.config.accountId,
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json'
     }
 
@@ -205,7 +205,7 @@ export class TXBulkCollector implements StateCollector {
           throw new Error(`TX SOSDirect error ${response.status}: ${errorText}`)
         }
 
-        return await response.json() as T
+        return (await response.json()) as T
       } catch (error) {
         lastError = error as Error
         this.stats.totalErrors++
@@ -243,7 +243,7 @@ export class TXBulkCollector implements StateCollector {
     const filings = bulkData.map(this.transformFiling.bind(this))
 
     // Cache filings for quick lookup
-    filings.forEach(filing => {
+    filings.forEach((filing) => {
       this.cachedFilings.set(filing.filingNumber, filing)
     })
 
@@ -265,7 +265,7 @@ export class TXBulkCollector implements StateCollector {
       headers: {
         'X-SOSDirect-API-Key': this.config.apiKey,
         'X-SOSDirect-Account-ID': this.config.accountId,
-        'Accept': 'application/json'
+        Accept: 'application/json'
       },
       signal: AbortSignal.timeout(this.config.timeout)
     })
@@ -274,7 +274,7 @@ export class TXBulkCollector implements StateCollector {
       throw new Error(`Failed to download bulk file: ${response.status}`)
     }
 
-    return await response.json() as TXBulkFilingRecord[]
+    return (await response.json()) as TXBulkFilingRecord[]
   }
 
   /**
@@ -392,14 +392,12 @@ export class TXBulkCollector implements StateCollector {
         // Filter by filing types if specified
         let filtered = dayFilings
         if (options.filingTypes?.length) {
-          filtered = dayFilings.filter(f =>
-            options.filingTypes!.includes(f.filingType)
-          )
+          filtered = dayFilings.filter((f) => options.filingTypes!.includes(f.filingType))
         }
 
         // Filter by status if not including inactive
         if (!options.includeInactive) {
-          filtered = filtered.filter(f => f.status === 'active')
+          filtered = filtered.filter((f) => f.status === 'active')
         }
 
         allFilings.push(...filtered)
@@ -409,7 +407,10 @@ export class TXBulkCollector implements StateCollector {
           break
         }
       } catch (error) {
-        console.warn(`Failed to download bulk data for ${currentDate.toISOString().split('T')[0]}:`, error)
+        console.warn(
+          `Failed to download bulk data for ${currentDate.toISOString().split('T')[0]}:`,
+          error
+        )
       }
 
       // Move to next day
@@ -469,17 +470,18 @@ export class TXBulkCollector implements StateCollector {
     const rateLimitStats = this.rateLimiter.getStats()
 
     return {
-      isHealthy: this.stats.totalDownloads > 0
-        ? this.stats.totalErrors / this.stats.totalDownloads < 0.1
-        : true,
+      isHealthy:
+        this.stats.totalDownloads > 0
+          ? this.stats.totalErrors / this.stats.totalDownloads < 0.1
+          : true,
       lastCollectionTime: this.stats.lastCollectionTime,
       totalCollected: this.stats.totalCollected,
-      errorRate: this.stats.totalDownloads > 0
-        ? this.stats.totalErrors / this.stats.totalDownloads
-        : 0,
-      averageLatency: this.stats.latencies.length > 0
-        ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
-        : 0,
+      errorRate:
+        this.stats.totalDownloads > 0 ? this.stats.totalErrors / this.stats.totalDownloads : 0,
+      averageLatency:
+        this.stats.latencies.length > 0
+          ? this.stats.latencies.reduce((a, b) => a + b, 0) / this.stats.latencies.length
+          : 0,
       rateLimitStats: {
         perMinute: rateLimitStats.perMinute,
         perHour: rateLimitStats.perHour,
@@ -523,8 +525,8 @@ export class TXBulkCollector implements StateCollector {
       state: 'TX',
       securedParty: this.transformParty(record.secured_party_information[0]),
       debtor: this.transformParty(record.debtor_information[0]),
-      assignee: record.additional_parties?.find(p => p.party_type === 'ASSIGNEE')
-        ? this.transformParty(record.additional_parties.find(p => p.party_type === 'ASSIGNEE'))
+      assignee: record.additional_parties?.find((p) => p.party_type === 'ASSIGNEE')
+        ? this.transformParty(record.additional_parties.find((p) => p.party_type === 'ASSIGNEE'))
         : undefined,
       collateral: record.collateral_description || '',
       pages: record.page_count,
@@ -559,15 +561,17 @@ export class TXBulkCollector implements StateCollector {
     return {
       name,
       organizationType: party.organization_name ? 'organization' : 'individual',
-      address: party.mailing_address ? {
-        street: [party.mailing_address.address_line_1, party.mailing_address.address_line_2]
-          .filter(Boolean)
-          .join(' '),
-        city: party.mailing_address.city,
-        state: party.mailing_address.state,
-        zipCode: party.mailing_address.postal_code,
-        country: party.mailing_address.country || 'US'
-      } : undefined
+      address: party.mailing_address
+        ? {
+            street: [party.mailing_address.address_line_1, party.mailing_address.address_line_2]
+              .filter(Boolean)
+              .join(' '),
+            city: party.mailing_address.city,
+            state: party.mailing_address.state,
+            zipCode: party.mailing_address.postal_code,
+            country: party.mailing_address.country || 'US'
+          }
+        : undefined
     }
   }
 
@@ -588,9 +592,24 @@ export class TXBulkCollector implements StateCollector {
    */
   private normalizeFilingType(type: string): string {
     const normalized = type.toUpperCase().replace(/\s+/g, '')
-    if (normalized.includes('UCC1') || normalized.includes('UCC-1') || normalized.includes('INITIAL')) return 'UCC-1'
-    if (normalized.includes('UCC3') || normalized.includes('UCC-3') || normalized.includes('AMENDMENT')) return 'UCC-3'
-    if (normalized.includes('UCC5') || normalized.includes('UCC-5') || normalized.includes('CORRECTION')) return 'UCC-5'
+    if (
+      normalized.includes('UCC1') ||
+      normalized.includes('UCC-1') ||
+      normalized.includes('INITIAL')
+    )
+      return 'UCC-1'
+    if (
+      normalized.includes('UCC3') ||
+      normalized.includes('UCC-3') ||
+      normalized.includes('AMENDMENT')
+    )
+      return 'UCC-3'
+    if (
+      normalized.includes('UCC5') ||
+      normalized.includes('UCC-5') ||
+      normalized.includes('CORRECTION')
+    )
+      return 'UCC-5'
     return type
   }
 
@@ -631,7 +650,7 @@ export class TXBulkCollector implements StateCollector {
    * Delay helper
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 }
 
@@ -643,7 +662,9 @@ export function createTXBulkCollector(): TXBulkCollector | null {
   const accountId = process.env.TX_SOSDIRECT_ACCOUNT_ID
 
   if (!apiKey || !accountId) {
-    console.warn('TX_SOSDIRECT_API_KEY or TX_SOSDIRECT_ACCOUNT_ID not set, TX Bulk collector unavailable')
+    console.warn(
+      'TX_SOSDIRECT_API_KEY or TX_SOSDIRECT_ACCOUNT_ID not set, TX Bulk collector unavailable'
+    )
     return null
   }
 

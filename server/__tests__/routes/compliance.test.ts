@@ -24,7 +24,9 @@ const {
   // AuditService
   mockAuditSearch,
   mockAuditExport,
-  mockAuditEntityHistory
+  mockAuditEntityHistory,
+  mockAuditVerify,
+  mockAuditExportPackage
 } = vi.hoisted(() => ({
   mockDisclosureList: vi.fn(),
   mockDisclosureGetById: vi.fn(),
@@ -38,7 +40,9 @@ const {
   mockConsentRevoke: vi.fn(),
   mockAuditSearch: vi.fn(),
   mockAuditExport: vi.fn(),
-  mockAuditEntityHistory: vi.fn()
+  mockAuditEntityHistory: vi.fn(),
+  mockAuditVerify: vi.fn(),
+  mockAuditExportPackage: vi.fn()
 }))
 
 vi.mock('../../services/DisclosureService', () => ({
@@ -65,7 +69,9 @@ vi.mock('../../services/AuditService', () => ({
   auditService: {
     searchAuditLogs: mockAuditSearch,
     exportForCompliance: mockAuditExport,
-    getEntityHistory: mockAuditEntityHistory
+    getEntityHistory: mockAuditEntityHistory,
+    verifyLogIntegrity: mockAuditVerify,
+    exportCompliancePackage: mockAuditExportPackage
   }
 }))
 
