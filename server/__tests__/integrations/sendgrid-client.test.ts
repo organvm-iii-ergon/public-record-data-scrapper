@@ -68,7 +68,12 @@ describe('SendGrid transport contract', () => {
     expect(fetchRequest.mock.calls[0][1]?.body).toBeUndefined()
   })
   it.each([
-    [JSON.stringify({ errors: [{ message: 'Denied', field: 'personalizations.0.to.0.email' }, {}] }), 'Denied'],
+    [
+      JSON.stringify({
+        errors: [{ message: 'Denied', field: 'personalizations.0.to.0.email' }, {}]
+      }),
+      'Denied'
+    ],
     ['upstream outage', 'upstream outage'],
     ['', 'SendGrid request failed with status 503']
   ])('reports provider failure for %s', async (payload, message) => {
