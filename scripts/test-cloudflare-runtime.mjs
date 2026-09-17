@@ -255,6 +255,74 @@ try {
   })
   assert.equal(validBearerRes.status, 200)
 
+  // 3g. The six dashboard surfaces share one authoritative tenant snapshot.
+  const unauthDashboard = await worker.dispatchFetch('http://localhost/api/dashboard')
+  assert.equal(unauthDashboard.status, 401)
+  const prospectPayload = {
+    id: 'payload-id-must-not-win',
+    companyName: 'Authoritative Company',
+    industry: 'construction',
+    state: 'CA',
+    status: 'dead',
+    priorityScore: 81,
+    defaultDate: '2021-01-01',
+    timeSinceDefault: 5,
+    uccFilings: [],
+    growthSignals: [],
+    healthScore: { score: 60, grade: 'C' },
+    narrative: 'Imported from a verified tenant source.'
+  }
+  const recordResponse = await worker.dispatchFetch(
+    'http://localhost/api/dashboard/records/prospects/prospect-source-1',
+    {
+      method: 'PUT',
+      headers: { 'X-API-Key': growthKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payload: prospectPayload,
+        sourceRef: 'receipt:test:1',
+        observedAt: '2026-09-17T00:00:00Z'
+      })
+    }
+  )
+  assert.equal(recordResponse.status, 200)
+  assert.equal((await recordResponse.json()).id, 'prospect-source-1')
+  const noProvenance = await worker.dispatchFetch(
+    'http://localhost/api/dashboard/records/prospects/rejected',
+    {
+      method: 'PUT',
+      headers: { 'X-API-Key': growthKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload: prospectPayload, observedAt: '2026-09-17T00:00:00Z' })
+    }
+  )
+  assert.equal(noProvenance.status, 400)
+  const actionResponse = await worker.dispatchFetch('http://localhost/api/dashboard/actions', {
+    method: 'POST',
+    headers: { 'X-API-Key': growthKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'refresh-data',
+      timestamp: '2026-09-17T00:01:00Z',
+      details: { source: 'test' }
+    })
+  })
+  assert.equal(actionResponse.status, 201)
+  const growthDashboardResponse = await worker.dispatchFetch('http://localhost/api/dashboard', {
+    headers: { 'X-API-Key': growthKey }
+  })
+  assert.equal(growthDashboardResponse.status, 200)
+  const growthDashboard = await growthDashboardResponse.json()
+  assert.equal(growthDashboard.prospects.length, 1)
+  assert.equal(growthDashboard.prospects[0].id, 'prospect-source-1')
+  assert.deepEqual(growthDashboard.competitors, [])
+  assert.deepEqual(growthDashboard.portfolio, [])
+  assert.equal(growthDashboard.userActions[0].type, 'refresh-data')
+  const freeDashboardResponse = await worker.dispatchFetch('http://localhost/api/dashboard', {
+    headers: { 'X-API-Key': freeKey }
+  })
+  assert.equal(freeDashboardResponse.status, 200)
+  const freeDashboard = await freeDashboardResponse.json()
+  assert.deepEqual(freeDashboard.prospects, [])
+  assert.deepEqual(freeDashboard.userActions, [])
+
   // 4. Prospect Ingestion & Strict Tenant Isolation (Telos #3)
   // Org Growth creates a prospect
   const createProspectRes = await worker.dispatchFetch('http://localhost/v1/prospects', {

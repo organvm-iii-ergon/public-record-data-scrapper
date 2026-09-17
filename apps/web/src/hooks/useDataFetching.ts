@@ -1,10 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Prospect, CompetitorData, PortfolioCompany, DataTier } from '@public-records/core'
 import { UserAction } from '@/lib/agentic/types'
-import { fetchProspects } from '@/lib/api/prospects'
-import { fetchCompetitors } from '@/lib/api/competitors'
-import { fetchPortfolio } from '@/lib/api/portfolio'
-import { fetchUserActions } from '@/lib/api/userActions'
+import { fetchDashboard } from '@/lib/api/dashboard'
 
 export interface UseDataFetchingOptions {
   /** Legacy option is ignored: application data always comes from the API. */
@@ -33,9 +30,7 @@ export interface UseDataFetchingResult {
   fetchData: (options?: { signal?: AbortSignal; silent?: boolean }) => Promise<boolean>
 }
 
-export function useDataFetching({
-  dataTier = 'oss'
-}: UseDataFetchingOptions): UseDataFetchingResult {
+export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchingResult {
   // Do not hydrate business records from unscoped legacy storage: it can contain
   // synthetic records or a previous tenant's data. Reload from the API each mount.
   const [prospects, setProspects] = useState<Prospect[]>([])
@@ -55,12 +50,16 @@ export function useDataFetching({
       setLoadError(null)
 
       try {
-        const [liveProspects, liveCompetitors, livePortfolio, liveUserActions] = await Promise.all([
-          fetchProspects(signal, { dataTier }),
-          fetchCompetitors(signal, { dataTier }),
-          fetchPortfolio(signal, { dataTier }),
-          fetchUserActions(signal, { dataTier })
-        ])
+        const snapshot = await fetchDashboard(signal)
+        if (!snapshot || typeof snapshot !== 'object') {
+          throw new Error('The API returned an invalid dataset. Please retry or contact support.')
+        }
+        const {
+          prospects: liveProspects,
+          competitors: liveCompetitors,
+          portfolio: livePortfolio,
+          userActions: liveUserActions
+        } = snapshot
 
         if (signal?.aborted) {
           return false
@@ -98,7 +97,7 @@ export function useDataFetching({
         }
       }
     },
-    [dataTier, setProspects, setCompetitors, setPortfolio, setUserActions, setLastDataRefresh]
+    []
   )
 
   useEffect(() => {

@@ -41,7 +41,7 @@ import { generateDashboardStats } from '@/lib/dashboardStats'
 import { Prospect } from '@public-records/core'
 import { ExportFormat } from '@/lib/exportUtils'
 import { UserAction } from '@/lib/agentic/types'
-import { logUserAction } from '@/lib/api/userActions'
+import { logDashboardAction } from '@/lib/api/dashboard'
 import { toast } from 'sonner'
 
 function DashboardApp() {
@@ -82,7 +82,7 @@ function DashboardApp() {
 
       if (!useDemoData) {
         try {
-          await logUserAction(newAction)
+          await logDashboardAction(newAction)
         } catch (error) {
           console.error('Failed to persist user action', error)
         }
@@ -271,7 +271,7 @@ function DashboardApp() {
 
             <TabsContent value="requalification" className="space-y-4 sm:space-y-6">
               <SubscriptionGate>
-                <RequalificationTab />
+                <RequalificationTab prospects={data.prospects} />
               </SubscriptionGate>
             </TabsContent>
 

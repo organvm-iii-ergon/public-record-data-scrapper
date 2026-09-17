@@ -19,26 +19,10 @@ vi.mock('@/lib/mockData', () => ({
   )
 }))
 
-// Mock API functions
-const mockFetchProspects = vi.fn()
-const mockFetchCompetitors = vi.fn()
-const mockFetchPortfolio = vi.fn()
-const mockFetchUserActions = vi.fn()
-
-vi.mock('@/lib/api/prospects', () => ({
-  fetchProspects: (...args: unknown[]) => mockFetchProspects(...args)
-}))
-
-vi.mock('@/lib/api/competitors', () => ({
-  fetchCompetitors: (...args: unknown[]) => mockFetchCompetitors(...args)
-}))
-
-vi.mock('@/lib/api/portfolio', () => ({
-  fetchPortfolio: (...args: unknown[]) => mockFetchPortfolio(...args)
-}))
-
-vi.mock('@/lib/api/userActions', () => ({
-  fetchUserActions: (...args: unknown[]) => mockFetchUserActions(...args)
+// One tenant snapshot feeds every dashboard surface.
+const mockFetchDashboard = vi.fn()
+vi.mock('@/lib/api/dashboard', () => ({
+  fetchDashboard: (...args: unknown[]) => mockFetchDashboard(...args)
 }))
 
 // Mock useSafeKV
@@ -89,10 +73,12 @@ describe('useDataFetching', () => {
     Object.keys(mockKVStore).forEach((key) => delete mockKVStore[key])
 
     // Default mock implementations
-    mockFetchProspects.mockResolvedValue([{ id: 'live-1', companyName: 'Live Company' }])
-    mockFetchCompetitors.mockResolvedValue([{ id: 'comp-1', name: 'Competitor 1' }])
-    mockFetchPortfolio.mockResolvedValue([{ id: 'port-1', name: 'Portfolio 1' }])
-    mockFetchUserActions.mockResolvedValue([{ id: 'action-1', type: 'click' }])
+    mockFetchDashboard.mockResolvedValue({
+      prospects: [{ id: 'live-1', companyName: 'Live Company' }],
+      competitors: [{ id: 'comp-1', name: 'Competitor 1' }],
+      portfolio: [{ id: 'port-1', name: 'Portfolio 1' }],
+      userActions: [{ id: 'action-1', type: 'click' }]
+    })
   })
 
   describe('initial state', () => {
@@ -137,48 +123,41 @@ describe('useDataFetching', () => {
       expect(result.current.userActions).toHaveLength(1)
     })
 
-    it('should call live API endpoints despite legacy mock mode', async () => {
+    it('should call the tenant snapshot despite legacy mock mode', async () => {
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      expect(mockFetchProspects).toHaveBeenCalled()
-      expect(mockFetchCompetitors).toHaveBeenCalled()
-      expect(mockFetchPortfolio).toHaveBeenCalled()
-      expect(mockFetchUserActions).toHaveBeenCalled()
+      expect(mockFetchDashboard).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('live data mode', () => {
-    it('should call all API endpoints when useMockData is false', async () => {
+    it('should call the tenant snapshot when useMockData is false', async () => {
       renderHook(() => useDataFetching({ useMockData: false }))
 
       await waitFor(() => {
-        expect(mockFetchProspects).toHaveBeenCalled()
+        expect(mockFetchDashboard).toHaveBeenCalled()
       })
-
-      expect(mockFetchCompetitors).toHaveBeenCalled()
-      expect(mockFetchPortfolio).toHaveBeenCalled()
-      expect(mockFetchUserActions).toHaveBeenCalled()
     })
 
     it('should pass abort signal to API calls', async () => {
       renderHook(() => useDataFetching({ useMockData: false }))
 
       await waitFor(() => {
-        expect(mockFetchProspects).toHaveBeenCalled()
+        expect(mockFetchDashboard).toHaveBeenCalled()
       })
 
       // Check that abort signal was passed
-      const callArg = mockFetchProspects.mock.calls[0][0]
+      const callArg = mockFetchDashboard.mock.calls[0][0]
       expect(callArg).toBeDefined()
       expect(callArg instanceof AbortSignal).toBe(true)
     })
 
     it('should expose API errors with empty datasets', async () => {
-      mockFetchProspects.mockRejectedValueOnce(new Error('Network error'))
+      mockFetchDashboard.mockRejectedValueOnce(new Error('Network error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const { result } = renderHook(() => useDataFetching({ useMockData: false }))
@@ -213,7 +192,7 @@ describe('useDataFetching', () => {
     })
 
     it('should return false and expose the API failure', async () => {
-      mockFetchProspects.mockRejectedValue(new Error('Error'))
+      mockFetchDashboard.mockRejectedValue(new Error('Error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const { result } = renderHook(() => useDataFetching({ useMockData: false }))
@@ -269,7 +248,7 @@ describe('useDataFetching', () => {
 
   it('ignores cached mock records before the first response', () => {
     mockKVStore['ucc-prospects'] = [{ id: 'old-demo', companyName: 'Synthetic' }]
-    mockFetchProspects.mockImplementation(() => new Promise(() => {}))
+    mockFetchDashboard.mockImplementation(() => new Promise(() => {}))
     const { result } = renderHook(() => useDataFetching({ useMockData: true }))
     expect(result.current.prospects).toEqual([])
     expect(result.current.lastDataRefresh).toBe('')
@@ -279,7 +258,7 @@ describe('useDataFetching', () => {
   it.each([null, '<html>login</html>', { error: 'unauthorized' }])(
     'rejects malformed successful responses without generating records: %s',
     async (payload) => {
-      mockFetchProspects.mockResolvedValue(payload)
+      mockFetchDashboard.mockResolvedValue(payload)
       const { result } = renderHook(() => useDataFetching({ useMockData: false }))
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.loadError).toContain('invalid dataset')
