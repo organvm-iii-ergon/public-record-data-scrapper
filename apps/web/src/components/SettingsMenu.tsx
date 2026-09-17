@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { GearSix, PlugsConnected } from '@phosphor-icons/react'
+import { GearSix, PlugsConnected, ShareNetwork } from '@phosphor-icons/react'
 import { Button } from '@public-records/ui/button'
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 } from '@public-records/ui/dropdown-menu'
 import { useDataTier } from '@/hooks/useDataTier'
 import { IntegrationsDialog } from '@/components/IntegrationsDialog'
+import { PartnerPortalDialog } from '@/components/PartnerPortalDialog'
 import type { DataTier } from '@public-records/core'
 
 const DATA_TIER_LABELS: Record<DataTier, { title: string; description: string }> = {
@@ -33,6 +34,7 @@ const DATA_TIER_PREVIEW_SUMMARY: Record<DataTier, string> = {
 export function SettingsMenu() {
   const { dataTier, setDataTier } = useDataTier()
   const [integrationsOpen, setIntegrationsOpen] = useState(false)
+  const [partnerPortalOpen, setPartnerPortalOpen] = useState(false)
 
   const isPreviewMode = useMemo(() => {
     return (
@@ -89,7 +91,16 @@ export function SettingsMenu() {
           ) : null}
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
-        <div className="p-1">
+        <div className="p-1 space-y-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPartnerPortalOpen(true)}
+            className="w-full justify-start text-xs text-white hover:bg-white/10"
+          >
+            <ShareNetwork size={14} className="mr-2 text-primary" />
+            Referral & Partner Portal
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -102,6 +113,7 @@ export function SettingsMenu() {
         </div>
       </DropdownMenuContent>
       <IntegrationsDialog open={integrationsOpen} onOpenChange={setIntegrationsOpen} />
+      <PartnerPortalDialog open={partnerPortalOpen} onOpenChange={setPartnerPortalOpen} />
     </DropdownMenu>
   )
 }

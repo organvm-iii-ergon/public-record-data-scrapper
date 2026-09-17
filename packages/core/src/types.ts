@@ -1023,3 +1023,51 @@ export interface CrmPushLog {
   errorMessage?: string
   createdAt: string
 }
+
+// ============================================================================
+// Referral & Partner Portal (Issue #480)
+// ============================================================================
+
+export type PartnerTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+export type ReferralEventType = 'click' | 'signup' | 'conversion' | 'payout'
+
+export interface PartnerReferralProgram {
+  id: string
+  orgId: string
+  partnerCode: string
+  referralUrl: string
+  commissionRate: number
+  tier: PartnerTier
+  payoutEmail?: string | null
+  status: 'active' | 'suspended'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferralEvent {
+  id: string
+  programId: string
+  eventType: ReferralEventType
+  referredEmail?: string | null
+  referredOrgId?: string | null
+  revenueAmount: number
+  commissionAmount: number
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+export interface PartnerMetrics {
+  program: PartnerReferralProgram
+  totalClicks: number
+  totalSignups: number
+  totalConversions: number
+  conversionRate: number
+  totalEarningsUsd: number
+  pendingEarningsUsd: number
+  paidEarningsUsd: number
+  partnerTier: PartnerTier
+  commissionRate: number
+  nextTierThreshold: number
+  conversionsToNextTier: number
+  recentEvents: ReferralEvent[]
+}

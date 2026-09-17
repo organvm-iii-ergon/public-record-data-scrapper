@@ -44,6 +44,7 @@ import agenticRouter from './routes/agentic'
 import scrapeRouter from './routes/scrape'
 import underwritingRouter from './routes/underwriting'
 import webhookSubscriptionsRouter from './routes/webhookSubscriptions'
+import partnerReferralsRouter from './routes/partnerReferrals'
 import v1Router from './routes/v1/index'
 
 // Import queue infrastructure
@@ -168,6 +169,9 @@ export class Server {
     // Billing routes (Stripe). The webhook is authenticated via Stripe signature
     // verification on the raw body (mounted above), not JWT.
     this.app.use('/api/billing', dataTierRouter, billingRouter)
+
+    // Partner & Referral Program routes (Issue #480)
+    this.app.use('/api/partner', partnerReferralsRouter)
 
     // Protected API routes (authentication required).
     // orgContextMiddleware runs AFTER authMiddleware (so req.user.orgId is
