@@ -219,26 +219,28 @@ export async function sendWebhookDelivery(
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10000)
+    try {
+      const res = await fetch(endpoint.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'UCC-MCA-Webhook/1.0',
+          'X-UCC-Delivery-ID': delivery.id,
+          'X-UCC-Event': delivery.event,
+          'X-UCC-Signature': signatureHeader
+        },
+        body: delivery.payload,
+        signal: controller.signal
+      })
 
-    const res = await fetch(endpoint.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'UCC-MCA-Webhook/1.0',
-        'X-UCC-Delivery-ID': delivery.id,
-        'X-UCC-Event': delivery.event,
-        'X-UCC-Signature': signatureHeader
-      },
-      body: delivery.payload,
-      signal: controller.signal
-    })
-
-    clearTimeout(timeout)
-    resStatus = res.status
-    resBody = await readBoundedResponseBody(res)
-    isSuccess = res.ok
-    if (!res.ok) {
-      errorMsg = `HTTP ${res.status}: ${resBody.slice(0, 200)}`
+      resStatus = res.status
+      resBody = await readBoundedResponseBody(res)
+      isSuccess = res.ok
+      if (!res.ok) {
+        errorMsg = `HTTP ${res.status}: ${resBody.slice(0, 200)}`
+      }
+    } finally {
+      clearTimeout(timeout)
     }
   } catch (err: unknown) {
     errorMsg = err instanceof Error ? err.message : String(err)
@@ -393,8 +395,37 @@ export async function drainWebhookDeliveries(env: Env, limit = 25): Promise<numb
   let processed = 0
   for (const d of deliveries) {
     try {
-      await sendWebhookDelivery(env, d.id)
-      processed++
+      const claim = await run(
+        env,
+        `UPDATE webhook_deliveries
+            SET status = 'delivering'
+          WHERE id = ?
+            AND status = 'pending'
+            AND (next_retry_at IS NULL OR datetime(next_retry_at) <= datetime('now'))
+            AND EXISTS (
+              SELECT 1 FROM webhook_endpoints e
+               WHERE e.id = webhook_deliveries.webhook_id
+                 AND e.org_id = webhook_deliveries.org_id
+                 AND e.status = 'active'
+            )`,
+        d.id
+      )
+      if (claim.meta.changes !== 1) continue
+
+      try {
+        await sendWebhookDelivery(env, d.id)
+        processed++
+      } finally {
+        // Recover a claim if delivery exits before its normal delivered/pending
+        // transition (for example, an endpoint is paused between claim and send).
+        await run(
+          env,
+          `UPDATE webhook_deliveries
+              SET status = 'pending'
+            WHERE id = ? AND status = 'delivering'`,
+          d.id
+        )
+      }
     } catch (err) {
       console.error(`[webhooks] failed processing delivery ${d.id}`, err)
     }

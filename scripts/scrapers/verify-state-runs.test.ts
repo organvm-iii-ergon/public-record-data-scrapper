@@ -63,6 +63,20 @@ describe('verify-state-runs (Green Run & Consecutive Streak Protocol)', () => {
       expect(evaluation.failureReasons.some((r) => r.includes('Latency SLA exceeded'))).toBe(true)
     })
 
+    it('rejects negative, fractional, and non-finite receipt metrics', () => {
+      const invalidReceipts = [
+        makeValidReceipt({ recordsIngested: -1, recordsValidated: -1 }),
+        makeValidReceipt({ recordsIngested: 1.5, recordsValidated: 1.5 }),
+        makeValidReceipt({ durationMs: Number.NaN })
+      ]
+
+      for (const receipt of invalidReceipts) {
+        const evaluation = evaluateRun(receipt)
+        expect(evaluation.isGreen).toBe(false)
+        expect(evaluation.failureReasons.some((reason) => reason.includes('Invalid'))).toBe(true)
+      }
+    })
+
     it('flags anti-bot or rate-limit blocks', () => {
       const receipt = makeValidReceipt({
         status: 'FAILURE',

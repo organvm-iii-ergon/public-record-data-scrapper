@@ -8,6 +8,7 @@ import {
   getVelocityAnalysisQueue,
   getOutreachQueue,
   getIngestionCircuitGate,
+  getRegisteredIngestionStates,
   recordIngestionQueued,
   resolvePrimaryIngestionStrategy,
   resolveStateIngestionStrategyChain
@@ -218,8 +219,9 @@ export class JobScheduler {
   private async scheduleUCCIngestion() {
     const ingestionQueue = getIngestionQueue()
 
-    // Get list of states to scrape (from config or database)
-    const states = ['NY', 'NJ', 'CA', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI']
+    // Derive coverage from the live ingestion registry so newly registered
+    // states are scheduled without requiring a second hard-coded allow-list.
+    const states = getRegisteredIngestionStates().sort()
     const dataTier = 'free-tier'
     const uccProvider = resolveUccProvider(dataTier)
     let queuedStates = 0

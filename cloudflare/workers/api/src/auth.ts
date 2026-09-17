@@ -14,6 +14,7 @@ import { createMiddleware } from 'hono/factory'
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
 import { first, run } from './db'
 import type { AppBindings, Env, Identity, SubscriptionTier } from './types'
+import { normalizeSubscriptionTier } from './tier'
 
 export const ACCESS_HEADER = 'Cf-Access-Jwt-Assertion'
 export const API_KEY_HEADER = 'X-API-Key'
@@ -123,7 +124,7 @@ export async function verifyApiKey(env: Env, presentedKey: string): Promise<Iden
   const identity: Identity = {
     orgId: row.org_id,
     role: row.role ?? 'user',
-    tier: (row.subscription_tier as SubscriptionTier) || 'free',
+    tier: normalizeSubscriptionTier(row.subscription_tier),
     authMethod: 'api_key',
     keyId: row.id
   }
@@ -201,9 +202,7 @@ export async function verifyAccessJwt(
         'SELECT subscription_tier FROM organizations WHERE id = ?',
         orgId
       )
-      if (orgRow?.subscription_tier) {
-        tier = orgRow.subscription_tier as SubscriptionTier
-      }
+      tier = normalizeSubscriptionTier(orgRow?.subscription_tier)
     } catch {
       // default to free
     }

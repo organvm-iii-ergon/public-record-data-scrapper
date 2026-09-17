@@ -65,7 +65,23 @@ keysRoute.post('/', async (c) => {
   const keyHash = await hashApiKey(key)
   const keyPrefix = key.slice(0, DISPLAY_PREFIX_LENGTH)
   const id = crypto.randomUUID()
-  const expiresAt = body.expires_at ? new Date(body.expires_at).toISOString() : null
+  let expiresAt: string | null = null
+  if (body.expires_at) {
+    const parsedExpiry = new Date(body.expires_at)
+    if (!Number.isFinite(parsedExpiry.getTime())) {
+      return c.json(
+        {
+          error: {
+            message: 'expires_at must be a valid date-time',
+            code: 'VALIDATION_ERROR',
+            statusCode: 400
+          }
+        },
+        400
+      )
+    }
+    expiresAt = parsedExpiry.toISOString()
+  }
 
   await run(
     c.env,

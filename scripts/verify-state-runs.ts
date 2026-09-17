@@ -93,8 +93,17 @@ export function evaluateRun(
     failureReasons.push(`Validation errors encountered: ${receipt.validationErrors.join('; ')}`)
   }
 
+  if (!Number.isInteger(receipt.recordsIngested) || receipt.recordsIngested < 0) {
+    failureReasons.push(`Invalid recordsIngested metric: ${receipt.recordsIngested}`)
+  }
+  if (!Number.isInteger(receipt.recordsValidated) || receipt.recordsValidated < 0) {
+    failureReasons.push(`Invalid recordsValidated metric: ${receipt.recordsValidated}`)
+  }
+
   // 4. SLA Latency Adherence
-  if (receipt.durationMs > maxLatencyMs) {
+  if (!Number.isFinite(receipt.durationMs) || receipt.durationMs < 0) {
+    failureReasons.push(`Invalid durationMs metric: ${receipt.durationMs}`)
+  } else if (receipt.durationMs > maxLatencyMs) {
     failureReasons.push(
       `Latency SLA exceeded: ${receipt.durationMs}ms > max allowed ${maxLatencyMs}ms`
     )

@@ -7,13 +7,14 @@ import {
   readBoundedResponseBody,
   replayWebhookDelivery
 } from '../../cloudflare/workers/api/src/webhooks.ts'
+import { normalizeSubscriptionTier } from '../../cloudflare/workers/api/src/tier.ts'
 import {
   isSecureWebhookUrl,
   publicCrmIntegration,
   publicWebhookEndpoint
 } from '../../cloudflare/workers/api/src/integrationSafety.ts'
 
-function createEnv({ firstResult = null, allResults = [] } = {}) {
+function createEnv({ firstResult = null, allResults = [], runChanges = 1 } = {}) {
   const calls = []
   const DB = {
     prepare(sql) {
@@ -33,7 +34,7 @@ function createEnv({ firstResult = null, allResults = [] } = {}) {
             },
             async run() {
               call.operation = 'run'
-              return { success: true }
+              return { success: true, meta: { changes: runChanges } }
             }
           }
         }
@@ -64,6 +65,14 @@ test('bounded response reader cancels after the byte limit', async () => {
   assert.equal(cancelled, true)
 })
 
+test('edge auth normalizes canonical billing tiers and fails unknown values closed', () => {
+  assert.equal(normalizeSubscriptionTier('professional'), 'pro')
+  assert.equal(normalizeSubscriptionTier('scale'), 'enterprise')
+  assert.equal(normalizeSubscriptionTier(' growth '), 'growth')
+  assert.equal(normalizeSubscriptionTier('unexpected'), 'free')
+  assert.equal(normalizeSubscriptionTier(null), 'free')
+})
+
 test('pending drain excludes paused endpoints and normalizes ISO retry timestamps', async () => {
   const { env, calls } = createEnv()
 
@@ -73,6 +82,18 @@ test('pending drain excludes paused endpoints and normalizes ISO retry timestamp
   assert.match(calls[0].sql, /e\.status = 'active'/)
   assert.match(calls[0].sql, /datetime\(d\.next_retry_at\) <= datetime\('now'\)/)
   assert.deepEqual(calls[0].params, [17])
+})
+
+test('pending drain atomically claims a delivery before sending it', async () => {
+  const { env, calls } = createEnv({ allResults: [{ id: 'delivery-1' }], runChanges: 0 })
+
+  assert.equal(await drainWebhookDeliveries(env, 1), 0)
+  assert.equal(calls.length, 2)
+  assert.equal(calls[1].operation, 'run')
+  assert.match(calls[1].sql, /SET status = 'delivering'/)
+  assert.match(calls[1].sql, /AND status = 'pending'/)
+  assert.match(calls[1].sql, /e\.status = 'active'/)
+  assert.deepEqual(calls[1].params, ['delivery-1'])
 })
 
 test('manual replay selects only failed or dead-letter deliveries', async () => {
@@ -118,4 +139,5 @@ test('edge API key management requires the admin role guard', () => {
     'utf8'
   )
   assert.match(source, /keysRoute\.use\('\*', requireRole\('admin'\)\)/)
+  assert.match(source, /Number\.isFinite\(parsedExpiry\.getTime\(\)\)/)
 })

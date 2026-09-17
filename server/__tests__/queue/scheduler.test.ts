@@ -28,6 +28,19 @@ const mocks = vi.hoisted(() => {
     mockOutreachQueue: { add: mockQueueAdd, name: 'outreach' },
     mockDatabaseQuery: vi.fn(),
     mockRecordIngestionQueued: vi.fn(),
+    mockGetRegisteredIngestionStates: vi.fn(() => [
+      'NY',
+      'NJ',
+      'CA',
+      'TX',
+      'FL',
+      'IL',
+      'PA',
+      'OH',
+      'GA',
+      'NC',
+      'MI'
+    ]),
     mockGetIngestionCircuitGate: vi.fn(() => ({
       allowed: true,
       circuitState: 'closed',
@@ -61,6 +74,7 @@ vi.mock('../../queue/queues', () => ({
   getVelocityAnalysisQueue: vi.fn(() => mocks.mockVelocityAnalysisQueue),
   getOutreachQueue: vi.fn(() => mocks.mockOutreachQueue),
   getIngestionCircuitGate: mocks.mockGetIngestionCircuitGate,
+  getRegisteredIngestionStates: mocks.mockGetRegisteredIngestionStates,
   recordIngestionQueued: mocks.mockRecordIngestionQueued,
   resolvePrimaryIngestionStrategy: mocks.mockResolvePrimaryIngestionStrategy,
   resolveStateIngestionStrategyChain: mocks.mockResolveStateIngestionStrategyChain
@@ -85,6 +99,9 @@ describeConditional('JobScheduler', () => {
     mocks.mockDatabaseQuery.mockReset()
     mocks.mockQueueAdd.mockReset().mockResolvedValue({ id: 'test-job-id' })
     mocks.mockRecordIngestionQueued.mockReset()
+    mocks.mockGetRegisteredIngestionStates
+      .mockReset()
+      .mockReturnValue(['NY', 'NJ', 'CA', 'TX', 'FL', 'IL', 'PA', 'OH', 'GA', 'NC', 'MI'])
     mocks.mockGetIngestionCircuitGate.mockReset().mockReturnValue({
       allowed: true,
       circuitState: 'closed',
@@ -205,6 +222,17 @@ describeConditional('JobScheduler', () => {
       await (scheduler as any).scheduleUCCIngestion()
 
       expect(mocks.mockQueueAdd).toHaveBeenCalledTimes(4)
+    })
+
+    it('discovers newly registered states without a scheduler allow-list change', async () => {
+      mocks.mockGetRegisteredIngestionStates.mockReturnValue(['CA', 'TX'])
+
+      const { JobScheduler } = await import('../../queue/scheduler')
+      const scheduler = new JobScheduler()
+      await (scheduler as any).scheduleUCCIngestion()
+
+      expect(mocks.mockQueueAdd).toHaveBeenCalledTimes(2)
+      expect(consoleSpy).toHaveBeenCalledWith('[Scheduler] Queueing UCC ingestion for 2 states')
     })
 
     it('should queue jobs with correct supported state codes', async () => {
