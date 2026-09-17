@@ -1,0 +1,28 @@
+{
+  "delegation_id": "F62318AC-03FB-4C80-ACE2-FCD6EEBA771A",
+  "timestamp": "2025-11-20_21-00-15Z",
+  "task_type": "atomization",
+  "target_file": "Tomb of the Unknowns.md",
+  "priority": "high",
+  "content_analysis": {
+    "total_chars": 1781,
+    "total_words": 245,
+    "total_lines": 70,
+    "paragraphs": 18,
+    "sections": 16
+  },
+  "atomization_breakdown": {
+    "themes": 1,
+    "paragraphs": 18,
+    "sentences": 2,
+    "unique_words": 104,
+    "total_letters": 1327
+  },
+  "processing_recommendations": {
+    "visualization_complexity": "advanced",
+    "interactive_features": ["toggle-atomization", "visual-breakdown", "data-export"],
+    "ui_style": "glassmorphism",
+    "estimated_processing_time": "2 minutes"
+  },
+  "status": "analyzed"
+}

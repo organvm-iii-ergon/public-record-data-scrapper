@@ -1,0 +1,150 @@
+# Independent compatibility jobs feed the required gate. Formatting failures
+# cannot suppress compiler, test or build evidence. Coverage remains separate.
+name: CI Gate
+
+on:
+  pull_request:
+    branches: [main, master, develop, 'lane/**']
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Compatibility (${{ matrix.check }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          [
+            format,
+            lint,
+            typecheck,
+            server-tests,
+            frontend-tests,
+            scraper-tests,
+            policy-tests,
+            build
+          ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - name: Use the canonical npm version
+        run: npm install --global npm@11.9.0 --ignore-scripts --no-audit --no-fund
+      - name: Frozen workspace install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Provision offline Chromium for browser runtime checks
+        if: ${{ matrix.check == 'scraper-tests' || matrix.check == 'build' }}
+        id: browser-runtime
+        run: node scripts/provision-browser-runtime.mjs >> "$GITHUB_OUTPUT"
+      - name: Run independent compatibility check
+        env:
+          CHECK: ${{ matrix.check }}
+          REVIEW_BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          PUPPETEER_EXECUTABLE_PATH: ${{ steps.browser-runtime.outputs.executable_path }}
+          CHROMIUM_EXECUTABLE_PATH: ${{ steps.browser-runtime.outputs.executable_path }}
+        run: |
+          case "$CHECK" in
+            format) node scripts/check-format.mjs "$REVIEW_BASE" ;;
+            lint) npm run lint ;;
+            typecheck) npm run typecheck ;;
+            server-tests) ./node_modules/.bin/vitest run --config vitest.config.server.ts --coverage.enabled=false ;;
+            frontend-tests) npm --workspace apps/web run test -- --run ;;
+            scraper-tests) npm run test:scrapers:unit && npm run test:browser-runtime ;;
+            policy-tests) node --test scripts/__tests__/dependency-evidence.test.mjs scripts/__tests__/check-format.test.mjs scripts/__tests__/staging-deploy-cron.test.mjs && node --import tsx --test scripts/__tests__/webhook-delivery-safety.test.mjs && python3 -m unittest discover -s scripts/dependencies -p 'test_ruleset_plan.py' ;;
+            build) npm run build:render ;;
+            *) exit 1 ;;
+          esac
+      - name: Verify dependency declarations did not drift
+        if: ${{ !cancelled() }}
+        run: git diff --exit-code -- package.json package-lock.json 'apps/*/package.json' 'packages/*/package.json'
+      - name: Record exact revisions
+        if: ${{ !cancelled() }}
+        env:
+          REVIEW_BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          REVIEW_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          {
+            printf 'Base: `%s`\n\nHead: `%s`\n\n' "$REVIEW_BASE" "$REVIEW_HEAD"
+            printf 'Tested checkout: `%s`\n\nWorkflow: `%s`\n\n' "$(git rev-parse HEAD)" "$WORKFLOW_SHA"
+            sha256sum package-lock.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  edge-typecheck:
+    name: Edge typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: cloudflare/package-lock.json
+      - name: Use the canonical npm version
+        run: npm install --global npm@11.9.0 --ignore-scripts --no-audit --no-fund
+      - name: Frozen Cloudflare install
+        working-directory: cloudflare
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      # Candidate dependencies execute only in this isolated compatibility job.
+      # Keep the graph/advisory evidence job free from candidate CLI execution.
+      - name: Verify locked Cloudflare CLI starts
+        run: node scripts/verify-cloudflare-toolchain.mjs
+      - name: Check the Worker with the locked local runtime
+        run: node scripts/test-cloudflare-runtime.mjs
+      - name: Verify Cloudflare diagnostic boundaries without credentials
+        if: ${{ !cancelled() }}
+        run: python3 scripts/test_diagnose_cloudflare.py
+      - name: Verify staging account resolution and binding counterexamples
+        if: ${{ !cancelled() }}
+        run: |
+          node scripts/verify-cloudflare-account.mjs
+          python3 scripts/test_verify_cloudflare_staging.py
+      - name: Verify staging provisioning and live receipt boundaries
+        if: ${{ !cancelled() }}
+        run: |
+          python3 scripts/test_provision_cloudflare_staging.py
+          python3 scripts/test_verify_cloudflare_live.py
+      - name: Typecheck Cloudflare
+        working-directory: cloudflare
+        run: npm run typecheck
+      - name: Verify edge dependency declarations did not drift
+        if: ${{ !cancelled() }}
+        run: git diff --exit-code -- cloudflare/package.json cloudflare/package-lock.json
+
+  gate:
+    if: ${{ always() }}
+    needs: [compatibility, edge-typecheck]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every compatibility job
+        env:
+          COMPATIBILITY: ${{ needs.compatibility.result }}
+          EDGE_TYPECHECK: ${{ needs.edge-typecheck.result }}
+        run: |
+          test "$COMPATIBILITY" = success
+          test "$EDGE_TYPECHECK" = success

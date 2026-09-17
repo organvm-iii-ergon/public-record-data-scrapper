@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    # Use workspace root only; prevents Dependabot from generating split PRs per directory
+    directory: '/'
+    target-branch: 'lane/heal'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      npm-deps:
+        applies-to: version-updates
+        patterns: ['*']
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    target-branch: 'lane/heal'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      github-actions-deps:
+        applies-to: version-updates
+        patterns: ['*']
+  - package-ecosystem: 'docker'
+    directory: '/'
+    target-branch: 'lane/heal'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      docker-deps:
+        applies-to: version-updates
+        patterns: ['*']
+  - package-ecosystem: 'cargo'
+    directory: '/apps/desktop/src-tauri'
+    target-branch: 'lane/heal'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      cargo-deps:
+        applies-to: version-updates
+        patterns: ['*']

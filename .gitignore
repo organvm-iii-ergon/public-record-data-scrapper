@@ -1,0 +1,78 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*-dist
+*.local
+
+# Test coverage
+coverage
+!apps/web/src/features/coverage/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/*.code-workspace
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.env
+**/agent-eval-report*
+pids
+.file-manifest
+.devcontainer/
+
+.spark-workbench-id
+
+# Scraper output files
+output.json
+enriched-data.json
+batch-results/
+*.csv
+!example-companies.csv
+!examples/lead-export-sample.csv
+!apps/web/public/ucc_enriched.csv
+
+# Distribution packages
+dist-package/
+ucc-scraper-*.tar.gz
+
+# Video production output
+video-output/
+
+# Expo
+.expo/
+.expo-shared/
+expo-debug.log*
+
+# Tauri
+src-tauri/target/
+src-tauri/bindings/
+
+# The server/ directory is tracked in this repo. This negation shields it from
+# any broader ignore rules in contributors' global git excludes (e.g. /server/).
+!/server/
+# VSCode Local History extension
+.lh/
+
+# Private scoring calibration (funder intel, source-map, credit-box tuning) — the moat.
+# Injected into the live operation; never committed to this public repo.
+server/services/calibration/*.private.json
+vault/
+playwright-report/
+test-results/
+.wrangler/
+.quality/

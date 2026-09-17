@@ -1,0 +1,284 @@
+/**
+ * State Collector Factory Template
+ *
+ * Copy this file when implementing a new state collector (e.g. for Epic S7 expansion).
+ * Replace "XX" with the 2-letter uppercase postal state code (e.g., IL, OH, PA).
+ *
+ * Requirements:
+ * 1. Implement all 6 methods of the StateCollector interface.
+ * 2. Implement `isReady(): boolean` for fail-closed credential gating.
+ * 3. Enforce rate limiting with RateLimiter.
+ * 4. Catch raw network/API/scraper errors and translate them into typed CollectionError instances.
+ * 5. Validate filings using validateFiling().
+ */
+
+import { RateLimiter } from '../RateLimiter'
+import {
+  CollectionError,
+  type CollectionOptions,
+  type CollectorStatus,
+  type SearchResult,
+  type StateCollector,
+  type UCCFiling,
+  type ValidationResult
+} from '../types'
+
+export interface XXCollectorConfig {
+  portalUrl?: string
+  apiKey?: string
+  accountId?: string
+  debtorSeeds?: string[]
+  requestTimeoutMs?: number
+}
+
+interface XXUpstreamRecord {
+  filingNumber?: string
+  filingType?: string
+  filingDate?: string
+  expirationDate?: string
+  status?: string
+  debtorName?: string
+  securedPartyName?: string
+  collateral?: string
+}
+
+export class XXStateCollector implements StateCollector {
+  private readonly stateCode = 'XX'
+  private readonly portalUrl: string
+  private readonly apiKey: string
+  private readonly accountId: string
+  private readonly debtorSeeds: string[]
+  private readonly requestTimeoutMs: number
+  private readonly rateLimiter: RateLimiter
+
+  private readonly stats = {
+    totalCollected: 0,
+    totalErrors: 0,
+    totalRequests: 0,
+    lastCollectionTime: undefined as string | undefined,
+    latencies: [] as number[]
+  }
+
+  constructor(config: XXCollectorConfig = {}) {
+    this.portalUrl = config.portalUrl ?? 'https://example-sos.gov/ucc'
+    this.apiKey = (config.apiKey ?? '').trim()
+    this.accountId = (config.accountId ?? '').trim()
+    this.debtorSeeds = (config.debtorSeeds ?? [])
+      .map((seed) => seed.trim())
+      .filter((seed) => seed.length > 0)
+    this.requestTimeoutMs = config.requestTimeoutMs ?? 30_000
+
+    this.rateLimiter = new RateLimiter({
+      requestsPerMinute: 10,
+      requestsPerHour: 300,
+      requestsPerDay: 2000
+    })
+  }
+
+  /**
+   * Credential Gate: Fails closed if required credentials or configuration seeds are missing.
+   * ScraperFactory / StateCollectorFactory will withhold this collector if isReady() returns false.
+   */
+  isReady(): boolean {
+    return Boolean(this.apiKey && this.debtorSeeds.length > 0)
+  }
+
+  /**
+   * Search filings by debtor / business name.
+   */
+  async searchByBusinessName(name: string): Promise<SearchResult> {
+    const records = await this.queryUpstream(name)
+    const filings = records.map((record) => this.mapRecord(record))
+
+    this.stats.totalCollected += filings.length
+    this.stats.lastCollectionTime = new Date().toISOString()
+
+    return {
+      filings,
+      total: filings.length,
+      hasMore: false
+    }
+  }
+
+  /**
+   * Search for a specific filing by filing number.
+   */
+  async searchByFilingNumber(number: string): Promise<UCCFiling | null> {
+    const records = await this.queryUpstream('', number)
+    const match = records.find((r) => (r.filingNumber ?? '').trim() === number.trim())
+    return match ? this.mapRecord(match) : null
+  }
+
+  /**
+   * Get detailed information for a specific filing.
+   */
+  async getFilingDetails(filingNumber: string): Promise<UCCFiling> {
+    const filing = await this.searchByFilingNumber(filingNumber)
+    if (!filing) {
+      throw new CollectionError(
+        this.stateCode,
+        'STRUCTURE_CHANGE',
+        false,
+        `Filing not found: ${filingNumber}`
+      )
+    }
+    return filing
+  }
+
+  /**
+   * Collect new filings within a specified time window or limit.
+   */
+  async collectNewFilings(options: CollectionOptions): Promise<UCCFiling[]> {
+    if (!this.isReady()) {
+      throw new CollectionError(
+        this.stateCode,
+        'AUTH',
+        false,
+        `State ${this.stateCode} collector is unconfigured or credentials are missing.`
+      )
+    }
+
+    const limit = options.limit ?? 50
+    const allFilings: UCCFiling[] = []
+
+    for (const seed of this.debtorSeeds) {
+      if (allFilings.length >= limit) break
+      const result = await this.searchByBusinessName(seed)
+      allFilings.push(...result.filings)
+    }
+
+    return allFilings.slice(0, limit)
+  }
+
+  /**
+   * Validate that a filing satisfies mandatory UCC field requirements.
+   */
+  validateFiling(filing: UCCFiling): ValidationResult {
+    const errors: string[] = []
+    const warnings: string[] = []
+
+    if (!filing.filingNumber?.trim()) errors.push('Missing filing number')
+    if (!filing.filingDate?.trim()) errors.push('Missing filing date')
+    if (!filing.debtor?.name?.trim()) errors.push('Missing debtor name')
+    if (!filing.securedParty?.name?.trim()) errors.push('Missing secured party')
+    if (!filing.state?.trim()) errors.push('Missing state code')
+
+    if (!filing.collateral?.trim()) warnings.push('Collateral description is empty')
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    }
+  }
+
+  /**
+   * Retrieve operational metrics and health status.
+   */
+  getStatus(): CollectorStatus {
+    const avgLatency =
+      this.stats.latencies.length > 0
+        ? this.stats.latencies.reduce((acc, curr) => acc + curr, 0) / this.stats.latencies.length
+        : 0
+
+    const errorRate =
+      this.stats.totalRequests > 0 ? this.stats.totalErrors / this.stats.totalRequests : 0
+
+    return {
+      isHealthy: this.isReady() && errorRate < 0.1,
+      lastCollectionTime: this.stats.lastCollectionTime,
+      totalCollected: this.stats.totalCollected,
+      errorRate,
+      averageLatency: avgLatency,
+      rateLimitStats: this.rateLimiter.getStats()
+    }
+  }
+
+  // --- Internal Helpers ---
+
+  private async queryUpstream(
+    businessName = '',
+    _filingNumber = ''
+  ): Promise<XXUpstreamRecord[]> {
+    const start = Date.now()
+    this.stats.totalRequests++
+
+    try {
+      await this.rateLimiter.acquire()
+
+      // Perform upstream fetch / scraping logic here with this.requestTimeoutMs
+      // If error occurs, catch and throw typed CollectionError
+      const sampleRecords: XXUpstreamRecord[] = businessName
+        ? [
+            {
+              filingNumber: `${this.stateCode}-2026-0001`,
+              filingType: 'UCC-1',
+              filingDate: new Date().toISOString().slice(0, 10),
+              status: 'active',
+              debtorName: businessName,
+              securedPartyName: 'Primary Funder Corp',
+              collateral: 'All accounts, receivables, and inventory.'
+            }
+          ]
+        : []
+
+      const latency = Date.now() - start
+      this.stats.latencies.push(latency)
+      if (this.stats.latencies.length > 100) this.stats.latencies.shift()
+
+      return sampleRecords
+    } catch (err) {
+      this.stats.totalErrors++
+      if (err instanceof CollectionError) throw err
+
+      throw new CollectionError(
+        this.stateCode,
+        'NETWORK',
+        true,
+        `Failed to query ${this.stateCode} portal: ${(err as Error).message}`,
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+
+  private mapRecord(raw: XXUpstreamRecord): UCCFiling {
+    return {
+      filingNumber: raw.filingNumber ?? `${this.stateCode}-UNKNOWN`,
+      filingType: raw.filingType ?? 'UCC-1',
+      filingDate: raw.filingDate ?? new Date().toISOString().slice(0, 10),
+      expirationDate: raw.expirationDate,
+      status: (raw.status as 'active' | 'lapsed' | 'terminated') ?? 'active',
+      state: this.stateCode,
+      debtor: {
+        name: raw.debtorName ?? 'UNKNOWN DEBTOR',
+        organizationType: 'organization'
+      },
+      securedParty: {
+        name: raw.securedPartyName ?? 'UNKNOWN SECURED PARTY',
+        organizationType: 'organization'
+      },
+      collateral: raw.collateral ?? 'All assets.',
+      rawData: { ...raw }
+    }
+  }
+}
+
+/**
+ * Factory builder function for StateCollectorFactory registration.
+ */
+export function createXXStateCollector(): XXStateCollector | null {
+  const apiKey = process.env.XX_UCC_API_KEY
+  const accountId = process.env.XX_UCC_ACCOUNT_ID
+  const seeds = (process.env.XX_UCC_DEBTOR_SEEDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  const collector = new XXStateCollector({
+    apiKey,
+    accountId,
+    debtorSeeds: seeds
+  })
+
+  return collector.isReady() ? collector : null
+}

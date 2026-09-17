@@ -1,0 +1,25 @@
+{
+  "name": "@public-records/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@public-records/core": "file:../../packages/core",
+    "@public-records/ui": "file:../../packages/ui",
+    "papaparse": "5.5.3",
+    "playwright": "1.60.0",
+    "winston": "3.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b --noCheck ../../tsconfig.json && vite build",
+    "preview": "vite preview",
+    "test": "vitest --config vitest.config.ts",
+    "test:watch": "vitest --watch --config vitest.config.ts",
+    "test:ui": "vitest --ui --config vitest.config.ts",
+    "test:coverage": "vitest --coverage --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/papaparse": "5.5.2"
+  }
+}
