@@ -131,10 +131,11 @@ test('scheduled.ts routes cron ticks and drains D1 jobs queue with fail-safe sem
   )
 })
 
-test('D1 migration 0004_job_leases.sql adds recoverable job leases', () => {
-  const sql = readFileSync(resolve(ROOT, 'cloudflare/migrations/0004_job_leases.sql'), 'utf8')
+test('canonical D1 migration 0004 adds recoverable job leases', () => {
+  const sql = readFileSync(resolve(ROOT, 'cloudflare/migrations/0004_job_claim_lease.sql'), 'utf8')
   assert.match(sql, /ALTER TABLE jobs ADD COLUMN claimed_at TEXT/)
-  assert.match(sql, /idx_jobs_processing_lease/)
+  assert.match(sql, /UPDATE jobs SET status = 'pending' WHERE status = 'processing'/)
+  assert.match(sql, /idx_jobs_claim_lease/)
 })
 
 test('D1 migration 0001_init.sql defines all required schema objects and index constraints', () => {
