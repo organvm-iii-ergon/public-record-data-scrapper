@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { GearSix, PlugsConnected } from '@phosphor-icons/react'
 import { Button } from '@public-records/ui/button'
 import {
@@ -25,21 +25,9 @@ const DATA_TIER_LABELS: Record<DataTier, { title: string; description: string }>
   }
 }
 
-const DATA_TIER_PREVIEW_SUMMARY: Record<DataTier, string> = {
-  oss: 'Preview caps: signals 0-3, revenue <= $2M, competitor filings <= 250.',
-  paid: 'Preview caps: signals 1-6, revenue <= $3M, competitor filings <= 500.'
-}
-
 export function SettingsMenu() {
   const { dataTier, setDataTier } = useDataTier()
   const [integrationsOpen, setIntegrationsOpen] = useState(false)
-
-  const isPreviewMode = useMemo(() => {
-    return (
-      import.meta.env.DEV ||
-      ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
-    )
-  }, [])
 
   return (
     <DropdownMenu>
@@ -79,14 +67,7 @@ export function SettingsMenu() {
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="px-3 py-2 text-xs text-white/60">
-          {isPreviewMode
-            ? 'Preview data is active. Tier selection will tune preview outputs.'
-            : 'Tier selection is forwarded to API requests for routing.'}
-          {isPreviewMode ? (
-            <div className="mt-1 text-[11px] text-white/50">
-              {DATA_TIER_PREVIEW_SUMMARY[dataTier]}
-            </div>
-          ) : null}
+          Tier selection is forwarded to API requests for routing.
         </div>
         <DropdownMenuSeparator className="bg-white/10" />
         <div className="p-1">

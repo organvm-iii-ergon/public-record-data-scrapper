@@ -1,3 +1,4 @@
+import { noMockRuntimePlugin } from '../../scripts/no-mock-runtime.mjs'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig, PluginOption } from 'vite'
@@ -8,16 +9,18 @@ import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 
 const appRoot = dirname(fileURLToPath(import.meta.url))
+const sparkEnabled = process.env.VITE_ENABLE_SPARK === 'true'
 
 // https://vite.dev/config/
 export default defineConfig({
   root: appRoot,
   plugins: [
+    noMockRuntimePlugin() as PluginOption,
     react(),
     tailwindcss(),
     // DO NOT REMOVE
     createIconImportProxy() as PluginOption,
-    sparkPlugin({ port: 5173 }) as PluginOption
+    ...(sparkEnabled ? [sparkPlugin({ port: 5173 }) as PluginOption] : [])
   ],
   resolve: {
     alias: {
