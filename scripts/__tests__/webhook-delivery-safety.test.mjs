@@ -150,6 +150,8 @@ test('edge job APIs preserve tenant boundaries and reserve internal producers', 
   assert.match(source, /const conditions: string\[\] = \['org_id = \?'\]/)
   assert.match(source, /WHERE id = \? AND org_id = \?/)
   assert.match(source, /INTERNAL_JOB_TYPES\.has\(jobType\)/)
+  assert.match(source, /!PUBLIC_JOB_TYPES\.has\(jobType\)/)
+  assert.match(source, /!body \|\| typeof body !== 'object'/)
 })
 
 test('job drain uses recoverable leases and tenant-scoped webhook lookup', () => {
