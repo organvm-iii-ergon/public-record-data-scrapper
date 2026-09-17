@@ -103,6 +103,14 @@ try {
     await db.prepare(stmt).run()
   }
 
+  const rawMigration5 = fs.readFileSync(
+    new URL('migrations/0005_webhook_delivery_claim_lease.sql', edge),
+    'utf8'
+  )
+  for (const stmt of splitSqlStatements(rawMigration5)) {
+    await db.prepare(stmt).run()
+  }
+
   const tables = await db
     .prepare(
       "SELECT name FROM sqlite_master WHERE name IN ('organizations', 'prospects', 'jobs', 'prospects_fts') ORDER BY name"
