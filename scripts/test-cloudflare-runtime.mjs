@@ -94,6 +94,10 @@ try {
   for (const stmt of splitSqlStatements(rawMigration3)) {
     await db.prepare(stmt).run()
   }
+  const rawMigration4 = fs.readFileSync(new URL('migrations/0004_job_leases.sql', edge), 'utf8')
+  for (const stmt of splitSqlStatements(rawMigration4)) {
+    await db.prepare(stmt).run()
+  }
 
   const tables = await db
     .prepare(
