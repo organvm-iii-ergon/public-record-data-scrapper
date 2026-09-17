@@ -269,7 +269,7 @@ export function isLiveReceipt(value: unknown): value is LiveReceipt {
     typeof receipt.durationMs === 'number' &&
     Number.isFinite(receipt.durationMs) &&
     receipt.durationMs >= 0 &&
-    Object.hasOwn(receipt, 'payload') &&
+    Object.prototype.hasOwnProperty.call(receipt, 'payload') &&
     typeof receipt.payloadSha256 === 'string' &&
     /^[a-f0-9]{64}$/i.test(receipt.payloadSha256) &&
     typeof receipt.isMockData === 'boolean' &&

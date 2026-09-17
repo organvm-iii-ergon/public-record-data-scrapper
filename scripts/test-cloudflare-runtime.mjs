@@ -420,7 +420,11 @@ try {
     headers: { 'X-API-Key': mintedKeySecret }
   })
   assert.equal(testNewKeyRes.status, 200)
-  assert.equal(testNewKeyRes.headers.get('X-RateLimit-Remaining'), '999')
+  assert.equal(
+    Number(testNewKeyRes.headers.get('X-RateLimit-Remaining')),
+    Number(mintKeyRes.headers.get('X-RateLimit-Remaining')) - 1,
+    'newly minted credentials must consume the same tenant quota bucket'
+  )
 
   // Revoke the key
   const revokeKeyRes = await worker.dispatchFetch(`http://localhost/v1/keys/${mintedKeyId}`, {
