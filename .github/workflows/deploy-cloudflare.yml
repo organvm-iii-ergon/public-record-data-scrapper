@@ -30,6 +30,7 @@ on:
       - 'scripts/prepare-cloudflare-pages.mjs'
       - 'scripts/__tests__/cloudflare-pages.test.mjs'
       - 'scripts/no-mock-runtime.mjs'
+      - 'scripts/verify-tenant-dashboard-bundle.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig.json'

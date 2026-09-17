@@ -163,7 +163,12 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
     join(process.cwd(), '.github/workflows/deploy-cloudflare.yml'),
     'utf8'
   )
-  for (const path of ['apps/web/**', 'functions/**', 'scripts/prepare-cloudflare-pages.mjs']) {
+  for (const path of [
+    'apps/web/**',
+    'functions/**',
+    'scripts/prepare-cloudflare-pages.mjs',
+    'scripts/verify-tenant-dashboard-bundle.mjs'
+  ]) {
     assert.match(workerWorkflow, new RegExp(path.replaceAll('*', '\\*')))
   }
 })
