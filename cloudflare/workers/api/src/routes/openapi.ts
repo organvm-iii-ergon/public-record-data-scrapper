@@ -110,29 +110,6 @@ export const openApiSpec = {
           '200': { description: 'List of jobs' },
           '401': { description: 'Unauthorized' }
         }
-      },
-      post: {
-        summary: 'Enqueue a background job',
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  type: { type: 'string' },
-                  payload: { type: 'object' }
-                },
-                required: ['type']
-              }
-            }
-          }
-        },
-        responses: {
-          '202': { description: 'Job enqueued' },
-          '400': { description: 'Bad request' },
-          '401': { description: 'Unauthorized' }
-        }
       }
     },
     '/v1/jobs/{id}': {

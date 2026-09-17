@@ -532,7 +532,7 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
 
   // Verify credentials via provider adapter
   const adapter = CRM_ADAPTERS[body.provider]
-  const isValid = await adapter.verifyCredentials(body.api_key)
+  const isValid = await adapter.verifyCredentials(body.api_key, body.config)
   const status = isValid ? 'active' : 'error'
 
   const id = `crm_${crypto.randomUUID()}`

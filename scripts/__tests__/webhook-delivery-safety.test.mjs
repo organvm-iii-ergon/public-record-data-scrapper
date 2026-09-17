@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs'
 import {
   drainWebhookDeliveries,
   readBoundedResponseBody,
-  replayWebhookDelivery
+  replayWebhookDelivery,
+  sendWebhookDelivery
 } from '../../cloudflare/workers/api/src/webhooks.ts'
 import { normalizeSubscriptionTier } from '../../cloudflare/workers/api/src/tier.ts'
 import {
@@ -99,14 +100,79 @@ test('pending drain atomically claims a delivery before sending it', async () =>
   assert.deepEqual(calls[2].params, ['delivery-1'])
 })
 
-test('manual replay selects only failed or dead-letter deliveries', async () => {
-  const { env, calls } = createEnv({ firstResult: null })
+test('manual replay atomically claims only failed or dead-letter deliveries', async () => {
+  const { env, calls } = createEnv({ runChanges: 0 })
 
   assert.equal(await replayWebhookDelivery(env, 'org-1', 'delivery-1'), false)
   assert.equal(calls.length, 1)
-  assert.equal(calls[0].operation, 'first')
+  assert.equal(calls[0].operation, 'run')
+  assert.match(calls[0].sql, /SET status = 'delivering'/)
   assert.match(calls[0].sql, /status IN \('failed', 'dead_letter'\)/)
   assert.deepEqual(calls[0].params, ['delivery-1', 'org-1'])
+})
+
+test('webhook delivery refuses redirects and increments failure state atomically', async () => {
+  const delivery = {
+    id: 'delivery-1',
+    org_id: 'org-1',
+    webhook_id: 'endpoint-1',
+    event: 'test.ping',
+    payload: '{}',
+    status: 'pending',
+    attempts: 0,
+    max_attempts: 5,
+    next_retry_at: null
+  }
+  const endpoint = {
+    id: 'endpoint-1',
+    org_id: 'org-1',
+    url: 'https://hooks.example.test/events',
+    secret: 'whsec_test',
+    events: '["*"]',
+    status: 'active',
+    consecutive_failures: 9
+  }
+  const calls = []
+  const DB = {
+    prepare(sql) {
+      const call = { sql, params: [] }
+      calls.push(call)
+      return {
+        bind(...params) {
+          call.params = params
+          return {
+            async first() {
+              return calls.filter((item) => item.sql.startsWith('SELECT')).length === 1
+                ? delivery
+                : endpoint
+            },
+            async run() {
+              return { success: true, meta: { changes: 1 } }
+            }
+          }
+        }
+      }
+    }
+  }
+  const originalFetch = globalThis.fetch
+  let redirect
+  globalThis.fetch = async (_url, init) => {
+    redirect = init.redirect
+    return new Response('', { status: 302, headers: { location: 'http://127.0.0.1/' } })
+  }
+  try {
+    const result = await sendWebhookDelivery({ DB }, 'delivery-1', 'org-1')
+    assert.equal(result.success, false)
+    assert.equal(redirect, 'manual')
+    const endpointUpdate = calls.find((call) =>
+      call.sql.includes('consecutive_failures = consecutive_failures + 1')
+    )
+    assert.ok(endpointUpdate)
+    assert.match(endpointUpdate.sql, /consecutive_failures \+ 1 >= \?/)
+    assert.deepEqual(endpointUpdate.params, [10, 'endpoint-1', 'org-1'])
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
 
 test('public integration serializers omit signing secrets and provider API keys', () => {
@@ -196,7 +262,26 @@ test('outbound integrations have durable retries, timeouts, and tenant RLS', () 
     'utf8'
   )
   assert.match(crmSource, /CRM_REQUEST_TIMEOUT_MS = 10_000/)
-  assert.equal((crmSource.match(/signal: crmRequestSignal\(\)/g) ?? []).length, 4)
+  assert.equal((crmSource.match(/signal: crmRequestSignal\(\)/g) ?? []).length, 6)
+  assert.doesNotMatch(crmSource, /return apiKey\.length > 10/)
+
+  const authSource = readFileSync(
+    new URL('../../cloudflare/workers/api/src/auth.ts', import.meta.url),
+    'utf8'
+  )
+  assert.doesNotMatch(authSource, /KV\?\.get<Identity>/)
+
+  const prospectsSource = readFileSync(
+    new URL('../../cloudflare/workers/api/src/routes/prospects.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(prospectsSource, /!body \|\|[\s\S]*typeof body !== 'object'/)
+
+  const crmMigration = readFileSync(
+    new URL('../../cloudflare/migrations/0003_webhooks_crm.sql', import.meta.url),
+    'utf8'
+  )
+  assert.match(crmMigration, /crm_id\s+TEXT REFERENCES crm_integrations\(id\) ON DELETE SET NULL/)
 
   const rlsMigration = readFileSync(
     new URL('../../database/migrations/20260915_webhook_subscriptions.sql', import.meta.url),
@@ -210,6 +295,7 @@ test('outbound integrations have durable retries, timeouts, and tenant RLS', () 
     new URL('../../cloudflare/workers/api/src/routes/openapi.ts', import.meta.url),
     'utf8'
   )
+  assert.doesNotMatch(openApiSource, /summary: 'Enqueue a background job'/)
   assert.equal(
     (openApiSource.match(/'503': \{ description: 'Enrichment worker unavailable' \}/g) ?? [])
       .length,

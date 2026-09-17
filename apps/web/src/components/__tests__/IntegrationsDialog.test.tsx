@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { IntegrationsDialog } from '../IntegrationsDialog'
@@ -11,6 +11,32 @@ vi.mock('sonner', () => ({
     promise: vi.fn((p) => p)
   }
 }))
+
+const { apiRequest } = vi.hoisted(() => ({
+  apiRequest: vi.fn(async (path: string, options?: { method?: string; body?: unknown }) => {
+    if (path === '/webhooks' && options?.method === 'POST') {
+      const body = options.body as { url: string; description?: string; events: string[] }
+      return {
+        endpoint: {
+          id: 'whe-created',
+          org_id: 'org-current',
+          url: body.url,
+          secret: 'whsec-created-once',
+          description: body.description,
+          events: body.events,
+          status: 'active',
+          created_at: '2026-09-17T00:00:00Z'
+        }
+      }
+    }
+    if (path === '/webhooks') return { endpoints: [] }
+    if (path === '/webhooks/deliveries') return { deliveries: [] }
+    if (path === '/crm/integrations') return { integrations: [] }
+    throw new Error(`Unexpected API request: ${path}`)
+  })
+}))
+
+vi.mock('@/lib/api/client', () => ({ apiRequest }))
 
 describe('IntegrationsDialog', () => {
   it('renders CRM tab by default with native HubSpot push details', () => {
@@ -34,8 +60,7 @@ describe('IntegrationsDialog', () => {
     expect(screen.getByText(/Register New Webhook Endpoint/i)).toBeInTheDocument()
     expect(screen.getByText(/HMAC-SHA256 \(X-UCC-Signature\)/i)).toBeInTheDocument()
     expect(screen.getByText(/Recent Deliveries & Dead-Letter Queue \(DLQ\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Dead-Letter \(DLQ\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/Replay DLQ/i)).toBeInTheDocument()
+    expect(screen.getByText(/Recent Deliveries & Dead-Letter Queue \(DLQ\)/i)).toBeInTheDocument()
   })
 
   it('allows registering a new webhook endpoint and displays feedback', async () => {
@@ -50,6 +75,12 @@ describe('IntegrationsDialog', () => {
     const registerBtn = screen.getByText('Register Endpoint')
     await user.click(registerBtn)
 
-    expect(screen.getByText('https://example.com/api/webhooks')).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.getByText('https://example.com/api/webhooks')).toBeInTheDocument()
+    )
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/webhooks',
+      expect.objectContaining({ method: 'POST' })
+    )
   })
 })

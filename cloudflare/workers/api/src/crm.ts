@@ -33,7 +33,7 @@ export interface ProspectPayload {
 
 export interface CrmAdapter {
   readonly provider: CrmProvider
-  verifyCredentials(apiKey: string): Promise<boolean>
+  verifyCredentials(apiKey: string, config?: Record<string, unknown>): Promise<boolean>
   pushProspect(
     apiKey: string,
     prospect: ProspectPayload,
@@ -152,9 +152,21 @@ export class HubSpotAdapter implements CrmAdapter {
 export class SalesforceAdapter implements CrmAdapter {
   readonly provider: CrmProvider = 'salesforce'
 
-  async verifyCredentials(apiKey: string): Promise<boolean> {
-    // In production, apiKey contains accessToken or instanceUrl|accessToken
-    return apiKey.length > 10
+  async verifyCredentials(apiKey: string, config: Record<string, unknown> = {}): Promise<boolean> {
+    const instanceUrl = salesforceInstanceUrl(config.instanceUrl)
+    if (!instanceUrl) return false
+
+    try {
+      const res = await fetch(`${instanceUrl}/services/oauth2/userinfo`, {
+        method: 'GET',
+        signal: crmRequestSignal(),
+        headers: { Authorization: `Bearer ${apiKey}` },
+        redirect: 'error'
+      })
+      return res.ok
+    } catch {
+      return false
+    }
   }
 
   async pushProspect(
@@ -162,8 +174,12 @@ export class SalesforceAdapter implements CrmAdapter {
     prospect: ProspectPayload,
     config: Record<string, unknown> = {}
   ): Promise<CrmPushResult> {
-    const instanceUrl = (config.instanceUrl as string) ?? 'https://login.salesforce.com'
+    const instanceUrl = salesforceInstanceUrl(config.instanceUrl)
     const companyName = prospect.company_name ?? 'Unnamed Company'
+
+    if (!instanceUrl) {
+      return { success: false, provider: this.provider, error: 'Invalid Salesforce instance URL' }
+    }
 
     try {
       const res = await fetch(`${instanceUrl}/services/data/v58.0/sobjects/Lead`, {
@@ -208,8 +224,27 @@ export class GoHighLevelAdapter implements CrmAdapter {
   readonly provider: CrmProvider = 'gohighlevel'
   private readonly baseUrl = 'https://services.leadconnectorhq.com'
 
-  async verifyCredentials(apiKey: string): Promise<boolean> {
-    return apiKey.length > 10
+  async verifyCredentials(apiKey: string, config: Record<string, unknown> = {}): Promise<boolean> {
+    const locationId = typeof config.locationId === 'string' ? config.locationId.trim() : ''
+    if (!locationId) return false
+
+    try {
+      const url = new URL(`${this.baseUrl}/contacts/`)
+      url.searchParams.set('locationId', locationId)
+      url.searchParams.set('limit', '1')
+      const res = await fetch(url, {
+        method: 'GET',
+        signal: crmRequestSignal(),
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Version: '2021-07-28'
+        },
+        redirect: 'error'
+      })
+      return res.ok
+    } catch {
+      return false
+    }
   }
 
   async pushProspect(
@@ -257,6 +292,27 @@ export class GoHighLevelAdapter implements CrmAdapter {
         error: err instanceof Error ? err.message : String(err)
       }
     }
+  }
+}
+
+function salesforceInstanceUrl(value: unknown): string | null {
+  const candidate =
+    typeof value === 'string' && value.trim() ? value.trim() : 'https://login.salesforce.com'
+  try {
+    const url = new URL(candidate)
+    const host = url.hostname.toLowerCase()
+    if (
+      url.protocol !== 'https:' ||
+      (!host.endsWith('.salesforce.com') &&
+        host !== 'salesforce.com' &&
+        !host.endsWith('.force.com') &&
+        host !== 'force.com')
+    ) {
+      return null
+    }
+    return url.origin
+  } catch {
+    return null
   }
 }
 

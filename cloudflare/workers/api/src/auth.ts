@@ -89,16 +89,6 @@ export async function verifyApiKey(env: Env, presentedKey: string): Promise<Iden
 
   const keyHash = await hashApiKey(presentedKey)
 
-  // Fast path: optional KV caching for verified identity
-  try {
-    const cached = await env.KV?.get<Identity>(`apikey:${keyHash}`, 'json')
-    if (cached) {
-      return cached
-    }
-  } catch {
-    // KV read failure is non-fatal; fall through to D1
-  }
-
   const row = await first<ApiKeyVerifyRow>(
     env,
     `SELECT a.id, a.org_id, a.role, a.expires_at, a.revoked_at, o.subscription_tier
@@ -129,7 +119,9 @@ export async function verifyApiKey(env: Env, presentedKey: string): Promise<Iden
     keyId: row.id
   }
 
-  // Cache in KV for 60 seconds to relieve D1 under high concurrency
+  // Keep a short-lived cache as an observability/performance hint only. It is
+  // deliberately never used as authorization state: every request rechecks
+  // D1 so revocations and expirations take effect immediately.
   try {
     await env.KV?.put(`apikey:${keyHash}`, JSON.stringify(identity), { expirationTtl: 60 })
   } catch {

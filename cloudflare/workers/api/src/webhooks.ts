@@ -230,6 +230,10 @@ export async function sendWebhookDelivery(
     try {
       const res = await fetch(endpoint.url, {
         method: 'POST',
+        // Never follow tenant-controlled redirects. A destination that was
+        // validated as public HTTPS must not be able to bounce the worker to
+        // an internal address after validation.
+        redirect: 'manual',
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': 'UCC-MCA-Webhook/1.0',
@@ -312,20 +316,19 @@ export async function sendWebhookDelivery(
   )
 
   // Increment failure count on endpoint
-  const newConsecutiveFailures = endpoint.consecutive_failures + 1
-  const shouldCircuitBreak = newConsecutiveFailures >= CIRCUIT_BREAKER_THRESHOLD
-  const nextEndpointStatus = shouldCircuitBreak ? 'paused' : endpoint.status
-
   await run(
     env,
     `UPDATE webhook_endpoints
-        SET consecutive_failures = ?,
-            status = ?,
+        SET consecutive_failures = consecutive_failures + 1,
+            status = CASE
+              WHEN consecutive_failures + 1 >= ? THEN 'paused'
+              ELSE status
+            END,
             updated_at = datetime('now')
-      WHERE id = ?`,
-    newConsecutiveFailures,
-    nextEndpointStatus,
-    endpoint.id
+      WHERE id = ? AND org_id = ?`,
+    CIRCUIT_BREAKER_THRESHOLD,
+    endpoint.id,
+    delivery.org_id
   )
 
   return {
@@ -465,30 +468,35 @@ export async function replayWebhookDelivery(
   orgId: string,
   deliveryId: string
 ): Promise<boolean> {
-  const delivery = await first<WebhookDeliveryRow>(
+  const claim = await run(
     env,
-    `SELECT * FROM webhook_deliveries
+    `UPDATE webhook_deliveries
+        SET status = 'delivering',
+            attempts = 0,
+            error_message = NULL,
+            next_retry_at = NULL,
+            claimed_at = datetime('now')
       WHERE id = ? AND org_id = ? AND status IN ('failed', 'dead_letter')`,
     deliveryId,
     orgId
   )
 
-  if (!delivery) return false
-
-  await run(
-    env,
-    `UPDATE webhook_deliveries
-        SET status = 'pending',
-            attempts = 0,
-            error_message = NULL,
-            next_retry_at = NULL,
-            claimed_at = NULL
-      WHERE id = ? AND org_id = ?`,
-    deliveryId,
-    orgId
-  )
+  if (claim.meta.changes !== 1) return false
 
   // Trigger immediate dispatch
-  await sendWebhookDelivery(env, deliveryId)
+  try {
+    await sendWebhookDelivery(env, deliveryId, orgId)
+  } finally {
+    // If dispatch exits before a normal transition, leave a recoverable item
+    // rather than an indefinitely held replay claim.
+    await run(
+      env,
+      `UPDATE webhook_deliveries
+          SET status = 'pending', claimed_at = NULL
+        WHERE id = ? AND org_id = ? AND status = 'delivering'`,
+      deliveryId,
+      orgId
+    )
+  }
   return true
 }

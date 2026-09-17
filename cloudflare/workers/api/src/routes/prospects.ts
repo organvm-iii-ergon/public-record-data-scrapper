@@ -152,7 +152,7 @@ interface CreateProspectBody {
 prospectsRoute.post('/', async (c) => {
   const { orgId } = c.get('identity')
 
-  let body: CreateProspectBody
+  let body: CreateProspectBody | null
   try {
     body = await c.req.json<CreateProspectBody>()
   } catch {
@@ -163,6 +163,8 @@ prospectsRoute.post('/', async (c) => {
   }
 
   if (
+    !body ||
+    typeof body !== 'object' ||
     !body.company_name ||
     typeof body.company_name !== 'string' ||
     body.company_name.trim().length === 0

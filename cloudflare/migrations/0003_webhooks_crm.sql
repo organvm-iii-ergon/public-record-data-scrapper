@@ -65,7 +65,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_integrations_org_provider ON crm_integ
 CREATE TABLE IF NOT EXISTS crm_push_logs (
   id            TEXT PRIMARY KEY,
   org_id        TEXT NOT NULL REFERENCES organizations(id),
-  crm_id        TEXT NOT NULL REFERENCES crm_integrations(id) ON DELETE CASCADE,
+  crm_id        TEXT REFERENCES crm_integrations(id) ON DELETE SET NULL,
   prospect_id   TEXT NOT NULL,
   provider      TEXT NOT NULL,
   external_id   TEXT,                                           -- CRM object ID (e.g. HubSpot company ID)

@@ -15,9 +15,10 @@
  * 7. Cryptographic receipt integrity: valid sha256 checksum of payload
  */
 
-import { createHash } from 'crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { createHash, randomUUID } from 'crypto'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import { stateCollectorFactory } from '../apps/web/src/lib/collectors/StateCollectorFactory'
 
 export interface LiveReceipt {
   receiptId: string
@@ -224,19 +225,154 @@ export function loadStreakStatus(
   }
 }
 
+export function loadRunReceipts(state: string, baseDir = process.cwd()): LiveReceipt[] {
+  const directory = join(baseDir, '.quality', 'state-runs', state.toUpperCase())
+  if (!existsSync(directory)) return []
+
+  const receipts: LiveReceipt[] = []
+  for (const name of readdirSync(directory)
+    .filter((entry) => entry.endsWith('.json'))
+    .sort()) {
+    try {
+      const value = JSON.parse(readFileSync(join(directory, name), 'utf8')) as LiveReceipt
+      if (value.state?.toUpperCase() === state.toUpperCase() && value.receiptId) {
+        receipts.push(value)
+      }
+    } catch {
+      // A malformed receipt is ignored here; it cannot contribute to a green streak.
+    }
+  }
+  return receipts
+}
+
+export function saveRunReceipt(receipt: LiveReceipt, baseDir = process.cwd()): string {
+  const directory = join(baseDir, '.quality', 'state-runs', receipt.state.toUpperCase())
+  mkdirSync(directory, { recursive: true })
+  const filePath = join(directory, `${receipt.receiptId}.json`)
+  writeFileSync(filePath, JSON.stringify(receipt, null, 2), 'utf8')
+  return filePath
+}
+
+async function probeState(state: string, count: number): Promise<LiveReceipt[]> {
+  const collector = stateCollectorFactory.getCollector(state)
+  const config = stateCollectorFactory.getStateConfig(state)
+  if (!collector || !config) {
+    throw new Error(`No production-ready collector is configured for ${state}`)
+  }
+
+  const receipts: LiveReceipt[] = []
+  for (let index = 0; index < count; index++) {
+    const started = Date.now()
+    const timestamp = new Date().toISOString()
+    let payload: unknown = []
+    let status: LiveReceipt['status'] = 'SUCCESS'
+    let errorMessage: string | undefined
+    let validationErrors: string[] = []
+
+    try {
+      const filings = await collector.collectNewFilings({
+        since: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        limit: 100
+      })
+      payload = filings
+      validationErrors = filings.flatMap((filing, filingIndex) =>
+        collector
+          .validateFiling(filing)
+          .errors.map((error) => `record ${filingIndex + 1}: ${error}`)
+      )
+      if (validationErrors.length > 0) status = 'FAILURE'
+    } catch (error) {
+      status = 'FAILURE'
+      errorMessage = error instanceof Error ? error.message : String(error)
+    }
+
+    const recordsIngested = Array.isArray(payload) ? payload.length : 0
+    const receipt: LiveReceipt = {
+      receiptId: `rcpt_${state.toLowerCase()}_${Date.now()}_${randomUUID().slice(0, 8)}`,
+      state,
+      accessMethod: config.activeMethod ?? config.accessMethods[0] ?? 'scrape',
+      timestamp,
+      targetQuery: 'new filings from the previous 24 hours',
+      status,
+      recordsIngested,
+      recordsValidated: Math.max(0, recordsIngested - validationErrors.length),
+      validationErrors,
+      durationMs: Date.now() - started,
+      payload,
+      payloadSha256: computePayloadDigest(payload),
+      isMockData: false,
+      ...(errorMessage ? { errorMessage } : {})
+    }
+    saveRunReceipt(receipt)
+    receipts.push(receipt)
+  }
+  return receipts
+}
+
 // --- CLI Execution Handler ---
 async function main() {
   const args = process.argv.slice(2)
+  const isStatus = args.includes('--status')
+  const isEvaluate = args.includes('--evaluate')
+  const isProbe = args.includes('--probe')
   const stateArgIndex = args.indexOf('--state')
   const state = stateArgIndex !== -1 ? args[stateArgIndex + 1]?.toUpperCase() : undefined
 
+  if (isStatus) {
+    const directory = join(process.cwd(), '.quality', 'state-verification')
+    const files = existsSync(directory)
+      ? readdirSync(directory)
+          .filter((name) => name.endsWith('-verification.json'))
+          .sort()
+      : []
+    if (files.length === 0) {
+      console.log('[Verifier] No saved certification statuses found.')
+      return
+    }
+    for (const file of files) {
+      const saved = JSON.parse(
+        readFileSync(join(directory, file), 'utf8')
+      ) as VerificationStreakStatus
+      console.log(
+        `${saved.state}: ${saved.currentStreak}/${saved.targetStreak} ${saved.isCertified ? 'CERTIFIED' : 'NOT CERTIFIED'}`
+      )
+    }
+    return
+  }
+
   if (!state) {
     console.log('Automated State Run Verifier (Epic S6 / S7 Playbook)')
-    console.log('Usage: npx tsx scripts/verify-state-runs.ts --state <STATE_CODE> [--evaluate]')
-    process.exit(0)
+    console.log(
+      'Usage: npx tsx scripts/verify-state-runs.ts --state <STATE_CODE> (--evaluate | --probe [--count N]) | --status'
+    )
+    process.exitCode = 1
+    return
   }
 
   console.log(`[Verifier] Assessing state ${state} verification status...`)
+
+  if (isProbe) {
+    const countArgIndex = args.indexOf('--count')
+    const requestedCount =
+      countArgIndex === -1 ? 1 : Number.parseInt(args[countArgIndex + 1] ?? '', 10)
+    if (!Number.isInteger(requestedCount) || requestedCount < 1 || requestedCount > 25) {
+      throw new Error('--count must be an integer between 1 and 25')
+    }
+    const probed = await probeState(state, requestedCount)
+    console.log(`[Verifier] Recorded ${probed.length} live probe receipt(s).`)
+  }
+
+  if (isEvaluate || isProbe) {
+    const receipts = loadRunReceipts(state)
+    if (receipts.length === 0) {
+      throw new Error(`No run receipts found for ${state}`)
+    }
+    const evaluated = evaluateStreak(receipts)
+    const savedAt = saveStreakStatus(evaluated)
+    console.log(`[Verifier] Evaluated ${evaluated.totalEvaluated} unique receipt(s).`)
+    console.log(`[Verifier] Saved ${savedAt}`)
+  }
+
   const current = loadStreakStatus(state)
 
   if (current) {

@@ -187,7 +187,7 @@ export interface CrmIntegrationRow {
 export interface CrmPushLogRow {
   id: string
   org_id: string
-  crm_id: string
+  crm_id: string | null
   prospect_id: string
   provider: string
   external_id: string | null
