@@ -98,6 +98,26 @@ try {
     .run()
   assert.equal(await resolve(payload), null, 'revoked enrollment fails closed')
   await db.prepare('UPDATE access_enrollment_invites SET revoked_at = NULL').run()
+  await db
+    .prepare(
+      `CREATE TRIGGER reject_test_membership BEFORE INSERT ON access_memberships
+       BEGIN SELECT RAISE(ABORT, 'test membership rejection'); END`
+    )
+    .run()
+  const rejected = await worker.dispatchFetch('http://localhost/', {
+    method: 'POST',
+    body: JSON.stringify({ payload })
+  })
+  assert.equal(rejected.status, 500, 'membership failure aborts the enrollment batch')
+  const unclaimed = await db
+    .prepare(
+      'SELECT claimed_subject, claimed_at FROM access_enrollment_invites WHERE issuer=? AND email=? AND org_id=?'
+    )
+    .bind(issuer, 'test@example.test', 'a')
+    .first()
+  assert.equal(unclaimed.claimed_subject, null, 'failed membership insert rolls back the claim')
+  assert.equal(unclaimed.claimed_at, null, 'failed membership insert rolls back claim time')
+  await db.prepare('DROP TRIGGER reject_test_membership').run()
   assert.equal(
     (await resolve({ ...payload, email: ' Test@Example.Test ' })).role,
     'user',

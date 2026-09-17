@@ -7,6 +7,7 @@ import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
 import { DemoTour } from '@/components/DemoTour'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+import { SettingsMenu } from '@/components/SettingsMenu'
 
 // Layout components
 import { Header, LoadingAndErrorState, TabNavigation, MobileBottomNav } from '@/components/layout'
@@ -172,7 +173,10 @@ function DashboardApp() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} />
+      <Header
+        onRefresh={handleRefreshData}
+        settings={tenantSurface ? undefined : <SettingsMenu />}
+      />
       {!tenantSurface && <QuickAccessBanner />}
       {!tenantSurface && <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />}
 

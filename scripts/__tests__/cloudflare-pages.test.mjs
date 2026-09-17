@@ -146,14 +146,35 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /provision-cloudflare-staging\.py --plan/)
   assert.match(workflow, /resolve-cloudflare-production\.py/)
   assert.match(workflow, /head_sha=\$GITHUB_SHA/)
+  assert.match(workflow, /Wait for the exact Worker deployment/)
+  assert.match(workflow, /deploy-cloudflare\.yml\/runs/)
+  assert.doesNotMatch(workflow, /event=push&head_sha=/)
+  assert.match(workflow, /actions\/runs\/\$run_id\/jobs\?per_page=100/)
+  assert.match(workflow, /\.name == "deploy-staging" and \.conclusion == "success"/)
+  assert.match(workflow, /test "\$conclusion" = success/)
   assert.match(workflow, /for attempt in 1 2 3 4 5 6/)
   assert.match(workflow, /curl -q --silent --show-error/)
   assert.match(workflow, /%\{http_code\} %\{redirect_url\}\\n/)
   assert.match(workflow, /team="\$\{team#https:\/\/\}"/)
   assert.match(workflow, /team="\$\{team%\/\}"/)
   assert.match(workflow, /test "\$access_ready" = true/)
+  assert.match(workflow, /--write-out '%\{http_code\} %\{redirect_url\}\\n'/)
+  assert.ok((workflow.match(/git\/ref\/heads\/main/g) || []).length >= 2)
   assert.match(workflow, /Retire the superseded GitHub Pages site/)
-  assert.match(workflow, /--method DELETE "repos\/\$GITHUB_REPOSITORY\/pages"/)
+  assert.match(workflow, /test "\$status" = 204 -o "\$status" = 404/)
   assert.doesNotMatch(workflow, /actions\/deploy-pages/)
   assert.doesNotMatch(workflow, /VITE_PUBLIC_DEMO/)
+
+  const workerWorkflow = await readFile(
+    join(process.cwd(), '.github/workflows/deploy-cloudflare.yml'),
+    'utf8'
+  )
+  for (const path of [
+    'apps/web/**',
+    'functions/**',
+    'scripts/prepare-cloudflare-pages.mjs',
+    'scripts/verify-tenant-dashboard-bundle.mjs'
+  ]) {
+    assert.match(workerWorkflow, new RegExp(path.replaceAll('*', '\\*')))
+  }
 })

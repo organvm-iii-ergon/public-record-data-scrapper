@@ -337,7 +337,7 @@ def access_identity(api, app, domain):
     return aud
 
 
-def pages_access_identity(api, app, domain):
+def pages_access_application_identity(app, domain):
     if (app.get("name") != PAGES_ACCESS or app.get("type") != "self_hosted"
             or app.get("domain") != domain):
         raise Blocked("pages_access_application_target_mismatch")
@@ -348,14 +348,25 @@ def pages_access_identity(api, app, domain):
     aud = app.get("aud")
     if not isinstance(aud, str) or not re.fullmatch(r"[a-fA-F0-9]{64}", aud):
         raise Blocked("pages_access_audience_not_verified")
-    policies = inventory_policies(api, identifier("access", app))
+    return aud
+
+
+def validate_pages_access_policies(policies, require_allow):
     if any(policy.get("decision") not in {"deny", "allow", "non_identity"}
            for policy in policies):
         raise Blocked("pages_access_policy_bypasses_authentication_or_is_unknown")
     allow = [policy for policy in policies if policy.get("decision") == "allow"]
-    if not allow or any(not isinstance(policy.get("include"), list) or not policy["include"]
-                        for policy in allow):
+    if any(not isinstance(policy.get("include"), list) or not policy["include"]
+           for policy in allow):
         raise Blocked("pages_access_enrollment_policy_required")
+    if require_allow and not allow:
+        raise Blocked("pages_access_enrollment_policy_required")
+
+
+def pages_access_identity(api, app, domain):
+    aud = pages_access_application_identity(app, domain)
+    policies = inventory_policies(api, identifier("access", app))
+    validate_pages_access_policies(policies, require_allow=True)
     return aud
 
 
@@ -460,7 +471,11 @@ def reconcile(api, root, config, staging, production, report, apply):
     if selected["access"]:
         access_identity(api, selected["access"], domain)
     if pages_access:
-        pages_access_identity(api, pages_access, pages_domain)
+        pages_access_application_identity(pages_access, pages_domain)
+        validate_pages_access_policies(
+            inventory_policies(api, identifier("access", pages_access)),
+            require_allow=not apply,
+        )
         production_audiences = {
             value.strip() for value in production.get("vars", {}).get("ACCESS_AUD", "").split(",")
             if value.strip()

@@ -27,7 +27,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     environment: ${{ github.event_name == 'push' && 'staging' || inputs.target }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -94,6 +94,31 @@ jobs:
           test "$GITHUB_REF" = refs/heads/main
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+      - name: Wait for the exact Worker deployment
+        if: steps.target.outputs.environment == 'staging'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 360); do
+            receipt="$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/deploy-cloudflare.yml/runs?branch=main&head_sha=$GITHUB_SHA&per_page=20")"
+            conclusion=missing
+            while read -r run_id; do
+              jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?per_page=100")"
+              if jq -e \
+                '.jobs | any(.name == "deploy-staging" and .conclusion == "success")' \
+                <<< "$jobs" > /dev/null; then
+                conclusion=success
+                break
+              fi
+            done < <(jq -r --arg sha "$GITHUB_SHA" \
+              '.workflow_runs[] | select(.head_sha == $sha and (.event == "push" or .event == "workflow_dispatch")) | .id' \
+              <<< "$receipt")
+            if [ "$conclusion" = success ]; then break; fi
+            test "$attempt" -lt 360
+            sleep 5
+          done
+          test "$conclusion" = success
       - name: Resolve or create the exact Pages project
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -149,10 +174,14 @@ jobs:
       - name: Deploy the exact Pages revision
         working-directory: ${{ steps.package.outputs.dir }}
         env:
+          GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
           PROJECT: ${{ steps.target.outputs.project }}
         run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           ../../../cloudflare/node_modules/.bin/wrangler pages deploy dist \
             --project-name "$PROJECT" \
             --branch main \
@@ -195,7 +224,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method DELETE "repos/$GITHUB_REPOSITORY/pages"
-          status="$(gh api --include "repos/$GITHUB_REPOSITORY/pages" 2>/dev/null \
-            | head -n 1 | awk '{print $2}' || true)"
+          endpoint="https://api.github.com/repos/$GITHUB_REPOSITORY/pages"
+          status="$(curl --silent --show-error --output .quality/github-pages-delete.json \
+            --write-out '%{http_code}' --request DELETE \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' "$endpoint")"
+          test "$status" = 204 -o "$status" = 404
+          status="$(curl --silent --show-error --output .quality/github-pages-readback.json \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' "$endpoint")"
           test "$status" = 404
