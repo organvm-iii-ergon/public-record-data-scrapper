@@ -80,35 +80,19 @@ try {
     return statements
   }
 
-  const rawMigration1 = fs.readFileSync(new URL('migrations/0001_init.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration1)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration2 = fs.readFileSync(new URL('migrations/0002_api_keys.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration2)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration3 = fs.readFileSync(new URL('migrations/0003_webhooks_crm.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration3)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration4 = fs.readFileSync(
-    new URL('migrations/0004_job_claim_lease.sql', edge),
-    'utf8'
-  )
-  for (const stmt of splitSqlStatements(rawMigration4)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration5 = fs.readFileSync(
-    new URL('migrations/0005_webhook_delivery_claim_lease.sql', edge),
-    'utf8'
-  )
-  for (const stmt of splitSqlStatements(rawMigration5)) {
-    await db.prepare(stmt).run()
+  const migrations = [
+    '0001_init.sql',
+    '0002_api_keys.sql',
+    '0003_webhooks_crm.sql',
+    '0004_job_claim_lease.sql',
+    '0005_webhook_delivery_claim_lease.sql',
+    '0006_rate_limit_counters.sql'
+  ]
+  for (const migration of migrations) {
+    const sql = fs.readFileSync(new URL(`migrations/${migration}`, edge), 'utf8')
+    for (const stmt of splitSqlStatements(sql)) {
+      await db.prepare(stmt).run()
+    }
   }
 
   const tables = await db
@@ -258,13 +242,13 @@ try {
   })
   assert.equal(expiredRes.status, 401)
 
-  // 3e. Valid X-API-Key header -> 200 with rate limit headers
+  // 3e. One authenticated collection request consumes exactly one quota slot.
   const validHeaderRes = await worker.dispatchFetch('http://localhost/v1/prospects', {
     headers: { 'X-API-Key': growthKey }
   })
   assert.equal(validHeaderRes.status, 200)
   assert.equal(validHeaderRes.headers.get('X-RateLimit-Limit'), '1000')
-  assert.ok(validHeaderRes.headers.get('X-RateLimit-Remaining'))
+  assert.equal(validHeaderRes.headers.get('X-RateLimit-Remaining'), '999')
   assert.ok(validHeaderRes.headers.get('X-RateLimit-Reset'))
   const validHeaderJson = await validHeaderRes.json()
   assert.deepEqual(validHeaderJson.data, [])
@@ -312,6 +296,7 @@ try {
     headers: { 'X-API-Key': freeKey }
   })
   assert.equal(freeListRes.status, 200)
+  assert.equal(freeListRes.headers.get('X-RateLimit-Remaining'), '9')
   const freeList = await freeListRes.json()
   assert.equal(freeList.data.length, 0)
 
@@ -381,7 +366,7 @@ try {
   const singleEnrichData = await singleEnrichRes.json()
   assert.equal(singleEnrichData.error.code, 'SERVICE_UNAVAILABLE')
 
-  // 6b. Batch enrichment with Free tier -> 403 TIER_UPGRADE_REQUIRED (blocked at edge before D1!)
+  // 6b. Batch enrichment with Free tier -> 403 TIER_UPGRADE_REQUIRED
   const freeBatchRes = await worker.dispatchFetch('http://localhost/v1/enrichment/batch', {
     method: 'POST',
     headers: {
@@ -435,6 +420,7 @@ try {
     headers: { 'X-API-Key': mintedKeySecret }
   })
   assert.equal(testNewKeyRes.status, 200)
+  assert.equal(testNewKeyRes.headers.get('X-RateLimit-Remaining'), '999')
 
   // Revoke the key
   const revokeKeyRes = await worker.dispatchFetch(`http://localhost/v1/keys/${mintedKeyId}`, {
@@ -467,6 +453,15 @@ try {
     }
   }
   assert.ok(rateLimited, 'Expected rate limiter to trigger HTTP 429 on free tier quota exhaustion')
+
+  // Missing counter storage must never fall back to permissive isolate/KV counts.
+  await db.prepare('ALTER TABLE rate_limit_counters RENAME TO rate_limit_counters_unavailable').run()
+  const unavailableQuota = await worker.dispatchFetch('http://localhost/v1/prospects', {
+    headers: { 'X-API-Key': growthKey }
+  })
+  assert.equal(unavailableQuota.status, 503)
+  assert.equal((await unavailableQuota.json()).error.code, 'RATE_LIMIT_UNAVAILABLE')
+  await db.prepare('ALTER TABLE rate_limit_counters_unavailable RENAME TO rate_limit_counters').run()
 
   // Verify scheduled cron triggers and D1 queue drainage
   const runtimeWorker = await worker.getWorker()
@@ -521,7 +516,7 @@ try {
 
   assert.equal(outboundRequests, 0)
   console.log(
-    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, schema=5 tables, v1_api=ok, api_keys=ok, tenant_isolation=ok, rate_limits=ok (429 verified), tier_entitlements=ok (403 verified), crons=4 passed, d1_drain=ok; outbound=0'
+    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, v1_api=ok, api_keys=ok, tenant_isolation=ok, atomic_rate_limits=ok, single_charge=ok, unavailable_quota=503, tier_entitlements=ok, crons=4 passed, d1_drain=ok; outbound=0'
   )
 } finally {
   await worker.dispose()

@@ -102,10 +102,20 @@ export async function processWebhookDeliveryJob(
     const nextAttempt = attemptsMade + 1
     if (nextAttempt >= MAX_DELIVERY_ATTEMPTS) {
       await notifyDeadDelivery(deliveryId, event)
-      return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'dead' }
+      return {
+        deliveryId,
+        success: false,
+        responseStatus: result.responseStatus,
+        newStatus: 'dead'
+      }
     }
 
-    return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'failed' }
+    return {
+      deliveryId,
+      success: false,
+      responseStatus: result.responseStatus,
+      newStatus: 'failed'
+    }
   })
 }
 

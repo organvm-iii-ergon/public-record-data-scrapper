@@ -1,22 +1,14 @@
 /**
  * Edge Rate Limiting & Tier Entitlements for Cloudflare Workers.
  *
- * Enforces sliding/fixed-window request quotas and subscription entitlements
- * at the edge BEFORE any D1 database query is executed.
- *
- * Rate-limit window key: `ratelimit:<apiKeyHash>:<windowMinute>`
- * When the caller used a Cloudflare Access JWT (no API key) we fall back to
- * keying on the tenant's `orgId` to ensure JWT callers are still rate-limited.
- *
- * Tier limits (requests per minute per key):
- *  free       → 10
- *  starter    → 100
- *  growth     → 1 000
- *  pro        → 1 000
- *  enterprise → 10 000
+ * A single conditional D1 UPSERT admits each authenticated request before
+ * executing business handlers. KV and isolate-local maps are not suitable
+ * for an authoritative cross-isolate counter and are deliberately not used.
+ * A missing migration or unavailable counter fails closed with HTTP 503.
  */
 import { createMiddleware } from 'hono/factory'
 import { hashApiKey } from './auth'
+import { admitQuota } from './atomicQuota'
 import type { AppBindings, SubscriptionTier } from './types'
 
 /** Requests-per-minute quota per subscription tier. */
@@ -36,57 +28,35 @@ const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
   enterprise: 3
 }
 
-// In-isolate memory store to protect KV from concurrent write spikes.
-// Keyed on the same composite key used in KV so hot-path reads avoid KV round-trips.
-const memoryCounters = new Map<string, { count: number; window: number }>()
-
-/**
- * Derive a stable rate-limit bucket key for the current request.
- *
- * API-key callers are bucketed by their key's SHA-256 hash (independent
- * tenant quota even when two tenants share the same egress IP / orgId).
- * JWT / Access callers fall back to orgId-based bucketing.
- */
+/** Stable credential bucket; the database stores the current window separately. */
 async function buildRateLimitKey(
-  identity: { orgId: string; keyId?: string; authMethod: string },
-  presentedKey: string | undefined,
-  windowMinute: number
+  identity: { orgId: string; authMethod: string },
+  presentedKey: string | undefined
 ): Promise<string> {
-  if (identity.authMethod === 'api_key' && presentedKey) {
-    const hash = await hashApiKey(presentedKey)
-    return `ratelimit:${hash}:${windowMinute}`
+  if (identity.authMethod === 'api_key') {
+    if (!presentedKey) throw new Error('Authenticated API key is missing')
+    return `ratelimit:key:${await hashApiKey(presentedKey)}`
   }
-  return `ratelimit:${identity.orgId}:${windowMinute}`
+  return `ratelimit:org:${identity.orgId}`
 }
 
-/**
- * Edge rate-limiting middleware.
- *
- * Uses a 60-second fixed window keyed by the tenant's API key hash (or orgId
- * for JWT callers). Inspects tier entitlement and sets standard rate-limit
- * response headers:
- *  - X-RateLimit-Limit
- *  - X-RateLimit-Remaining
- *  - X-RateLimit-Reset
- *  - Retry-After (on 429)
- *
- * Also injects `X-Forwarded-Tier` so the Express origin can skip its own
- * DB tier lookup when the edge has already resolved the subscription tier.
- */
 export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
   const identity = c.get('identity')
-  const tier: SubscriptionTier = identity?.tier ?? 'free'
+  if (!identity?.orgId) {
+    return c.json(
+      { error: { message: 'Authentication required', code: 'UNAUTHORIZED', statusCode: 401 } },
+      401
+    )
+  }
+  const tier: SubscriptionTier = identity.tier ?? 'free'
   const limit = TIER_LIMITS[tier] ?? TIER_LIMITS.free
-  const orgId = identity?.orgId ?? 'anonymous'
-
   const now = Date.now()
   const windowMinute = Math.floor(now / 60000)
   const resetEpoch = (windowMinute + 1) * 60
   const resetInSeconds = Math.max(1, resetEpoch - Math.floor(now / 1000))
 
-  // Extract presented API key for per-key bucketing
-  const apiKeyHeader = c.req.header('X-API-Key') ?? c.req.header('x-api-key')
-  const authHeader = c.req.header('Authorization') ?? c.req.header('authorization')
+  const apiKeyHeader = c.req.header('X-API-Key')
+  const authHeader = c.req.header('Authorization')
   let presentedKey: string | undefined
   if (typeof apiKeyHeader === 'string' && apiKeyHeader.trim().length > 0) {
     presentedKey = apiKeyHeader.trim()
@@ -101,51 +71,31 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
     }
   }
 
-  const cacheKey = await buildRateLimitKey(
-    { orgId, keyId: identity?.keyId, authMethod: identity?.authMethod ?? 'cf_access' },
-    presentedKey,
-    windowMinute
-  )
+  c.header('X-RateLimit-Limit', String(limit))
+  c.header('X-RateLimit-Reset', String(resetEpoch))
 
-  // 1. Check & increment in-memory counter (fast path, avoids KV on every request)
-  let currentCount = 0
-  const mem = memoryCounters.get(cacheKey)
-  if (mem && mem.window === windowMinute) {
-    mem.count += 1
-    currentCount = mem.count
-  } else {
-    // Evict stale windows to prevent isolate memory leaks
-    if (memoryCounters.size > 1000) {
-      memoryCounters.clear()
-    }
-    currentCount = 1
-    memoryCounters.set(cacheKey, { count: 1, window: windowMinute })
-  }
-
-  // 2. Sync with KV if bound (authoritative cross-isolate count)
-  if (c.env.KV) {
-    try {
-      const kvRaw = await c.env.KV.get(cacheKey)
-      const kvCount = kvRaw ? Number.parseInt(kvRaw, 10) : 0
-      currentCount = Math.max(currentCount, kvCount + 1)
-      // Best-effort KV write with 120 s TTL (2× window); failures are non-fatal
-      c.executionCtx?.waitUntil?.(
-        c.env.KV.put(cacheKey, String(currentCount), { expirationTtl: 120 })
-      )
-    } catch {
-      // KV failure is non-fatal; the in-memory counter provides degraded protection
-    }
-  }
-
-  const remaining = Math.max(0, limit - currentCount)
-
-  // 3. Short-circuit at the edge when the quota is exceeded
-  if (currentCount > limit) {
-    c.header('X-RateLimit-Limit', String(limit))
+  let admission: Awaited<ReturnType<typeof admitQuota>>
+  try {
+    const bucket = await buildRateLimitKey(identity, presentedKey)
+    admission = await admitQuota(c.env.DB, bucket, windowMinute, limit)
+  } catch {
     c.header('X-RateLimit-Remaining', '0')
-    c.header('X-RateLimit-Reset', String(resetEpoch))
-    c.header('Retry-After', String(resetInSeconds))
+    c.header('Retry-After', '1')
+    return c.json(
+      {
+        error: {
+          message: 'Rate-limit admission is temporarily unavailable',
+          code: 'RATE_LIMIT_UNAVAILABLE',
+          statusCode: 503
+        }
+      },
+      503
+    )
+  }
 
+  c.header('X-RateLimit-Remaining', String(admission.remaining))
+  if (!admission.allowed) {
+    c.header('Retry-After', String(resetInSeconds))
     return c.json(
       {
         error: {
@@ -158,22 +108,12 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
     )
   }
 
-  // 4. Inject rate-limit headers and the resolved tier for the origin server
-  c.header('X-RateLimit-Limit', String(limit))
-  c.header('X-RateLimit-Remaining', String(remaining))
-  c.header('X-RateLimit-Reset', String(resetEpoch))
-  // Signal resolved tier to Express so it can skip its own DB org lookup
+  // Informational response header only; never an origin authorization input.
   c.header('X-Forwarded-Tier', tier)
-
   await next()
 })
 
-/**
- * Tier entitlement middleware.
- *
- * Ensures the tenant possesses at least `minTier` access before executing
- * downstream handlers. Evaluated at the edge before any D1 query.
- */
+/** Ensure the authenticated tenant possesses at least the requested tier. */
 export function requireTier(minTier: SubscriptionTier) {
   return createMiddleware<AppBindings>(async (c, next) => {
     const identity = c.get('identity')

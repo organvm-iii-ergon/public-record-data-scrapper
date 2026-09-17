@@ -30,7 +30,7 @@ beforeEach(() => {
 })
 
 describe('webhook worker tenant context', () => {
-  it('retains distinct organization contexts across concurrent jobs and async queries', async () => {
+  it('isolates concurrent tenant jobs across asynchronous queries', async () => {
     mocks.deliver.mockImplementation(async (deliveryId: string) => {
       expect(getCurrentOrgId()).toBe(deliveryId)
       await new Promise((resolve) => setTimeout(resolve, 1))
@@ -47,7 +47,7 @@ describe('webhook worker tenant context', () => {
     expect(getCurrentOrgId()).toBeUndefined()
   })
 
-  it.each([undefined, '', 'not-a-uuid'])('rejects an absent or malformed tenant: %s', async (orgId) => {
+  it.each([undefined, '', 'not-a-uuid'])('rejects invalid tenant %s', async (orgId) => {
     await expect(processWebhookDeliveryJob(job(orgId as string))).rejects.toThrow(
       'organization UUID'
     )

@@ -5,7 +5,7 @@
  * Implements:
  *  - Public health & OpenAPI endpoints (/health, /v1/health, /openapi.json, /v1/openapi.json)
  *  - Edge API key & Access JWT authentication (unifiedAuth)
- *  - Edge sliding-window rate limiting & tier entitlement checks (rateLimiter)
+ *  - Atomic edge rate limiting & tier entitlement checks (rateLimiter)
  *  - Org-scoped resource routes (/v1/prospects, /v1/jobs, /v1/enrichment, /v1/keys)
  *  - Fail-closed error handling & structured logging
  */
@@ -64,15 +64,12 @@ app.get('/v1/openapi.json', (c) => c.json(openApiSpec))
 // ============================================================================
 const v1 = new Hono<AppBindings>()
 
-// Protect v1 business endpoints with edge auth and rate limiting
+// Hono's /* pattern includes the collection root as well as descendants.
+// Register each chain once so one request consumes exactly one quota slot.
 v1.use('/prospects/*', unifiedAuth, rateLimiter)
-v1.use('/prospects', unifiedAuth, rateLimiter)
 v1.use('/jobs/*', unifiedAuth, rateLimiter)
-v1.use('/jobs', unifiedAuth, rateLimiter)
 v1.use('/enrichment/*', unifiedAuth, rateLimiter)
-v1.use('/enrichment', unifiedAuth, rateLimiter)
 v1.use('/keys/*', unifiedAuth, rateLimiter)
-v1.use('/keys', unifiedAuth, rateLimiter)
 
 v1.route('/prospects', prospectsRoute)
 v1.route('/jobs', jobsRoute)
@@ -203,6 +200,44 @@ app.post('/api/webhooks', accessAuth, orgScope, async (c) => {
     },
     201
   )
+})
+
+/**
+ * GET /api/webhooks/deliveries — list delivery logs and Dead-Letter Queue (DLQ).
+ * Register this static path before /:id so "deliveries" is not an endpoint ID.
+ * Filter by ?status=dead_letter to inspect DLQ items.
+ */
+app.get('/api/webhooks/deliveries', accessAuth, orgScope, async (c) => {
+  const { orgId } = c.get('identity')
+  const statusFilter = c.req.query('status')
+  const rawLimit = Number.parseInt(c.req.query('limit') ?? '50', 10)
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50
+
+  let rows: WebhookDeliveryRow[]
+  if (statusFilter) {
+    rows = await all<WebhookDeliveryRow>(
+      c.env,
+      `SELECT * FROM webhook_deliveries
+        WHERE org_id = ? AND status = ?
+        ORDER BY created_at DESC
+        LIMIT ?`,
+      orgId,
+      statusFilter,
+      limit
+    )
+  } else {
+    rows = await all<WebhookDeliveryRow>(
+      c.env,
+      `SELECT * FROM webhook_deliveries
+        WHERE org_id = ?
+        ORDER BY created_at DESC
+        LIMIT ?`,
+      orgId,
+      limit
+    )
+  }
+
+  return c.json({ deliveries: rows })
 })
 
 /**
@@ -379,43 +414,6 @@ app.post('/api/webhooks/:id/test', accessAuth, orgScope, async (c) => {
 
   const sendResult = await sendWebhookDelivery(c.env, deliveryId)
   return c.json({ delivery_id: deliveryId, ...sendResult })
-})
-
-/**
- * GET /api/webhooks/deliveries — list delivery logs and Dead-Letter Queue (DLQ).
- * Filter by ?status=dead_letter to inspect DLQ items.
- */
-app.get('/api/webhooks/deliveries', accessAuth, orgScope, async (c) => {
-  const { orgId } = c.get('identity')
-  const statusFilter = c.req.query('status')
-  const rawLimit = Number.parseInt(c.req.query('limit') ?? '50', 10)
-  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50
-
-  let rows: WebhookDeliveryRow[]
-  if (statusFilter) {
-    rows = await all<WebhookDeliveryRow>(
-      c.env,
-      `SELECT * FROM webhook_deliveries
-        WHERE org_id = ? AND status = ?
-        ORDER BY created_at DESC
-        LIMIT ?`,
-      orgId,
-      statusFilter,
-      limit
-    )
-  } else {
-    rows = await all<WebhookDeliveryRow>(
-      c.env,
-      `SELECT * FROM webhook_deliveries
-        WHERE org_id = ?
-        ORDER BY created_at DESC
-        LIMIT ?`,
-      orgId,
-      limit
-    )
-  }
-
-  return c.json({ deliveries: rows })
 })
 
 /**
