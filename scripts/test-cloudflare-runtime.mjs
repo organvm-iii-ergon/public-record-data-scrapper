@@ -459,6 +459,13 @@ try {
   const healthOutcome = await runtimeWorker.scheduled({ cron: '0 */12 * * *' })
   assert.equal(healthOutcome.outcome, 'ok')
 
+  // Unified trigger runs coincident schedules using the intended UTC timestamp.
+  const unifiedOutcome = await runtimeWorker.scheduled({
+    cron: '0 0,2,6,12,18 * * *',
+    scheduledTime: Date.UTC(2026, 8, 17, 12)
+  })
+  assert.equal(unifiedOutcome.outcome, 'ok')
+
   // 4. Unrecognized schedule fallback (fail-safe)
   const unknownOutcome = await runtimeWorker.scheduled({ cron: '0 0 1 1 *' })
   assert.equal(unknownOutcome.outcome, 'ok')
@@ -497,7 +504,7 @@ try {
 
   assert.equal(outboundRequests, 0)
   console.log(
-    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, schema=5 tables, v1_api=ok, api_keys=ok, tenant_isolation=ok, rate_limits=ok (429 verified), tier_entitlements=ok (403 verified), crons=4 passed, d1_drain=ok; outbound=0'
+    'Local Worker runtime passed: health=200, unauthenticated=401, missing=404, schema=5 tables, v1_api=ok, api_keys=ok, tenant_isolation=ok, rate_limits=ok (429 verified), tier_entitlements=ok (403 verified), crons=5 passed, d1_drain=ok; outbound=0'
   )
 } finally {
   await worker.dispose()

@@ -14,6 +14,7 @@
  * blocking the rest of the drain.
  */
 import { all, run } from './db'
+import { scheduledTasks } from './cron-plan'
 import type { Env } from './types'
 import { drainWebhookDeliveries, sendWebhookDelivery } from './webhooks'
 import { pushProspectToCrm } from './crm'
@@ -156,18 +157,25 @@ export async function scheduled(
 ): Promise<void> {
   const task = (async () => {
     try {
-      switch (event.cron) {
-        case '0 2 * * *':
-          await runIngestion(env)
-          break
-        case '0 */6 * * *':
-          await runEnrichment(env)
-          break
-        case '0 */12 * * *':
-          await runHealthScores(env)
-          break
-        default:
-          console.warn(`[cron] unrecognized schedule: ${event.cron}`)
+      const tasks = scheduledTasks(event.cron, event.scheduledTime)
+      if (!tasks.length) console.warn(`[cron] no task scheduled: ${event.cron}`)
+      for (const task of tasks) {
+        try {
+          switch (task) {
+            case 'ingestion':
+              await runIngestion(env)
+              break
+            case 'enrichment':
+              await runEnrichment(env)
+              break
+            case 'health':
+              await runHealthScores(env)
+              break
+          }
+        } catch (err) {
+          // A failed coincident task must not suppress another schedule.
+          console.error(`[cron] ${task} failed`, err)
+        }
       }
     } catch (err) {
       // Fail-safe: a broken scheduled task never aborts the drain below.

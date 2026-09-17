@@ -71,10 +71,13 @@ test('cloudflare/wrangler.toml binds D1 database and declares cron triggers for 
   assert.match(wranglerContent, /database_id\s*=\s*"REPLACE_WITH_PRODUCTION_D1_ID"/)
 
   // Scheduled triggers across environments
-  const requiredCrons = ['"0 2 * * *"', '"0 */6 * * *"', '"0 */12 * * *"']
-  for (const cron of requiredCrons) {
-    assert.ok(wranglerContent.includes(cron), `wrangler.toml must include cron trigger ${cron}`)
-  }
+  const configured = [...wranglerContent.matchAll(/^crons\s*=\s*(\[.*\])/gm)].map((match) =>
+    JSON.parse(match[1])
+  )
+  assert.deepEqual(
+    configured,
+    Array.from({ length: 3 }, () => ['0 0,2,6,12,18 * * *'])
+  )
 })
 
 test('Worker entrypoint exports scheduled handler and binds typed D1 client', () => {
@@ -103,10 +106,11 @@ test('scheduled.ts routes cron ticks and drains D1 jobs queue with fail-safe sem
     'utf8'
   )
 
-  // Cron schedule routing
-  assert.match(scheduledContent, /case '0 2 \* \* \*':[\s\S]*runIngestion\(env\)/)
-  assert.match(scheduledContent, /case '0 \*\/6 \* \* \*':[\s\S]*runEnrichment\(env\)/)
-  assert.match(scheduledContent, /case '0 \*\/12 \* \* \*':[\s\S]*runHealthScores\(env\)/)
+  // Routing uses the event's scheduled time, never the delayed execution clock.
+  assert.match(scheduledContent, /scheduledTasks\(event.cron, event.scheduledTime\)/)
+  assert.match(scheduledContent, /case 'ingestion':[\s\S]*runIngestion\(env\)/)
+  assert.match(scheduledContent, /case 'enrichment':[\s\S]*runEnrichment\(env\)/)
+  assert.match(scheduledContent, /case 'health':[\s\S]*runHealthScores\(env\)/)
 
   // Always drains jobs regardless of tick
   assert.match(scheduledContent, /await drainJobs\(env\)/)
