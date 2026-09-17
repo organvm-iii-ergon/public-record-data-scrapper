@@ -143,6 +143,22 @@ describe('StateRuleEngine (#478)', () => {
         )
       }
     })
+
+    it('accepts ISO timestamps with minute precision', () => {
+      expect(engine.calculateExpirationDate('2024-02-29T12:30Z', 'CA')).toBe('2029-02-28')
+
+      const result = engine.validate({
+        filingNumber: '24-00123456',
+        filingDate: '2024-02-29T12:30Z',
+        state: 'CA',
+        debtor: { name: 'DEBTOR LLC' },
+        securedParty: { name: 'BANK CORP' },
+        collateral: 'All assets'
+      })
+      expect(result.errors).not.toContainEqual(
+        expect.objectContaining({ field: 'filingDate', code: 'INVALID_DATE' })
+      )
+    })
   })
 
   describe('Collateral Analysis & Disclosure Tagging', () => {
