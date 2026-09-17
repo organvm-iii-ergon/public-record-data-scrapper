@@ -15,6 +15,7 @@ import type { Context } from 'hono'
 import { accessAuth, orgScope, unifiedAuth } from './auth'
 import { all, first, run } from './db'
 import { rateLimiter } from './rateLimit'
+import { billingRoute } from './routes/billing'
 import { enrichmentRoute } from './routes/enrichment'
 import { dashboardRoute } from './routes/dashboard'
 import { jobsRoute } from './routes/jobs'
@@ -69,11 +70,14 @@ v1.use('/enrichment/*', unifiedAuth, rateLimiter)
 v1.use('/enrichment', unifiedAuth, rateLimiter)
 v1.use('/keys/*', unifiedAuth, rateLimiter)
 v1.use('/keys', unifiedAuth, rateLimiter)
+v1.use('/billing/*', unifiedAuth, rateLimiter)
+v1.use('/billing', unifiedAuth, rateLimiter)
 
 v1.route('/prospects', prospectsRoute)
 v1.route('/jobs', jobsRoute)
 v1.route('/enrichment', enrichmentRoute)
 v1.route('/keys', keysRoute)
+v1.route('/billing', billingRoute)
 
 app.route('/v1', v1)
 app.route('/api/dashboard', dashboardRoute)
