@@ -82,6 +82,8 @@ class ProvisionTests(unittest.TestCase):
         self.config_path = self.root / "cloudflare/wrangler.toml"
         self.config_path.write_text(self.source.read_text())
         self.api = FakeAPI()
+        self.sleep = patch.object(P.time, "sleep").start()
+        self.addCleanup(patch.stopall)
 
     def run_case(self, apply=True):
         stream = io.StringIO()
@@ -106,6 +108,50 @@ class ProvisionTests(unittest.TestCase):
                 self.assertEqual(status, 1)
                 self.assertEqual(report["blocker"]["http_status"], 401)
                 self.assertEqual(self.api.writes, [])
+
+    def test_post_create_stale_total_gets_one_corrective_read_without_duplicate_write(self):
+        calls = 0
+        def listing(path):
+            nonlocal calls
+            calls += 1
+            rows = copy.deepcopy(self.api.rows["d1"])
+            return {"result": rows, "result_info": {"total_count": 0 if calls == 2 else len(rows)}}
+        self.api.overrides["list_d1"] = listing
+        status, report = self.run_case()
+        self.assertEqual((status, report["status"]), (0, "ready"))
+        self.assertEqual(calls, 3)
+        self.assertEqual(len([c for c in self.api.writes if c[0] == "create_d1"]), 1)
+        self.sleep.assert_called_once_with(2)
+
+    def test_persistently_inconsistent_created_resource_stays_blocked(self):
+        self.api.overrides["list_d1"] = lambda path: {
+            "result": copy.deepcopy(self.api.rows["d1"]), "result_info": {"total_count": 0}}
+        status, report = self.run_case()
+        self.assertEqual(status, 1)
+        self.assertEqual(report["blocker"]["code"], "inconsistent_list_total")
+        self.assertEqual(len(self.api.writes), 1)
+        self.sleep.assert_called_once_with(2)
+
+    def test_access_accepts_only_provider_normalized_exact_destination(self):
+        app = self.api.created["access"]
+        app["destinations"] = [{"type": "public", "uri": app["domain"]}]
+        app["self_hosted_domains"] = [app["domain"]]
+        self.assertEqual(self.run_case()[0], 0)
+        for destinations in ([{"type": "public", "uri": "production.example.com"}],
+                             [{"type": "private", "uri": app["domain"]}],
+                             app["destinations"] * 2):
+            app["destinations"] = destinations
+            with self.assertRaises(P.Blocked):
+                P.access_identity(self.api, app, app["domain"])
+
+    def test_identity_conflicts_and_denials_are_never_retried(self):
+        for code in ("cloudflare_request_denied_or_failed", "ambiguous_staging_resource",
+                     "duplicate_resource_or_repeated_page"):
+            with patch.object(P, "inventory", side_effect=P.Blocked(code)) as fetch:
+                with self.assertRaises(P.Blocked):
+                    P.readback(self.api, "d1", D1, created=True)
+                self.assertEqual(fetch.call_count, 1)
+        self.sleep.assert_not_called()
 
     def test_create_readback_then_repeat_reuses_every_resource(self):
         status, report = self.run_case()

@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import time
 import tomllib
 import urllib.error
 import urllib.parse
@@ -185,6 +186,31 @@ def inventory(api, kind):
     raise Blocked("pagination_limit_exceeded", resource=kind)
 
 
+
+def readback(api, kind, value, created=False):
+    """One corrective read after a new write; never repeat resource creation.
+
+    A just-created D1 database was returned with a stale list total by the
+    provider. Keep complete inventory checks and require a coherent readback;
+    retry only that bounded post-create observation, never a denial or duplicate.
+    """
+    for attempt in range(2 if created else 1):
+        try:
+            current = one_exact(inventory(api, kind), kind)
+            if current is None:
+                raise Blocked("resource_readback_mismatch", resource=kind)
+            if identifier(kind, current) != value:
+                raise Blocked("resource_identity_changed", resource=kind)
+            return current
+        except Blocked as exc:
+            if not created or attempt or exc.receipt["code"] not in {
+                "inconsistent_list_total", "incomplete_pagination", "resource_readback_mismatch"
+            }:
+                raise
+            time.sleep(2)
+    raise AssertionError("unreachable readback state")
+
+
 def one_exact(rows, kind):
     key = KEYS[kind][0]
     matches = [r for r in rows if r[key] == NAMES[kind]]
@@ -194,6 +220,7 @@ def one_exact(rows, kind):
 
 
 def safe_path(root, relative, must_exist=False):
+    root = root.resolve()
     path = root / relative
     for part in [path, *path.parents]:
         if part.is_symlink():
@@ -259,7 +286,7 @@ def access_identity(api, app, domain):
         raise Blocked("access_application_target_mismatch")
     # Reject multi-destination apps: a dedicated staging app must not encompass
     # production or other hostnames via newer destination fields.
-    if app.get("destinations") or app.get("self_hosted_domains") not in (None, [], [domain]):
+    if app.get("destinations") not in (None, [], [{"type": "public", "uri": domain}]) or app.get("self_hosted_domains") not in (None, [], [domain]):
         raise Blocked("access_application_has_additional_targets")
     aud = app.get("aud")
     if not isinstance(aud, str) or not re.fullmatch(r"[a-fA-F0-9]{64}", aud):
@@ -390,9 +417,7 @@ def reconcile(api, root, config, staging, production, report, apply):
         entry["id"] = value
         # Re-list rather than trusting a successful create response. This also
         # detects concurrent duplicate creation without deleting anyone's work.
-        current = one_exact(inventory(api, kind), kind)
-        if current is None or identifier(kind, current) != value:
-            raise Blocked("resource_readback_mismatch", resource=kind)
+        current = readback(api, kind, value, created=entry["action"] == "created")
         selected[kind] = current
         isolate(selected, production)
     aud = access_identity(api, selected["access"], domain)

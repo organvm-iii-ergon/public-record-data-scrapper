@@ -180,6 +180,9 @@ vi.mock('@phosphor-icons/react', () => ({
   ),
   Envelope: ({ className }: { className?: string }) => (
     <span data-testid="envelope-icon" className={className} />
+  ),
+  Lightning: ({ className }: { className?: string }) => (
+    <span data-testid="lightning-icon" className={className} />
   )
 }))
 

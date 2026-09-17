@@ -24,6 +24,8 @@ cloudflare/
       scheduled.ts        # Cron handler + D1 jobs drain ($0 queue)
 ```
 
+For verification contracts, background cron trigger testing, and D1 binding proof, see [`../docs/staging-deploy-and-cron-verification.md`](../docs/staging-deploy-and-cron-verification.md).
+
 ## Staging activation
 
 Credential provisioning and delivery are owned by [Limen CLAVIS / #320](https://github.com/4444J99/limen/issues/320).
