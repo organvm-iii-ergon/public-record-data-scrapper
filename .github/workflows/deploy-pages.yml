@@ -28,6 +28,8 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  pages: write
 
 concurrency:
   group: pages-${{ github.event_name == 'push' && 'staging' || inputs.target }}
@@ -82,7 +84,14 @@ jobs:
       - name: Build the root-based SPA
         env:
           VITE_API_BASE_URL: /api
+          VITE_DEPLOYMENT_SURFACE: tenant-dashboard
         run: npm --workspace apps/web run build -- --base=/
+      - name: Reject unsupported API surfaces from the hosted bundle
+        run: |
+          if grep --recursive --quiet --extended-regexp \
+            '/api/(deals|contacts|communications|compliance|partner)' dist/assets; then
+            exit 1
+          fi
       - name: Prepare the environment-bound Pages package
         id: package
         env:
@@ -100,6 +109,58 @@ jobs:
           test "$GITHUB_REF" = refs/heads/main
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+      - name: Require the exact Worker revision and authenticated Pages boundary
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TARGET: ${{ steps.target.outputs.environment }}
+        run: |
+          if [ "$TARGET" = staging ]; then
+            python3 scripts/provision-cloudflare-staging.py --plan
+            worker="$(jq -er .worker_url cloudflare/.generated/staging-provisioning.json)"
+            expected_environment=staging
+          else
+            python3 scripts/resolve-cloudflare-production.py
+            worker="$(jq -er .worker_url cloudflare/.generated/production-resolution.json)"
+            expected_environment=production
+          fi
+          mkdir -p .quality
+          curl --fail --silent --show-error --max-time 20 \
+            "$worker/health?revision=$GITHUB_SHA" > .quality/pages-worker-health.json
+          jq --arg sha "$GITHUB_SHA" --arg environment "$expected_environment" -e \
+            '. == {ok:true, env:$environment, revision:$sha}' \
+            .quality/pages-worker-health.json
+      - name: Require same-revision staging acceptance before production
+        if: steps.target.outputs.environment == 'production'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          receipt="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy-pages.yml/runs?branch=main&event=push&status=success&head_sha=$GITHUB_SHA&per_page=10")"
+          jq -e --arg sha "$GITHUB_SHA" \
+            '.workflow_runs | any(.head_sha == $sha and .event == "push" and .conclusion == "success")' \
+            <<< "$receipt"
+      - name: Resolve or create the exact Pages project
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
+          PROJECT: ${{ steps.target.outputs.project }}
+        run: |
+          mkdir -p .quality
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT"
+          status="$(curl --silent --show-error --output .quality/pages-project.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$endpoint")"
+          if [ "$status" = 404 ]; then
+            status="$(curl --silent --show-error --output .quality/pages-project.json --write-out '%{http_code}' \
+              --request POST \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data "$(jq -nc --arg name "$PROJECT" '{name:$name,production_branch:"main"}')" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")"
+          fi
+          test "$status" = 200
+          jq --arg project "$PROJECT" -e \
+            '.success == true and .result.name == $project and .result.production_branch == "main"' \
+            .quality/pages-project.json
       - name: Deploy the exact Pages revision
         working-directory: ${{ steps.package.outputs.dir }}
         env:
@@ -124,3 +185,21 @@ jobs:
           jq --arg sha "$GITHUB_SHA" -e \
             '.success == true and (.result | max_by(.created_on) | .deployment_trigger.metadata.commit_hash == $sha and .latest_stage.status == "success")' \
             .quality/pages-deployments.json
+          team="$(curl --fail --silent --show-error \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/organizations" \
+            | jq -er '.result.auth_domain')"
+          case "$team" in *.cloudflareaccess.com) ;; *) exit 1 ;; esac
+          read -r status redirect < <(curl --silent --show-error --max-time 20 --output /dev/null \
+            --write-out '%{http_code} %{redirect_url}' "https://$PROJECT.pages.dev/")
+          test "$status" = 302 -o "$status" = 303 -o "$status" = 307
+          case "$redirect" in "https://$team/"*) ;; *) exit 1 ;; esac
+      - name: Retire the superseded GitHub Pages site
+        if: steps.target.outputs.environment == 'production'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/pages"
+          status="$(gh api --include "repos/$GITHUB_REPOSITORY/pages" 2>/dev/null \
+            | head -n 1 | awk '{print $2}' || true)"
+          test "$status" = 404
