@@ -1,3 +1,4 @@
+import { noMockRuntimePlugin } from '../../scripts/no-mock-runtime.mjs'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig, PluginOption } from 'vite'
@@ -13,6 +14,7 @@ const appRoot = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   root: appRoot,
   plugins: [
+    noMockRuntimePlugin() as PluginOption,
     react(),
     tailwindcss(),
     // DO NOT REMOVE

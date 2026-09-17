@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { GenerativeNarrativeEngine } from '../GenerativeNarrativeEngine'
 import { Prospect, GenerativeContext } from '@public-records/core'
 
@@ -57,16 +57,32 @@ describe('GenerativeNarrativeEngine', () => {
   beforeEach(() => {
     // Mock environment variables
     vi.stubEnv('VITE_USE_MOCK_DATA', 'true')
-    engine = new GenerativeNarrativeEngine()
+    engine = new GenerativeNarrativeEngine('https://llm.example.test', 'unit-test-placeholder')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          content: [
+            {
+              text: '## SUMMARY\nProvider analysis.\n## KEY_FINDINGS\n- Supported finding.\n## RISK_FACTORS\n- Verify records.'
+            }
+          ]
+        })
+      })
+    )
   })
 
-  it('should parse keyInsights correctly from mock response', async () => {
-    // We rely on generateMockResponse being used because of VITE_USE_MOCK_DATA='true'
-    // but we need to inspect what generateMockResponse returns.
-    // However, the test is to ensure that generateNarrative populates keyInsights.
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
 
+  it('parses the provider response even when a legacy mock flag is enabled', async () => {
     const narrative = await engine.generateNarrative(mockContext)
 
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(narrative.summary).toBe('Provider analysis.')
     expect(narrative).toBeDefined()
     expect(narrative.prospectId).toBe(mockProspect.id)
     expect(narrative.summary).toBeTruthy()

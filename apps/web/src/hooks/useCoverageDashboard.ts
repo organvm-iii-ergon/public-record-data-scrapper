@@ -1,9 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import {
-  fetchCoverageDashboard,
-  createCoveragePreviewSnapshot,
-  type CoverageDashboardSnapshot
-} from '@/lib/api/health'
+import { fetchCoverageDashboard, type CoverageDashboardSnapshot } from '@/lib/api/health'
 
 export interface UseCoverageDashboardOptions {
   pollIntervalMs?: number
@@ -22,7 +18,7 @@ export interface UseCoverageDashboardResult {
 export function useCoverageDashboard(
   options: UseCoverageDashboardOptions = {}
 ): UseCoverageDashboardResult {
-  const { pollIntervalMs = 30000, fallbackToPreview = false, enabled = true } = options
+  const { pollIntervalMs = 30000, enabled = true } = options
 
   const [snapshot, setSnapshot] = useState<CoverageDashboardSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
@@ -30,9 +26,6 @@ export function useCoverageDashboard(
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
-  // Keep snapshot accessible inside fetchData without making it a dependency
-  const snapshotRef = useRef<CoverageDashboardSnapshot | null>(null)
-  snapshotRef.current = snapshot
 
   const fetchData = useCallback(async () => {
     if (!enabled) return
@@ -55,15 +48,13 @@ export function useCoverageDashboard(
       const message = (err as Error).message || 'Failed to fetch coverage data'
       setError(message)
 
-      if (fallbackToPreview && !snapshotRef.current) {
-        setSnapshot(createCoveragePreviewSnapshot())
-      }
+      setSnapshot(null)
     } finally {
       if (!controller.signal.aborted) {
         setLoading(false)
       }
     }
-  }, [enabled, fallbackToPreview])
+  }, [enabled])
 
   // Initial fetch
   useEffect(() => {

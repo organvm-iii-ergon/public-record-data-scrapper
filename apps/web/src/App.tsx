@@ -37,13 +37,12 @@ import { useSystemContext } from '@/hooks/useSystemContext'
 import { useDataTier } from '@/hooks/useDataTier'
 
 // Utils and types
-import { generateDashboardStats } from '@/lib/demoData'
+import { generateDashboardStats } from '@/lib/dashboardStats'
 import { Prospect } from '@public-records/core'
 import { ExportFormat } from '@/lib/exportUtils'
 import { UserAction } from '@/lib/agentic/types'
 import { logUserAction } from '@/lib/api/userActions'
 import { toast } from 'sonner'
-import { PublicDataDemo } from '@/components/PublicDataDemo'
 
 function DashboardApp() {
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
@@ -52,9 +51,7 @@ function DashboardApp() {
   const [tourOpen, setTourOpen] = useState(false)
   const { dataTier } = useDataTier()
 
-  const useDemoData =
-    import.meta.env.DEV &&
-    ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
+  const useDemoData = false
 
   // Data fetching
   const data = useDataFetching({ useMockData: useDemoData, dataTier })
@@ -339,8 +336,7 @@ function DashboardApp() {
 }
 
 function App() {
-  const publicDemoReceipt = String(import.meta.env.VITE_PUBLIC_DEMO_RECEIPT_URL ?? '').trim()
-  return publicDemoReceipt ? <PublicDataDemo receiptPath={publicDemoReceipt} /> : <DashboardApp />
+  return <DashboardApp />
 }
 
 export default App

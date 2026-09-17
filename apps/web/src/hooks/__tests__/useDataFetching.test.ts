@@ -121,8 +121,8 @@ describe('useDataFetching', () => {
     })
   })
 
-  describe('mock data mode', () => {
-    it('should load mock data when useMockData is true', async () => {
+  describe('legacy mock option cannot enable synthetic data', () => {
+    it('should load only API records even when useMockData is true', async () => {
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
       await waitFor(() => {
@@ -130,24 +130,24 @@ describe('useDataFetching', () => {
       })
 
       // Mock data should be set
-      expect(mockSetKV).toHaveBeenCalled()
-      expect(result.current.prospects).toHaveLength(24)
+      expect(mockSetKV).not.toHaveBeenCalled()
+      expect(result.current.prospects).toEqual([{ id: 'live-1', companyName: 'Live Company' }])
       expect(result.current.competitors).toHaveLength(1)
-      expect(result.current.portfolio).toHaveLength(15)
-      expect(result.current.userActions).toEqual([])
+      expect(result.current.portfolio).toHaveLength(1)
+      expect(result.current.userActions).toHaveLength(1)
     })
 
-    it('should not call live API endpoints in mock mode', async () => {
+    it('should call live API endpoints despite legacy mock mode', async () => {
       const { result } = renderHook(() => useDataFetching({ useMockData: true }))
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      expect(mockFetchProspects).not.toHaveBeenCalled()
-      expect(mockFetchCompetitors).not.toHaveBeenCalled()
-      expect(mockFetchPortfolio).not.toHaveBeenCalled()
-      expect(mockFetchUserActions).not.toHaveBeenCalled()
+      expect(mockFetchProspects).toHaveBeenCalled()
+      expect(mockFetchCompetitors).toHaveBeenCalled()
+      expect(mockFetchPortfolio).toHaveBeenCalled()
+      expect(mockFetchUserActions).toHaveBeenCalled()
     })
   })
 
@@ -177,19 +177,19 @@ describe('useDataFetching', () => {
       expect(callArg instanceof AbortSignal).toBe(true)
     })
 
-    it('should fall back to demo data when the live API errors', async () => {
+    it('should expose API errors with empty datasets', async () => {
       mockFetchProspects.mockRejectedValueOnce(new Error('Network error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const { result } = renderHook(() => useDataFetching({ useMockData: false }))
 
       await waitFor(() => {
-        expect(result.current.isDemoFallback).toBe(true)
+        expect(result.current.loadError).not.toBe(null)
       })
 
       expect(result.current.isLoading).toBe(false)
-      expect(result.current.loadError).toBe(null)
-      expect(result.current.prospects).toHaveLength(12)
+      expect(result.current.loadError).toBe('Network error')
+      expect(result.current.prospects).toEqual([])
 
       consoleSpy.mockRestore()
     })
@@ -212,14 +212,14 @@ describe('useDataFetching', () => {
       expect(fetchResult).toBe(true)
     })
 
-    it('should return false and expose demo fallback on fetch error', async () => {
+    it('should return false and expose the API failure', async () => {
       mockFetchProspects.mockRejectedValue(new Error('Error'))
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       const { result } = renderHook(() => useDataFetching({ useMockData: false }))
 
       await waitFor(() => {
-        expect(result.current.isDemoFallback).toBe(true)
+        expect(result.current.loadError).not.toBe(null)
       })
 
       let fetchResult = true
@@ -228,7 +228,7 @@ describe('useDataFetching', () => {
       })
 
       expect(fetchResult).toBe(false)
-      expect(result.current.loadError).toBe(null)
+      expect(result.current.loadError).toBe('Error')
 
       consoleSpy.mockRestore()
     })
@@ -266,6 +266,28 @@ describe('useDataFetching', () => {
       expect(fetchResult).toBe(false)
     })
   })
+
+  it('ignores cached mock records before the first response', () => {
+    mockKVStore['ucc-prospects'] = [{ id: 'old-demo', companyName: 'Synthetic' }]
+    mockFetchProspects.mockImplementation(() => new Promise(() => {}))
+    const { result } = renderHook(() => useDataFetching({ useMockData: true }))
+    expect(result.current.prospects).toEqual([])
+    expect(result.current.lastDataRefresh).toBe('')
+    expect(mockSetKV).not.toHaveBeenCalled()
+  })
+
+  it.each([null, '<html>login</html>', { error: 'unauthorized' }])(
+    'rejects malformed successful responses without generating records: %s',
+    async (payload) => {
+      mockFetchProspects.mockResolvedValue(payload)
+      const { result } = renderHook(() => useDataFetching({ useMockData: false }))
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      expect(result.current.loadError).toContain('invalid dataset')
+      expect(result.current.prospects).toEqual([])
+      expect(result.current.isDemoFallback).toBe(false)
+      expect(result.current.lastDataRefresh).toBe('')
+    }
+  )
 
   describe('setters', () => {
     it('should expose setProspects function', () => {
