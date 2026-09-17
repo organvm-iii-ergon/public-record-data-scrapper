@@ -15,6 +15,8 @@ P = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(P)
 
 WORKER = "ucc-mca-edge-production"
+PAGES_PROJECT = "ucc-mca-dashboard"
+PAGES_ACCESS = "ucc-mca-dashboard-access"
 NAMES = {
     "d1": "ucc-mca",
     "kv": "ucc-mca-edge-KV",
@@ -27,6 +29,7 @@ STAGING_NAMES = {
     "r2": "cronus-assets-staging",
     "access": "ucc-mca-edge-staging-api",
 }
+STAGING_PAGES_ACCESS = "ucc-mca-dashboard-staging-access"
 
 
 def exact(rows, kind, name):
@@ -51,9 +54,13 @@ def resolve(api, root, report):
     rows = {kind: P.inventory(api, kind) for kind in NAMES}
     selected = {kind: exact(rows[kind], kind, name) for kind, name in NAMES.items()}
     staging = {kind: exact(rows[kind], kind, name) for kind, name in STAGING_NAMES.items()}
+    pages_access = exact(rows["access"], "access", PAGES_ACCESS)
+    staging_pages_access = exact(rows["access"], "access", STAGING_PAGES_ACCESS)
     for kind in NAMES:
         if P.identifier(kind, selected[kind]).lower() == P.identifier(kind, staging[kind]).lower():
             raise P.Blocked("production_resource_shared_with_staging", resource=kind)
+    if P.identifier("access", pages_access) == P.identifier("access", staging_pages_access):
+        raise P.Blocked("production_resource_shared_with_staging", resource="pages_access")
 
     organization = api.request(
         "access_organization", f"/accounts/{P.ACCOUNT}/access/organizations"
@@ -80,6 +87,12 @@ def resolve(api, root, report):
         aud = P.access_identity(api, selected["access"], domain)
     finally:
         P.NAMES, P.WORKER = original_names, original_worker
+    original_pages_access, original_pages_project = P.PAGES_ACCESS, P.PAGES_PROJECT
+    try:
+        P.PAGES_ACCESS, P.PAGES_PROJECT = PAGES_ACCESS, PAGES_PROJECT
+        pages_aud = P.pages_access_identity(api, pages_access, PAGES_PROJECT + ".pages.dev")
+    finally:
+        P.PAGES_ACCESS, P.PAGES_PROJECT = original_pages_access, original_pages_project
 
     revision = os.environ.get("GITHUB_SHA", "")
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
@@ -105,7 +118,7 @@ def resolve(api, root, report):
         "vars": {
             "ENVIRONMENT": "production",
             "ACCESS_TEAM_DOMAIN": team,
-            "ACCESS_AUD": aud,
+            "ACCESS_AUD": aud + "," + pages_aud,
             "DEPLOYMENT_SHA": revision,
         },
     }
@@ -116,7 +129,8 @@ def resolve(api, root, report):
         "resources": [
             {"kind": kind, "name": NAMES[kind], "id": P.identifier(kind, selected[kind])}
             for kind in NAMES
-        ],
+        ] + [{"kind": "pages_access", "name": PAGES_ACCESS,
+              "id": P.identifier("access", pages_access)}],
     })
     return output
 

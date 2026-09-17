@@ -7,7 +7,7 @@ import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
 import { DemoTour } from '@/components/DemoTour'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
-import { PublicDataDemo } from '@/components/PublicDataDemo'
+import { SettingsMenu } from '@/components/SettingsMenu'
 
 // Layout components
 import { Header, LoadingAndErrorState, TabNavigation, MobileBottomNav } from '@/components/layout'
@@ -172,7 +172,7 @@ function DashboardApp() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} />
+      <Header onRefresh={handleRefreshData} settings={<SettingsMenu />} />
       <QuickAccessBanner />
       <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
 
@@ -336,12 +336,72 @@ function DashboardApp() {
   )
 }
 
+function TenantDashboardApp() {
+  const { dataTier } = useDataTier()
+  const data = useDataFetching({ useMockData: false, dataTier })
+  const { fetchData, loadError } = data
+  const stats = useMemo(() => {
+    if (data.prospects.length === 0 || data.portfolio.length === 0) return null
+    try {
+      return generateDashboardStats(data.prospects, data.portfolio)
+    } catch {
+      return null
+    }
+  }, [data.prospects, data.portfolio])
+  const refresh = useCallback(async () => {
+    const success = await fetchData()
+    if (success) toast.success('Tenant data refreshed')
+    else toast.error('Refresh failed', { description: loadError ?? 'Unable to load tenant data.' })
+  }, [fetchData, loadError])
+
+  return (
+    <div className="min-h-screen">
+      <Header onRefresh={refresh} />
+      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
+          <LoadingAndErrorState
+            isLoading={data.isLoading}
+            loadError={data.loadError}
+            isDemoFallback={false}
+            onRetry={() => void data.fetchData()}
+          />
+          {stats ? (
+            <StatsOverview stats={stats} />
+          ) : (
+            !data.isLoading &&
+            !data.loadError && (
+              <div className="glass-effect border border-white/10 rounded-lg p-4 text-sm text-white/70">
+                No tenant metrics are available yet.
+              </div>
+            )
+          )}
+          {data.lastDataRefresh && (
+            <StaleDataWarning lastUpdated={data.lastDataRefresh} onRefresh={refresh} />
+          )}
+          <StatusTab
+            prospects={data.prospects}
+            portfolio={data.portfolio}
+            competitors={data.competitors}
+            userActions={data.userActions}
+            isLoading={data.isLoading}
+            loadError={data.loadError}
+            lastDataRefresh={data.lastDataRefresh}
+            usePreviewData={false}
+            dataTier={dataTier}
+            onRefresh={refresh}
+          />
+        </div>
+      </main>
+    </div>
+  )
+}
+
 function App() {
-  const publicDemoReceipt = import.meta.env.VITE_PUBLIC_DEMO_RECEIPT_URL
-  if (publicDemoReceipt) {
-    return <PublicDataDemo receiptPath={publicDemoReceipt} />
-  }
-  return <DashboardApp />
+  return import.meta.env.VITE_DEPLOYMENT_SURFACE === 'tenant-dashboard' ? (
+    <TenantDashboardApp />
+  ) : (
+    <DashboardApp />
+  )
 }
 
 export default App

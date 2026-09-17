@@ -8,20 +8,23 @@ Common commands (from repo root):
 - `npm run build` (web build)
 - `npm run test` (web unit tests)
 
-## GitHub Pages public-data mode
+## Authenticated Cloudflare Pages deployment
 
-GitHub Pages has no same-origin Express API. The Pages workflow therefore sets
-`VITE_PUBLIC_DEMO_RECEIPT_URL=data/austin-building-permits.receipt.json` and renders a read-only
-public-data surface instead of allowing the authenticated dashboard to send doomed `/api` requests.
-The tracked receipt selects four non-contact fields from City of Austin dataset `3syk-w9eu`; the
-deployment gate verifies the live metadata, JSON endpoint, and Pages-readable CORS before building.
-Other deployments remain on the normal dashboard/API path unless they explicitly set this variable.
+The hosted tenant dashboard is deployed by `deploy-pages.yml` to Cloudflare Pages. The build sets
+`VITE_DEPLOYMENT_SURFACE=tenant-dashboard` and exposes only the authoritative, tenant-scoped status
+surface backed by `/api/dashboard`; unsupported CRM and communications routes are not presented.
+Pages Functions forward `/api/*` to the environment's exact-revision Worker service binding and
+preserve the Cloudflare Access assertion. The Worker verifies the Pages Access audience and resolves
+the authenticated subject through `access_memberships` before returning tenant records.
+
+Staging deploys only from the current accepted `main` revision. Production additionally requires an
+explicit `DEPLOY` confirmation and a successful same-revision staging Pages receipt. After a verified
+authenticated production replacement is live, the workflow retires the superseded GitHub Pages site.
 
 Focused verification from the repository root:
 
 ```bash
-node --test scripts/verify-pages-public-demo.test.mjs
-node scripts/verify-pages-public-demo.mjs apps/web/public/data/austin-building-permits.receipt.json
-VITE_PUBLIC_DEMO_RECEIPT_URL=data/austin-building-permits.receipt.json npm --workspace apps/web run build -- --base=/public-record-data-scrapper/
-npx --no-install playwright test --config playwright.pages-demo.config.ts
+node --test scripts/__tests__/cloudflare-pages.test.mjs
+node scripts/no-mock-runtime.mjs
+VITE_API_BASE_URL=/api VITE_DEPLOYMENT_SURFACE=tenant-dashboard npm --workspace apps/web run build -- --base=/
 ```

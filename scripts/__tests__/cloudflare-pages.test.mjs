@@ -97,6 +97,7 @@ test('Pages packages separate bindings, API-only routing and replace stale outpu
     ]) {
       const destination = await preparePages(environment, name, root)
       const config = JSON.parse(await readFile(join(destination, 'wrangler.json'), 'utf8'))
+      assert.equal('account_id' in config, false)
       assert.equal(config.services[0].service, service)
       assert.deepEqual(config.env.preview.services, config.services)
       const routes = JSON.parse(await readFile(join(destination, 'dist/_routes.json'), 'utf8'))
@@ -114,5 +115,44 @@ test('Pages packages separate bindings, API-only routing and replace stale outpu
     await assert.rejects(preparePages('staging', 'ucc-mca-dashboard-staging', root))
   } finally {
     await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('deployment workflow targets Cloudflare Pages with exact-revision receipts', async () => {
+  const workflow = await readFile(join(process.cwd(), '.github/workflows/deploy-pages.yml'), 'utf8')
+  assert.match(workflow, /wrangler pages deploy dist/)
+  assert.match(workflow, /ucc-mca-dashboard-staging/)
+  assert.match(workflow, /ucc-mca-dashboard/)
+  assert.match(workflow, /--commit-hash "\$GITHUB_SHA"/)
+  assert.match(workflow, /deployment_trigger\.metadata\.commit_hash/)
+  assert.match(workflow, /test "\$GITHUB_REF" = refs\/heads\/main/)
+  assert.match(workflow, /max_by\(\.created_on\)/)
+  assert.match(workflow, /Resolve or create the exact Pages project/)
+  assert.match(workflow, /production_branch:\"main\"/)
+  assert.match(workflow, /\.result\.name == \$project/)
+  assert.equal(
+    (workflow.match(/CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30/g) || []).length,
+    3
+  )
+  assert.match(workflow, /test "\$CONFIRM" = DEPLOY/)
+  assert.match(workflow, /VITE_DEPLOYMENT_SURFACE: tenant-dashboard/)
+  assert.match(workflow, /health\?revision=\$GITHUB_SHA/)
+  assert.match(workflow, /provision-cloudflare-staging\.py --plan/)
+  assert.match(workflow, /resolve-cloudflare-production\.py/)
+  assert.match(workflow, /head_sha=\$GITHUB_SHA/)
+  assert.match(workflow, /Wait for the exact Worker deployment/)
+  assert.match(workflow, /deploy-cloudflare\.yml\/runs/)
+  assert.match(workflow, /test "\$conclusion" = success/)
+  assert.match(workflow, /Retire the superseded GitHub Pages site/)
+  assert.match(workflow, /test "\$status" = 204 -o "\$status" = 404/)
+  assert.doesNotMatch(workflow, /actions\/deploy-pages/)
+  assert.doesNotMatch(workflow, /VITE_PUBLIC_DEMO/)
+
+  const workerWorkflow = await readFile(
+    join(process.cwd(), '.github/workflows/deploy-cloudflare.yml'),
+    'utf8'
+  )
+  for (const path of ['apps/web/**', 'functions/**', 'scripts/prepare-cloudflare-pages.mjs']) {
+    assert.match(workerWorkflow, new RegExp(path.replaceAll('*', '\\*')))
   }
 })

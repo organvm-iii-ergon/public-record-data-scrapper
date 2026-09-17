@@ -1,13 +1,14 @@
+import type { ReactNode } from 'react'
 import { Button } from '@public-records/ui/button'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { SettingsMenu } from '@/components/SettingsMenu'
 import { ArrowClockwise } from '@phosphor-icons/react'
 
 interface HeaderProps {
   onRefresh: () => void
+  settings?: ReactNode
 }
 
-export function Header({ onRefresh }: HeaderProps) {
+export function Header({ onRefresh, settings }: HeaderProps) {
   return (
     <header className="mica-effect border-b-2 border-primary/20 sticky top-0 z-50 shadow-xl shadow-primary/10">
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-5">
@@ -25,7 +26,7 @@ export function Header({ onRefresh }: HeaderProps) {
           {/* Header Actions */}
           <div className="flex gap-2 flex-shrink-0">
             <ThemeToggle />
-            <SettingsMenu />
+            {settings}
             <Button
               variant="outline"
               onClick={onRefresh}

@@ -1,27 +1,22 @@
-const mockRuntime = /\/(?:mockData|demoData)\.[cm]?[jt]sx?(?:\?|$)/
-const publicDataDemoRuntime = /\/(?:PublicDataDemo|publicDemo)\.[cm]?[jt]sx?(?:\?|$)/
+const forbidden = /\/(?:mockData|demoData|PublicDataDemo|publicDemo)\.[cm]?[jt]sx?(?:\?|$)/
 
-export function assertNoMockRuntime(bundle, { allowPublicDataDemo = false } = {}) {
+export function assertNoMockRuntime(bundle) {
   for (const output of Object.values(bundle)) {
     if (output.type !== 'chunk') continue
     for (const [id, module] of Object.entries(output.modules)) {
-      const normalizedId = id.replaceAll('\\', '/')
-      const forbidden =
-        mockRuntime.test(normalizedId) ||
-        (!allowPublicDataDemo && publicDataDemoRuntime.test(normalizedId))
-      if (module.renderedLength > 0 && forbidden) {
+      if (module.renderedLength > 0 && forbidden.test(id.replaceAll('\\', '/'))) {
         throw new Error(`Mock or demo data entered the application bundle: ${id.split('/').pop()}`)
       }
     }
   }
 }
 
-export function noMockRuntimePlugin(options = {}) {
+export function noMockRuntimePlugin() {
   return {
     name: 'no-mock-business-data',
     apply: 'build',
     generateBundle(_options, bundle) {
-      assertNoMockRuntime(bundle, options)
+      assertNoMockRuntime(bundle)
     }
   }
 }

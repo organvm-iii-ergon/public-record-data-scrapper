@@ -181,11 +181,21 @@ export async function verifyAccessJwt(
   if (!token || token.length === 0) return null
   if (!teamDomain || !audience) return null
 
+  const acceptedAudiences = audience
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => /^[a-fA-F0-9]{64}$/.test(value))
+  if (
+    acceptedAudiences.length === 0 ||
+    new Set(acceptedAudiences).size !== acceptedAudiences.length
+  )
+    return null
+
   let payload: JWTPayload
   try {
     const result = await jwtVerify(token, getJwks(teamDomain), {
       issuer: `https://${teamDomain}`,
-      audience
+      audience: acceptedAudiences
     })
     payload = result.payload
   } catch {

@@ -47,14 +47,6 @@ export interface PublicDemoData {
 
 type FetchLike = typeof fetch
 
-export function formatPublicDemoDate(value: string): string {
-  const calendarDate = /^(\d{4}-\d{2}-\d{2})(?:T|$)/.exec(value)?.[1]
-  const date = new Date(calendarDate ? `${calendarDate}T00:00:00Z` : value)
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(date)
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

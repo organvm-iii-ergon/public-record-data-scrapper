@@ -5,13 +5,19 @@ import { Button } from '@public-records/ui/button'
 import { Card } from '@public-records/ui/card'
 import {
   loadPublicDemoData,
-  formatPublicDemoDate,
   type PublicDemoData,
   resolvePublicDemoReceiptUrl
 } from '@/lib/publicDemo'
 
 interface PublicDataDemoProps {
   receiptPath: string
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(date)
 }
 
 export function PublicDataDemo({ receiptPath }: PublicDataDemoProps) {
@@ -146,7 +152,7 @@ export function PublicDataDemo({ receiptPath }: PublicDataDemoProps) {
                     <dt className="text-muted-foreground">Permit</dt>
                     <dd className="font-mono break-all">{permit.id}</dd>
                     <dt className="text-muted-foreground">Issued</dt>
-                    <dd>{formatPublicDemoDate(permit.issueDate)}</dd>
+                    <dd>{formatDate(permit.issueDate)}</dd>
                   </dl>
                 </Card>
               ))}

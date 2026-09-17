@@ -21,6 +21,8 @@ import uuid
 
 ACCOUNT = "e0921b840fd656d8ea46426f1f114c30"
 WORKER = "ucc-mca-edge-staging"
+PAGES_PROJECT = "ucc-mca-dashboard-staging"
+PAGES_ACCESS = "ucc-mca-dashboard-staging-access"
 NAMES = {"d1": "ucc-mca-staging", "kv": "ucc-mca-edge-staging-KV",
          "r2": "cronus-assets-staging", "access": "ucc-mca-edge-staging-api"}
 PATHS = {"d1": "/d1/database", "kv": "/storage/kv/namespaces",
@@ -60,7 +62,15 @@ class API:
         if method not in {"GET", "POST"}:
             raise Blocked("unsupported_mutation")
         if method == "POST" and path not in {prefix + p for p in PATHS.values()}:
-            raise Blocked("unsupported_mutation")
+            policy_path = re.fullmatch(
+                re.escape(prefix) + r"/access/apps/([0-9a-fA-F-]{36})/policies", path
+            )
+            if not policy_path:
+                raise Blocked("unsupported_mutation")
+            try:
+                uuid.UUID(policy_path.group(1))
+            except ValueError:
+                raise Blocked("unsupported_mutation") from None
         observation = {"operation": operation, "method": method, "success": False}
         self.report["requests"].append(observation)
         try:
@@ -219,6 +229,29 @@ def one_exact(rows, kind):
     return matches[0] if matches else None
 
 
+def one_access_named(rows, name):
+    matches = [row for row in rows if row.get("name") == name]
+    if len(matches) > 1:
+        raise Blocked("ambiguous_staging_resource", resource="pages_access")
+    return matches[0] if matches else None
+
+
+def readback_access_named(api, name, value, created=False):
+    for attempt in range(2 if created else 1):
+        try:
+            current = one_access_named(inventory(api, "access"), name)
+            if current is None or identifier("access", current) != value:
+                raise Blocked("resource_readback_mismatch", resource="pages_access")
+            return current
+        except Blocked as exc:
+            if not created or attempt or exc.receipt["code"] not in {
+                "inconsistent_list_total", "incomplete_pagination", "resource_readback_mismatch"
+            }:
+                raise
+            time.sleep(2)
+    raise AssertionError("unreachable readback state")
+
+
 def safe_path(root, relative, must_exist=False):
     root = root.resolve()
     path = root / relative
@@ -277,7 +310,11 @@ def isolate(selected, production):
             if isinstance(value, str) and value.lower() == current.lower():
                 raise Blocked("staging_resource_shared_with_production", resource=kind)
     app = selected.get("access")
-    if app and app.get("aud") == production.get("vars", {}).get("ACCESS_AUD"):
+    production_audiences = {
+        value.strip() for value in production.get("vars", {}).get("ACCESS_AUD", "").split(",")
+        if value.strip()
+    }
+    if app and app.get("aud") in production_audiences:
         raise Blocked("staging_access_shared_with_production")
 
 
@@ -297,6 +334,33 @@ def access_identity(api, app, domain):
     # Bypass would remove Access authentication from the protected API path.
     if any(p.get("decision") not in {"deny", "allow", "non_identity"} for p in policies):
         raise Blocked("existing_access_policy_bypasses_authentication_or_is_unknown")
+    return aud
+
+
+def pages_access_application_identity(app, domain):
+    if (app.get("name") != PAGES_ACCESS or app.get("type") != "self_hosted"
+            or app.get("domain") != domain):
+        raise Blocked("pages_access_application_target_mismatch")
+    if app.get("destinations") not in (None, [], [{"type": "public", "uri": domain}]):
+        raise Blocked("pages_access_application_has_additional_targets")
+    if app.get("self_hosted_domains") not in (None, [], [domain]):
+        raise Blocked("pages_access_application_has_additional_targets")
+    aud = app.get("aud")
+    if not isinstance(aud, str) or not re.fullmatch(r"[a-fA-F0-9]{64}", aud):
+        raise Blocked("pages_access_audience_not_verified")
+    return aud
+
+
+def pages_access_identity(api, app, domain):
+    aud = pages_access_application_identity(app, domain)
+    policies = inventory_policies(api, identifier("access", app))
+    if any(policy.get("decision") not in {"deny", "allow", "non_identity"}
+           for policy in policies):
+        raise Blocked("pages_access_policy_bypasses_authentication_or_is_unknown")
+    allow = [policy for policy in policies if policy.get("decision") == "allow"]
+    if not allow or any(not isinstance(policy.get("include"), list) or not policy["include"]
+                        for policy in allow):
+        raise Blocked("pages_access_enrollment_policy_required")
     return aud
 
 
@@ -388,15 +452,30 @@ def reconcile(api, root, config, staging, production, report, apply):
         raise Blocked("existing_workers_subdomain_required")
     hostname = WORKER + "." + subdomain + ".workers.dev"
     domain = hostname + "/api/*"
-    report.update(worker_url="https://" + hostname, access_domain=domain)
+    pages_domain = PAGES_PROJECT + ".pages.dev"
+    report.update(worker_url="https://" + hostname, access_domain=domain,
+                  pages_access_domain=pages_domain)
     for app in all_rows["access"]:
         if app.get("domain") == domain and app.get("name") != NAMES["access"]:
             raise Blocked("access_hostname_owned_by_another_application")
+        if app.get("domain") == pages_domain and app.get("name") != PAGES_ACCESS:
+            raise Blocked("pages_access_hostname_owned_by_another_application")
+    pages_access = one_access_named(all_rows["access"], PAGES_ACCESS)
     isolate(selected, production)
     if selected["access"]:
         access_identity(api, selected["access"], domain)
+    if pages_access:
+        pages_access_application_identity(pages_access, pages_domain)
+        production_audiences = {
+            value.strip() for value in production.get("vars", {}).get("ACCESS_AUD", "").split(",")
+            if value.strip()
+        }
+        if pages_access.get("aud") in production_audiences:
+            raise Blocked("staging_access_shared_with_production")
     report["resources"] = [{"kind": kind, "name": NAMES[kind], "action": "reuse" if row else "create"}
                            for kind, row in selected.items()]
+    report["resources"].append({"kind": "pages_access", "name": PAGES_ACCESS,
+                                "action": "reuse" if pages_access else "create"})
     if not apply:
         report["status"] = "planned"
         return None
@@ -406,6 +485,8 @@ def reconcile(api, root, config, staging, production, report, apply):
                          "session_duration": "1h", "app_launcher_visible": False, "policies": []}}
     for entry in report["resources"]:
         kind = entry["kind"]
+        if kind == "pages_access":
+            continue
         if selected[kind] is None:
             row = api.request("create_" + kind, f"/accounts/{ACCOUNT}" + PATHS[kind], "POST", bodies[kind]).get("result")
             if not isinstance(row, dict) or row.get(KEYS[kind][0]) != NAMES[kind]:
@@ -420,7 +501,31 @@ def reconcile(api, root, config, staging, production, report, apply):
         current = readback(api, kind, value, created=entry["action"] == "created")
         selected[kind] = current
         isolate(selected, production)
+    pages_entry = report["resources"][-1]
+    if pages_access is None:
+        pages_access = api.request(
+            "create_pages_access", f"/accounts/{ACCOUNT}" + PATHS["access"], "POST",
+            {"name": PAGES_ACCESS, "type": "self_hosted", "domain": pages_domain,
+             "session_duration": "1h", "app_launcher_visible": False, "policies": []},
+        ).get("result")
+        if not isinstance(pages_access, dict) or pages_access.get("name") != PAGES_ACCESS:
+            raise Blocked("created_resource_name_mismatch", resource="pages_access")
+        page_id = identifier("access", pages_access)
+        pages_access = readback_access_named(api, PAGES_ACCESS, page_id, created=True)
+        pages_entry.update(action="created", id=page_id)
+    else:
+        pages_entry["id"] = identifier("access", pages_access)
+    policies = inventory_policies(api, identifier("access", pages_access))
+    if not any(policy.get("decision") == "allow" for policy in policies):
+        api.request(
+            "create_pages_access_policy",
+            f"/accounts/{ACCOUNT}/access/apps/{identifier('access', pages_access)}/policies",
+            "POST",
+            {"name": "Authenticated tenant members", "decision": "allow",
+             "precedence": 1, "include": [{"everyone": {}}]},
+        )
     aud = access_identity(api, selected["access"], domain)
+    pages_aud = pages_access_identity(api, pages_access, pages_domain)
     output = {"name": WORKER, "account_id": ACCOUNT, "main": str(safe_path(root, "cloudflare/" + config["main"], True)),
               "compatibility_date": config["compatibility_date"], "compatibility_flags": copy.deepcopy(config.get("compatibility_flags", [])),
               "workers_dev": True, "preview_urls": False,
@@ -428,7 +533,8 @@ def reconcile(api, root, config, staging, production, report, apply):
               "kv_namespaces": [{"binding": "KV", "id": identifier("kv", selected["kv"])}],
               "r2_buckets": [{"binding": "ARTIFACTS", "bucket_name": NAMES["r2"]}],
               "triggers": copy.deepcopy(staging.get("triggers", {"crons": []})),
-              "vars": {"ENVIRONMENT": "staging", "ACCESS_TEAM_DOMAIN": team, "ACCESS_AUD": aud}}
+              "vars": {"ENVIRONMENT": "staging", "ACCESS_TEAM_DOMAIN": team,
+                       "ACCESS_AUD": aud + "," + pages_aud}}
     revision = os.environ.get("GITHUB_SHA", "")
     if revision:
         if not re.fullmatch(r"[0-9a-f]{40}", revision):
@@ -436,6 +542,7 @@ def reconcile(api, root, config, staging, production, report, apply):
         output["vars"]["DEPLOYMENT_SHA"] = revision
         report["deployment_sha"] = revision
     report["status"] = "ready"
+    report["access_policy_verified"] = True
     return output
 
 
@@ -453,7 +560,8 @@ def save_json(path, content):
 def run(root, apply=False, api_factory=API):
     report = {"schema_version": 1, "mode": "apply" if apply else "plan", "status": "blocked",
               "account_id": ACCOUNT, "worker_name": WORKER, "requests": [], "resources": [],
-              "access_enrollment_verified": False, "deployment_verified": False}
+              "access_policy_verified": False, "access_enrollment_verified": False,
+              "deployment_verified": False}
     directory = None
     try:
         config, staging, production = source_config(root)

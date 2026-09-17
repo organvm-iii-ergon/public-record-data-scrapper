@@ -22,8 +22,18 @@ on:
   push:
     branches: [main]
     paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'functions/**'
       - 'cloudflare/**'
       - 'scripts/*cloudflare*'
+      - 'scripts/prepare-cloudflare-pages.mjs'
+      - 'scripts/__tests__/cloudflare-pages.test.mjs'
+      - 'scripts/no-mock-runtime.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy-pages.yml'
       - '.github/workflows/deploy-cloudflare.yml'
   pull_request:
     branches: [main]
@@ -45,6 +55,7 @@ on:
 # Least privilege: the deploy needs only repo read.
 permissions:
   contents: read
+  actions: read
 
 jobs:
   verify-staging:
@@ -225,6 +236,16 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
 
+      - name: Require same-revision staging Pages acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          receipt="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy-pages.yml/runs?branch=main&event=push&status=success&head_sha=$GITHUB_SHA&per_page=10")"
+          jq -e --arg sha "$GITHUB_SHA" \
+            '.workflow_runs | any(.head_sha == $sha and .event == "push" and .conclusion == "success")' \
+            <<< "$receipt"
+
       - name: Resolve existing isolated production resources
         id: resolution
         env:
@@ -245,7 +266,7 @@ jobs:
         working-directory: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
         run: |
           : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is not configured}"
           : "${CLOUDFLARE_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID is not configured}"
@@ -261,7 +282,7 @@ jobs:
         working-directory: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
         run: |
           : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is not configured}"
           : "${CLOUDFLARE_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID is not configured}"
