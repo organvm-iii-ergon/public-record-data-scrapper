@@ -161,6 +161,51 @@ function assertSafeUrl(rawUrl: string): URL {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_TIMEOUT_MS = 5_000
+const MAX_RESPONSE_BODY_BYTES = 1024
+
+/** Read only the response prefix retained in delivery logs. */
+export async function readBoundedResponseBody(
+  response: Response,
+  maxBytes = MAX_RESPONSE_BODY_BYTES
+): Promise<string> {
+  if (!response.body || maxBytes <= 0) return ''
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let totalBytes = 0
+
+  try {
+    while (totalBytes < maxBytes) {
+      const { value, done } = await reader.read()
+      if (done) break
+      if (!value?.byteLength) continue
+
+      const remaining = maxBytes - totalBytes
+      const chunk = value.byteLength > remaining ? value.subarray(0, remaining) : value
+      chunks.push(chunk)
+      totalBytes += chunk.byteLength
+
+      if (value.byteLength > remaining || totalBytes === maxBytes) {
+        try {
+          await reader.cancel('webhook response body limit reached')
+        } catch {
+          // Cancellation is best-effort; retained bytes are already bounded.
+        }
+        break
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const body = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(body)
+}
 
 /**
  * Deliver a signed webhook payload to a subscriber endpoint.
@@ -202,8 +247,7 @@ export async function deliverWebhook(
     // Read up to 1 KB of the response for logging.
     let responseBody: string | undefined
     try {
-      const text = await response.text()
-      responseBody = text.slice(0, 1024)
+      responseBody = await readBoundedResponseBody(response)
     } catch {
       // Ignore body-read errors.
     }
@@ -262,6 +306,20 @@ export interface WebhookDeliveryRow {
   created_at: string
 }
 
+export interface WebhookDeliveryJob {
+  deliveryId: string
+  event: string
+  attemptsMade: number
+}
+
+type EnqueueWebhookDelivery = (job: WebhookDeliveryJob) => Promise<void>
+
+async function enqueueWebhookDelivery(job: WebhookDeliveryJob): Promise<void> {
+  // Keep the service independent from worker startup while using the production queue by default.
+  const { getWebhookDeliveryQueue } = await import('../queue/workers/webhookDeliveryWorker')
+  await getWebhookDeliveryQueue().add('deliver', job, { jobId: job.deliveryId })
+}
+
 /**
  * OutboundWebhookService orchestrates:
  * 1. Finding subscriptions for an event.
@@ -270,7 +328,10 @@ export interface WebhookDeliveryRow {
  * 4. Updating the delivery record with the outcome.
  */
 export class OutboundWebhookService {
-  constructor(private readonly db: WebhookDb) {}
+  constructor(
+    private readonly db: WebhookDb,
+    private readonly enqueueDelivery: EnqueueWebhookDelivery = enqueueWebhookDelivery
+  ) {}
 
   /**
    * Fan out an event to all matching enabled subscriptions for an org.
@@ -300,7 +361,10 @@ export class OutboundWebhookService {
          RETURNING id`,
         [sub.id, event, JSON.stringify(payload)]
       )
-      if (row) deliveryIds.push(row.id)
+      if (row) {
+        await this.enqueueDelivery({ deliveryId: row.id, event, attemptsMade: 0 })
+        deliveryIds.push(row.id)
+      }
     }
 
     return deliveryIds
