@@ -559,6 +559,20 @@ const entityHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(500).default(100)
 })
 
+// GET /api/compliance/audit/integrity — global chain health only. The response
+// contains no tenant records, but remains admin-only because the chain spans
+// every tenant and is an operational compliance control.
+router.get(
+  '/audit/integrity',
+  requireRole('admin'),
+  asyncHandler(async (req, res) => {
+    const orgId = resolveOrgId(req as AuthenticatedRequest, res)
+    if (!orgId) return
+
+    res.json(await auditService.verifyIntegrity())
+  })
+)
+
 // GET /api/compliance/audit/entity/:entityType/:entityId — full entity history
 router.get(
   '/audit/entity/:entityType/:entityId',

@@ -61,6 +61,86 @@ type ExportFormat = 'json' | 'csv'
 
 export class AuditService {
   /**
+   * Verify the database-enforced global audit chain without returning tenant
+   * payloads. The chain is global so a tenant-filtered check would incorrectly
+   * treat interleaved organizations as breaks.
+   */
+  async verifyIntegrity(): Promise<{
+    valid: boolean
+    totalRecords: number
+    brokenRecords: number
+    stateMatchesTail: boolean
+  }> {
+    try {
+      const results = await database.query<{
+        total_records: string
+        broken_records: string
+        state_matches_tail: boolean
+      }>(`
+        WITH checked AS (
+          SELECT
+            entry.chain_sequence,
+            entry.prev_hash,
+            entry.record_hash,
+            COALESCE(
+              lag(entry.record_hash) OVER (ORDER BY entry.chain_sequence),
+              repeat('0', 64)
+            ) AS expected_prev_hash,
+            encode(
+              sha256(convert_to((to_jsonb(entry) - 'record_hash')::TEXT, 'UTF8')),
+              'hex'
+            ) AS expected_record_hash
+          FROM audit_logs AS entry
+        ),
+        summary AS (
+          SELECT
+            COUNT(*) AS total_records,
+            COUNT(*) FILTER (
+              WHERE prev_hash IS DISTINCT FROM expected_prev_hash
+                 OR record_hash IS DISTINCT FROM expected_record_hash
+            ) AS broken_records
+          FROM checked
+        ),
+        tail AS (
+          SELECT chain_sequence, record_hash
+          FROM audit_logs
+          ORDER BY chain_sequence DESC
+          LIMIT 1
+        )
+        SELECT
+          summary.total_records,
+          summary.broken_records,
+          state.last_sequence = COALESCE(tail.chain_sequence, 0)
+            AND state.last_hash = COALESCE(tail.record_hash, repeat('0', 64))
+            AS state_matches_tail
+        FROM summary
+        CROSS JOIN audit_chain_state AS state
+        LEFT JOIN tail ON TRUE
+        WHERE state.singleton = TRUE
+      `)
+
+      const result = results[0]
+      if (!result) {
+        throw new Error('Audit chain state is missing')
+      }
+
+      const totalRecords = parseInt(result.total_records, 10)
+      const brokenRecords = parseInt(result.broken_records, 10)
+      return {
+        valid: brokenRecords === 0 && result.state_matches_tail,
+        totalRecords,
+        brokenRecords,
+        stateMatchesTail: result.state_matches_tail
+      }
+    } catch (error) {
+      throw new DatabaseError(
+        'Failed to verify audit integrity',
+        error instanceof Error ? error : undefined
+      )
+    }
+  }
+
+  /**
    * Transform database row to AuditLog type
    */
   private transformAuditLog(row: AuditLogRow): AuditLog {

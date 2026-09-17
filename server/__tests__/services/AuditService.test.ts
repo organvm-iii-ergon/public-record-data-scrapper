@@ -21,6 +21,36 @@ describe('AuditService', () => {
     service = new AuditService()
   })
 
+  describe('verifyIntegrity', () => {
+    it('returns a valid receipt only when every row and the chain tail match', async () => {
+      mockQuery.mockResolvedValueOnce([
+        { total_records: '42', broken_records: '0', state_matches_tail: true }
+      ])
+
+      await expect(service.verifyIntegrity()).resolves.toEqual({
+        valid: true,
+        totalRecords: 42,
+        brokenRecords: 0,
+        stateMatchesTail: true
+      })
+      expect(mockQuery.mock.calls[0][0]).toContain("to_jsonb(entry) - 'record_hash'")
+      expect(mockQuery.mock.calls[0][0]).toContain('lag(entry.record_hash)')
+    })
+
+    it('fails closed when the serialized tail does not match', async () => {
+      mockQuery.mockResolvedValueOnce([
+        { total_records: '42', broken_records: '0', state_matches_tail: false }
+      ])
+
+      await expect(service.verifyIntegrity()).resolves.toMatchObject({ valid: false })
+    })
+
+    it('wraps missing state and query failures as DatabaseError', async () => {
+      mockQuery.mockResolvedValueOnce([])
+      await expect(service.verifyIntegrity()).rejects.toThrow(DatabaseError)
+    })
+  })
+
   describe('getEntityHistory', () => {
     it('should return history for an entity', async () => {
       const mockLogs = [
