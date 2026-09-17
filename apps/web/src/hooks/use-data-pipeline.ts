@@ -7,8 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Prospect } from '@public-records/core'
 import { DataRefreshScheduler, SchedulerStatus } from '@/lib/services'
-import { featureFlags, getDataPipelineConfig } from '@/lib/config/dataPipeline'
-import { generateProspects } from '@/lib/demoData'
+import { getDataPipelineConfig } from '@/lib/config/dataPipeline'
 import { useDataTier } from '@/hooks/useDataTier'
 import {
   initDatabaseService,
@@ -41,7 +40,6 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
   const { dataTier } = useDataTier()
 
   const schedulerRef = useRef<DataRefreshScheduler | null>(null)
-  const demoDataEnabled = featureFlags.useDemoData
 
   /**
    * Lazily instantiate the scheduler so startScheduler/stopScheduler/
@@ -49,10 +47,6 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
    * permanently-null ref. Demo mode never needs a scheduler.
    */
   const ensureScheduler = useCallback((): DataRefreshScheduler | null => {
-    if (demoDataEnabled) {
-      return null
-    }
-
     if (!schedulerRef.current) {
       const { schedule, ingestion, enrichment } = getDataPipelineConfig()
       // autoStart is forced off here: the hook controls lifecycle explicitly
@@ -65,7 +59,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
     }
 
     return schedulerRef.current
-  }, [demoDataEnabled])
+  }, [])
 
   /**
    * Initialize data pipeline
@@ -76,33 +70,26 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
         setLoading(true)
         setError(null)
 
-        if (demoDataEnabled) {
-          console.log('Using demo data (preview mode enabled)')
-          const previewProspects = generateProspects(100, { dataTier })
-          setProspects(previewProspects)
+        // Ensure the scheduler instance exists for non-demo data flows
+        ensureScheduler()
+        // Use database
+        console.log('Initializing database connection...')
+
+        // Initialize database service
+        await initDatabaseService()
+
+        // Check if database has data
+        const hasData = await hasDatabaseData()
+
+        if (hasData) {
+          console.log('Loading prospects from database...')
+          const dbProspects = await fetchProspects()
+          setProspects(dbProspects)
           setLastUpdate(new Date().toISOString())
+          console.log(`Loaded ${dbProspects.length} prospects from database`)
         } else {
-          // Ensure the scheduler instance exists for non-demo data flows
-          ensureScheduler()
-          // Use database
-          console.log('Initializing database connection...')
-
-          // Initialize database service
-          await initDatabaseService()
-
-          // Check if database has data
-          const hasData = await hasDatabaseData()
-
-          if (hasData) {
-            console.log('Loading prospects from database...')
-            const dbProspects = await fetchProspects()
-            setProspects(dbProspects)
-            setLastUpdate(new Date().toISOString())
-            console.log(`Loaded ${dbProspects.length} prospects from database`)
-          } else {
-            console.warn('No data in database. Run `npm run db:seed` to seed sample data.')
-            setError('No data in database. Please seed data or switch to preview mode.')
-          }
+          console.info('No records are available in the database.')
+          setProspects([])
         }
 
         setLoading(false)
@@ -120,7 +107,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
     return () => {
       schedulerRef.current?.stop()
     }
-  }, [dataTier, demoDataEnabled, ensureScheduler])
+  }, [dataTier, ensureScheduler])
 
   /**
    * Manually refresh all data
@@ -130,17 +117,11 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
       setLoading(true)
       setError(null)
 
-      if (demoDataEnabled) {
-        const previewProspects = generateProspects(100, { dataTier })
-        setProspects(previewProspects)
-        setLastUpdate(new Date().toISOString())
-      } else {
-        // Refresh from database
-        const dbProspects = await fetchProspects()
-        setProspects(dbProspects)
-        setLastUpdate(new Date().toISOString())
-        console.log(`Refreshed ${dbProspects.length} prospects from database`)
-      }
+      // Refresh from database
+      const dbProspects = await fetchProspects()
+      setProspects(dbProspects)
+      setLastUpdate(new Date().toISOString())
+      console.log(`Refreshed ${dbProspects.length} prospects from database`)
 
       setLoading(false)
     } catch (err) {
@@ -148,7 +129,7 @@ export function useDataPipeline(): DataPipelineState & DataPipelineActions {
       setError(err instanceof Error ? err.message : 'Failed to refresh data')
       setLoading(false)
     }
-  }, [dataTier, demoDataEnabled])
+  }, [dataTier])
 
   /**
    * Start the scheduler
