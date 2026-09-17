@@ -7,6 +7,7 @@ on:
       - 'apps/web/**'
       - 'packages/**'
       - 'functions/**'
+      - 'cloudflare/**'
       - 'scripts/prepare-cloudflare-pages.mjs'
       - 'scripts/__tests__/cloudflare-pages.test.mjs'
       - 'scripts/no-mock-runtime.mjs'
