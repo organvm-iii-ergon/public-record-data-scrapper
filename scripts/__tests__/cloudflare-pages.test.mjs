@@ -128,6 +128,10 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /test "\$GITHUB_REF" = refs\/heads\/main/)
   assert.match(workflow, /max_by\(\.created_on\)/)
   assert.match(workflow, /Resolve or create the exact Pages project/)
+  assert.ok(
+    workflow.indexOf('Resolve or create the exact Pages project') <
+      workflow.indexOf('Require the exact Worker revision and authenticated Pages boundary')
+  )
   assert.match(workflow, /production_branch:\"main\"/)
   assert.match(workflow, /\.result\.name == \$project/)
   assert.equal(
