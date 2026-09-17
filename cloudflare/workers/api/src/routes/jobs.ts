@@ -14,7 +14,7 @@ export const jobsRoute = new Hono<AppBindings>()
  * GET /v1/jobs — List background jobs for the tenant.
  */
 jobsRoute.get('/', async (c) => {
-  const { orgId, role } = c.get('identity')
+  const { orgId } = c.get('identity')
 
   const rawLimit = Number.parseInt(c.req.query('limit') ?? '50', 10)
   const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50
@@ -27,11 +27,10 @@ jobsRoute.get('/', async (c) => {
   const conditions: string[] = []
   const params: unknown[] = []
 
-  // Admins may view all or filter by org; non-admins are strictly bound to their org.
-  if (role !== 'admin') {
-    conditions.push('org_id = ?')
-    params.push(orgId)
-  }
+  // API-key roles are tenant-scoped. Even an org admin must never cross the
+  // organization boundary; platform-wide operators use a separate surface.
+  conditions.push('org_id = ?')
+  params.push(orgId)
 
   if (status) {
     conditions.push('status = ?')
@@ -93,17 +92,16 @@ jobsRoute.get('/', async (c) => {
  * GET /v1/jobs/:id — Retrieve a background job status.
  */
 jobsRoute.get('/:id', async (c) => {
-  const { orgId, role } = c.get('identity')
+  const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
   const job = await first<JobRow>(
     c.env,
     `SELECT id, type, payload, status, org_id, attempts, created_at
        FROM jobs
-      WHERE id = ? AND (org_id = ? OR ? = 'admin')`,
+      WHERE id = ? AND org_id = ?`,
     id,
-    orgId,
-    role ?? 'user'
+    orgId
   )
 
   if (!job) {
@@ -137,6 +135,8 @@ interface CreateJobBody {
   payload?: unknown
 }
 
+const INTERNAL_JOB_TYPES = new Set(['webhook_delivery', 'crm_push'])
+
 /**
  * POST /v1/jobs — Enqueue an asynchronous pipeline job.
  */
@@ -160,6 +160,20 @@ jobsRoute.post('/', async (c) => {
     )
   }
 
+  const jobType = body.type.trim()
+  if (INTERNAL_JOB_TYPES.has(jobType)) {
+    return c.json(
+      {
+        error: {
+          message: 'This job type is reserved for internal producers',
+          code: 'FORBIDDEN_JOB_TYPE',
+          statusCode: 403
+        }
+      },
+      403
+    )
+  }
+
   const id = crypto.randomUUID()
   const payloadStr = body.payload !== undefined ? JSON.stringify(body.payload) : '{}'
 
@@ -168,7 +182,7 @@ jobsRoute.post('/', async (c) => {
     `INSERT INTO jobs (id, type, payload, status, org_id, attempts)
      VALUES (?, ?, ?, 'pending', ?, 0)`,
     id,
-    body.type.trim(),
+    jobType,
     payloadStr,
     orgId
   )

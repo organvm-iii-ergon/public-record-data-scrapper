@@ -114,15 +114,27 @@ test('scheduled.ts routes cron ticks and drains D1 jobs queue with fail-safe sem
   // Atomic claim query
   assert.match(
     scheduledContent,
-    /UPDATE jobs SET status = 'processing', attempts = attempts \+ 1\s+WHERE id = \? AND status = 'pending'/
+    /SET status = 'processing', attempts = attempts \+ 1, claimed_at = datetime\('now'\)\s+WHERE id = \? AND status = 'pending'/
   )
 
   // Terminal or retry status handling
-  assert.match(scheduledContent, /UPDATE jobs SET status = 'done' WHERE id = \?/)
+  assert.match(scheduledContent, /UPDATE jobs SET status = 'done', claimed_at = NULL WHERE id = \?/)
   assert.match(
     scheduledContent,
     /const nextStatus = job\.attempts \+ 1 >= MAX_ATTEMPTS \? 'failed' : 'pending'/
   )
+
+  // Evicted workers cannot strand processing jobs forever.
+  assert.match(
+    scheduledContent,
+    /SET status = 'pending', claimed_at = NULL[\s\S]*WHERE status = 'processing'/
+  )
+})
+
+test('D1 migration 0004_job_leases.sql adds recoverable job leases', () => {
+  const sql = readFileSync(resolve(ROOT, 'cloudflare/migrations/0004_job_leases.sql'), 'utf8')
+  assert.match(sql, /ALTER TABLE jobs ADD COLUMN claimed_at TEXT/)
+  assert.match(sql, /idx_jobs_processing_lease/)
 })
 
 test('D1 migration 0001_init.sql defines all required schema objects and index constraints', () => {

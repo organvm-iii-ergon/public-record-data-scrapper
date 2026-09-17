@@ -378,12 +378,11 @@ export class OutboundWebhookService {
     events: string[],
     secret: string
   ): Promise<string> {
-    const hashedSecret = crypto.createHash('sha256').update(secret).digest('hex')
     const [row] = await this.db.query<{ id: string }>(
       `INSERT INTO webhook_subscriptions (org_id, url, secret, events)
        VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [orgId, url, hashedSecret, events]
+      [orgId, url, secret, events]
     )
     if (!row) throw new Error('Failed to create webhook subscription')
     return row.id

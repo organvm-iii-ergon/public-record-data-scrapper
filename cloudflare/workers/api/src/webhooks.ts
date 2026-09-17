@@ -177,12 +177,19 @@ export function calculateNextRetry(attempt: number): string {
  */
 export async function sendWebhookDelivery(
   env: Env,
-  deliveryId: string
+  deliveryId: string,
+  orgId?: string
 ): Promise<{ success: boolean; status?: number; error?: string }> {
   const delivery = await first<WebhookDeliveryRow>(
     env,
-    `SELECT * FROM webhook_deliveries WHERE id = ?`,
-    deliveryId
+    `SELECT * FROM webhook_deliveries
+      WHERE id = ?
+        AND (? IS NULL OR org_id = ?)
+        AND status IN ('pending', 'delivering')
+        AND (next_retry_at IS NULL OR datetime(next_retry_at) <= datetime('now'))`,
+    deliveryId,
+    orgId ?? null,
+    orgId ?? null
   )
   if (!delivery) {
     return { success: false, error: `Delivery ${deliveryId} not found` }

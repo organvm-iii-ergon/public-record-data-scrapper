@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express'
+import express, { Express, NextFunction, Request, Response } from 'express'
 import type { Server as HttpServer } from 'http'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -91,17 +91,22 @@ export class Server {
 
     // Raw body middleware for webhooks (must be before JSON parser)
     // This preserves the raw body for signature verification
-    this.app.use(
-      '/api/webhooks',
-      express.raw({
-        type: 'application/json',
-        limit: '1mb',
-        verify: (req: Request, res: Response, buf: Buffer) => {
-          // Store raw body for signature verification
-          ;(req as Request & { rawBody?: Buffer }).rawBody = buf
-        }
-      })
-    )
+    const webhookRawParser = express.raw({
+      type: 'application/json',
+      limit: '1mb',
+      verify: (req: Request, res: Response, buf: Buffer) => {
+        // Store raw body for signature verification
+        ;(req as Request & { rawBody?: Buffer }).rawBody = buf
+      }
+    })
+    this.app.use('/api/webhooks', (req: Request, res: Response, next: NextFunction) => {
+      // Subscription management uses ordinary JSON. Keeping it out of the raw
+      // parser lets the global express.json middleware populate req.body.
+      if (req.path === '/subscriptions' || req.path.startsWith('/subscriptions/')) {
+        return next()
+      }
+      return webhookRawParser(req, res, next)
+    })
 
     // Parsing for webhook form data (Twilio sends as x-www-form-urlencoded)
     this.app.use('/api/webhooks', express.urlencoded({ extended: true, limit: '1mb' }))
@@ -278,7 +283,7 @@ export class Server {
 
     // Outbound webhook subscription management (authenticated — requires org context)
     this.app.use(
-      '/api/webhooks/subscriptions',
+      '/api/webhooks',
       authMiddleware,
       orgContextMiddleware,
       dataTierRouter,

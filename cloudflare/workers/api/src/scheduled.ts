@@ -28,6 +28,7 @@ interface JobRow {
 
 const MAX_ATTEMPTS = 5
 const DRAIN_BATCH = 25
+const JOB_LEASE_MINUTES = 15
 
 // --- Scheduled-task stubs (would enqueue per-state / per-prospect work) ------
 
@@ -65,8 +66,11 @@ async function processJob(env: Env, job: JobRow): Promise<void> {
   switch (job.type) {
     case 'webhook_delivery': {
       const deliveryId = parsedPayload.deliveryId as string
-      if (!deliveryId) throw new Error(`Missing deliveryId in webhook_delivery job ${job.id}`)
-      const res = await sendWebhookDelivery(env, deliveryId)
+      const orgId = job.org_id
+      if (!deliveryId || !orgId) {
+        throw new Error(`Missing deliveryId or org_id in webhook_delivery job ${job.id}`)
+      }
+      const res = await sendWebhookDelivery(env, deliveryId, orgId)
       if (!res.success) {
         throw new Error(res.error ?? `Webhook delivery failed with status ${res.status}`)
       }
@@ -99,6 +103,17 @@ async function processJob(env: Env, job: JobRow): Promise<void> {
 export async function drainJobs(env: Env): Promise<void> {
   let jobs: JobRow[]
   try {
+    // Recover work abandoned by an evicted/timed-out isolate. The lease is
+    // refreshed only by a successful claim, so a later tick can safely retry.
+    await run(
+      env,
+      `UPDATE jobs
+          SET status = 'pending', claimed_at = NULL
+        WHERE status = 'processing'
+          AND claimed_at IS NOT NULL
+          AND datetime(claimed_at) <= datetime('now', ?)`,
+      `-${JOB_LEASE_MINUTES} minutes`
+    )
     jobs = await all<JobRow>(
       env,
       `SELECT id, type, payload, org_id, attempts
@@ -121,7 +136,8 @@ export async function drainJobs(env: Env): Promise<void> {
       // at-least-once if a later step fails (the job returns to 'pending').
       const claim = await run(
         env,
-        `UPDATE jobs SET status = 'processing', attempts = attempts + 1
+        `UPDATE jobs
+            SET status = 'processing', attempts = attempts + 1, claimed_at = datetime('now')
           WHERE id = ? AND status = 'pending'`,
         job.id
       )
@@ -132,12 +148,17 @@ export async function drainJobs(env: Env): Promise<void> {
 
       await processJob(env, job)
 
-      await run(env, `UPDATE jobs SET status = 'done' WHERE id = ?`, job.id)
+      await run(env, `UPDATE jobs SET status = 'done', claimed_at = NULL WHERE id = ?`, job.id)
     } catch (err) {
       console.error(`[drain] job ${job.id} failed`, err)
       const nextStatus = job.attempts + 1 >= MAX_ATTEMPTS ? 'failed' : 'pending'
       try {
-        await run(env, `UPDATE jobs SET status = ? WHERE id = ?`, nextStatus, job.id)
+        await run(
+          env,
+          `UPDATE jobs SET status = ?, claimed_at = NULL WHERE id = ?`,
+          nextStatus,
+          job.id
+        )
       } catch (markErr) {
         console.error(`[drain] could not mark job ${job.id} as ${nextStatus}`, markErr)
       }
