@@ -1,25 +1,27 @@
 /**
- * Cloudflare Access (Zero Trust) JWT verification — the higher-order auth from
- * telos: "the org_id the IDOR fix needs arrives in the Access JWT — auth stops
- * being our code."
+ * Cloudflare Access (Zero Trust) JWT & API Key authentication — edge identity plane.
  *
- * Access puts a signed JWT on every request in the `Cf-Access-Jwt-Assertion`
- * header. We verify it against the team JWKS and extract the tenant (org_id).
+ * Implements multi-tenant B2B authentication:
+ *  1. Programmatic access: Long-lived API keys (`prk_...`) sent via `X-API-Key`
+ *     or `Authorization: Bearer prk_...`. Hashed using SHA-256 before D1 lookup.
+ *  2. Interactive / Dashboard access: Cloudflare Access JWT in `Cf-Access-Jwt-Assertion`
+ *     verified against Zero Trust team JWKS.
  *
- * FAIL CLOSED everywhere: missing header, bad signature, wrong audience, or a
- * token without an org all yield 401 (or 403 for org mismatch). This ports the
- * #234 isolation logic (see server/routes/deals.ts `resolveOrgId`) to the edge.
+ * FAIL CLOSED everywhere: missing, malformed, revoked, or expired credentials yield 401.
+ * Tenant isolation is rooted in the resolved `identity.orgId`.
  */
 import { createMiddleware } from 'hono/factory'
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
-import type { AppBindings, Identity } from './types'
+import { all, first, run } from './db'
+import type { AppBindings, Env, Identity, SubscriptionTier } from './types'
 
-const ACCESS_HEADER = 'Cf-Access-Jwt-Assertion'
+export const ACCESS_HEADER = 'Cf-Access-Jwt-Assertion'
+export const API_KEY_HEADER = 'X-API-Key'
+export const API_KEY_PREFIX = 'prk_'
 
 /**
  * JWKS sets are keyed by team domain and cached for the lifetime of the
- * isolate. `createRemoteJWKSet` itself caches keys and only refetches on an
- * unknown `kid`, so this avoids a network round-trip per request.
+ * isolate. `createRemoteJWKSet` caches keys and refetches on unknown `kid`.
  */
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>()
 
@@ -34,11 +36,94 @@ function getJwks(teamDomain: string): ReturnType<typeof createRemoteJWKSet> {
 }
 
 /**
- * Pull the tenant id out of the verified payload. Cloudflare Access emits
- * custom claims either flat (`org_id`) or namespaced (e.g.
- * `https://<team>/org_id`); accept any claim whose key is `org_id` or ends in
- * `/org_id`. Must be a non-empty string.
+ * SHA-256 hex digest using native Web Crypto API.
  */
+export async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(key)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * Pull an API key out of request headers (X-API-Key or Authorization: Bearer prk_...).
+ */
+export function extractApiKey(apiKeyHeader?: string, authHeader?: string): string | undefined {
+  if (typeof apiKeyHeader === 'string' && apiKeyHeader.trim().length > 0) {
+    return apiKeyHeader.trim()
+  }
+
+  if (typeof authHeader === 'string') {
+    const parts = authHeader.trim().split(/\s+/)
+    if (
+      parts.length === 2 &&
+      parts[0]?.toLowerCase() === 'bearer' &&
+      parts[1]?.startsWith(API_KEY_PREFIX)
+    ) {
+      return parts[1]
+    }
+  }
+
+  return undefined
+}
+
+interface ApiKeyVerifyRow {
+  id: string
+  org_id: string
+  role: string
+  expires_at: string | null
+  revoked_at: string | null
+  subscription_tier: string | null
+}
+
+/**
+ * Verify a presented API key against D1.
+ * Returns the resolved `Identity` or `null` if invalid, revoked, or expired.
+ */
+export async function verifyApiKey(env: Env, presentedKey: string): Promise<Identity | null> {
+  if (!presentedKey.startsWith(API_KEY_PREFIX)) {
+    return null
+  }
+
+  const keyHash = await hashApiKey(presentedKey)
+
+  const row = await first<ApiKeyVerifyRow>(
+    env,
+    `SELECT a.id, a.org_id, a.role, a.expires_at, a.revoked_at, o.subscription_tier
+       FROM api_keys a
+       INNER JOIN organizations o ON a.org_id = o.id
+      WHERE a.key_hash = ?`,
+    keyHash
+  )
+
+  if (!row) return null
+  if (row.revoked_at !== null) return null
+  if (
+    row.expires_at !== null &&
+    (!Number.isFinite(Date.parse(row.expires_at)) || Date.parse(row.expires_at) <= Date.now())
+  ) {
+    return null
+  }
+
+  // Best-effort usage timestamp update; failures must not block the request.
+  try {
+    await run(env, `UPDATE api_keys SET last_used_at = datetime('now') WHERE id = ?`, row.id)
+  } catch {
+    // ignore
+  }
+
+  const identity: Identity = {
+    orgId: row.org_id,
+    role: row.role ?? 'user',
+    tier: (row.subscription_tier as SubscriptionTier) || 'free',
+    authMethod: 'api_key',
+    keyId: row.id
+  }
+
+  return identity
+}
+
 function extractOrgId(payload: JWTPayload): string | undefined {
   for (const [key, value] of Object.entries(payload)) {
     if (
@@ -52,33 +137,49 @@ function extractOrgId(payload: JWTPayload): string | undefined {
   return undefined
 }
 
-function extractRole(payload: JWTPayload): string | undefined {
-  for (const [key, value] of Object.entries(payload)) {
-    if (
-      (key === 'role' || key.endsWith('/role')) &&
-      typeof value === 'string' &&
-      value.length > 0
-    ) {
-      return value
-    }
+/** Called only after signature, issuer and audience verification. */
+export async function resolveAccessMembership(
+  env: Env,
+  payload: JWTPayload
+): Promise<Identity | null> {
+  if (!payload.sub || payload.iss !== `https://${env.ACCESS_TEAM_DOMAIN}`) return null
+  const requestedOrg = extractOrgId(payload)
+  const rows = await all<{ org_id: string; role: string; subscription_tier: SubscriptionTier }>(
+    env,
+    `SELECT m.org_id, m.role, o.subscription_tier FROM access_memberships m
+      JOIN organizations o ON o.id = m.org_id
+      WHERE m.issuer = ? AND m.subject = ? AND m.revoked_at IS NULL
+        AND (? IS NULL OR m.org_id = ?) LIMIT 2`,
+    payload.iss,
+    payload.sub,
+    requestedOrg ?? null,
+    requestedOrg ?? null
+  )
+  // Ambiguous memberships require an explicit organization selection; claims
+  // can select a membership but can never create one or elevate its role.
+  if (rows.length !== 1) return null
+  const row = rows[0]
+  if (!row) return null
+  return {
+    orgId: row.org_id,
+    role: row.role,
+    tier: row.subscription_tier,
+    email: typeof payload.email === 'string' ? payload.email : undefined,
+    authMethod: 'cf_access'
   }
-  return undefined
 }
 
 /**
- * Verify the Access JWT and return the caller identity, or `null` if the token
- * is missing/invalid/untenanted (the caller maps null → 401).
+ * Verify Cloudflare Access JWT and resolve tenant identity + tier.
  */
 export async function verifyAccessJwt(
   token: string | undefined,
   teamDomain: string,
-  audience: string
+  audience: string,
+  env?: Env
 ): Promise<Identity | null> {
   if (!token || token.length === 0) return null
-  if (!teamDomain || !audience) {
-    // Misconfigured Worker: refuse rather than accept anything. Fail closed.
-    return null
-  }
+  if (!teamDomain || !audience) return null
 
   let payload: JWTPayload
   try {
@@ -88,26 +189,70 @@ export async function verifyAccessJwt(
     })
     payload = result.payload
   } catch {
-    // Bad signature, expired, wrong audience/issuer — all fail closed.
     return null
   }
 
-  const orgId = extractOrgId(payload)
-  if (!orgId) return null
-
-  const email = typeof payload.email === 'string' ? payload.email : undefined
-  const role = extractRole(payload)
-
-  return { orgId, email, role }
+  if (!env) return null
+  try {
+    return await resolveAccessMembership(env, payload)
+  } catch {
+    return null
+  }
 }
 
 /**
- * Hono middleware: enforce a valid Access JWT and stash the identity.
- * On success: `c.set('identity', identity)`. On any failure: 401, fail closed.
+ * Unified Edge Auth Middleware:
+ * Supports API Keys (X-API-Key or Authorization: Bearer prk_...) and Cloudflare Access JWT.
+ * Fails closed with 401 if unauthenticated or invalid.
+ */
+export const unifiedAuth = createMiddleware<AppBindings>(async (c, next) => {
+  const presentedKey = extractApiKey(
+    c.req.header(API_KEY_HEADER) || c.req.header('x-api-key'),
+    c.req.header('Authorization') || c.req.header('authorization')
+  )
+
+  if (presentedKey) {
+    const identity = await verifyApiKey(c.env, presentedKey)
+    if (!identity) {
+      return c.json(
+        { error: { message: 'Invalid or expired API key', code: 'UNAUTHORIZED', statusCode: 401 } },
+        401
+      )
+    }
+    c.set('identity', identity)
+    await next()
+    return
+  }
+
+  // Fall back to Cloudflare Access JWT
+  const accessJwt = c.req.header(ACCESS_HEADER)
+  if (accessJwt) {
+    const identity = await verifyAccessJwt(
+      accessJwt,
+      c.env.ACCESS_TEAM_DOMAIN,
+      c.env.ACCESS_AUD,
+      c.env
+    )
+    if (!identity) {
+      return c.json(
+        { error: { message: 'Unauthorized', code: 'UNAUTHORIZED', statusCode: 401 } },
+        401
+      )
+    }
+    c.set('identity', identity)
+    await next()
+    return
+  }
+
+  return c.json({ error: { message: 'Unauthorized', code: 'UNAUTHORIZED', statusCode: 401 } }, 401)
+})
+
+/**
+ * Legacy accessAuth middleware for backward compatibility.
  */
 export const accessAuth = createMiddleware<AppBindings>(async (c, next) => {
   const token = c.req.header(ACCESS_HEADER)
-  const identity = await verifyAccessJwt(token, c.env.ACCESS_TEAM_DOMAIN, c.env.ACCESS_AUD)
+  const identity = await verifyAccessJwt(token, c.env.ACCESS_TEAM_DOMAIN, c.env.ACCESS_AUD, c.env)
 
   if (!identity) {
     return c.json(
@@ -121,9 +266,28 @@ export const accessAuth = createMiddleware<AppBindings>(async (c, next) => {
 })
 
 /**
- * Read a client-supplied org_id from query string or JSON body without
- * consuming the body for downstream handlers.
+ * Enforces role restriction (e.g. 'admin').
  */
+export function requireRole(...allowedRoles: string[]) {
+  return createMiddleware<AppBindings>(async (c, next) => {
+    const identity = c.get('identity')
+    const role = identity?.role ?? 'user'
+    if (!allowedRoles.includes(role)) {
+      return c.json(
+        {
+          error: {
+            message: 'Insufficient permissions for this operation',
+            code: 'FORBIDDEN',
+            statusCode: 403
+          }
+        },
+        403
+      )
+    }
+    await next()
+  })
+}
+
 async function readSuppliedOrgId(
   c: Parameters<Parameters<typeof createMiddleware<AppBindings>>[0]>[0]
 ): Promise<string | undefined> {
@@ -133,14 +297,12 @@ async function readSuppliedOrgId(
   const contentType = c.req.header('Content-Type') ?? ''
   if (contentType.includes('application/json')) {
     try {
-      // Hono caches the parsed body, so downstream `c.req.json()` is unaffected.
       const body = (await c.req.json()) as unknown
       if (body && typeof body === 'object' && 'org_id' in body) {
         const value = (body as Record<string, unknown>).org_id
         if (typeof value === 'string') return value
       }
     } catch {
-      // Unparseable body — nothing supplied, let validation handle it later.
       return undefined
     }
   }
@@ -148,17 +310,11 @@ async function readSuppliedOrgId(
 }
 
 /**
- * Hono middleware: port of #234 `resolveOrgId` cross-check. The tenant is
- * ALWAYS the token's org. If the client also supplies an `org_id` (query or
- * body) it MUST equal the token's org, or the request is rejected (403).
- *
- * Run AFTER `accessAuth`. Because no-org tokens are already rejected at 401,
- * here we only need the supplied-value cross-check.
+ * Hono middleware: port of #234 `resolveOrgId` cross-check.
  */
 export const orgScope = createMiddleware<AppBindings>(async (c, next) => {
   const identity = c.get('identity')
 
-  // Defensive: should never happen if accessAuth ran first. Fail closed.
   if (!identity?.orgId) {
     return c.json(
       {

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DataTier } from '@public-records/core'
 import {
-  createCoveragePreviewSnapshot,
   fetchCoverageDashboard,
   type CoverageDashboardSnapshot,
   type CoverageStatus,
@@ -192,11 +191,6 @@ export function CoverageDashboard({
       setError(null)
 
       try {
-        if (usePreviewData) {
-          setSnapshot(createCoveragePreviewSnapshot(dataTier))
-          return
-        }
-
         const result = await fetchCoverageDashboard(controller.signal, { dataTier })
         setSnapshot(result)
       } catch (loadError) {

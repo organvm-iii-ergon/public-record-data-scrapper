@@ -17,18 +17,13 @@ describe('CoverageDashboard', () => {
     vi.clearAllMocks()
   })
 
-  it('renders the readiness snapshot in explicit preview mode', async () => {
+  it('does not enable sample coverage through the legacy preview prop', async () => {
+    vi.mocked(fetchCoverageDashboard).mockRejectedValueOnce(new Error('Coverage API offline'))
     render(<CoverageDashboard dataTier="paid" usePreviewData />)
-
-    expect(await screen.findByText('Coverage Dashboard')).toBeInTheDocument()
-    expect(screen.getByText(/Operational readiness snapshot/i)).toBeInTheDocument()
-    expect(screen.getByText('Automatic fallback')).toBeInTheDocument()
-    expect(screen.getByText('High-value states')).toBeInTheDocument()
-    expect(screen.getByText('California')).toBeInTheDocument()
-    expect(screen.getByText('Texas')).toBeInTheDocument()
-    expect(screen.getByText('Florida')).toBeInTheDocument()
-    expect(screen.getByText('New York')).toBeInTheDocument()
-    expect(screen.getByText('Circuit open')).toBeInTheDocument()
+    expect(await screen.findByText('Coverage API offline')).toBeInTheDocument()
+    expect(fetchCoverageDashboard).toHaveBeenCalled()
+    expect(screen.queryByText('California')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Operational readiness snapshot/i)).not.toBeInTheDocument()
   })
 
   it('does not silently fall back to synthetic data when live coverage fails', async () => {
