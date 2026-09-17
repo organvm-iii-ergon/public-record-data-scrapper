@@ -13,20 +13,12 @@
  * crashing the tick; a failing job is marked `failed` and skipped, never
  * blocking the rest of the drain.
  */
-import { all, run } from './db'
+import { first } from './db'
+import { claimJob, finishJob, type ClaimedJob } from './job-queue'
 import type { Env } from './types'
 import { drainWebhookDeliveries, sendWebhookDelivery } from './webhooks'
 import { pushProspectToCrm } from './crm'
 
-interface JobRow {
-  id: string
-  type: string
-  payload: string | null
-  org_id: string | null
-  attempts: number
-}
-
-const MAX_ATTEMPTS = 5
 const DRAIN_BATCH = 25
 
 // --- Scheduled-task stubs (would enqueue per-state / per-prospect work) ------
@@ -52,7 +44,7 @@ async function runHealthScores(env: Env): Promise<void> {
 /**
  * Process a single dequeued job. Dispatch by `job.type`.
  */
-async function processJob(env: Env, job: JobRow): Promise<void> {
+async function processJob(env: Env, job: ClaimedJob): Promise<void> {
   let parsedPayload: Record<string, unknown> = {}
   if (job.payload) {
     try {
@@ -66,6 +58,10 @@ async function processJob(env: Env, job: JobRow): Promise<void> {
     case 'webhook_delivery': {
       const deliveryId = parsedPayload.deliveryId as string
       if (!deliveryId) throw new Error(`Missing deliveryId in webhook_delivery job ${job.id}`)
+      if (!job.org_id || !await first(env,
+        'SELECT id FROM webhook_deliveries WHERE id = ? AND org_id = ?', deliveryId, job.org_id)) {
+        throw new Error('Webhook job does not own the referenced delivery')
+      }
       const res = await sendWebhookDelivery(env, deliveryId)
       if (!res.success) {
         throw new Error(res.error ?? `Webhook delivery failed with status ${res.status}`)
@@ -97,50 +93,21 @@ async function processJob(env: Env, job: JobRow): Promise<void> {
  * `failed`. Per-job try/catch means one bad job never stalls the batch.
  */
 export async function drainJobs(env: Env): Promise<void> {
-  let jobs: JobRow[]
-  try {
-    jobs = await all<JobRow>(
-      env,
-      `SELECT id, type, payload, org_id, attempts
-         FROM jobs
-        WHERE status = 'pending'
-        ORDER BY created_at ASC
-        LIMIT ?`,
-      DRAIN_BATCH
-    )
-  } catch (err) {
-    console.error('[drain] failed to read jobs queue', err)
-    return
-  }
-
-  for (const job of jobs) {
+  for (let index = 0; index < DRAIN_BATCH; index++) {
+    let job: ClaimedJob | null
+    try { job = await claimJob(env) }
+    catch { console.error('[drain] job claim failed'); return }
+    if (!job) return
     try {
-      // Atomic claim: the status='pending' guard + changes check means only one
-      // drain wins a job, so overlapping ticks (a manual /__scheduled during a
-      // real cron) can't double-process. Claim is at-most-once; processing stays
-      // at-least-once if a later step fails (the job returns to 'pending').
-      const claim = await run(
-        env,
-        `UPDATE jobs SET status = 'processing', attempts = attempts + 1
-          WHERE id = ? AND status = 'pending'`,
-        job.id
-      )
-      if (claim.meta.changes !== 1) {
-        // Already claimed by another tick — skip without touching it.
-        continue
-      }
-
       await processJob(env, job)
-
-      await run(env, `UPDATE jobs SET status = 'done' WHERE id = ?`, job.id)
+      if (!await finishJob(env, job, true)) {
+        console.error(`[drain] job ${job.id} completion rejected: lease no longer owned`)
+      }
     } catch (err) {
       console.error(`[drain] job ${job.id} failed`, err)
-      const nextStatus = job.attempts + 1 >= MAX_ATTEMPTS ? 'failed' : 'pending'
-      try {
-        await run(env, `UPDATE jobs SET status = ? WHERE id = ?`, nextStatus, job.id)
-      } catch (markErr) {
-        console.error(`[drain] could not mark job ${job.id} as ${nextStatus}`, markErr)
-      }
+      // An expired/stolen lease cannot change the newer attempt's state.
+      try { await finishJob(env, job, false) }
+      catch { console.error(`[drain] job ${job.id} retry state could not be persisted`) }
     }
   }
 }
