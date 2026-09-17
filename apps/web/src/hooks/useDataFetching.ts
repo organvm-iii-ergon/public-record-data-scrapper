@@ -31,6 +31,8 @@ export interface UseDataFetchingResult {
 }
 
 export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchingResult {
+  // Keep the legacy call signature while deliberately ignoring its mock/data-tier switches.
+  void _options
   // Do not hydrate business records from unscoped legacy storage: it can contain
   // synthetic records or a previous tenant's data. Reload from the API each mount.
   const [prospects, setProspects] = useState<Prospect[]>([])

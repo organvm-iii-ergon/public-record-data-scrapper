@@ -12,9 +12,14 @@ function response(body: unknown) {
 
 describe('dashboard tenant snapshot', () => {
   it('requests one same-origin authenticated surface and preserves all collections', async () => {
-    const fetch = vi.fn().mockResolvedValue(response({
-      prospects: [{ id: 'p1' }], competitors: [], portfolio: [], userActions: []
-    }))
+    const fetch = vi.fn().mockResolvedValue(
+      response({
+        prospects: [{ id: 'p1' }],
+        competitors: [],
+        portfolio: [],
+        userActions: []
+      })
+    )
     vi.stubGlobal('fetch', fetch)
     const snapshot = await fetchDashboard()
     expect(snapshot.prospects).toEqual([{ id: 'p1' }])
