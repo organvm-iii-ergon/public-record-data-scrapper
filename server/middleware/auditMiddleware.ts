@@ -312,6 +312,27 @@ export const auditMiddleware = (
     return next()
   }
 
+  let isAuditable = false
+  let action = ''
+  let entityType = ''
+
+  if (AUDITABLE_MUTATION_METHODS.includes(req.method)) {
+    isAuditable = true
+    action = ACTION_MAP[req.method] || req.method.toLowerCase()
+    entityType = getEntityType(req.path)
+  } else if (req.method === 'GET') {
+    const sensitiveConfig = getSensitiveReadConfig(req.path)
+    if (sensitiveConfig) {
+      isAuditable = true
+      action = sensitiveConfig.action
+      entityType = sensitiveConfig.entityType
+    }
+  }
+
+  if (!isAuditable) {
+    return next()
+  }
+
   // Generate or use existing request ID
   const requestId = (req as Request & { correlationId?: string }).correlationId || uuidv4()
 
