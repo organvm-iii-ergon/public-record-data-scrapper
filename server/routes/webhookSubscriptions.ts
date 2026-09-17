@@ -150,7 +150,7 @@ router.post(
     if (deliveryRow) {
       await getWebhookDeliveryQueue().add(
         'deliver',
-        { deliveryId: deliveryRow.id, event: 'webhook.test', attemptsMade: 0 },
+        { orgId, deliveryId: deliveryRow.id, event: 'webhook.test', attemptsMade: 0 },
         { delay: 0 }
       )
     }

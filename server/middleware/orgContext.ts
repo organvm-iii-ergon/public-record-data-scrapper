@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { Response, NextFunction } from 'express'
+import type { Response, NextFunction } from 'express'
 import type { AuthenticatedRequest } from './authMiddleware'
 
 /**
@@ -38,6 +38,17 @@ const store = new AsyncLocalStorage<OrgContextStore>()
  */
 export function getCurrentOrgId(): string | undefined {
   return store.getStore()?.orgId
+}
+
+/** Bind an internal job to its explicit tenant without bypassing RLS. */
+export function runWithOrgContext<T>(orgId: string, operation: () => T): T {
+  if (
+    typeof orgId !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId)
+  ) {
+    throw new Error('A valid organization UUID is required for background work')
+  }
+  return store.run({ orgId }, operation)
 }
 
 /**

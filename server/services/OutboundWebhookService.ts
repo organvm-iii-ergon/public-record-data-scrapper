@@ -311,6 +311,7 @@ export interface WebhookDeliveryRow {
 }
 
 export interface WebhookDeliveryJob {
+  orgId: string
   deliveryId: string
   event: string
   attemptsMade: number
@@ -366,7 +367,7 @@ export class OutboundWebhookService {
         [sub.id, event, JSON.stringify(payload)]
       )
       if (row) {
-        await this.enqueueDelivery({ deliveryId: row.id, event, attemptsMade: 0 })
+        await this.enqueueDelivery({ orgId, deliveryId: row.id, event, attemptsMade: 0 })
         deliveryIds.push(row.id)
       }
     }

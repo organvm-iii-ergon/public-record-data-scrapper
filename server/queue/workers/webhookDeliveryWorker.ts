@@ -14,6 +14,7 @@
 import { Worker, Job, Queue } from 'bullmq'
 import { redisConnection } from '../connection'
 import { database } from '../../database/connection'
+import { runWithOrgContext } from '../../middleware/orgContext'
 import {
   OutboundWebhookService,
   MAX_DELIVERY_ATTEMPTS
@@ -24,6 +25,8 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface WebhookDeliveryJobData {
+  /** Organization captured by the trusted producer; never inferred across tenants. */
+  orgId: string
   /** webhook_deliveries.id */
   deliveryId: string
   /** Human-readable event name for logging. */
@@ -79,29 +82,31 @@ async function notifyDeadDelivery(deliveryId: string, event: string): Promise<vo
 export async function processWebhookDeliveryJob(
   jobData: WebhookDeliveryJobData
 ): Promise<WebhookDeliveryJobResult> {
-  const service = new OutboundWebhookService(database)
-  const { deliveryId, event, attemptsMade } = jobData
+  // AsyncLocalStorage is shared with the database's organization resolver.
+  // Missing/invalid legacy job tenants fail before querying, never as an
+  // unrestricted owner connection or a guessed cross-tenant lookup.
+  return runWithOrgContext(jobData.orgId, async () => {
+    const service = new OutboundWebhookService(database)
+    const { deliveryId, event, attemptsMade } = jobData
+    const result = await service.deliver(deliveryId)
 
-  const result = await service.deliver(deliveryId)
-
-  if (result.success) {
-    return {
-      deliveryId,
-      success: true,
-      responseStatus: result.responseStatus,
-      newStatus: 'delivered'
+    if (result.success) {
+      return {
+        deliveryId,
+        success: true,
+        responseStatus: result.responseStatus,
+        newStatus: 'delivered'
+      }
     }
-  }
 
-  // Delivery failed. Determine whether to re-queue or promote to dead.
-  const nextAttempt = attemptsMade + 1 // attempts already made → next attempt number
-  if (nextAttempt >= MAX_DELIVERY_ATTEMPTS) {
-    // No more retries — record is already marked dead by OutboundWebhookService.deliver().
-    await notifyDeadDelivery(deliveryId, event)
-    return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'dead' }
-  }
+    const nextAttempt = attemptsMade + 1
+    if (nextAttempt >= MAX_DELIVERY_ATTEMPTS) {
+      await notifyDeadDelivery(deliveryId, event)
+      return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'dead' }
+    }
 
-  return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'failed' }
+    return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'failed' }
+  })
 }
 
 // ---------------------------------------------------------------------------

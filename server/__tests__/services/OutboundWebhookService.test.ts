@@ -251,6 +251,7 @@ describe('OutboundWebhookService.dispatch', () => {
       'delivery-1'
     ])
     expect(enqueue).toHaveBeenCalledWith({
+      orgId: 'org-1',
       deliveryId: 'delivery-1',
       event: 'prospect.created',
       attemptsMade: 0
