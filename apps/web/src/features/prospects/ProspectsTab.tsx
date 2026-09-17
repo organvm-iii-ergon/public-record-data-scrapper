@@ -28,6 +28,7 @@ import { MagnifyingGlass, Faders } from '@phosphor-icons/react'
 import { useIsMobile } from '@public-records/ui/use-mobile'
 
 interface ProspectsTabProps {
+  readOnly?: boolean
   // Data
   prospects: Prospect[]
   filteredProspects: Prospect[]
@@ -64,6 +65,7 @@ interface ProspectsTabProps {
 }
 
 export function ProspectsTab({
+  readOnly = false,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   prospects: _prospects,
   filteredProspects,
@@ -201,14 +203,16 @@ export function ProspectsTab({
           </div>
         </div>
 
-        <BatchOperations
-          prospects={filteredProspects}
-          selectedIds={selectedIds}
-          onSelectionChange={onSelectionChange}
-          onBatchClaim={onBatchClaim}
-          onBatchExport={onBatchExport}
-          onBatchDelete={onBatchDelete}
-        />
+        {!readOnly && (
+          <BatchOperations
+            prospects={filteredProspects}
+            selectedIds={selectedIds}
+            onSelectionChange={onSelectionChange}
+            onBatchClaim={onBatchClaim}
+            onBatchExport={onBatchExport}
+            onBatchDelete={onBatchDelete}
+          />
+        )}
 
         {/* Prospect Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
@@ -220,22 +224,24 @@ export function ProspectsTab({
                 className="relative h-full"
                 {...(index === 0 ? { 'data-tour': 'prospect-card' } : {})}
               >
-                <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) => {
-                      const newSelected = new Set(selectedIds)
-                      if (checked) {
-                        newSelected.add(prospect.id)
-                      } else {
-                        newSelected.delete(prospect.id)
-                      }
-                      onSelectionChange(newSelected)
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="glass-effect border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                </div>
+                {!readOnly && (
+                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        const newSelected = new Set(selectedIds)
+                        if (checked) {
+                          newSelected.add(prospect.id)
+                        } else {
+                          newSelected.delete(prospect.id)
+                        }
+                        onSelectionChange(newSelected)
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="glass-effect border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                  </div>
+                )}
                 <ProspectCard prospect={prospect} onSelect={onProspectSelect} />
               </div>
             )

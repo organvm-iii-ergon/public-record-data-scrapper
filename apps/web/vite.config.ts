@@ -10,6 +10,7 @@ import { dirname, resolve } from 'path'
 
 const appRoot = dirname(fileURLToPath(import.meta.url))
 const sparkEnabled = process.env.VITE_ENABLE_SPARK === 'true'
+const tenantDashboard = process.env.VITE_DEPLOYMENT_SURFACE === 'tenant-dashboard'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -23,9 +24,17 @@ export default defineConfig({
     ...(sparkEnabled ? [sparkPlugin({ port: 5173 }) as PluginOption] : [])
   ],
   resolve: {
-    alias: {
-      '@': resolve(appRoot, 'src')
-    }
+    alias: [
+      { find: '@', replacement: resolve(appRoot, 'src') },
+      ...(tenantDashboard
+        ? [
+            {
+              find: /^\.\/App\.tsx$/,
+              replacement: resolve(appRoot, 'src/TenantDashboardApp.tsx')
+            }
+          ]
+        : [])
+    ]
   },
   build: {
     outDir: resolve(appRoot, '../../dist'),

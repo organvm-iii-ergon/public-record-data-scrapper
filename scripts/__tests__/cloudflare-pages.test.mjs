@@ -136,6 +136,7 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   )
   assert.match(workflow, /test "\$CONFIRM" = DEPLOY/)
   assert.match(workflow, /VITE_DEPLOYMENT_SURFACE: tenant-dashboard/)
+  assert.match(workflow, /verify-tenant-dashboard-bundle\.mjs dist/)
   assert.match(workflow, /health\?revision=\$GITHUB_SHA/)
   assert.match(workflow, /provision-cloudflare-staging\.py --plan/)
   assert.match(workflow, /resolve-cloudflare-production\.py/)

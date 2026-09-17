@@ -315,6 +315,7 @@ try {
   assert.deepEqual(growthDashboard.competitors, [])
   assert.deepEqual(growthDashboard.portfolio, [])
   assert.equal(growthDashboard.userActions[0].type, 'refresh-data')
+  assert.equal(growthDashboard.dataTier, 'paid')
   const freeDashboardResponse = await worker.dispatchFetch('http://localhost/api/dashboard', {
     headers: { 'X-API-Key': freeKey }
   })
@@ -322,6 +323,7 @@ try {
   const freeDashboard = await freeDashboardResponse.json()
   assert.deepEqual(freeDashboard.prospects, [])
   assert.deepEqual(freeDashboard.userActions, [])
+  assert.equal(freeDashboard.dataTier, 'oss')
 
   // 4. Prospect Ingestion & Strict Tenant Isolation (Telos #3)
   // Org Growth creates a prospect

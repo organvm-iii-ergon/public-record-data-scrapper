@@ -10,6 +10,7 @@ on:
       - 'scripts/prepare-cloudflare-pages.mjs'
       - 'scripts/__tests__/cloudflare-pages.test.mjs'
       - 'scripts/no-mock-runtime.mjs'
+      - 'scripts/verify-tenant-dashboard-bundle.mjs'
       - 'package.json'
       - 'package-lock.json'
       - 'tsconfig.json'
@@ -87,11 +88,7 @@ jobs:
           VITE_DEPLOYMENT_SURFACE: tenant-dashboard
         run: npm --workspace apps/web run build -- --base=/
       - name: Reject unsupported API surfaces from the hosted bundle
-        run: |
-          if grep --recursive --quiet --extended-regexp \
-            '/api/(deals|contacts|communications|compliance|partner)' dist/assets; then
-            exit 1
-          fi
+        run: node scripts/verify-tenant-dashboard-bundle.mjs dist
       - name: Prepare the environment-bound Pages package
         id: package
         env:
