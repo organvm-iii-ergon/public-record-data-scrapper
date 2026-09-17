@@ -453,7 +453,7 @@ export class StateRuleEngine {
 
   private parseValidDate(value: string): Date | undefined {
     const trimmed = value.trim()
-    const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/)
+    const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/)
     if (iso) {
       const year = Number(iso[1])
       const month = Number(iso[2])
@@ -464,6 +464,14 @@ export class StateRuleEngine {
         parsed.getUTCMonth() !== month - 1 ||
         parsed.getUTCDate() !== day
       ) {
+        return undefined
+      }
+
+      if (trimmed.length === 10) return parsed
+
+      const timestampPattern =
+        /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/
+      if (!timestampPattern.test(trimmed) || Number.isNaN(new Date(trimmed).getTime())) {
         return undefined
       }
       return parsed
@@ -660,8 +668,13 @@ export class StateRuleEngine {
     const collateralAnalysis = this.analyzeCollateral(filing.collateral, state)
 
     // Calculate/verify expiration date
+    const normalizedFilingType = filing.filingType
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
     const shouldCalculateExpiration =
-      filing.filingType === 'UCC-1' && filing.status !== 'terminated'
+      ['UCC1', 'INITIALFINANCINGSTATEMENT', 'FINANCINGSTATEMENT'].includes(normalizedFilingType) &&
+      filing.status !== 'terminated'
     const expirationDate =
       filing.expirationDate ||
       (shouldCalculateExpiration
