@@ -181,7 +181,11 @@ export class PlaidClient {
       body: JSON.stringify(body)
     })
 
-    const payload = await response.json().catch(() => ({}))
+    const decoded: unknown = await response.json().catch(() => null)
+    const payload =
+      decoded && typeof decoded === 'object' && !Array.isArray(decoded)
+        ? (decoded as Record<string, unknown>)
+        : {}
 
     if (!response.ok) {
       throw this.createError(
@@ -189,14 +193,19 @@ export class PlaidClient {
         typeof payload.error_code === 'string' ? payload.error_code : 'PLAID_REQUEST_FAILED',
         typeof payload.error_message === 'string'
           ? payload.error_message
-          : `Plaid request failed with status ${response.status}`
+          : `Plaid request failed with status ${response.status}`,
+        typeof payload.request_id === 'string' ? payload.request_id : undefined
       )
     }
 
-    return {
-      data: payload as T,
-      requestId: typeof payload.request_id === 'string' ? payload.request_id : `plaid-${Date.now()}`
+    if (typeof payload.request_id !== 'string' || !payload.request_id) {
+      throw this.createError(
+        'API_ERROR',
+        'INVALID_RESPONSE',
+        'Plaid response is missing its request identifier'
+      )
     }
+    return { data: payload as T, requestId: payload.request_id }
   }
 
   /**
@@ -221,12 +230,17 @@ export class PlaidClient {
   /**
    * Create a Plaid error object
    */
-  private createError(errorType: string, errorCode: string, errorMessage: string): PlaidError {
+  private createError(
+    errorType: string,
+    errorCode: string,
+    errorMessage: string,
+    requestId?: string
+  ): PlaidError {
     return {
       errorType,
       errorCode,
       errorMessage,
-      requestId: `plaid-${Date.now()}`
+      requestId
     }
   }
 }

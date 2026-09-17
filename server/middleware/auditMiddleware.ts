@@ -253,7 +253,7 @@ export const auditMiddleware = (
   const auditContext: AuditContext = {
     requestId,
     userId: req.user?.id,
-    orgId: (req as AuthenticatedRequest & { orgId?: string }).orgId,
+    orgId: req.user?.orgId,
     action: ACTION_MAP[req.method] || req.method.toLowerCase(),
     entityType: getEntityType(req.path),
     entityId: extractEntityId(req.path) || req.body?.id,
@@ -372,7 +372,17 @@ export async function createAuditLog(params: {
     ...params,
     requestId: params.requestId || uuidv4(),
     beforeState: redactSensitiveData(params.beforeState),
-    afterState: redactSensitiveData(params.afterState)
+    afterState: redactSensitiveData(params.afterState),
+    changes: params.changes
+      ? Object.fromEntries(
+          Object.entries(params.changes).map(([field, change]) => [
+            field,
+            isSensitiveKey(field)
+              ? { old: '[REDACTED]', new: '[REDACTED]' }
+              : { old: redactValue(change.old, 0), new: redactValue(change.new, 0) }
+          ])
+        )
+      : undefined
   }
   await writeAuditLog(context)
 }
