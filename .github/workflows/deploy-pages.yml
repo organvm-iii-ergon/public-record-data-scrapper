@@ -186,6 +186,8 @@ jobs:
             --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/access/organizations" \
             | jq -er '.result.auth_domain')"
+          case "$team" in https://*) team="${team#https://}" ;; esac
+          team="${team%/}"
           case "$team" in *.cloudflareaccess.com) ;; *) exit 1 ;; esac
           access_ready=false
           for attempt in 1 2 3 4 5 6; do
