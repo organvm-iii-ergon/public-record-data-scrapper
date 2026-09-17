@@ -139,8 +139,9 @@ export class SendGridClient {
     const parsed = rawText ? this.tryParseJson(rawText) : undefined
 
     if (!response.ok) {
-      const apiErrors = (parsed as { errors?: Array<{ message?: string; field?: string }> } | undefined)
-        ?.errors
+      const apiErrors = (
+        parsed as { errors?: Array<{ message?: string; field?: string }> } | undefined
+      )?.errors
       return {
         success: false,
         error: {
