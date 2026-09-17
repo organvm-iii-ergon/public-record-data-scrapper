@@ -126,8 +126,18 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /--commit-hash "\$GITHUB_SHA"/)
   assert.match(workflow, /deployment_trigger\.metadata\.commit_hash/)
   assert.match(workflow, /test "\$GITHUB_REF" = refs\/heads\/main/)
-  assert.match(workflow, /any\(\.environment == "production"/)
-  assert.doesNotMatch(workflow, /max_by\(\.created_on\)/)
+  assert.match(workflow, /map\(select\(\.environment == "production"\)\)/)
+  assert.match(workflow, /max_by\(\.created_on\)/)
+  assert.doesNotMatch(workflow, /any\(\.environment == "production"/)
+  assert.match(workflow, /for attempt in \$\(seq 1 24\)/)
+  assert.match(workflow, /test "\$receipt_sha" != "\$GITHUB_SHA"/)
+  assert.match(workflow, /failure\|failed\|canceled\|cancelled/)
+  assert.match(workflow, /test "\$receipt_verified" = true/)
+  assert.ok(
+    workflow.indexOf('map(select(.environment == "production"))') <
+      workflow.indexOf('max_by(.created_on)') &&
+      workflow.indexOf('max_by(.created_on)') < workflow.indexOf('receipt_sha="$(printf')
+  )
   assert.match(workflow, /Resolve or create the exact Pages project/)
   assert.ok(
     workflow.indexOf('Resolve or create the exact Pages project') <
