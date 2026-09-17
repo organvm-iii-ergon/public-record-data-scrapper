@@ -139,7 +139,9 @@ export class SendGridClient {
     const parsed = rawText ? this.tryParseJson(rawText) : undefined
 
     if (!response.ok) {
-      const apiErrors = (parsed as { errors?: Array<{ message?: string }> } | undefined)?.errors
+      const apiErrors = (
+        parsed as { errors?: Array<{ message?: string; field?: string }> } | undefined
+      )?.errors
       return {
         success: false,
         error: {
@@ -152,7 +154,8 @@ export class SendGridClient {
             rawText ||
             `SendGrid request failed with status ${response.status}`,
           errors: apiErrors?.map((entry) => ({
-            message: entry.message || 'Provider returned an unspecified error'
+            message: entry.message || 'Provider returned an unspecified error',
+            ...(entry.field ? { field: entry.field } : {})
           }))
         }
       }
