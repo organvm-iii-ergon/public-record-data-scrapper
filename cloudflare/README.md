@@ -118,9 +118,13 @@ npm run dev
 npm run typecheck
 ```
 
-Production remains the separate existing manual `confirm=DEPLOY` operation and
-uses production bindings plus its `CLOUDFLARE_ACCOUNT_ID` secret. Staging resource
-reconciliation does not provision or promote production.
+Production remains the separate manual `confirm=DEPLOY` operation. That explicit
+gate may create only the exact dedicated production Pages project, D1, KV, R2,
+Worker Access application, and Pages Access application when they are missing.
+Every create is followed by provider readback and a fresh staging/production
+isolation check before migrations or upload. Existing exact-name resources are
+reused; ambiguous resources stop promotion, and nothing is deleted. Staging
+resource reconciliation never provisions or promotes production.
 
 ## The strangler plan (how we cross)
 

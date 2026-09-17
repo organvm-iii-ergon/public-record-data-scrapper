@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Resolve existing production bindings and emit a deploy config; never create resources."""
+"""Resolve or explicitly provision isolated production bindings."""
+import argparse
 import copy
 import importlib.util
 import json
@@ -135,10 +136,38 @@ def resolve(api, root, report):
     return output
 
 
-def run(root=ROOT, api_factory=P.API):
+def provision(api, root, report):
+    """Create only missing exact-name production resources, then re-resolve.
+
+    The staging reconciler already owns the bounded create/readback contracts.
+    Temporarily supply production names and configuration, then restore its
+    module globals before independently resolving both environments again.
+    """
+    config, staging, production = P.source_config(root)
+    originals = P.NAMES, P.WORKER, P.PAGES_PROJECT, P.PAGES_ACCESS
+    try:
+        P.NAMES = NAMES
+        P.WORKER = WORKER
+        P.PAGES_PROJECT = PAGES_PROJECT
+        P.PAGES_ACCESS = PAGES_ACCESS
+        P.reconcile(api, root, config, production, staging, report, True)
+        creation_receipt = copy.deepcopy(report.get("resources", []))
+    finally:
+        P.NAMES, P.WORKER, P.PAGES_PROJECT, P.PAGES_ACCESS = originals
+    report["production_writes"] = any(
+        row.get("action") == "created" for row in creation_receipt
+    )
+    output = resolve(api, root, report)
+    actions = {row.get("kind"): row.get("action") for row in creation_receipt}
+    for row in report["resources"]:
+        row["action"] = actions.get(row["kind"], "reuse")
+    return output
+
+
+def run(root=ROOT, api_factory=P.API, apply=False):
     report = {
         "schema_version": 1,
-        "mode": "reuse-only",
+        "mode": "apply" if apply else "reuse-only",
         "status": "blocked",
         "account_id": P.ACCOUNT,
         "worker_name": WORKER,
@@ -150,7 +179,7 @@ def run(root=ROOT, api_factory=P.API):
     generated.mkdir(mode=0o700, exist_ok=True)
     try:
         api = api_factory(os.environ.get("CLOUDFLARE_API_TOKEN", ""), report)
-        output = resolve(api, root, report)
+        output = provision(api, root, report) if apply else resolve(api, root, report)
         P.save_json(P.safe_path(root, "cloudflare/.generated/production.wrangler.json"), output)
     except P.Blocked as exc:
         report["blocker"] = exc.receipt
@@ -162,4 +191,8 @@ def run(root=ROOT, api_factory=P.API):
 
 
 if __name__ == "__main__":
-    raise SystemExit(run())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--apply", action="store_true", help="Create only missing exact-name production resources"
+    )
+    raise SystemExit(run(apply=parser.parse_args().apply))
