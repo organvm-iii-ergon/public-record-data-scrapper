@@ -17,6 +17,7 @@ import {
   nextRetryAt,
   buildWebhookPayload,
   deliverWebhook,
+  readBoundedResponseBody,
   MAX_DELIVERY_ATTEMPTS,
   OutboundWebhookService
 } from '../../services/OutboundWebhookService'
@@ -204,6 +205,55 @@ describe('deliverWebhook', () => {
     })
     expect(result.success).toBe(false)
     expect(result.error).toMatch(/private/)
+  })
+
+  it('bounds and cancels subscriber response bodies', async () => {
+    let cancelled = false
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(700).fill(97))
+        controller.enqueue(new Uint8Array(700).fill(98))
+      },
+      cancel() {
+        cancelled = true
+      }
+    })
+
+    const body = await readBoundedResponseBody(new Response(stream), 1024)
+
+    expect(new TextEncoder().encode(body)).toHaveLength(1024)
+    expect(cancelled).toBe(true)
+  })
+})
+
+describe('OutboundWebhookService.dispatch', () => {
+  it('enqueues every persisted delivery on the production delivery rail', async () => {
+    const mockDb = {
+      query: vi
+        .fn()
+        .mockResolvedValueOnce([
+          {
+            id: 'sub-1',
+            org_id: 'org-1',
+            url: 'https://hooks.example.com/wh',
+            secret: 'secret',
+            events: ['prospect.created'],
+            enabled: true
+          }
+        ])
+        .mockResolvedValueOnce([{ id: 'delivery-1' }])
+    }
+    const enqueue = vi.fn().mockResolvedValue(undefined)
+    const service = new OutboundWebhookService(mockDb, enqueue)
+
+    await expect(service.dispatch('org-1', 'prospect.created', { id: 'p-1' })).resolves.toEqual([
+      'delivery-1'
+    ])
+    expect(enqueue).toHaveBeenCalledWith({
+      deliveryId: 'delivery-1',
+      event: 'prospect.created',
+      attemptsMade: 0
+    })
   })
 })
 
