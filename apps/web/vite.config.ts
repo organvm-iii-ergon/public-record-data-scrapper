@@ -10,12 +10,13 @@ import { dirname, resolve } from 'path'
 
 const appRoot = dirname(fileURLToPath(import.meta.url))
 const sparkEnabled = process.env.VITE_ENABLE_SPARK === 'true'
+const publicDataDemoEnabled = Boolean(process.env.VITE_PUBLIC_DEMO_RECEIPT_URL)
 
 // https://vite.dev/config/
 export default defineConfig({
   root: appRoot,
   plugins: [
-    noMockRuntimePlugin() as PluginOption,
+    noMockRuntimePlugin({ allowPublicDataDemo: publicDataDemoEnabled }) as PluginOption,
     react(),
     tailwindcss(),
     // DO NOT REMOVE

@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const RECEIPT_SCHEMA = 'public-records.pages_public_demo_source.v1'
-const DEFAULT_PAGES_ORIGIN = 'https://organvm.github.io'
+const DEFAULT_PAGES_ORIGIN = 'https://organvm-iii-ergon.github.io'
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value)

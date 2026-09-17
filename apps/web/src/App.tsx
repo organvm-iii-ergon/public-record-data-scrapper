@@ -7,6 +7,7 @@ import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
 import { DemoTour } from '@/components/DemoTour'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+import { PublicDataDemo } from '@/components/PublicDataDemo'
 
 // Layout components
 import { Header, LoadingAndErrorState, TabNavigation, MobileBottomNav } from '@/components/layout'
@@ -336,6 +337,10 @@ function DashboardApp() {
 }
 
 function App() {
+  const publicDemoReceipt = import.meta.env.VITE_PUBLIC_DEMO_RECEIPT_URL
+  if (publicDemoReceipt) {
+    return <PublicDataDemo receiptPath={publicDemoReceipt} />
+  }
   return <DashboardApp />
 }
 
