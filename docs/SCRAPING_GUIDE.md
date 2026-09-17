@@ -495,11 +495,28 @@ UCC_API_KEY=your_production_api_key
 
 ---
 
+## Adding New States (State Expansion Factory)
+
+To onboard new states to the platform (Epic S6 / Epic S7), follow the comprehensive, standardized playbook:
+
+👉 **[`docs/playbooks/ADD_ONE_STATE_PLAYBOOK.md`](playbooks/ADD_ONE_STATE_PLAYBOOK.md)**
+
+The playbook defines:
+
+- The 7-step onboarding pipeline: Research -> Adapter -> Bot Gate -> Live Receipt -> Docs -> Pricing -> Compliance.
+- The standardized `StateCollector` contract ensuring zero churn on core orchestration.
+- The 7-point definition of a 'Green Run'.
+- The 7-consecutive-run verification runner (`npx tsx scripts/verify-state-runs.ts --state <STATE>`).
+
+---
+
 ## Support & Resources
 
+- **Add-One-State Playbook:** `docs/playbooks/ADD_ONE_STATE_PLAYBOOK.md`
 - **Mock Implementation:** `scripts/scrapers/ca-ucc-scraper.ts`
 - **Puppeteer Implementation:** `scripts/scrapers/ca-ucc-scraper-puppeteer.ts`
 - **API Implementation:** `scripts/scrapers/ca-ucc-scraper-api.ts`
 - **Factory Pattern:** `scripts/scrapers/scraper-factory.ts`
+- **Web Collector Factory:** `apps/web/src/lib/collectors/StateCollectorFactory.ts`
 
 **Questions?** Check `QUICKSTART.md` or open an issue on GitHub.
