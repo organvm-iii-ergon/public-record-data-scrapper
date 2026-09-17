@@ -161,7 +161,13 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /--write-out '%\{http_code\} %\{redirect_url\}\\n'/)
   assert.ok((workflow.match(/git\/ref\/heads\/main/g) || []).length >= 2)
   assert.match(workflow, /Retire the superseded GitHub Pages site/)
-  assert.match(workflow, /test "\$status" = 204 -o "\$status" = 404/)
+  assert.match(workflow, /github-pages-current\.json/)
+  assert.match(workflow, /if \[ "\$status" = 404 \]; then[\s\S]*exit 0/)
+  assert.match(workflow, /test "\$status" = 200/)
+  assert.match(workflow, /test "\$delete_status" = 204/)
+  assert.ok(
+    workflow.indexOf('github-pages-current.json') < workflow.indexOf('github-pages-delete.json')
+  )
   assert.doesNotMatch(workflow, /actions\/deploy-pages/)
   assert.doesNotMatch(workflow, /VITE_PUBLIC_DEMO/)
 

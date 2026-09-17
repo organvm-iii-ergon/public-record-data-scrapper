@@ -225,11 +225,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           endpoint="https://api.github.com/repos/$GITHUB_REPOSITORY/pages"
-          status="$(curl --silent --show-error --output .quality/github-pages-delete.json \
+          status="$(curl --silent --show-error --output .quality/github-pages-current.json \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' "$endpoint")"
+          if [ "$status" = 404 ]; then
+            exit 0
+          fi
+          test "$status" = 200
+          delete_status="$(curl --silent --show-error --output .quality/github-pages-delete.json \
             --write-out '%{http_code}' --request DELETE \
             --header "Authorization: Bearer $GH_TOKEN" \
             --header 'Accept: application/vnd.github+json' "$endpoint")"
-          test "$status" = 204 -o "$status" = 404
+          test "$delete_status" = 204
           status="$(curl --silent --show-error --output .quality/github-pages-readback.json \
             --write-out '%{http_code}' \
             --header "Authorization: Bearer $GH_TOKEN" \
