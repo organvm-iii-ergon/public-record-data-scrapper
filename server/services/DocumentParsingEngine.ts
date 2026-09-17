@@ -7,8 +7,7 @@
  * Capabilities:
  * - PDF Byte Stream Extraction: Decodes PDF text streams, flate-compressed streams,
  *   text operators (Tj, TJ, ', ") and form layout markers.
- * - OCR Integration: Pluggable OCR interface with built-in heuristic/template OCR
- *   layout engine and external OCR provider support (Tesseract, AWS Textract, Cloud Vision).
+ * - OCR Integration: Pluggable OCR interface for an explicitly registered provider.
  * - UCC Schema Normalization: Extracts filing number, filing date, lapse date,
  *   filing type/action, debtor organization/individual, secured party, and collateral details.
  * - Collateral Intelligence: Analyzes financing clauses (future receivables/MCA, all assets, equipment, inventory).
@@ -99,37 +98,8 @@ export interface OcrProvider {
   recognize(imageBuffer: Buffer, options?: { lang?: string }): Promise<string>
 }
 
-/**
- * Built-in Heuristic / Template OCR layout provider for ASCII and structured form scans.
- */
-export class HeuristicOcrProvider implements OcrProvider {
-  name = 'heuristic-ocr'
-
-  async isAvailable(): Promise<boolean> {
-    return true
-  }
-
-  async recognize(imageBuffer: Buffer): Promise<string> {
-    // Convert buffer to string attempting ASCII/UTF-8 extraction
-    const raw = imageBuffer.toString('utf-8')
-    if (raw && /UCC|DEBTOR|SECURED/i.test(raw)) {
-      return raw
-    }
-    // For binary image data, extract printable text sequences
-    const printable = imageBuffer
-      .toString('latin1')
-      .replace(/[^\x20-\x7E\r\n\t]/g, ' ')
-      .replace(/\s{3,}/g, ' ')
-    return printable
-  }
-}
-
 export class DocumentParsingEngine {
   private ocrProviders: Map<string, OcrProvider> = new Map()
-
-  constructor() {
-    this.registerOcrProvider(new HeuristicOcrProvider())
-  }
 
   registerOcrProvider(provider: OcrProvider): void {
     this.ocrProviders.set(provider.name.toLowerCase(), provider)
@@ -139,7 +109,7 @@ export class DocumentParsingEngine {
     if (name) {
       return this.ocrProviders.get(name.toLowerCase())
     }
-    return this.ocrProviders.get('heuristic-ocr')
+    return this.ocrProviders.values().next().value
   }
 
   /**
@@ -191,13 +161,16 @@ export class DocumentParsingEngine {
 
     if (isScanned && options.enableOcr !== false) {
       const ocrProvider = this.getOcrProvider(options.ocrProviderName)
-      if (ocrProvider) {
-        const ocrText = await ocrProvider.recognize(buffer)
-        const combined = `${text}\n${ocrText}`.trim()
-        const parsed = this.parseExtractedText(combined, options, 'hybrid')
-        parsed.pages = Math.max(pageCount, 1)
-        return parsed
+      if (!ocrProvider || !(await ocrProvider.isAvailable())) {
+        throw new Error(
+          `No available OCR provider for scanned PDF (requested: ${options.ocrProviderName || 'default'})`
+        )
       }
+      const ocrText = await ocrProvider.recognize(buffer)
+      const combined = `${text}\n${ocrText}`.trim()
+      const parsed = this.parseExtractedText(combined, options, 'hybrid')
+      parsed.pages = Math.max(pageCount, 1)
+      return parsed
     }
 
     const parsed = this.parseExtractedText(text, options, 'pdf-text')
@@ -215,9 +188,9 @@ export class DocumentParsingEngine {
     const buffer = Buffer.isBuffer(imageBuffer) ? imageBuffer : Buffer.from(imageBuffer)
     const ocrProvider = this.getOcrProvider(options.ocrProviderName)
 
-    if (!ocrProvider) {
+    if (!ocrProvider || !(await ocrProvider.isAvailable())) {
       throw new Error(
-        `No OCR provider available for image parsing (requested: ${options.ocrProviderName || 'default'})`
+        `No available OCR provider for image parsing (requested: ${options.ocrProviderName || 'default'})`
       )
     }
 
@@ -419,7 +392,7 @@ export class DocumentParsingEngine {
     if (/UCC-1|UCC1|FINANCING\s+STATEMENT/i.test(text)) {
       return 'UCC-1'
     }
-    return 'UCC-1'
+    return 'UNKNOWN'
   }
 
   private extractAmendmentAction(text: string): ParsedAmendmentAction {
@@ -452,8 +425,8 @@ export class DocumentParsingEngine {
       }
     }
 
-    warnings.push('Filing number not found; generated synthetic placeholder')
-    return `UNKNOWN-${Date.now()}`
+    warnings.push('Filing number not found')
+    return ''
   }
 
   private extractInitialFilingNumber(text: string): string | undefined {
@@ -479,8 +452,8 @@ export class DocumentParsingEngine {
       }
     }
 
-    warnings.push('Filing date not detected; defaulting to current date')
-    return new Date().toISOString().slice(0, 10)
+    warnings.push('Filing date not detected')
+    return ''
   }
 
   private extractExpirationDate(
@@ -578,9 +551,9 @@ export class DocumentParsingEngine {
       }
     }
 
-    warnings.push('Debtor party not clearly detected; set to Unknown Debtor')
+    warnings.push('Debtor party not clearly detected')
     return {
-      name: 'UNKNOWN DEBTOR',
+      name: '',
       isOrganization: true
     }
   }
@@ -617,9 +590,9 @@ export class DocumentParsingEngine {
       }
     }
 
-    warnings.push('Secured party not clearly detected; set to Unknown Secured Party')
+    warnings.push('Secured party not clearly detected')
     return {
-      name: 'UNKNOWN SECURED PARTY',
+      name: '',
       isOrganization: true
     }
   }
@@ -674,11 +647,7 @@ export class DocumentParsingEngine {
     if (hasInventory) keywords.push('inventory')
 
     return {
-      description:
-        rawCollateral ||
-        (isAllAssets
-          ? 'All personal property now owned or hereafter acquired.'
-          : 'General Commercial Collateral'),
+      description: rawCollateral,
       isAllAssets,
       hasFutureReceivables,
       hasEquipment,
@@ -704,13 +673,13 @@ export class DocumentParsingEngine {
   }): number {
     let score = 0.0
 
-    if (fields.filingNumber && !fields.filingNumber.startsWith('UNKNOWN')) score += 0.25
+    if (fields.filingNumber) score += 0.25
     if (fields.filingDate) score += 0.15
-    if (fields.debtor && fields.debtor.name !== 'UNKNOWN DEBTOR') {
+    if (fields.debtor.name) {
       score += 0.25
       if (fields.debtor.address?.state) score += 0.05
     }
-    if (fields.securedParty && fields.securedParty.name !== 'UNKNOWN SECURED PARTY') {
+    if (fields.securedParty.name) {
       score += 0.2
     }
     if (fields.collateral && fields.collateral.description.length > 20) {
@@ -768,16 +737,17 @@ export class DocumentParsingEngine {
    * Convert parsed document to CollectedUCCFiling format for ingestion pipeline.
    */
   toCollectedFiling(parsed: ParsedUCCDocument): CollectedUCCFiling {
+    this.assertCanonicalFields(parsed)
     const debtorParty: CollectedParty = {
       name: parsed.debtor.name,
-      address: parsed.debtor.address?.raw || parsed.debtor.address?.street,
-      organizationType: parsed.debtor.isOrganization ? 'corporation' : 'individual'
+      address: this.toCollectedAddress(parsed.debtor.address),
+      organizationType: parsed.debtor.isOrganization ? 'organization' : 'individual'
     }
 
     const securedParty: CollectedParty = {
       name: parsed.securedParty.name,
-      address: parsed.securedParty.address?.raw || parsed.securedParty.address?.street,
-      organizationType: parsed.securedParty.isOrganization ? 'corporation' : 'individual'
+      address: this.toCollectedAddress(parsed.securedParty.address),
+      organizationType: parsed.securedParty.isOrganization ? 'organization' : 'individual'
     }
 
     return {
@@ -805,6 +775,10 @@ export class DocumentParsingEngine {
    * Convert parsed document to CoreUCCFiling format.
    */
   toCoreFiling(parsed: ParsedUCCDocument, id?: string): CoreUCCFiling {
+    this.assertCanonicalFields(parsed)
+    if (parsed.filingType !== 'UCC-1' && parsed.filingType !== 'UCC-3') {
+      throw new Error('Cannot canonicalize a document with an unknown filing type')
+    }
     return {
       id: id || `${parsed.state}:${parsed.filingNumber}`,
       filingDate: parsed.filingDate,
@@ -812,7 +786,32 @@ export class DocumentParsingEngine {
       securedParty: parsed.securedParty.name,
       state: parsed.state,
       status: parsed.amendmentAction === 'termination' ? 'terminated' : 'active',
-      filingType: parsed.filingType === 'UCC-3' ? 'UCC-3' : 'UCC-1'
+      filingType: parsed.filingType
+    }
+  }
+
+  private assertCanonicalFields(parsed: ParsedUCCDocument): void {
+    const missing = [
+      ['filingNumber', parsed.filingNumber],
+      ['filingDate', parsed.filingDate],
+      ['debtor.name', parsed.debtor.name],
+      ['securedParty.name', parsed.securedParty.name]
+    ].filter(([, value]) => !value)
+    if (missing.length > 0) {
+      throw new Error(
+        `Cannot canonicalize incomplete extraction; missing: ${missing.map(([field]) => field).join(', ')}`
+      )
+    }
+  }
+
+  private toCollectedAddress(address?: ParsedAddress): CollectedParty['address'] {
+    if (!address) return undefined
+    return {
+      street: address.street ?? address.raw,
+      city: address.city,
+      state: address.state,
+      zipCode: address.postalCode,
+      country: address.country
     }
   }
 }

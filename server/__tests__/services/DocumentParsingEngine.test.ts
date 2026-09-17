@@ -135,6 +135,14 @@ describe('DocumentParsingEngine (#477)', () => {
       expect(parsed.collateral.hasEquipment).toBe(true)
       expect(parsed.collateral.hasInventory).toBe(true)
     })
+
+    it('fails closed when no real OCR provider is registered', async () => {
+      await expect(
+        new DocumentParsingEngine().parseImage(Buffer.from('binary-image'), {
+          fallbackState: 'OH'
+        })
+      ).rejects.toThrow('No available OCR provider')
+    })
   })
 
   describe('Raw Text & Heuristic Extraction', () => {
@@ -221,6 +229,20 @@ describe('DocumentParsingEngine (#477)', () => {
       expect(core.status).toBe('terminated')
       expect(core.debtorName).toBe('ALPHA TRUCKING LLC')
       expect(core.securedParty).toBe('CAPITAL ONE BANK')
+    })
+
+    it('does not fabricate required fields for an incomplete extraction', async () => {
+      const parsed = await engine.parseText('unstructured page', { fallbackState: 'CA' })
+
+      expect(parsed.filingNumber).toBe('')
+      expect(parsed.filingDate).toBe('')
+      expect(parsed.filingType).toBe('UNKNOWN')
+      expect(parsed.debtor.name).toBe('')
+      expect(parsed.securedParty.name).toBe('')
+      expect(parsed.collateral.description).toBe('')
+      expect(() => engine.toCollectedFiling(parsed)).toThrow(
+        'Cannot canonicalize incomplete extraction'
+      )
     })
   })
 
