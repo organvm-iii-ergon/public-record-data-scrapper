@@ -17,6 +17,7 @@ import { all, first, run } from './db'
 import { rateLimiter } from './rateLimit'
 import { billingRoute } from './routes/billing'
 import { enrichmentRoute } from './routes/enrichment'
+import { dashboardRoute } from './routes/dashboard'
 import { jobsRoute } from './routes/jobs'
 import { keysRoute } from './routes/keys'
 import { openApiSpec } from './routes/openapi'
@@ -79,6 +80,7 @@ v1.route('/keys', keysRoute)
 v1.route('/billing', billingRoute)
 
 app.route('/v1', v1)
+app.route('/api/dashboard', dashboardRoute)
 
 // ============================================================================
 // Legacy /api routes for backward compatibility
