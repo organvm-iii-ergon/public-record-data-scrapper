@@ -2,10 +2,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   buildPublicDemoSourceUrl,
+  formatPublicDemoDate,
   loadPublicDemoData,
   parsePublicDemoReceipt,
   resolvePublicDemoReceiptUrl
 } from '../publicDemo'
+
+it('preserves zone-less source calendar dates when formatting', () => {
+  expect(formatPublicDemoDate('2026-07-16T00:00:00.000')).toBe('Jul 16, 2026')
+  expect(formatPublicDemoDate('2026-07-16')).toBe('Jul 16, 2026')
+})
 
 const receipt = {
   schema: 'public-records.pages_public_demo_source.v1',
