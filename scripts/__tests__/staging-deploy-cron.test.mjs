@@ -47,7 +47,7 @@ test('deploy-cloudflare.yml triggers and staging gates are strictly defined', ()
   )
   assert.match(
     workflowContent,
-    /SELECT name FROM sqlite_master WHERE name IN \('organizations', 'prospects', 'jobs', 'prospects_fts'\)/
+    /SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name; SELECT name FROM d1_migrations ORDER BY name/
   )
 })
 
