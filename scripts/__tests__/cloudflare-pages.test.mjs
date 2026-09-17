@@ -135,6 +135,13 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
     3
   )
   assert.match(workflow, /test "\$CONFIRM" = DEPLOY/)
+  assert.match(workflow, /VITE_DEPLOYMENT_SURFACE: tenant-dashboard/)
+  assert.match(workflow, /health\?revision=\$GITHUB_SHA/)
+  assert.match(workflow, /provision-cloudflare-staging\.py --plan/)
+  assert.match(workflow, /resolve-cloudflare-production\.py/)
+  assert.match(workflow, /head_sha=\$GITHUB_SHA/)
+  assert.match(workflow, /Retire the superseded GitHub Pages site/)
+  assert.match(workflow, /--method DELETE "repos\/\$GITHUB_REPOSITORY\/pages"/)
   assert.doesNotMatch(workflow, /actions\/deploy-pages/)
   assert.doesNotMatch(workflow, /VITE_PUBLIC_DEMO/)
 })

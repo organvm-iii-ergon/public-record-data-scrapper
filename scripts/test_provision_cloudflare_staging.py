@@ -16,6 +16,7 @@ P = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(P)
 D1 = "12345678-1234-4234-8234-123456789abc"
 APP = "98765432-1234-4234-8234-123456789abc"
+PAGES_APP = "87654321-1234-4234-8234-123456789abc"
 KV = "0123456789abcdef0123456789abcdef"
 AUD = "a" * 64
 SECRET = "sensitive-token-must-not-appear"
@@ -34,6 +35,10 @@ class FakeAPI:
                         "r2": {"name": P.NAMES["r2"]},
                         "access": {"name": P.NAMES["access"], "id": APP, "aud": AUD,
                                    "type": "self_hosted", "domain": P.WORKER + ".example.workers.dev/api/*"}}
+        self.created_pages_access = {
+            "name": P.PAGES_ACCESS, "id": PAGES_APP, "aud": "b" * 64,
+            "type": "self_hosted", "domain": P.PAGES_PROJECT + ".pages.dev"
+        }
 
     def factory(self, token, report):
         self.report = report
@@ -56,6 +61,14 @@ class FakeAPI:
             return {"result": self.workers}
         if operation == "list_access_policies":
             return {"result": self.policies, "result_info": {"total_count": len(self.policies)}}
+        if operation == "create_pages_access":
+            result = copy.deepcopy(self.created_pages_access)
+            self.rows["access"].append(result)
+            return {"result": result}
+        if operation == "create_pages_access_policy":
+            policy = {"id": D1, **copy.deepcopy(body)}
+            self.policies.append(policy)
+            return {"result": policy}
         kind = operation.split("_", 1)[1]
         if method == "POST":
             result = copy.deepcopy(self.created[kind])
@@ -156,17 +169,18 @@ class ProvisionTests(unittest.TestCase):
     def test_create_readback_then_repeat_reuses_every_resource(self):
         status, report = self.run_case()
         self.assertEqual((status, report["status"]), (0, "ready"))
-        self.assertEqual(len(self.api.writes), 4)
+        self.assertEqual(len(self.api.writes), 6)
         config = json.loads((self.root / "cloudflare/.generated/staging.wrangler.json").read_text())
         self.assertEqual(config["name"], P.WORKER)
         self.assertNotIn("env", config)
         self.assertEqual(config["d1_databases"][0]["database_name"], P.NAMES["d1"])
         self.assertTrue(Path(config["main"]).is_absolute())
-        self.assertEqual(config["vars"]["ACCESS_AUD"], AUD)
+        self.assertEqual(config["vars"]["ACCESS_AUD"], AUD + "," + "b" * 64)
         self.assertEqual(config["vars"]["DEPLOYMENT_SHA"], "a" * 40)
+        self.assertTrue(report["access_policy_verified"])
         self.assertFalse(report["access_enrollment_verified"])
         self.assertIsNone(report["prior_deployment"])
-        self.assertEqual(self.api.writes[-1][3]["policies"], [])
+        self.assertEqual(self.api.writes[-1][3]["include"], [{"everyone": {}}])
         self.api.calls.clear()
         status, report = self.run_case()
         self.assertEqual(status, 0)
@@ -227,7 +241,10 @@ class ProvisionTests(unittest.TestCase):
         self.api.calls.clear()
         status, report = self.run_case()
         self.assertEqual(status, 0)
-        self.assertEqual([c[0] for c in self.api.writes], ["create_kv", "create_r2", "create_access"])
+        self.assertEqual([c[0] for c in self.api.writes], [
+            "create_kv", "create_r2", "create_access", "create_pages_access",
+            "create_pages_access_policy"
+        ])
         self.assertEqual(report["resources"][0]["action"], "reuse")
 
     def test_success_response_without_matching_readback_is_not_accepted(self):
@@ -260,14 +277,14 @@ class ProvisionTests(unittest.TestCase):
             self.assertEqual(self.api.writes, [])
 
     def test_existing_authenticated_policies_are_preserved_on_redeploy(self):
-        for decision in ["allow", "non_identity"]:
-            self.api = FakeAPI()
-            self.api.rows = {kind: [row] for kind, row in self.api.created.items()}
-            self.api.policies = [{"id": APP, "decision": decision, "include": [{"email": {"email": "owner@example.test"}}]}]
-            status, report = self.run_case()
-            self.assertEqual(status, 0)
-            self.assertFalse(report["access_enrollment_verified"])
-            self.assertEqual(self.api.writes, [])
+        self.api.rows = {kind: [row] for kind, row in self.api.created.items()}
+        self.api.rows["access"].append(self.api.created_pages_access)
+        self.api.policies = [{"id": APP, "decision": "allow", "include": [{"email": {"email": "owner@example.test"}}]}]
+        status, report = self.run_case()
+        self.assertEqual(status, 0)
+        self.assertTrue(report["access_policy_verified"])
+        self.assertFalse(report["access_enrollment_verified"])
+        self.assertEqual(self.api.writes, [])
 
     def test_existing_bypass_policy_does_not_pass_authentication_gate(self):
         self.api.rows["access"] = [self.api.created["access"]]

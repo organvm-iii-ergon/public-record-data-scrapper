@@ -19,6 +19,8 @@ D1_PROD = "12345678-1234-4234-8234-123456789abc"
 D1_STAGE = "22345678-1234-4234-8234-123456789abc"
 APP_PROD = "32345678-1234-4234-8234-123456789abc"
 APP_STAGE = "42345678-1234-4234-8234-123456789abc"
+PAGES_APP_PROD = "52345678-1234-4234-8234-123456789abc"
+PAGES_APP_STAGE = "62345678-1234-4234-8234-123456789abc"
 KV_PROD = "0123456789abcdef0123456789abcdef"
 KV_STAGE = "1123456789abcdef0123456789abcdef"
 AUD = "a" * 64
@@ -45,6 +47,10 @@ class FakeAPI:
                  "type": "self_hosted", "domain": "ucc-mca-edge-production.example.workers.dev/api/*"},
                 {"name": R.STAGING_NAMES["access"], "id": APP_STAGE, "aud": "b" * 64,
                  "type": "self_hosted", "domain": "ucc-mca-edge-staging.example.workers.dev/api/*"},
+                {"name": R.PAGES_ACCESS, "id": PAGES_APP_PROD, "aud": "c" * 64,
+                 "type": "self_hosted", "domain": "ucc-mca-dashboard.pages.dev"},
+                {"name": R.STAGING_PAGES_ACCESS, "id": PAGES_APP_STAGE, "aud": "d" * 64,
+                 "type": "self_hosted", "domain": "ucc-mca-dashboard-staging.pages.dev"},
             ],
         }
 
@@ -64,7 +70,8 @@ class FakeAPI:
         if operation == "workers_subdomain":
             return {"result": {"subdomain": "example"}}
         if operation == "list_access_policies":
-            return {"result": [{"id": "policy", "decision": "allow"}],
+            return {"result": [{"id": "policy", "decision": "allow",
+                                "include": [{"everyone": {}}]}],
                     "result_info": {"total_count": 1}}
         kind = operation.removeprefix("list_")
         rows = copy.deepcopy(self.rows[kind])
@@ -100,6 +107,7 @@ class ProductionResolverTests(unittest.TestCase):
         )
         self.assertEqual(config["d1_databases"][0]["database_id"], D1_PROD)
         self.assertEqual(config["vars"]["DEPLOYMENT_SHA"], "a" * 40)
+        self.assertEqual(config["vars"]["ACCESS_AUD"], AUD + "," + "c" * 64)
         self.assertEqual(report["production_writes"], False)
 
     def test_missing_or_shared_resource_fails_closed(self):
