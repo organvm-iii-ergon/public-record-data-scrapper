@@ -115,18 +115,13 @@ test('scheduled.ts routes cron ticks and drains D1 jobs queue with fail-safe sem
   // Always drains jobs regardless of tick
   assert.match(scheduledContent, /await drainJobs\(env\)/)
 
-  // Atomic claim query
-  assert.match(
-    scheduledContent,
-    /UPDATE jobs SET status = 'processing', attempts = attempts \+ 1\s+WHERE id = \? AND status = 'pending'/
-  )
-
-  // Terminal or retry status handling
-  assert.match(scheduledContent, /UPDATE jobs SET status = 'done' WHERE id = \?/)
-  assert.match(
-    scheduledContent,
-    /const nextStatus = job\.attempts \+ 1 >= MAX_ATTEMPTS \? 'failed' : 'pending'/
-  )
+  // The drain delegates state transitions to the durable adapter. Actual D1
+  // concurrency, recovery and fencing behavior is exercised by its CI test.
+  assert.match(scheduledContent, /await claimJob\(env\)/)
+  assert.match(scheduledContent, /await finishJob\(env, job, true\)/)
+  assert.match(scheduledContent, /await finishJob\(env, job, false\)/)
+  const workflow = readFileSync(resolve(ROOT, '.github/workflows/ci-gate.yml'), 'utf8')
+  assert.match(workflow, /run: node scripts\/test-cloudflare-jobs\.mjs/)
 })
 
 test('D1 migration 0001_init.sql defines all required schema objects and index constraints', () => {
