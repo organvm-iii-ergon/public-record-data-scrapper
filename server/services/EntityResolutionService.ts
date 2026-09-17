@@ -4,7 +4,7 @@
  * Enterprise entity resolution engine for the UCC-MCA Intelligence Platform.
  * Deduplicates and links corporate entities and individuals across 50-state filings,
  * identifying cross-state operations, funder overlaps, and principal networks,
- * and assigning calibrated `enrichment_confidence` scores.
+ * and assigning deterministic `enrichment_confidence` scores.
  *
  * @module server/services/EntityResolutionService
  */
@@ -225,7 +225,7 @@ export class EntityResolutionService {
   }
 
   /**
-   * Cluster corporate filings across different states using blocking and ML inference.
+   * Cluster corporate filings across different states using blocking and weighted scoring.
    */
   private clusterCorporateFilings(filings: FilingEntityInput[]): ResolvedEntityCluster[] {
     if (filings.length === 0) return []
@@ -569,6 +569,9 @@ export class EntityResolutionService {
       autoLinkThreshold?: number
     } = {}
   ): Promise<ProspectLinkResult> {
+    if (!options.orgId) {
+      throw new Error('Organization context is required for prospect linking')
+    }
     const threshold = options.autoLinkThreshold ?? 0.75
     let targetProspectId = options.prospectId
 
@@ -583,10 +586,11 @@ export class EntityResolutionService {
       }>(
         `SELECT id, company_name, state, enrichment_confidence
          FROM prospects
-         WHERE company_name_normalized = $1
-            OR company_name % $2
+         WHERE org_id = $3
+           AND (company_name_normalized = $1
+            OR company_name % $2)
          LIMIT 5`,
-        [normalizedDebtor, filing.debtorName]
+        [normalizedDebtor, filing.debtorName, options.orgId]
       )
 
       if (candidates.length === 0) {
@@ -613,8 +617,8 @@ export class EntityResolutionService {
       enrichment_confidence: number | null
     }>(
       `SELECT id, company_name, state, enrichment_confidence
-       FROM prospects WHERE id = $1`,
-      [targetProspectId]
+       FROM prospects WHERE id = $1 AND org_id = $2`,
+      [targetProspectId, options.orgId]
     )
 
     if (prospectRows.length === 0) {
@@ -706,8 +710,8 @@ export class EntityResolutionService {
        SET enrichment_confidence = $2,
            last_enriched_at = NOW(),
            updated_at = NOW()
-       WHERE id = $1`,
-      [targetProspectId, updatedConfidence]
+       WHERE id = $1 AND org_id = $3`,
+      [targetProspectId, updatedConfidence, options.orgId]
     )
 
     return {
@@ -726,7 +730,10 @@ export class EntityResolutionService {
    * ucc_filings table, discovers unlinked filings from other states, creates junction
    * links, and recalculates the updated `enrichment_confidence`.
    */
-  async resolveAndEnrichProspect(prospectId: string): Promise<{
+  async resolveAndEnrichProspect(
+    prospectId: string,
+    orgId: string
+  ): Promise<{
     prospectId: string
     canonicalName: string
     states: string[]
@@ -743,8 +750,8 @@ export class EntityResolutionService {
       enrichment_confidence: number | null
     }>(
       `SELECT id, company_name, company_name_normalized, state, enrichment_confidence
-       FROM prospects WHERE id = $1`,
-      [prospectId]
+       FROM prospects WHERE id = $1 AND org_id = $2`,
+      [prospectId, orgId]
     )
 
     if (prospectRows.length === 0) {
@@ -826,8 +833,8 @@ export class EntityResolutionService {
        SET enrichment_confidence = $2,
            last_enriched_at = NOW(),
            updated_at = NOW()
-       WHERE id = $1`,
-      [prospectId, finalConfidence]
+       WHERE id = $1 AND org_id = $3`,
+      [prospectId, finalConfidence, orgId]
     )
 
     return {

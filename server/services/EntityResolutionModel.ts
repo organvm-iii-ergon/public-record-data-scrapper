@@ -1,14 +1,15 @@
 /**
- * EntityResolutionModel — Machine-learning and probabilistic record-linkage model
+ * EntityResolutionModel — deterministic weighted record-linkage scorer
  * for deduplicating and linking corporate entities and individuals across state filings.
  *
- * Employs a calibrated logistic regression classifier combining string distance metrics
+ * Applies fixed, reviewable weights to string distance metrics
  * (Jaro-Winkler, Levenshtein, token Jaccard, token containment, Soundex), contextual
  * identifiers (state, address, city, ZIP), and graph signals (shared secured parties,
  * shared principals/guarantors).
  *
  * Assigns an explicit `enrichment_confidence` score bounded in [0.00, 1.00] reflecting
- * the probability and evidence density of the match.
+ * the normalized score and evidence density of the match. The weights are not
+ * represented as trained or empirically calibrated.
  *
  * @module server/services/EntityResolutionModel
  */
@@ -81,16 +82,16 @@ export interface IndividualComparisonFeatures {
 }
 
 export interface ModelPrediction {
-  /** Raw logistic match probability in [0, 1]. */
+  /** Legacy field containing the logistic transform of the fixed weighted score. */
   probability: number
   /** Probability scaled to [0, 100]. */
   score: number
   /**
-   * Bounded enrichment confidence in [0.00, 1.00], incorporating model probability,
+   * Bounded enrichment confidence in [0.00, 1.00], incorporating the weighted score,
    * multi-signal corroboration, and cross-state linkage density.
    */
   enrichment_confidence: number
-  /** Whether the match exceeds the authoritative linking threshold. */
+  /** Whether the match exceeds the configured deterministic linking threshold. */
   isMatch: boolean
   /** Whether the match falls in the ambiguous band requiring human/clerical review. */
   needsReview: boolean
@@ -105,7 +106,7 @@ export interface EntityResolutionWeights {
   weights: Record<string, number>
 }
 
-// Default pre-calibrated weights for corporate entity resolution
+// Default fixed weights for corporate entity resolution
 const DEFAULT_CORPORATE_WEIGHTS: EntityResolutionWeights = {
   intercept: -3.4,
   weights: {
@@ -125,7 +126,7 @@ const DEFAULT_CORPORATE_WEIGHTS: EntityResolutionWeights = {
   }
 }
 
-// Default pre-calibrated weights for individual entity resolution
+// Default fixed weights for individual entity resolution
 const DEFAULT_INDIVIDUAL_WEIGHTS: EntityResolutionWeights = {
   intercept: -3.6,
   weights: {
@@ -362,7 +363,7 @@ export class EntityResolutionModel {
   }
 
   /**
-   * Run ML inference for corporate entity comparison.
+   * Score a corporate entity comparison.
    */
   predictCorporateMatch(
     features: CorporateComparisonFeatures,
@@ -410,7 +411,7 @@ export class EntityResolutionModel {
       penalty += 0.15
     }
 
-    // Calibrated enrichment confidence bounded [0.00, 1.00]
+    // Deterministic enrichment confidence bounded [0.00, 1.00]
     const rawConfidence =
       probability * 0.85 + (evidenceCount / 10) * 0.15 + crossStateBonus - penalty
     const enrichment_confidence = Number(Math.max(0.0, Math.min(1.0, rawConfidence)).toFixed(2))
@@ -453,7 +454,7 @@ export class EntityResolutionModel {
   }
 
   /**
-   * Run ML inference for individual entity comparison.
+   * Score an individual entity comparison.
    */
   predictIndividualMatch(
     features: IndividualComparisonFeatures,
@@ -537,7 +538,7 @@ export class EntityResolutionModel {
     return {
       corporateWeights: this.corporateWeights,
       individualWeights: this.individualWeights,
-      modelVersion: '1.0.0-calibrated'
+      modelVersion: '1.0.0-fixed-weights'
     }
   }
 }

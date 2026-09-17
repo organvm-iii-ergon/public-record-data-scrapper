@@ -4,7 +4,7 @@ name: CI Gate
 
 on:
   pull_request:
-    branches: [main, master, develop, 'lane/**']
+    branches: [main, master, develop]
   push:
     branches: [main]
   workflow_dispatch:

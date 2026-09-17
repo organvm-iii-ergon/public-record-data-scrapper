@@ -477,6 +477,19 @@ describe('Enrichment API', () => {
       expect(response.status).toBe(200)
       expect(response.body.prospectId).toBe('550e8400-e29b-41d4-a716-446655440000')
       expect(response.body.enrichment_confidence).toBe(0.93)
+      expect(mockResolveAndEnrichProspect).toHaveBeenCalledWith(
+        '550e8400-e29b-41d4-a716-446655440000',
+        'test-org'
+      )
+    })
+
+    it('fails closed without an organization context', async () => {
+      const response = await request(app)
+        .post('/api/enrichment/resolve-prospect/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', createAuthHeader('test-user', { orgId: null }))
+
+      expect(response.status).toBe(403)
+      expect(mockResolveAndEnrichProspect).not.toHaveBeenCalled()
     })
   })
 })

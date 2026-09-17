@@ -189,7 +189,8 @@ describe('EntityResolutionService', () => {
       }
 
       const result = await service.linkFilingToProspect(filing, {
-        prospectId: 'prospect-uuid-1'
+        prospectId: 'prospect-uuid-1',
+        orgId: 'org-test'
       })
 
       expect(result.linked).toBe(true)
@@ -224,7 +225,8 @@ describe('EntityResolutionService', () => {
       }
 
       const result = await service.linkFilingToProspect(filing, {
-        prospectId: 'prospect-uuid-2'
+        prospectId: 'prospect-uuid-2',
+        orgId: 'org-test'
       })
 
       expect(result.linked).toBe(false)
@@ -275,7 +277,7 @@ describe('EntityResolutionService', () => {
       // Mock prospect update
       mockQuery.mockResolvedValueOnce({ rowCount: 1 })
 
-      const result = await service.resolveAndEnrichProspect('prospect-uuid-1')
+      const result = await service.resolveAndEnrichProspect('prospect-uuid-1', 'org-test')
 
       expect(result.prospectId).toBe('prospect-uuid-1')
       expect(result.states).toEqual(expect.arrayContaining(['CA', 'TX']))
@@ -286,9 +288,9 @@ describe('EntityResolutionService', () => {
 
     it('throws when prospect is not found', async () => {
       mockQuery.mockResolvedValueOnce([])
-      await expect(service.resolveAndEnrichProspect('non-existent-uuid')).rejects.toThrow(
-        'Prospect non-existent-uuid not found'
-      )
+      await expect(
+        service.resolveAndEnrichProspect('non-existent-uuid', 'org-test')
+      ).rejects.toThrow('Prospect non-existent-uuid not found')
     })
   })
 })

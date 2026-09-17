@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { validateRequest } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { getResolvedDataTier } from '../middleware/dataTier'
+import type { AuthenticatedRequest } from '../middleware/authMiddleware'
 import { EnrichmentService } from '../services/EnrichmentService'
 import { entityResolutionService } from '../services/EntityResolutionService'
 
@@ -148,7 +149,7 @@ router.post(
   })
 )
 
-// POST /api/enrichment/match-pair - ML comparison and confidence score for an entity pair
+// POST /api/enrichment/match-pair - Deterministic comparison score for an entity pair
 router.post(
   '/match-pair',
   validateRequest({ body: matchPairSchema }),
@@ -163,7 +164,12 @@ router.post(
   '/resolve-prospect/:id',
   validateRequest({ params: resolveProspectParamSchema }),
   asyncHandler(async (req, res) => {
-    const result = await entityResolutionService.resolveAndEnrichProspect(req.params.id)
+    const orgId = (req as AuthenticatedRequest).user?.orgId
+    if (!orgId) {
+      res.status(403).json({ error: 'Authenticated organization context is required' })
+      return
+    }
+    const result = await entityResolutionService.resolveAndEnrichProspect(req.params.id, orgId)
     res.json(result)
   })
 )
