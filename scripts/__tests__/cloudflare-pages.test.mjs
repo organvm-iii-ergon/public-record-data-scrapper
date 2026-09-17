@@ -126,7 +126,8 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /--commit-hash "\$GITHUB_SHA"/)
   assert.match(workflow, /deployment_trigger\.metadata\.commit_hash/)
   assert.match(workflow, /test "\$GITHUB_REF" = refs\/heads\/main/)
-  assert.match(workflow, /max_by\(\.created_on\)/)
+  assert.match(workflow, /any\(\.environment == "production"/)
+  assert.doesNotMatch(workflow, /max_by\(\.created_on\)/)
   assert.match(workflow, /Resolve or create the exact Pages project/)
   assert.ok(
     workflow.indexOf('Resolve or create the exact Pages project') <

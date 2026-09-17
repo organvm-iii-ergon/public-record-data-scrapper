@@ -197,7 +197,7 @@ jobs:
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT/deployments" \
             > .quality/pages-deployments.json
           jq --arg sha "$GITHUB_SHA" -e \
-            '.success == true and (.result | max_by(.created_on) | .deployment_trigger.metadata.commit_hash == $sha and .latest_stage.status == "success")' \
+            '.success == true and (.result | any(.environment == "production" and .deployment_trigger.metadata.commit_hash == $sha and .latest_stage.status == "success"))' \
             .quality/pages-deployments.json
           team="$(curl --fail --silent --show-error \
             --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
