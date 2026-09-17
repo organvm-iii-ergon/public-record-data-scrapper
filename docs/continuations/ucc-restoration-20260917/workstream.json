@@ -1,0 +1,51 @@
+{
+  "branch": "docs/ucc-restoration-20260917",
+  "contract": {
+    "authorization": {
+      "approval_mode": "never",
+      "mode": "full_non_destructive",
+      "retained_gates": [
+        "destructive",
+        "credential",
+        "paid_spend",
+        "public_send",
+        "runtime_or_host_mutation"
+      ],
+      "reversible_in_scope": "proceed_without_confirmation",
+      "sandbox": "workspace-write"
+    },
+    "conductor": {
+      "boundary_rule": "recheck_remaining_runway_before_each_packet",
+      "expiry_rule": "stop_or_emit_successor_before_zero",
+      "lane_selection": "derive_from_live_capabilities",
+      "mode": "route_bounded_packets",
+      "provider_and_model": "provider_neutral"
+    },
+    "runway": {
+      "deadline_at": null,
+      "deadline_epoch": null,
+      "duration_seconds": 1800,
+      "requested": "30m",
+      "started_at": null,
+      "started_epoch": null
+    },
+    "schema": "limen.workstream.contract.v1"
+  },
+  "private_capsule": {
+    "content": "redacted",
+    "modules": [
+      "README.md",
+      "manifest.md",
+      "workstream.json",
+      "workstream-contract.py",
+      "intent.md",
+      "runtime.md",
+      "closeout.md",
+      "kickstart.sh",
+      "capsule.identity"
+    ]
+  },
+  "schema": "limen.workstream.receipt.v1",
+  "slug": "ucc-restoration-20260917",
+  "workstream": "ucc-restoration"
+}
