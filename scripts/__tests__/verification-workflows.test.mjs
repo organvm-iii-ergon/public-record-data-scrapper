@@ -38,16 +38,17 @@ test('staging acceptance rejects failed or skipped mandatory steps including cre
   assert.equal(job.steps[artifact].if, '${{ !cancelled() }}')
 })
 
-test('production promotion is current-main, reuse-only and terminally accepted', () => {
+test('production promotion is current-main, explicitly provisioned and terminally accepted', () => {
   const job = workflow('deploy-cloudflare.yml').jobs['deploy-production']
   const names = job.steps.map((entry) => entry.name)
   assert.ok(names.includes('Require the current accepted main revision'))
-  assert.ok(names.includes('Resolve existing isolated production resources'))
+  assert.ok(names.includes('Reconcile the production Pages project prerequisite'))
+  assert.ok(names.includes('Provision or reuse isolated production resources'))
   assert.ok(names.includes('Verify exact live production revision and authentication boundary'))
   const resolver = job.steps.find(
-    (entry) => entry.name === 'Resolve existing isolated production resources'
+    (entry) => entry.name === 'Provision or reuse isolated production resources'
   )
-  assert.match(resolver.run, /resolve-cloudflare-production\.py/)
+  assert.match(resolver.run, /resolve-cloudflare-production\.py --apply/)
   const terminal = job.steps.find(
     (entry) => entry.name === 'Require complete production promotion acceptance'
   )
