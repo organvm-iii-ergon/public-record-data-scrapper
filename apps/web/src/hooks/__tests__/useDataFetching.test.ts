@@ -77,7 +77,8 @@ describe('useDataFetching', () => {
       prospects: [{ id: 'live-1', companyName: 'Live Company' }],
       competitors: [{ id: 'comp-1', name: 'Competitor 1' }],
       portfolio: [{ id: 'port-1', name: 'Portfolio 1' }],
-      userActions: [{ id: 'action-1', type: 'click' }]
+      userActions: [{ id: 'action-1', type: 'click' }],
+      dataTier: 'paid'
     })
   })
 
@@ -121,6 +122,7 @@ describe('useDataFetching', () => {
       expect(result.current.competitors).toHaveLength(1)
       expect(result.current.portfolio).toHaveLength(1)
       expect(result.current.userActions).toHaveLength(1)
+      expect(result.current.dataTier).toBe('paid')
     })
 
     it('should call the tenant snapshot despite legacy mock mode', async () => {

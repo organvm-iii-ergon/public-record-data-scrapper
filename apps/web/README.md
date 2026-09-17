@@ -11,8 +11,9 @@ Common commands (from repo root):
 ## Authenticated Cloudflare Pages deployment
 
 The hosted tenant dashboard is deployed by `deploy-pages.yml` to Cloudflare Pages. The build sets
-`VITE_DEPLOYMENT_SURFACE=tenant-dashboard` and exposes only the authoritative, tenant-scoped status
-surface backed by `/api/dashboard`; unsupported CRM and communications routes are not presented.
+`VITE_DEPLOYMENT_SURFACE=tenant-dashboard` and exposes only the authoritative, tenant-scoped
+contract backed by `/api/dashboard`: Prospects, Portfolio, Intelligence, Analytics, Requalification,
+and Agentic. Unsupported CRM, communications, coverage, and compliance routes are not presented.
 Pages Functions forward `/api/*` to the environment's exact-revision Worker service binding and
 preserve the Cloudflare Access assertion. The Worker verifies the Pages Access audience and resolves
 the authenticated subject through `access_memberships` before returning tenant records.

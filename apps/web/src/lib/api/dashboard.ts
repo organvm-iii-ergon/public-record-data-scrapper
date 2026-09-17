@@ -1,4 +1,4 @@
-import type { CompetitorData, PortfolioCompany, Prospect } from '@public-records/core'
+import type { CompetitorData, DataTier, PortfolioCompany, Prospect } from '@public-records/core'
 import type { UserAction } from '@/lib/agentic/types'
 import { apiRequest } from './client'
 
@@ -7,6 +7,7 @@ export interface DashboardSnapshot {
   competitors: CompetitorData[]
   portfolio: PortfolioCompany[]
   userActions: UserAction[]
+  dataTier: DataTier
 }
 
 function records(value: unknown, name: string): Record<string, unknown>[] {
@@ -25,11 +26,15 @@ export async function fetchDashboard(signal?: AbortSignal): Promise<DashboardSna
     throw new Error('The dashboard returned an invalid snapshot.')
   }
   const snapshot = value as Record<string, unknown>
+  if (snapshot.dataTier !== 'oss' && snapshot.dataTier !== 'paid') {
+    throw new Error('The dashboard returned an invalid subscription tier.')
+  }
   return {
     prospects: records(snapshot.prospects, 'prospects') as unknown as Prospect[],
     competitors: records(snapshot.competitors, 'competitors') as unknown as CompetitorData[],
     portfolio: records(snapshot.portfolio, 'portfolio') as unknown as PortfolioCompany[],
-    userActions: records(snapshot.userActions, 'user actions') as unknown as UserAction[]
+    userActions: records(snapshot.userActions, 'user actions') as unknown as UserAction[],
+    dataTier: snapshot.dataTier
   }
 }
 
