@@ -193,7 +193,7 @@ jobs:
           access_ready=false
           for attempt in 1 2 3 4 5 6; do
             read -r status redirect < <(curl -q --silent --show-error --max-time 20 --output /dev/null \
-              --write-out '%{http_code} %{redirect_url}' "https://$PROJECT.pages.dev/")
+              --write-out '%{http_code} %{redirect_url}\n' "https://$PROJECT.pages.dev/")
             case "$status:$redirect" in
               302:https://$team/*|303:https://$team/*|307:https://$team/*)
                 access_ready=true
