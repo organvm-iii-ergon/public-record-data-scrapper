@@ -7,7 +7,6 @@
  * A missing migration or unavailable counter fails closed with HTTP 503.
  */
 import { createMiddleware } from 'hono/factory'
-import { hashApiKey } from './auth'
 import { admitQuota } from './atomicQuota'
 import type { AppBindings, SubscriptionTier } from './types'
 
@@ -28,15 +27,8 @@ const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
   enterprise: 3
 }
 
-/** Stable credential bucket; the database stores the current window separately. */
-async function buildRateLimitKey(
-  identity: { orgId: string; authMethod: string },
-  presentedKey: string | undefined
-): Promise<string> {
-  if (identity.authMethod === 'api_key') {
-    if (!presentedKey) throw new Error('Authenticated API key is missing')
-    return `ratelimit:key:${await hashApiKey(presentedKey)}`
-  }
+/** All credentials for one tenant share one authoritative quota bucket. */
+function buildRateLimitKey(identity: { orgId: string }): string {
   return `ratelimit:org:${identity.orgId}`
 }
 
@@ -55,28 +47,12 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
   const resetEpoch = (windowMinute + 1) * 60
   const resetInSeconds = Math.max(1, resetEpoch - Math.floor(now / 1000))
 
-  const apiKeyHeader = c.req.header('X-API-Key')
-  const authHeader = c.req.header('Authorization')
-  let presentedKey: string | undefined
-  if (typeof apiKeyHeader === 'string' && apiKeyHeader.trim().length > 0) {
-    presentedKey = apiKeyHeader.trim()
-  } else if (typeof authHeader === 'string') {
-    const parts = authHeader.trim().split(/\s+/)
-    if (
-      parts.length === 2 &&
-      parts[0]?.toLowerCase() === 'bearer' &&
-      parts[1]?.startsWith('prk_')
-    ) {
-      presentedKey = parts[1]
-    }
-  }
-
   c.header('X-RateLimit-Limit', String(limit))
   c.header('X-RateLimit-Reset', String(resetEpoch))
 
   let admission: Awaited<ReturnType<typeof admitQuota>>
   try {
-    const bucket = await buildRateLimitKey(identity, presentedKey)
+    const bucket = buildRateLimitKey(identity)
     admission = await admitQuota(c.env.DB, bucket, windowMinute, limit)
   } catch {
     c.header('X-RateLimit-Remaining', '0')

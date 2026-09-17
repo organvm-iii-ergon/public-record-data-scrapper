@@ -650,8 +650,12 @@ export class StateCollectorFactory {
    * Register a dynamic state with both config and collector builder.
    */
   registerDynamicState(config: StateConfig, build: () => StateCollector | undefined): void {
-    this.registerStateConfig(config)
     const primaryMethod = config.accessMethods[0] || 'scrape'
+    this.registerStateConfig({
+      ...config,
+      accessMethods: [primaryMethod],
+      activeMethod: primaryMethod
+    })
     this.registerCollectorBuilder(config.code, primaryMethod, build)
   }
 

@@ -44,7 +44,9 @@ keysRoute.post('/', async (c) => {
 
   let body: CreateKeyBody
   try {
-    body = await c.req.json<CreateKeyBody>()
+    const value = await c.req.json<unknown>()
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid body')
+    body = value as CreateKeyBody
   } catch {
     return c.json(
       { error: { message: 'Invalid JSON body', code: 'BAD_REQUEST', statusCode: 400 } },

@@ -82,8 +82,10 @@ export function evaluateRun(
   }
 
   // 2. Zero Mock Contamination
-  if (receipt.isMockData) {
-    failureReasons.push('Disqualified: Run used mock or canned data (isMockData = true)')
+  if (receipt.isMockData !== false) {
+    failureReasons.push(
+      'Disqualified: Run used mock or canned data, or lacks explicit live-data proof (isMockData must be false)'
+    )
   }
 
   // 3. Schema Conformance
@@ -234,8 +236,8 @@ export function loadRunReceipts(state: string, baseDir = process.cwd()): LiveRec
     .filter((entry) => entry.endsWith('.json'))
     .sort()) {
     try {
-      const value = JSON.parse(readFileSync(join(directory, name), 'utf8')) as LiveReceipt
-      if (value.state?.toUpperCase() === state.toUpperCase() && value.receiptId) {
+      const value = JSON.parse(readFileSync(join(directory, name), 'utf8')) as unknown
+      if (isLiveReceipt(value) && value.state.toUpperCase() === state.toUpperCase()) {
         receipts.push(value)
       }
     } catch {
@@ -243,6 +245,36 @@ export function loadRunReceipts(state: string, baseDir = process.cwd()): LiveRec
     }
   }
   return receipts
+}
+
+export function isLiveReceipt(value: unknown): value is LiveReceipt {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const receipt = value as Record<string, unknown>
+  return (
+    typeof receipt.receiptId === 'string' &&
+    receipt.receiptId.length > 0 &&
+    typeof receipt.state === 'string' &&
+    receipt.state.length > 0 &&
+    ['api', 'bulk', 'vendor', 'scrape'].includes(String(receipt.accessMethod)) &&
+    typeof receipt.timestamp === 'string' &&
+    Number.isFinite(Date.parse(receipt.timestamp)) &&
+    typeof receipt.targetQuery === 'string' &&
+    (receipt.status === 'SUCCESS' || receipt.status === 'FAILURE') &&
+    Number.isInteger(receipt.recordsIngested) &&
+    Number(receipt.recordsIngested) >= 0 &&
+    Number.isInteger(receipt.recordsValidated) &&
+    Number(receipt.recordsValidated) >= 0 &&
+    Array.isArray(receipt.validationErrors) &&
+    receipt.validationErrors.every((error) => typeof error === 'string') &&
+    typeof receipt.durationMs === 'number' &&
+    Number.isFinite(receipt.durationMs) &&
+    receipt.durationMs >= 0 &&
+    Object.hasOwn(receipt, 'payload') &&
+    typeof receipt.payloadSha256 === 'string' &&
+    /^[a-f0-9]{64}$/i.test(receipt.payloadSha256) &&
+    typeof receipt.isMockData === 'boolean' &&
+    (receipt.errorMessage === undefined || typeof receipt.errorMessage === 'string')
+  )
 }
 
 export function saveRunReceipt(receipt: LiveReceipt, baseDir = process.cwd()): string {

@@ -34,6 +34,8 @@ export interface Env {
   JWT_SECRET?: string
   /** Stripe webhook signing secret (set when the billing route is ported). */
   STRIPE_WEBHOOK_SECRET?: string
+  /** Base64-encoded 32-byte AES-GCM key (`wrangler secret put CRM_CREDENTIAL_ENCRYPTION_KEY`). */
+  CRM_CREDENTIAL_ENCRYPTION_KEY?: string
 }
 
 export type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro' | 'enterprise'
@@ -191,7 +193,8 @@ export interface CrmPushLogRow {
   prospect_id: string
   provider: string
   external_id: string | null
-  status: 'success' | 'failed'
+  status: 'pending' | 'success' | 'failed'
+  idempotency_key: string | null
   error_message: string | null
   created_at: string
 }

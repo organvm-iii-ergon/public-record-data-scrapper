@@ -122,3 +122,5 @@ crons = ["*/1 * * * *", "0 2 * * *", "0 */6 * * *", "0 */12 * * *"]
 ENVIRONMENT = "production"
 ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"  # TODO
 ACCESS_AUD = "REPLACE_WITH_PRODUCTION_ACCESS_AUD"       # TODO
+# CRM credentials require a base64-encoded 32-byte key in every environment:
+#   npx wrangler secret put CRM_CREDENTIAL_ENCRYPTION_KEY

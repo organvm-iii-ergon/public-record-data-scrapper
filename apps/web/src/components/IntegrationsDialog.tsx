@@ -126,6 +126,7 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
   const [hubspotActive, setHubspotActive] = useState(false)
   const [hubspotAutoSync, setHubspotAutoSync] = useState(true)
   const [salesforceKey, setSalesforceKey] = useState('')
+  const [salesforceInstanceUrl, setSalesforceInstanceUrl] = useState('')
   const [salesforceActive, setSalesforceActive] = useState(false)
   const [testingCrm, setTestingCrm] = useState<string | null>(null)
 
@@ -240,11 +241,21 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
       toast.error('Enter an access token before connecting.')
       return
     }
+    if (provider === 'salesforce' && !salesforceInstanceUrl.trim()) {
+      toast.error('Enter your Salesforce instance URL before connecting.')
+      return
+    }
     setTestingCrm(provider)
     try {
       const result = await apiRequest<{ verified: boolean; message: string }>('/crm/integrations', {
         method: 'POST',
-        body: { provider, api_key: apiKey.trim() }
+        body: {
+          provider,
+          api_key: apiKey.trim(),
+          ...(provider === 'salesforce'
+            ? { config: { instanceUrl: salesforceInstanceUrl.trim() } }
+            : {})
+        }
       })
       if (!result.verified) throw new Error(result.message)
       if (provider === 'hubspot') setHubspotActive(true)
@@ -414,7 +425,15 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                   Enterprise Lead object export via OAuth 2.0 Connected App.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
+                <Input
+                  type="url"
+                  value={salesforceInstanceUrl}
+                  onChange={(e) => setSalesforceInstanceUrl(e.target.value)}
+                  placeholder="https://your-domain.my.salesforce.com"
+                  className="glass-effect border-white/20 text-white text-xs h-9"
+                  disabled={!salesforceActive}
+                />
                 <div className="flex gap-2">
                   <Input
                     type="password"
@@ -502,15 +521,19 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                     )}
                     <div className="flex items-center gap-2 text-white/50 text-[11px]">
                       <span>Secret: {ep.secretPreview || 'whsec_••••••••'}</span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(ep.secret || '')
-                          toast.success('Webhook signing secret copied!')
-                        }}
-                        className="text-primary hover:underline flex items-center gap-0.5"
-                      >
-                        <Copy size={11} /> copy
-                      </button>
+                      {ep.secret ? (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(ep.secret!)
+                            toast.success('Webhook signing secret copied!')
+                          }}
+                          className="text-primary hover:underline flex items-center gap-0.5"
+                        >
+                          <Copy size={11} /> copy
+                        </button>
+                      ) : (
+                        <span>Only shown once; rotate to replace.</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">

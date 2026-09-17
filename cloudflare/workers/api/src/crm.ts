@@ -10,6 +10,7 @@
  */
 
 import { first, run } from './db'
+import { decryptCredential } from './integrationSafety'
 import type { CrmIntegrationRow, CrmProvider, CrmPushResult, Env } from './types'
 
 export const CRM_REQUEST_TIMEOUT_MS = 10_000
@@ -296,8 +297,8 @@ export class GoHighLevelAdapter implements CrmAdapter {
 }
 
 function salesforceInstanceUrl(value: unknown): string | null {
-  const candidate =
-    typeof value === 'string' && value.trim() ? value.trim() : 'https://login.salesforce.com'
+  const candidate = typeof value === 'string' ? value.trim() : ''
+  if (!candidate) return null
   try {
     const url = new URL(candidate)
     const host = url.hostname.toLowerCase()
@@ -393,22 +394,74 @@ export async function pushProspectToCrm(
     }
   }
 
-  const result = await adapter.pushProspect(crmIntegration.api_key, prospect, config)
-
-  // Log the audit trail into crm_push_logs
-  const logId = `cpl_${crypto.randomUUID()}`
-  await run(
+  const idempotencyKey = `crm-push:${orgId}:${crmIntegration.id}:${prospectId}:${crmIntegration.provider}`
+  const existing = await first<{ status: string; external_id: string | null }>(
     env,
-    `INSERT INTO crm_push_logs (id, org_id, crm_id, prospect_id, provider, external_id, status, error_message)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    'SELECT status, external_id FROM crm_push_logs WHERE org_id = ? AND idempotency_key = ?',
+    orgId,
+    idempotencyKey
+  )
+  if (existing) {
+    return existing.status === 'success'
+      ? {
+          success: true,
+          provider: crmIntegration.provider,
+          externalId: existing.external_id ?? undefined
+        }
+      : {
+          success: false,
+          provider: crmIntegration.provider,
+          error: 'CRM push is already recorded; review the audit log before retrying'
+        }
+  }
+
+  const logId = `cpl_${crypto.randomUUID()}`
+  const claim = await run(
+    env,
+    `INSERT OR IGNORE INTO crm_push_logs
+       (id, org_id, crm_id, prospect_id, provider, external_id, status, error_message, idempotency_key)
+     VALUES (?, ?, ?, ?, ?, NULL, 'pending', NULL, ?)`,
     logId,
     orgId,
     crmIntegration.id,
     prospectId,
     crmIntegration.provider,
+    idempotencyKey
+  )
+  if (claim.meta.changes !== 1) {
+    return {
+      success: false,
+      provider: crmIntegration.provider,
+      error: 'CRM push is already in progress'
+    }
+  }
+
+  let result: CrmPushResult
+  try {
+    const apiKey = await decryptCredential(
+      crmIntegration.api_key,
+      env.CRM_CREDENTIAL_ENCRYPTION_KEY
+    )
+    result = await adapter.pushProspect(apiKey, prospect, config)
+  } catch (error) {
+    result = {
+      success: false,
+      provider: crmIntegration.provider,
+      error: error instanceof Error ? error.message : 'CRM credential is unavailable'
+    }
+  }
+
+  await run(
+    env,
+    `UPDATE crm_push_logs
+        SET external_id = ?, status = ?, error_message = ?
+      WHERE id = ? AND org_id = ? AND idempotency_key = ?`,
     result.externalId ?? null,
     result.success ? 'success' : 'failed',
-    result.error ?? null
+    result.error ?? null,
+    logId,
+    orgId,
+    idempotencyKey
   )
 
   return result

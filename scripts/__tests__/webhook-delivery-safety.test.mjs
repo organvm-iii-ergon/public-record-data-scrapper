@@ -9,7 +9,10 @@ import {
   sendWebhookDelivery
 } from '../../cloudflare/workers/api/src/webhooks.ts'
 import { normalizeSubscriptionTier } from '../../cloudflare/workers/api/src/tier.ts'
+import { pushProspectToCrm } from '../../cloudflare/workers/api/src/crm.ts'
 import {
+  decryptCredential,
+  encryptCredential,
   isSecureWebhookUrl,
   publicCrmIntegration,
   publicWebhookEndpoint
@@ -191,15 +194,101 @@ test('public integration serializers omit signing secrets and provider API keys'
     config: '{"region":"us"}'
   })
   assert.equal('api_key' in integration, false)
-  assert.equal(integration.api_key_preview, 'prov••••alue')
+  assert.equal(integration.api_key_preview, 'credential unavailable')
   assert.deepEqual(integration.config, { region: 'us' })
 })
 
-test('webhook destinations require a valid HTTPS URL', () => {
-  assert.equal(isSecureWebhookUrl('https://hooks.example.test/events'), true)
-  assert.equal(isSecureWebhookUrl('http://hooks.example.test/events'), false)
-  assert.equal(isSecureWebhookUrl('ftp://hooks.example.test/events'), false)
-  assert.equal(isSecureWebhookUrl('not a URL'), false)
+test('CRM credentials round-trip only through an encrypted envelope', async () => {
+  const key = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+  const encrypted = await encryptCredential('provider-secret', key)
+  assert.match(encrypted, /^enc:v1:/)
+  assert.equal(encrypted.includes('provider-secret'), false)
+  assert.equal(await decryptCredential(encrypted, key), 'provider-secret')
+  await assert.rejects(decryptCredential('provider-secret', key), /reconnect/)
+})
+
+test('CRM pushes claim one idempotency key before the remote create', async () => {
+  const key = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+  const encrypted = await encryptCredential('provider-secret', key)
+  let log = null
+  let remoteCalls = 0
+  const DB = {
+    prepare(sql) {
+      return {
+        bind(...params) {
+          return {
+            async first() {
+              if (sql.includes('FROM crm_integrations')) {
+                return {
+                  id: 'crm-1',
+                  org_id: 'org-1',
+                  provider: 'hubspot',
+                  status: 'active',
+                  api_key: encrypted,
+                  config: null
+                }
+              }
+              if (sql.includes('FROM prospects')) {
+                return {
+                  id: 'prospect-1',
+                  company_name: 'Acme',
+                  priority_score: 90,
+                  status: 'new',
+                  raw_data: null
+                }
+              }
+              if (sql.includes('FROM crm_push_logs')) return log
+              return null
+            },
+            async run() {
+              if (sql.includes('INSERT OR IGNORE INTO crm_push_logs')) {
+                if (log) return { meta: { changes: 0 } }
+                log = { status: 'pending', external_id: null }
+                return { meta: { changes: 1 } }
+              }
+              if (sql.includes('UPDATE crm_push_logs')) {
+                log = { status: params[1], external_id: params[0] }
+              }
+              return { meta: { changes: 1 } }
+            }
+          }
+        }
+      }
+    }
+  }
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => {
+    remoteCalls += 1
+    return new Response(JSON.stringify({ id: 'company-1' }), { status: 200 })
+  }
+  try {
+    const env = { DB, CRM_CREDENTIAL_ENCRYPTION_KEY: key }
+    assert.equal((await pushProspectToCrm(env, 'org-1', 'prospect-1')).success, true)
+    assert.equal((await pushProspectToCrm(env, 'org-1', 'prospect-1')).success, true)
+    assert.equal(remoteCalls, 1)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('webhook destinations require public DNS and a valid HTTPS URL', async () => {
+  const publicResolver = async (_url, init) => {
+    const type = String(_url).includes('type=A') && !String(_url).includes('type=AAAA') ? 1 : 28
+    return new Response(
+      JSON.stringify({ Answer: type === 1 ? [{ type, data: '93.184.216.34' }] : [] }),
+      { status: 200 }
+    )
+  }
+  const privateResolver = async () =>
+    new Response(JSON.stringify({ Answer: [{ type: 1, data: '127.0.0.1' }] }), { status: 200 })
+  assert.equal(await isSecureWebhookUrl('https://hooks.example.test/events', publicResolver), true)
+  assert.equal(
+    await isSecureWebhookUrl('https://hooks.example.test/events', privateResolver),
+    false
+  )
+  assert.equal(await isSecureWebhookUrl('https://127.0.0.1/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('http://hooks.example.test/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('not a URL', publicResolver), false)
 })
 
 test('edge API key management requires the admin role guard', () => {

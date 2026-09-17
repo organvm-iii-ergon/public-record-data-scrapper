@@ -15,6 +15,7 @@ import type { Context } from 'hono'
 import { accessAuth, orgScope, unifiedAuth } from './auth'
 import { all, first, run } from './db'
 import {
+  encryptCredential,
   isSecureWebhookUrl,
   publicCrmIntegration,
   publicWebhookEndpoint
@@ -133,7 +134,7 @@ app.get('/api/webhooks', accessAuth, orgScope, async (c) => {
 /**
  * POST /api/webhooks — register a new webhook destination.
  */
-app.post('/api/webhooks', accessAuth, orgScope, async (c) => {
+app.post('/api/webhooks', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
 
   const body = (await c.req.json().catch(() => ({}))) as {
@@ -150,7 +151,7 @@ app.post('/api/webhooks', accessAuth, orgScope, async (c) => {
     )
   }
 
-  if (!isSecureWebhookUrl(body.url)) {
+  if (!(await isSecureWebhookUrl(body.url))) {
     return c.json(
       {
         error: {
@@ -267,7 +268,7 @@ app.get('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
 /**
  * PUT /api/webhooks/:id — update an existing webhook endpoint.
  */
-app.put('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
+app.put('/api/webhooks/:id', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
@@ -293,7 +294,10 @@ app.put('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
   }
 
   const nextUrl = body.url ?? endpoint.url
-  if (body.url !== undefined && (typeof body.url !== 'string' || !isSecureWebhookUrl(body.url))) {
+  if (
+    body.url !== undefined &&
+    (typeof body.url !== 'string' || !(await isSecureWebhookUrl(body.url)))
+  ) {
     return c.json(
       {
         error: {
@@ -347,7 +351,7 @@ app.put('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
 /**
  * DELETE /api/webhooks/:id — delete a webhook endpoint.
  */
-app.delete('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
+app.delete('/api/webhooks/:id', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
@@ -371,7 +375,7 @@ app.delete('/api/webhooks/:id', accessAuth, orgScope, async (c) => {
 /**
  * POST /api/webhooks/:id/test — trigger an immediate test ping delivery.
  */
-app.post('/api/webhooks/:id/test', accessAuth, orgScope, async (c) => {
+app.post('/api/webhooks/:id/test', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
@@ -443,7 +447,7 @@ app.get('/api/webhooks/deliveries/:id', accessAuth, orgScope, async (c) => {
 /**
  * POST /api/webhooks/deliveries/:id/retry — replay a dead-letter or failed delivery.
  */
-app.post('/api/webhooks/deliveries/:id/retry', accessAuth, orgScope, async (c) => {
+app.post('/api/webhooks/deliveries/:id/retry', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
@@ -499,7 +503,7 @@ app.get('/api/crm/integrations', accessAuth, orgScope, async (c) => {
 /**
  * POST /api/crm/integrations — register or update CRM integration (HubSpot, Salesforce, GoHighLevel).
  */
-app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
+app.post('/api/crm/integrations', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
 
   const body = (await c.req.json().catch(() => ({}))) as {
@@ -534,6 +538,21 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
   const adapter = CRM_ADAPTERS[body.provider]
   const isValid = await adapter.verifyCredentials(body.api_key, body.config)
   const status = isValid ? 'active' : 'error'
+  let encryptedApiKey: string
+  try {
+    encryptedApiKey = await encryptCredential(body.api_key, c.env.CRM_CREDENTIAL_ENCRYPTION_KEY)
+  } catch {
+    return c.json(
+      {
+        error: {
+          message: 'CRM credential storage is temporarily unavailable',
+          code: 'CREDENTIAL_STORAGE_UNAVAILABLE',
+          statusCode: 503
+        }
+      },
+      503
+    )
+  }
 
   const id = `crm_${crypto.randomUUID()}`
   const configString = body.config ? JSON.stringify(body.config) : null
@@ -552,7 +571,7 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
     orgId,
     body.provider,
     status,
-    body.api_key,
+    encryptedApiKey,
     configString
   )
 
@@ -570,7 +589,7 @@ app.post('/api/crm/integrations', accessAuth, orgScope, async (c) => {
 /**
  * DELETE /api/crm/integrations/:id — delete a CRM integration.
  */
-app.delete('/api/crm/integrations/:id', accessAuth, orgScope, async (c) => {
+app.delete('/api/crm/integrations/:id', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
   const id = c.req.param('id')
 
@@ -594,7 +613,7 @@ app.delete('/api/crm/integrations/:id', accessAuth, orgScope, async (c) => {
 /**
  * POST /api/crm/push — push a UCC prospect to the configured CRM.
  */
-app.post('/api/crm/push', accessAuth, orgScope, async (c) => {
+app.post('/api/crm/push', accessAuth, orgScope, rateLimiter, async (c) => {
   const { orgId } = c.get('identity')
 
   const body = (await c.req.json().catch(() => ({}))) as {

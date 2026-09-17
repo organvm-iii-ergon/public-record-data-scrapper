@@ -44,6 +44,16 @@ describe('verify-state-runs (Green Run & Consecutive Streak Protocol)', () => {
       expect(evaluation.failureReasons.some((r) => r.includes('mock or canned data'))).toBe(true)
     })
 
+    it('fails closed when the live-data flag is missing', () => {
+      const receipt = makeValidReceipt()
+      delete (receipt as Partial<LiveReceipt>).isMockData
+      const evaluation = evaluateRun(receipt)
+      expect(evaluation.isGreen).toBe(false)
+      expect(
+        evaluation.failureReasons.some((reason) => reason.includes('explicit live-data proof'))
+      ).toBe(true)
+    })
+
     it('flags schema validation mismatch when validated count != ingested count', () => {
       const receipt = makeValidReceipt({
         recordsIngested: 3,
