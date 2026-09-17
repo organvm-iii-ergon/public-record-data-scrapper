@@ -42,7 +42,6 @@ export async function preparePages(environment, projectName, outputRoot = root) 
   const service = environment === 'staging' ? 'ucc-mca-edge-staging' : 'ucc-mca-edge-production'
   const config = {
     name: projectName,
-    account_id: 'e0921b840fd656d8ea46426f1f114c30',
     compatibility_date: '2026-09-16',
     pages_build_output_dir: './dist',
     services: [{ binding: 'API', service }],

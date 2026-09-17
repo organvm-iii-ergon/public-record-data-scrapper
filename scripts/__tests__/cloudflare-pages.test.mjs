@@ -97,6 +97,7 @@ test('Pages packages separate bindings, API-only routing and replace stale outpu
     ]) {
       const destination = await preparePages(environment, name, root)
       const config = JSON.parse(await readFile(join(destination, 'wrangler.json'), 'utf8'))
+      assert.equal('account_id' in config, false)
       assert.equal(config.services[0].service, service)
       assert.deepEqual(config.env.preview.services, config.services)
       const routes = JSON.parse(await readFile(join(destination, 'dist/_routes.json'), 'utf8'))
