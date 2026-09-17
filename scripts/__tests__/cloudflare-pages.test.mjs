@@ -150,6 +150,7 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /test "\$conclusion" = success/)
   assert.match(workflow, /for attempt in 1 2 3 4 5 6/)
   assert.match(workflow, /curl -q --silent --show-error/)
+  assert.match(workflow, /%\{http_code\} %\{redirect_url\}\\n/)
   assert.match(workflow, /team="\$\{team#https:\/\/\}"/)
   assert.match(workflow, /team="\$\{team%\/\}"/)
   assert.match(workflow, /test "\$access_ready" = true/)
