@@ -3,6 +3,8 @@
 -- Serializes audit appends inside PostgreSQL, derives every hash from the
 -- stored row, and keeps the existing UPDATE/DELETE/TRUNCATE guards in force.
 
+BEGIN;
+
 ALTER TABLE audit_logs
     ADD COLUMN chain_sequence BIGINT,
     ADD COLUMN prev_hash CHAR(64),
@@ -111,3 +113,5 @@ COMMENT ON COLUMN audit_logs.record_hash IS
     'SHA-256 over the canonical JSONB representation of the stored row, excluding record_hash';
 COMMENT ON TABLE audit_chain_state IS
     'Singleton serialization state for the database-enforced audit hash chain';
+
+COMMIT;

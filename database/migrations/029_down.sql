@@ -1,3 +1,5 @@
+BEGIN;
+
 DROP TRIGGER IF EXISTS append_audit_hash_chain_before_insert ON audit_logs;
 DROP FUNCTION IF EXISTS append_audit_hash_chain();
 DROP TABLE IF EXISTS audit_chain_state;
@@ -9,3 +11,5 @@ ALTER TABLE audit_logs
     DROP COLUMN IF EXISTS record_hash,
     DROP COLUMN IF EXISTS prev_hash,
     DROP COLUMN IF EXISTS chain_sequence;
+
+COMMIT;
