@@ -305,6 +305,20 @@ class ProvisionTests(unittest.TestCase):
         )
         self.assertEqual(self.api.writes, [])
 
+    def test_existing_malformed_pages_allow_policy_fails_before_any_mutation(self):
+        self.api.rows["access"] = [self.api.created_pages_access]
+        for include in (None, []):
+            with self.subTest(include=include):
+                self.api.calls.clear()
+                self.api.policies = [{"id": APP, "decision": "allow", "include": include}]
+                status, report = self.run_case()
+                self.assertEqual(status, 1)
+                self.assertEqual(
+                    report["blocker"]["code"],
+                    "pages_access_enrollment_policy_required",
+                )
+                self.assertEqual(self.api.writes, [])
+
     def test_existing_bypass_policy_does_not_pass_authentication_gate(self):
         self.api.rows["access"] = [self.api.created["access"]]
         self.api.policies = [{"id": APP, "decision": "bypass", "include": [{"everyone": {}}]}]

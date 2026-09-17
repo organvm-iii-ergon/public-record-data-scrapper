@@ -187,30 +187,29 @@ export async function resolveAccessMembership(
       )
       if (enrollments.length === 1 && enrollments[0]) {
         const enrollment = enrollments[0]
-        if (enrollment.claimed_subject === null) {
-          const claimed = await run(
-            env,
+        const [claimed] = await env.DB.batch([
+          env.DB.prepare(
             `UPDATE access_enrollment_invites
-                SET claimed_subject = ?, claimed_at = datetime('now')
+                SET claimed_subject = COALESCE(claimed_subject, ?),
+                    claimed_at = COALESCE(claimed_at, datetime('now'))
               WHERE issuer = ? AND email = ? AND org_id = ?
-                AND claimed_subject IS NULL AND revoked_at IS NULL`,
-            payload.sub,
-            payload.iss,
-            email,
-            enrollment.org_id
-          )
-          if (claimed.meta.changes !== 1) return null
-        }
-        await run(
-          env,
-          `INSERT INTO access_memberships(issuer, subject, org_id, role)
-           VALUES (?, ?, ?, ?)
-           ON CONFLICT(issuer, subject, org_id) DO NOTHING`,
-          payload.iss,
-          payload.sub,
-          enrollment.org_id,
-          enrollment.role
-        )
+                AND role = ? AND revoked_at IS NULL
+                AND (expires_at IS NULL OR
+                  (julianday(expires_at) IS NOT NULL AND julianday(expires_at) > julianday('now')))
+                AND (claimed_subject IS NULL OR claimed_subject = ?)`
+          ).bind(payload.sub, payload.iss, email, enrollment.org_id, enrollment.role, payload.sub),
+          env.DB.prepare(
+            `INSERT INTO access_memberships(issuer, subject, org_id, role)
+           SELECT issuer, ?, org_id, role
+             FROM access_enrollment_invites
+            WHERE issuer = ? AND email = ? AND org_id = ? AND role = ?
+              AND claimed_subject = ? AND revoked_at IS NULL
+              AND (expires_at IS NULL OR
+                (julianday(expires_at) IS NOT NULL AND julianday(expires_at) > julianday('now')))
+           ON CONFLICT(issuer, subject, org_id) DO NOTHING`
+          ).bind(payload.sub, payload.iss, email, enrollment.org_id, enrollment.role, payload.sub)
+        ])
+        if (!claimed || claimed.meta.changes !== 1) return null
         rows = await all<AccessMembershipRow>(
           env,
           `SELECT m.org_id, m.role, o.subscription_tier FROM access_memberships m

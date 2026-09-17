@@ -356,9 +356,10 @@ def validate_pages_access_policies(policies, require_allow):
            for policy in policies):
         raise Blocked("pages_access_policy_bypasses_authentication_or_is_unknown")
     allow = [policy for policy in policies if policy.get("decision") == "allow"]
-    if require_allow and (not allow or any(
-            not isinstance(policy.get("include"), list) or not policy["include"]
-            for policy in allow)):
+    if any(not isinstance(policy.get("include"), list) or not policy["include"]
+           for policy in allow):
+        raise Blocked("pages_access_enrollment_policy_required")
+    if require_allow and not allow:
         raise Blocked("pages_access_enrollment_policy_required")
 
 
