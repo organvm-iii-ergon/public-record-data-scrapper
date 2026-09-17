@@ -51,7 +51,7 @@ const worker = new Miniflare(
   })
 )
 try {
-  // Apply D1 schema migrations (0001_init.sql and 0002_api_keys.sql)
+  // Apply every schema migration required by the exact worker head.
   const db = await worker.getD1Database('DB')
 
   function splitSqlStatements(sql) {
@@ -92,6 +92,14 @@ try {
 
   const rawMigration3 = fs.readFileSync(new URL('migrations/0003_webhooks_crm.sql', edge), 'utf8')
   for (const stmt of splitSqlStatements(rawMigration3)) {
+    await db.prepare(stmt).run()
+  }
+
+  const rawMigration4 = fs.readFileSync(
+    new URL('migrations/0004_job_claim_lease.sql', edge),
+    'utf8'
+  )
+  for (const stmt of splitSqlStatements(rawMigration4)) {
     await db.prepare(stmt).run()
   }
 
@@ -325,11 +333,19 @@ try {
       payload: { state: 'NY', date: '2026-09-15' }
     })
   })
-  assert.equal(createJobRes.status, 202)
-  const createdJob = await createJobRes.json()
-  const testJobId = createdJob.data.id
-  assert.ok(testJobId)
-  assert.equal(createdJob.data.status, 'pending')
+  assert.equal(createJobRes.status, 400)
+  const rejectedJob = await createJobRes.json()
+  assert.equal(rejectedJob.error.code, 'UNSUPPORTED_JOB_TYPE')
+
+  // Seed an internal job to exercise tenant-scoped status reads. Public callers
+  // cannot create jobs until a corresponding drain handler exists.
+  const testJobId = 'runtime-tenant-job'
+  await db
+    .prepare(
+      'INSERT INTO jobs (id, type, payload, status, org_id, attempts) VALUES (?, ?, ?, ?, ?, ?)'
+    )
+    .bind(testJobId, 'crm_push', '{}', 'pending', 'org-growth', 0)
+    .run()
 
   // Org Growth reads job status -> 200
   const readJobRes = await worker.dispatchFetch(`http://localhost/v1/jobs/${testJobId}`, {
@@ -353,9 +369,9 @@ try {
     },
     body: JSON.stringify({ prospect_id: prospectId })
   })
-  assert.equal(singleEnrichRes.status, 202)
+  assert.equal(singleEnrichRes.status, 503)
   const singleEnrichData = await singleEnrichRes.json()
-  assert.equal(singleEnrichData.data.prospect_id, prospectId)
+  assert.equal(singleEnrichData.error.code, 'SERVICE_UNAVAILABLE')
 
   // 6b. Batch enrichment with Free tier -> 403 TIER_UPGRADE_REQUIRED (blocked at edge before D1!)
   const freeBatchRes = await worker.dispatchFetch('http://localhost/v1/enrichment/batch', {
@@ -370,7 +386,7 @@ try {
   const freeBatchJson = await freeBatchRes.json()
   assert.equal(freeBatchJson.error.code, 'TIER_UPGRADE_REQUIRED')
 
-  // 6c. Batch enrichment with Growth tier -> 202 Accepted
+  // 6c. Batch enrichment with Growth tier fails closed until its worker exists.
   const growthBatchRes = await worker.dispatchFetch('http://localhost/v1/enrichment/batch', {
     method: 'POST',
     headers: {
@@ -379,9 +395,9 @@ try {
     },
     body: JSON.stringify({ prospect_ids: [prospectId] })
   })
-  assert.equal(growthBatchRes.status, 202)
+  assert.equal(growthBatchRes.status, 503)
   const growthBatchJson = await growthBatchRes.json()
-  assert.equal(growthBatchJson.data.total, 1)
+  assert.equal(growthBatchJson.error.code, 'SERVICE_UNAVAILABLE')
 
   // 6d. Enrichment status endpoint -> 200
   const enrichStatusRes = await worker.dispatchFetch('http://localhost/v1/enrichment/status', {
