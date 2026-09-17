@@ -9,13 +9,19 @@ const {
   mockEnrichBatch,
   mockTriggerRefresh,
   mockGetStatus,
-  mockGetQueueStatus
+  mockGetQueueStatus,
+  mockDeduplicateFilings,
+  mockMatchPair,
+  mockResolveAndEnrichProspect
 } = vi.hoisted(() => ({
   mockEnrichProspect: vi.fn(),
   mockEnrichBatch: vi.fn(),
   mockTriggerRefresh: vi.fn(),
   mockGetStatus: vi.fn(),
-  mockGetQueueStatus: vi.fn()
+  mockGetQueueStatus: vi.fn(),
+  mockDeduplicateFilings: vi.fn(),
+  mockMatchPair: vi.fn(),
+  mockResolveAndEnrichProspect: vi.fn()
 }))
 
 // Mock the EnrichmentService
@@ -26,6 +32,15 @@ vi.mock('../../services/EnrichmentService', () => ({
     triggerRefresh = mockTriggerRefresh
     getStatus = mockGetStatus
     getQueueStatus = mockGetQueueStatus
+  }
+}))
+
+// Mock the EntityResolutionService
+vi.mock('../../services/EntityResolutionService', () => ({
+  entityResolutionService: {
+    deduplicateFilings: mockDeduplicateFilings,
+    matchPair: mockMatchPair,
+    resolveAndEnrichProspect: mockResolveAndEnrichProspect
   }
 }))
 
@@ -343,6 +358,138 @@ describe('Enrichment API', () => {
       expect(typeof response.body.completed).toBe('number')
       expect(typeof response.body.failed).toBe('number')
       expect(typeof response.body.delayed).toBe('number')
+    })
+  })
+
+  describe('POST /api/enrichment/resolve-entities', () => {
+    it('should deduplicate and link state filings', async () => {
+      const mockSummary = {
+        totalFilingsProcessed: 2,
+        corporateClusters: [
+          {
+            clusterId: 'corp-1',
+            entityType: 'corporate',
+            canonicalName: 'Apex Logistics LLC',
+            aliases: [],
+            primaryState: 'CA',
+            states: ['CA', 'TX'],
+            filingIds: ['f-1', 'f-2'],
+            recordCount: 2,
+            enrichment_confidence: 0.92,
+            securedParties: ['Rapid Finance'],
+            principals: [],
+            crossStateLinksCount: 1,
+            explanation: 'Linked across 2 states'
+          }
+        ],
+        individualClusters: [],
+        crossStateEntities: 1,
+        deduplicationRatio: 0.5,
+        averageConfidence: 0.92
+      }
+
+      mockDeduplicateFilings.mockReturnValueOnce(mockSummary)
+
+      const response = await request(app)
+        .post('/api/enrichment/resolve-entities')
+        .set('Authorization', authHeader)
+        .send({
+          filings: [
+            {
+              id: 'f-1',
+              filingDate: '2024-01-01',
+              debtorName: 'Apex Logistics LLC',
+              state: 'CA',
+              securedParty: 'Rapid Finance'
+            },
+            {
+              id: 'f-2',
+              filingDate: '2024-02-01',
+              debtorName: 'Apex Logistics Inc',
+              state: 'TX',
+              securedParty: 'Rapid Finance'
+            }
+          ]
+        })
+
+      expect(response.status).toBe(200)
+      expect(response.body.totalFilingsProcessed).toBe(2)
+      expect(response.body.corporateClusters).toHaveLength(1)
+      expect(response.body.corporateClusters[0].enrichment_confidence).toBe(0.92)
+    })
+
+    it('should reject invalid filings payload', async () => {
+      const response = await request(app)
+        .post('/api/enrichment/resolve-entities')
+        .set('Authorization', authHeader)
+        .send({ filings: [] })
+
+      expect(response.status).toBe(400)
+    })
+  })
+
+  describe('POST /api/enrichment/match-pair', () => {
+    it('should evaluate an entity pair and return match prediction and confidence', async () => {
+      const mockPrediction = {
+        probability: 0.94,
+        score: 94,
+        enrichment_confidence: 0.92,
+        isMatch: true,
+        needsReview: false,
+        explanation: 'Exact normalized company name match; Shared secured party',
+        featureContributions: { exactNormalizedMatch: 4.5 }
+      }
+
+      mockMatchPair.mockReturnValueOnce(mockPrediction)
+
+      const response = await request(app)
+        .post('/api/enrichment/match-pair')
+        .set('Authorization', authHeader)
+        .send({
+          entity1: { name: 'Acme Transport LLC', state: 'CA' },
+          entity2: { name: 'Acme Transport Inc', state: 'TX' }
+        })
+
+      expect(response.status).toBe(200)
+      expect(response.body.isMatch).toBe(true)
+      expect(response.body.enrichment_confidence).toBe(0.92)
+    })
+  })
+
+  describe('POST /api/enrichment/resolve-prospect/:id', () => {
+    it('should resolve and link cross-state filings for a prospect', async () => {
+      const mockResult = {
+        prospectId: '550e8400-e29b-41d4-a716-446655440000',
+        canonicalName: 'Atlas Corp',
+        states: ['CA', 'TX'],
+        filingCount: 2,
+        newlyLinkedFilings: 1,
+        enrichment_confidence: 0.93,
+        explanation: 'Multi-state enterprise resolved across 2 states'
+      }
+
+      mockResolveAndEnrichProspect.mockResolvedValueOnce(mockResult)
+
+      const response = await request(app)
+        .post('/api/enrichment/resolve-prospect/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', authHeader)
+
+      expect(response.status).toBe(200)
+      expect(response.body.prospectId).toBe('550e8400-e29b-41d4-a716-446655440000')
+      expect(response.body.enrichment_confidence).toBe(0.93)
+      expect(mockResolveAndEnrichProspect).toHaveBeenCalledWith(
+        '550e8400-e29b-41d4-a716-446655440000',
+        'test-org'
+      )
+    })
+
+    it('fails closed without an organization context', async () => {
+      const response = await request(app)
+        .post('/api/enrichment/resolve-prospect/550e8400-e29b-41d4-a716-446655440000')
+        .set('Authorization', createAuthHeader('test-user', { orgId: null }))
+
+      expect(response.status).toBe(403)
+      expect(mockResolveAndEnrichProspect).not.toHaveBeenCalled()
     })
   })
 })
