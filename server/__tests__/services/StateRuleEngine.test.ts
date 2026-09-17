@@ -31,6 +31,16 @@ describe('StateRuleEngine (#478)', () => {
       expect(result.isOrganization).toBe(true)
     })
 
+    it('removes alias separator punctuation and matches PLLC before LLC', () => {
+      const dba = engine.normalizeEntityName('Acme, Inc., d/b/a Foo')
+      const pllc = engine.normalizeEntityName('Smith Professional Limited Liability Company')
+
+      expect(dba.clean).toBe('ACME, INC')
+      expect(dba.dba).toBe('FOO')
+      expect(pllc.clean).toBe('SMITH PLLC')
+      expect(pllc.entityType).toBe('PLLC')
+    })
+
     it('normalizes individual names formatted as LastName, FirstName', () => {
       const result = engine.normalizeEntityName('Doe, Johnathan A')
 
@@ -67,6 +77,19 @@ describe('StateRuleEngine (#478)', () => {
       expect(normalized).toBe('202412345678')
       expect(rule.filingNumberPattern.test(normalized)).toBe(true)
     })
+
+    it('accepts the advertised Georgia filing-number format', () => {
+      const result = engine.validate({
+        filingNumber: '2024-123456',
+        filingDate: '2024-01-15',
+        state: 'GA',
+        debtor: { name: 'DEBTOR LLC' },
+        securedParty: { name: 'BANK CORP' },
+        collateral: 'All assets'
+      })
+
+      expect(result.warnings.some((warning) => warning.code === 'NON_STANDARD_FORMAT')).toBe(false)
+    })
   })
 
   describe('Statutory Lapse & Expiration Calculation', () => {
@@ -87,6 +110,21 @@ describe('StateRuleEngine (#478)', () => {
         isPublicFinance: true
       })
       expect(expiration).toBe('2054-05-15')
+    })
+
+    it('rejects calendar-invalid dates instead of fabricating lapse dates', () => {
+      expect(engine.calculateExpirationDate('2024-02-31', 'CA')).toBeUndefined()
+      const result = engine.validate({
+        filingNumber: '24-00123456',
+        filingDate: '2024-02-31',
+        state: 'CA',
+        debtor: { name: 'DEBTOR LLC' },
+        securedParty: { name: 'BANK CORP' },
+        collateral: 'All assets'
+      })
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({ field: 'filingDate', code: 'INVALID_DATE' })
+      )
     })
   })
 
@@ -113,6 +151,12 @@ describe('StateRuleEngine (#478)', () => {
       expect(analysis.hasEquipment).toBe(true)
       expect(analysis.hasInventory).toBe(true)
       expect(analysis.categories).toContain('all-assets')
+    })
+
+    it('does not classify chattel paper as equipment', () => {
+      const analysis = engine.analyzeCollateral('All chattel paper and instruments')
+      expect(analysis.hasChattelPaper).toBe(true)
+      expect(analysis.hasEquipment).toBe(false)
     })
   })
 
@@ -238,6 +282,43 @@ describe('StateRuleEngine (#478)', () => {
       expect(batchResult.results).toHaveLength(2)
       expect(batchResult.passedCount).toBe(1)
       expect(batchResult.failedCount).toBe(1)
+    })
+
+    it('propagates public-finance status and preserves every extracted alias', () => {
+      const result = engine.process({
+        filingNumber: '2024-123456',
+        filingType: 'UCC-1',
+        filingDate: '2024-01-15',
+        state: 'NY',
+        status: 'active',
+        debtor: { name: 'Acme LLC formerly known as Oldco' },
+        securedParty: { name: 'Capital Corp d/b/a Funding Co' },
+        collateral: 'Public finance transaction',
+        collateralType: 'public-finance'
+      })
+
+      expect(result.normalized.expirationDate).toBe('2054-01-15')
+      expect(result.normalized.rawData?.entityDetails).toEqual(
+        expect.objectContaining({
+          debtorFka: 'OLDCO',
+          securedPartyDba: 'FUNDING CO'
+        })
+      )
+    })
+
+    it('does not fabricate a lapse date for terminated UCC-3 records', () => {
+      const result = engine.process({
+        filingNumber: 'NJ-12345678',
+        filingType: 'UCC-3',
+        filingDate: '2024-01-15',
+        state: 'NJ',
+        status: 'terminated',
+        debtor: { name: 'DEBTOR LLC' },
+        securedParty: { name: 'BANK CORP' },
+        collateral: 'All assets'
+      })
+
+      expect(result.normalized.expirationDate).toBeUndefined()
     })
   })
 
