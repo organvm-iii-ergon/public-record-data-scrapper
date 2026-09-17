@@ -17,6 +17,55 @@ export const API_VERSION = '2026-09-01'
 export const MAX_RETRY_ATTEMPTS = 5
 export const CIRCUIT_BREAKER_THRESHOLD = 10
 export const SIGNATURE_TOLERANCE_SECONDS = 300 // 5 minutes
+export const MAX_RESPONSE_BODY_BYTES = 1000
+
+/**
+ * Read at most `maxBytes` from a webhook response and cancel the remainder.
+ * Webhook destinations are tenant-controlled, so buffering `response.text()`
+ * before truncation would allow an unbounded response to exhaust the isolate.
+ */
+export async function readBoundedResponseBody(
+  response: Response,
+  maxBytes = MAX_RESPONSE_BODY_BYTES
+): Promise<string> {
+  if (!response.body || maxBytes <= 0) return ''
+
+  const reader = response.body.getReader()
+  const chunks: Uint8Array[] = []
+  let totalBytes = 0
+
+  try {
+    while (totalBytes < maxBytes) {
+      const { value, done } = await reader.read()
+      if (done) break
+      if (!value || value.byteLength === 0) continue
+
+      const remaining = maxBytes - totalBytes
+      const bounded = value.byteLength > remaining ? value.subarray(0, remaining) : value
+      chunks.push(bounded)
+      totalBytes += bounded.byteLength
+
+      if (value.byteLength > remaining || totalBytes === maxBytes) {
+        try {
+          await reader.cancel('webhook response body limit reached')
+        } catch {
+          // Cancellation is best-effort; the bounded bytes are already isolated.
+        }
+        break
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const body = new Uint8Array(totalBytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(body)
+}
 
 /**
  * Generate a standard webhook payload envelope.
@@ -146,11 +195,17 @@ export async function sendWebhookDelivery(
     delivery.org_id
   )
   if (!endpoint) {
-    return { success: false, error: `Endpoint ${delivery.webhook_id} not found` }
+    return {
+      success: false,
+      error: `Endpoint ${delivery.webhook_id} not found`
+    }
   }
 
   if (endpoint.status !== 'active') {
-    return { success: false, error: `Endpoint ${endpoint.id} is ${endpoint.status}` }
+    return {
+      success: false,
+      error: `Endpoint ${endpoint.id} is ${endpoint.status}`
+    }
   }
 
   const currentAttempt = delivery.attempts + 1
@@ -180,7 +235,7 @@ export async function sendWebhookDelivery(
 
     clearTimeout(timeout)
     resStatus = res.status
-    resBody = (await res.text()).slice(0, 1000) // Truncate response
+    resBody = await readBoundedResponseBody(res)
     isSuccess = res.ok
     if (!res.ok) {
       errorMsg = `HTTP ${res.status}: ${resBody.slice(0, 200)}`
@@ -261,7 +316,11 @@ export async function sendWebhookDelivery(
     endpoint.id
   )
 
-  return { success: false, status: resStatus ?? undefined, error: errorMsg ?? undefined }
+  return {
+    success: false,
+    status: resStatus ?? undefined,
+    error: errorMsg ?? undefined
+  }
 }
 
 /**
@@ -320,10 +379,13 @@ export async function triggerWebhookEvent<T = unknown>(
 export async function drainWebhookDeliveries(env: Env, limit = 25): Promise<number> {
   const deliveries = await all<WebhookDeliveryRow>(
     env,
-    `SELECT id FROM webhook_deliveries
-      WHERE status = 'pending'
-        AND (next_retry_at IS NULL OR next_retry_at <= datetime('now'))
-      ORDER BY created_at ASC
+    `SELECT d.id FROM webhook_deliveries d
+      INNER JOIN webhook_endpoints e
+        ON e.id = d.webhook_id AND e.org_id = d.org_id
+      WHERE d.status = 'pending'
+        AND e.status = 'active'
+        AND (d.next_retry_at IS NULL OR datetime(d.next_retry_at) <= datetime('now'))
+      ORDER BY d.created_at ASC
       LIMIT ?`,
     limit
   )
@@ -352,7 +414,8 @@ export async function replayWebhookDelivery(
 ): Promise<boolean> {
   const delivery = await first<WebhookDeliveryRow>(
     env,
-    `SELECT * FROM webhook_deliveries WHERE id = ? AND org_id = ?`,
+    `SELECT * FROM webhook_deliveries
+      WHERE id = ? AND org_id = ? AND status IN ('failed', 'dead_letter')`,
     deliveryId,
     orgId
   )

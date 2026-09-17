@@ -68,7 +68,7 @@ jobs:
             server-tests) ./node_modules/.bin/vitest run --config vitest.config.server.ts --coverage.enabled=false ;;
             frontend-tests) npm --workspace apps/web run test -- --run ;;
             scraper-tests) npm run test:scrapers:unit && npm run test:browser-runtime ;;
-            policy-tests) node --test scripts/__tests__/dependency-evidence.test.mjs scripts/__tests__/check-format.test.mjs scripts/__tests__/staging-deploy-cron.test.mjs && python3 -m unittest discover -s scripts/dependencies -p 'test_ruleset_plan.py' ;;
+            policy-tests) node --test scripts/__tests__/dependency-evidence.test.mjs scripts/__tests__/check-format.test.mjs scripts/__tests__/staging-deploy-cron.test.mjs && node --import tsx --test scripts/__tests__/webhook-delivery-safety.test.mjs && python3 -m unittest discover -s scripts/dependencies -p 'test_ruleset_plan.py' ;;
             build) npm run build:render ;;
             *) exit 1 ;;
           esac
