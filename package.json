@@ -163,6 +163,8 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/compression": "1.8.1",
+    "@types/cors": "2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.2",
     "@types/pg": "^8.16.0",
