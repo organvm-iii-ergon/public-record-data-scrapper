@@ -4,7 +4,14 @@ name: CI Gate
 
 on:
   pull_request:
-    branches: [main, master, develop]
+    branches:
+      - main
+      - master
+      - develop
+      - lane/verify
+      - lane/heal
+      - lane/expand-public-records
+      - lane/evolve-platform
   push:
     branches: [main]
   workflow_dispatch:
@@ -25,16 +32,15 @@ jobs:
       fail-fast: false
       matrix:
         check:
-          [
-            format,
-            lint,
-            typecheck,
-            server-tests,
-            frontend-tests,
-            scraper-tests,
-            policy-tests,
-            build
-          ]
+          - format
+          - lint
+          - typecheck
+          - server-typecheck
+          - server-tests
+          - frontend-tests
+          - scraper-tests
+          - policy-tests
+          - build
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -65,10 +71,11 @@ jobs:
             format) node scripts/check-format.mjs "$REVIEW_BASE" ;;
             lint) npm run lint ;;
             typecheck) npm run typecheck ;;
+            server-typecheck) npm run typecheck:server ;;
             server-tests) ./node_modules/.bin/vitest run --config vitest.config.server.ts --coverage.enabled=false ;;
             frontend-tests) npm --workspace apps/web run test -- --run ;;
             scraper-tests) npm run test:scrapers:unit && npm run test:browser-runtime ;;
-            policy-tests) node --test scripts/__tests__/dependency-evidence.test.mjs scripts/__tests__/check-format.test.mjs scripts/__tests__/staging-deploy-cron.test.mjs && python3 -m unittest discover -s scripts/dependencies -p 'test_ruleset_plan.py' ;;
+            policy-tests) node scripts/check-migration-versions.mjs && python3 scripts/test_agent_receipt.py && node --test scripts/__tests__/dependency-evidence.test.mjs scripts/__tests__/check-format.test.mjs scripts/__tests__/staging-deploy-cron.test.mjs scripts/__tests__/verification-workflows.test.mjs scripts/__tests__/check-migration-versions.test.mjs && python3 -m unittest discover -s scripts/dependencies -p 'test_ruleset_plan.py' ;;
             build) npm run build:render ;;
             *) exit 1 ;;
           esac
@@ -128,6 +135,7 @@ jobs:
         run: |
           python3 scripts/test_provision_cloudflare_staging.py
           python3 scripts/test_verify_cloudflare_live.py
+          python3 scripts/test_classify_cloudflare_staging_provisioning.py
       - name: Typecheck Cloudflare
         working-directory: cloudflare
         run: npm run typecheck
@@ -135,9 +143,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: git diff --exit-code -- cloudflare/package.json cloudflare/package-lock.json
 
+  backend-integration:
+    uses: ./.github/workflows/backend-tests.yml
+
   gate:
     if: ${{ always() }}
-    needs: [compatibility, edge-typecheck]
+    needs: [compatibility, edge-typecheck, backend-integration]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -145,6 +156,20 @@ jobs:
         env:
           COMPATIBILITY: ${{ needs.compatibility.result }}
           EDGE_TYPECHECK: ${{ needs.edge-typecheck.result }}
+          BACKEND_INTEGRATION: ${{ needs.backend-integration.result }}
         run: |
           test "$COMPATIBILITY" = success
           test "$EDGE_TYPECHECK" = success
+          test "$BACKEND_INTEGRATION" = success
+
+  pr-gate:
+    name: pr-gate
+    if: ${{ always() }}
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the compatibility gate
+        env:
+          GATE: ${{ needs.gate.result }}
+        run: test "$GATE" = success

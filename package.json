@@ -64,7 +64,8 @@
     "video:help": "bash scripts/video-production/generate-videos.sh --help",
     "prepare": "husky",
     "share": "lt --port 5000",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:server": "tsc --project server/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@github/spark": "^0.44.5",

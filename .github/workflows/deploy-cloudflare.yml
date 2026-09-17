@@ -27,7 +27,7 @@ on:
       - 'scripts/*cloudflare*'
       - '.github/workflows/deploy-cloudflare.yml'
   pull_request:
-    branches: [main]
+    branches: [main, lane/verify, lane/heal, lane/expand-public-records, lane/evolve-platform]
     paths:
       - 'cloudflare/**'
       - 'scripts/*cloudflare*'
@@ -65,6 +65,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify source without credentials
         run: |
+          node scripts/check-migration-versions.mjs
           node scripts/verify-cloudflare-toolchain.mjs
           node scripts/test-cloudflare-runtime.mjs
           python3 scripts/test_diagnose_cloudflare.py
@@ -120,23 +121,27 @@ jobs:
         id: provision_result
         run: python3 scripts/classify-cloudflare-staging-provisioning.py
       - name: Validate the generated staging configuration
+        id: configuration
         if: steps.provision_result.outputs.provisioning_ready == 'true'
         run: |
           python3 scripts/verify-cloudflare-live.py --configuration-only
           cd cloudflare
           ./node_modules/.bin/wrangler deploy --config .generated/staging.wrangler.json --dry-run --outdir .generated/bundle
       - name: Apply and verify D1 migrations
+        id: migrations
         if: steps.provision_result.outputs.provisioning_ready == 'true'
         working-directory: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           ./node_modules/.bin/wrangler d1 migrations apply DB --config .generated/staging.wrangler.json --remote
-          ./node_modules/.bin/wrangler d1 execute DB --config .generated/staging.wrangler.json --remote --command "SELECT name FROM sqlite_master WHERE name IN ('organizations', 'prospects', 'jobs', 'prospects_fts') ORDER BY name" --json > .generated/staging-schema.json
+          ./node_modules/.bin/wrangler d1 execute DB --config .generated/staging.wrangler.json --remote --command "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name; SELECT name FROM d1_migrations ORDER BY name" --json > .generated/staging-schema.json
       - name: Require the complete migrated schema
+        id: schema
         if: steps.provision_result.outputs.provisioning_ready == 'true'
         run: python3 scripts/verify-cloudflare-live.py --schema-only
       - name: Deploy the accepted Worker revision
+        id: deploy
         if: steps.provision_result.outputs.provisioning_ready == 'true'
         working-directory: cloudflare
         env:
@@ -146,6 +151,7 @@ jobs:
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
           ./node_modules/.bin/wrangler deploy --config .generated/staging.wrangler.json
       - name: Verify live staging identity and authentication boundary
+        id: live
         if: steps.provision_result.outputs.provisioning_ready == 'true'
         run: python3 scripts/verify-cloudflare-live.py
       - name: Preserve provisioning and deployment evidence
@@ -161,8 +167,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      - name: Require complete staging deployment acceptance
+        if: ${{ always() }}
+        env:
+          PROVISION_EXIT: ${{ steps.provision_staging.outputs.exit_status }}
+          PROVISION_READY: ${{ steps.provision_result.outputs.provisioning_ready }}
+          CONFIGURATION: ${{ steps.configuration.outcome }}
+          MIGRATIONS: ${{ steps.migrations.outcome }}
+          SCHEMA: ${{ steps.schema.outcome }}
+          DEPLOY: ${{ steps.deploy.outcome }}
+          LIVE: ${{ steps.live.outcome }}
+        run: |
+          test "$PROVISION_EXIT" = 0
+          test "$PROVISION_READY" = true
+          for result in "$CONFIGURATION" "$MIGRATIONS" "$SCHEMA" "$DEPLOY" "$LIVE"; do
+            test "$result" = success || exit 1
+          done
+
   # --- PRODUCTION: manual, gated on confirm == DEPLOY -----------------------
   deploy-production:
+    needs: verify-staging
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
     environment: production

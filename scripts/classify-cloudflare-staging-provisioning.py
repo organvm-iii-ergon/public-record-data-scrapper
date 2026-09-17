@@ -53,7 +53,7 @@ def classify_report(report: dict[str, Any]) -> tuple[int, bool, str]:
         if error_codes:
             summary += f" with provider codes {error_codes}"
         summary += ". The sanitized provisioning receipt was preserved and remote mutation was skipped."
-        return 0, False, summary
+        return 1, False, summary
 
     return 1, False, json.dumps(report, indent=2, sort_keys=True)
 
@@ -79,7 +79,7 @@ def main() -> int:
 
     if exit_status != 0:
         print(summary)
-        raise SystemExit("staging provisioning failed for a source/configuration reason")
+        raise SystemExit("staging provisioning did not complete")
 
     return 0
 

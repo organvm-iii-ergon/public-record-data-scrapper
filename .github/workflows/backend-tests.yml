@@ -1,15 +1,24 @@
 name: Backend Tests
 
 on:
+  workflow_call:
   push:
     branches: ['**']
   pull_request:
-    branches: ['main', 'master', 'develop']
+    branches:
+      - main
+      - master
+      - develop
+      - lane/verify
+      - lane/heal
+      - lane/expand-public-records
+      - lane/evolve-platform
 
 jobs:
   test:
     name: Backend Unit & Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:15
@@ -51,18 +60,18 @@ jobs:
         with:
           node-version: '24.19.0'
 
+      - name: Use the canonical npm version
+        run: npm install --global npm@11.9.0 --ignore-scripts --no-audit --no-fund
+
       - name: Install dependencies
         # BullMQ and ioredis are already declared in the committed workspace lock.
         run: npm ci --ignore-scripts
 
       - name: Run database migrations
-        run: npm run migrate || echo "::warning::Migration step failed"
+        run: npm run migrate
 
-      - name: Run server tests
-        run: npm run test:server || echo "::warning::Server tests failed"
-
-      - name: Generate coverage report
-        run: npm run test:server:coverage || echo "::warning::Coverage generation failed"
+      - name: Run isolated server tests and enforce coverage
+        run: npm run test:server:strict -- --run --coverage
 
       - name: Upload coverage to Codecov
         # TODO: SHA-pin this action (could not resolve offline). Pin codecov/codecov-action to a full release SHA.
@@ -72,11 +81,6 @@ jobs:
           flags: backend
           name: backend-coverage
         continue-on-error: true
-
-      - name: Check coverage thresholds
-        run: |
-          echo "Checking coverage thresholds (80% lines, functions, statements; 75% branches)"
-          npm run test:server:coverage -- --reporter=json || echo "::warning::Coverage thresholds not met"
 
       - name: Comment PR with coverage
         if: github.event_name == 'pull_request'

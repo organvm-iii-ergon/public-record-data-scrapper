@@ -43,7 +43,9 @@ export default defineConfig({
         : undefined
     },
     pool: 'forks',
-    singleFork: true,
+    // Database cleanup truncates shared tables: never overlap test files.
+    fileParallelism: false,
+    maxWorkers: 1,
     testTimeout: 10000,
     hookTimeout: 10000
   },

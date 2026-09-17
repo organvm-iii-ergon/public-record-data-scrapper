@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import sqlite3
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -14,7 +15,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "cloudflare" / ".generated"
 MAX_BYTES = 65_536
-SCHEMA = {"organizations", "prospects", "jobs", "prospects_fts"}
+MIGRATIONS = ROOT / "cloudflare" / "migrations"
 
 
 class VerificationError(Exception):
@@ -73,19 +74,60 @@ def validate_configuration(config, provision, expected_sha):
     return origin
 
 
-def validate_schema(payload):
-    if not isinstance(payload, list) or len(payload) != 1:
+def expected_schema(migrations_dir=MIGRATIONS):
+    """Execute every checked-in migration; include tables, indexes and triggers."""
+    files = sorted(migrations_dir.glob("*.sql"))
+    versions = set()
+    if not files:
+        raise VerificationError("missing_migrations")
+    with sqlite3.connect(":memory:") as connection:
+        connection.row_factory = sqlite3.Row
+        for path in files:
+            match = re.fullmatch(r"(\d+)_.+\.sql", path.name)
+            if not match or int(match[1]) in versions:
+                raise VerificationError("invalid_or_duplicate_migration_version")
+            versions.add(int(match[1]))
+            connection.executescript(path.read_text())
+        rows = [dict(row) for row in connection.execute(
+            "SELECT type, name, tbl_name, sql FROM sqlite_master "
+            "WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"
+        )]
+    return rows, [path.name for path in files]
+
+
+def sql_tokens(sql):
+    """Wrangler removes SQL comments; preserve quoted values while ignoring them."""
+    if sql is None:
+        return None
+    pattern = r"'(?:(?:'')|[^'])*'|\"(?:(?:\"\")|[^\"])*\"|`[^`]*`|\[[^\]]*\]|--[^\n]*|/\*.*?\*/|\w+|[^\s]"
+    return [token for token in re.findall(pattern, sql, flags=re.DOTALL)
+            if not token.startswith(("--", "/*"))]
+
+
+def validate_schema(payload, migrations_dir=MIGRATIONS):
+    if not isinstance(payload, list) or len(payload) != 2:
         raise VerificationError("invalid_schema_receipt")
-    result = payload[0]
-    if not isinstance(result, dict) or result.get("success") is not True:
-        raise VerificationError("schema_query_failed")
-    rows = result.get("results")
-    if not isinstance(rows, list) or len(rows) != len(SCHEMA):
-        raise VerificationError("schema_incomplete")
-    if any(not isinstance(row, dict) or set(row) != {"name"} for row in rows):
+    for result in payload:
+        if not isinstance(result, dict) or result.get("success") is not True:
+            raise VerificationError("schema_query_failed")
+        if not isinstance(result.get("results"), list):
+            raise VerificationError("invalid_schema_rows")
+    expected, migrations = expected_schema(migrations_dir)
+    rows, history = (result["results"] for result in payload)
+    if any(not isinstance(row, dict) or set(row) != {"type", "name", "tbl_name", "sql"}
+           or any(not isinstance(row[key], str) for key in ("type", "name", "tbl_name"))
+           or (row["sql"] is not None and not isinstance(row["sql"], str)) for row in rows):
         raise VerificationError("invalid_schema_rows")
-    if {row["name"] for row in rows} != SCHEMA:
-        raise VerificationError("schema_incomplete")
+    actual = {(row["type"], row["name"]): row for row in rows}
+    if len(actual) != len(rows):
+        raise VerificationError("duplicate_schema_rows")
+    for row in expected:
+        found = actual.get((row["type"], row["name"]))
+        if found is None or found["tbl_name"] != row["tbl_name"] or sql_tokens(found["sql"]) != sql_tokens(row["sql"]):
+            raise VerificationError("schema_incomplete_or_changed")
+    if (any(not isinstance(row, dict) or set(row) != {"name"} for row in history)
+            or sorted(row["name"] for row in history) != sorted(migrations)):
+        raise VerificationError("migration_history_mismatch")
 
 
 def fetch(origin, path, forged=False):
