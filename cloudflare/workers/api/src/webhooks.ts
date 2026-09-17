@@ -18,6 +18,7 @@ export const MAX_RETRY_ATTEMPTS = 5
 export const CIRCUIT_BREAKER_THRESHOLD = 10
 export const SIGNATURE_TOLERANCE_SECONDS = 300 // 5 minutes
 export const MAX_RESPONSE_BODY_BYTES = 1000
+export const DELIVERY_LEASE_SECONDS = 300
 
 /**
  * Read at most `maxBytes` from a webhook response and cancel the remainder.
@@ -263,7 +264,8 @@ export async function sendWebhookDelivery(
               response_body = ?,
               delivered_at = datetime('now'),
               error_message = NULL,
-              next_retry_at = NULL
+              next_retry_at = NULL,
+              claimed_at = NULL
         WHERE id = ?`,
       currentAttempt,
       resStatus,
@@ -297,7 +299,8 @@ export async function sendWebhookDelivery(
             response_status = ?,
             response_body = ?,
             error_message = ?,
-            next_retry_at = ?
+            next_retry_at = ?,
+            claimed_at = NULL
       WHERE id = ?`,
     nextStatus,
     currentAttempt,
@@ -386,6 +389,18 @@ export async function triggerWebhookEvent<T = unknown>(
  * Drain pending webhook deliveries whose retry window is ready.
  */
 export async function drainWebhookDeliveries(env: Env, limit = 25): Promise<number> {
+  // Make abandoned claims eligible again before selecting due work. The
+  // claimed_at lease survives isolate termination, unlike a finally block.
+  await run(
+    env,
+    `UPDATE webhook_deliveries
+        SET status = 'pending', claimed_at = NULL
+      WHERE status = 'delivering'
+        AND claimed_at IS NOT NULL
+        AND datetime(claimed_at) <= datetime('now', ?)`,
+    `-${DELIVERY_LEASE_SECONDS} seconds`
+  )
+
   const deliveries = await all<WebhookDeliveryRow>(
     env,
     `SELECT d.id FROM webhook_deliveries d
@@ -405,7 +420,7 @@ export async function drainWebhookDeliveries(env: Env, limit = 25): Promise<numb
       const claim = await run(
         env,
         `UPDATE webhook_deliveries
-            SET status = 'delivering'
+            SET status = 'delivering', claimed_at = datetime('now')
           WHERE id = ?
             AND status = 'pending'
             AND (next_retry_at IS NULL OR datetime(next_retry_at) <= datetime('now'))
@@ -428,7 +443,7 @@ export async function drainWebhookDeliveries(env: Env, limit = 25): Promise<numb
         await run(
           env,
           `UPDATE webhook_deliveries
-              SET status = 'pending'
+              SET status = 'pending', claimed_at = NULL
             WHERE id = ? AND status = 'delivering'`,
           d.id
         )
@@ -466,7 +481,8 @@ export async function replayWebhookDelivery(
         SET status = 'pending',
             attempts = 0,
             error_message = NULL,
-            next_retry_at = NULL
+            next_retry_at = NULL,
+            claimed_at = NULL
       WHERE id = ? AND org_id = ?`,
     deliveryId,
     orgId

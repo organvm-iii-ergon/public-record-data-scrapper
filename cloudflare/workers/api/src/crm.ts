@@ -12,6 +12,12 @@
 import { first, run } from './db'
 import type { CrmIntegrationRow, CrmProvider, CrmPushResult, Env } from './types'
 
+export const CRM_REQUEST_TIMEOUT_MS = 10_000
+
+function crmRequestSignal(): AbortSignal {
+  return AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS)
+}
+
 export interface ProspectPayload {
   id: string
   company_name: string | null
@@ -49,6 +55,7 @@ export class HubSpotAdapter implements CrmAdapter {
     try {
       const res = await fetch(`${this.baseUrl}/crm/v3/objects/companies?limit=1`, {
         method: 'GET',
+        signal: crmRequestSignal(),
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
@@ -104,6 +111,7 @@ export class HubSpotAdapter implements CrmAdapter {
     try {
       const res = await fetch(`${this.baseUrl}/crm/v3/objects/companies`, {
         method: 'POST',
+        signal: crmRequestSignal(),
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
@@ -160,6 +168,7 @@ export class SalesforceAdapter implements CrmAdapter {
     try {
       const res = await fetch(`${instanceUrl}/services/data/v58.0/sobjects/Lead`, {
         method: 'POST',
+        signal: crmRequestSignal(),
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
@@ -213,6 +222,7 @@ export class GoHighLevelAdapter implements CrmAdapter {
     try {
       const res = await fetch(`${this.baseUrl}/contacts/`, {
         method: 'POST',
+        signal: crmRequestSignal(),
         headers: {
           Authorization: `Bearer ${apiKey}`,
           Version: '2021-07-28',

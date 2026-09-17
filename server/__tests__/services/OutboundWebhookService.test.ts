@@ -164,6 +164,7 @@ describe('deliverWebhook', () => {
 
     expect(result.success).toBe(true)
     const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(call[1].redirect).toBe('manual')
     const headers = call[1].headers as Record<string, string>
     expect(headers['X-Webhook-Signature']).toMatch(/^sha256=[0-9a-f]{64}$/)
     expect(headers['X-Webhook-Id']).toBe(payload.id)

@@ -33,6 +33,31 @@ CREATE INDEX idx_webhook_deliveries_status ON webhook_deliveries(status, next_re
 
 CREATE INDEX idx_webhook_subscriptions_org ON webhook_subscriptions(org_id);
 
+-- Enforce tenant isolation at the database boundary. Delivery ownership is
+-- derived from its subscription so callers cannot bypass the org predicate.
+ALTER TABLE webhook_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhook_deliveries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY webhook_subscriptions_tenant_isolation ON webhook_subscriptions
+  USING (org_id = app_current_org_id())
+  WITH CHECK (org_id = app_current_org_id());
+
+CREATE POLICY webhook_deliveries_tenant_isolation ON webhook_deliveries
+  USING (
+    EXISTS (
+      SELECT 1 FROM webhook_subscriptions subscription
+      WHERE subscription.id = webhook_deliveries.subscription_id
+        AND subscription.org_id = app_current_org_id()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM webhook_subscriptions subscription
+      WHERE subscription.id = webhook_deliveries.subscription_id
+        AND subscription.org_id = app_current_org_id()
+    )
+  );
+
 -- Auto-update updated_at on webhook_subscriptions
 CREATE OR REPLACE FUNCTION set_webhook_subscriptions_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$

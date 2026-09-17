@@ -77,23 +77,26 @@ test('pending drain excludes paused endpoints and normalizes ISO retry timestamp
   const { env, calls } = createEnv()
 
   assert.equal(await drainWebhookDeliveries(env, 17), 0)
-  assert.equal(calls.length, 1)
-  assert.match(calls[0].sql, /INNER JOIN webhook_endpoints e/)
-  assert.match(calls[0].sql, /e\.status = 'active'/)
-  assert.match(calls[0].sql, /datetime\(d\.next_retry_at\) <= datetime\('now'\)/)
-  assert.deepEqual(calls[0].params, [17])
+  assert.equal(calls.length, 2)
+  assert.match(calls[0].sql, /status = 'delivering'/)
+  assert.match(calls[0].sql, /claimed_at IS NOT NULL/)
+  assert.deepEqual(calls[0].params, ['-300 seconds'])
+  assert.match(calls[1].sql, /INNER JOIN webhook_endpoints e/)
+  assert.match(calls[1].sql, /e\.status = 'active'/)
+  assert.match(calls[1].sql, /datetime\(d\.next_retry_at\) <= datetime\('now'\)/)
+  assert.deepEqual(calls[1].params, [17])
 })
 
 test('pending drain atomically claims a delivery before sending it', async () => {
   const { env, calls } = createEnv({ allResults: [{ id: 'delivery-1' }], runChanges: 0 })
 
   assert.equal(await drainWebhookDeliveries(env, 1), 0)
-  assert.equal(calls.length, 2)
-  assert.equal(calls[1].operation, 'run')
-  assert.match(calls[1].sql, /SET status = 'delivering'/)
-  assert.match(calls[1].sql, /AND status = 'pending'/)
-  assert.match(calls[1].sql, /e\.status = 'active'/)
-  assert.deepEqual(calls[1].params, ['delivery-1'])
+  assert.equal(calls.length, 3)
+  assert.equal(calls[2].operation, 'run')
+  assert.match(calls[2].sql, /SET status = 'delivering', claimed_at = datetime\('now'\)/)
+  assert.match(calls[2].sql, /AND status = 'pending'/)
+  assert.match(calls[2].sql, /e\.status = 'active'/)
+  assert.deepEqual(calls[2].params, ['delivery-1'])
 })
 
 test('manual replay selects only failed or dead-letter deliveries', async () => {
@@ -169,6 +172,49 @@ test('job drain uses recoverable leases and tenant-scoped webhook lookup', () =>
   )
   assert.match(webhookSource, /\(\? IS NULL OR org_id = \?\)/)
   assert.match(webhookSource, /status IN \('pending', 'delivering'\)/)
+  assert.match(webhookSource, /status = 'pending', claimed_at = NULL/)
+  assert.match(webhookSource, /claimed_at = datetime\('now'\)/)
+
+  const leaseMigration = readFileSync(
+    new URL('../../cloudflare/migrations/0005_webhook_delivery_claim_lease.sql', import.meta.url),
+    'utf8'
+  )
+  assert.match(leaseMigration, /ADD COLUMN claimed_at TEXT/)
+})
+
+test('outbound integrations have durable retries, timeouts, and tenant RLS', () => {
+  const workerSource = readFileSync(
+    new URL('../../server/queue/workers/webhookDeliveryWorker.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(workerSource, /attempts: MAX_DELIVERY_ATTEMPTS/)
+  assert.match(workerSource, /backoff: \{ type: 'exponential', delay: 30_000 \}/)
+  assert.doesNotMatch(workerSource, /getWebhookDeliveryQueue\(\)\.add\([\s\S]*nextAttempt/)
+
+  const crmSource = readFileSync(
+    new URL('../../cloudflare/workers/api/src/crm.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(crmSource, /CRM_REQUEST_TIMEOUT_MS = 10_000/)
+  assert.equal((crmSource.match(/signal: crmRequestSignal\(\)/g) ?? []).length, 4)
+
+  const rlsMigration = readFileSync(
+    new URL('../../database/migrations/20260915_webhook_subscriptions.sql', import.meta.url),
+    'utf8'
+  )
+  assert.match(rlsMigration, /ALTER TABLE webhook_subscriptions ENABLE ROW LEVEL SECURITY/)
+  assert.match(rlsMigration, /CREATE POLICY webhook_deliveries_tenant_isolation/)
+  assert.match(rlsMigration, /subscription\.org_id = app_current_org_id\(\)/)
+
+  const openApiSource = readFileSync(
+    new URL('../../cloudflare/workers/api/src/routes/openapi.ts', import.meta.url),
+    'utf8'
+  )
+  assert.equal(
+    (openApiSource.match(/'503': \{ description: 'Enrichment worker unavailable' \}/g) ?? [])
+      .length,
+    2
+  )
 })
 
 test('subscription management avoids raw JSON parsing and duplicate prefixes', () => {

@@ -5,7 +5,7 @@
  * represents a single delivery attempt for a webhook_deliveries record.
  *
  * Retry lifecycle:
- *   - On failure the job is re-queued with exponential backoff delay.
+ *   - On failure BullMQ retries the same durable job with exponential backoff.
  *   - After MAX_DELIVERY_ATTEMPTS the delivery is marked dead in the DB and
  *     a failure notification is emitted (logged; email hook is a no-op stub
  *     unless a notification service is injected).
@@ -16,8 +16,7 @@ import { redisConnection } from '../connection'
 import { database } from '../../database/connection'
 import {
   OutboundWebhookService,
-  MAX_DELIVERY_ATTEMPTS,
-  retryDelayMs
+  MAX_DELIVERY_ATTEMPTS
 } from '../../services/OutboundWebhookService'
 
 // ---------------------------------------------------------------------------
@@ -52,9 +51,11 @@ export function getWebhookDeliveryQueue(): Queue<WebhookDeliveryJobData> {
     webhookDeliveryQueue = new Queue<WebhookDeliveryJobData>('webhook-delivery', {
       connection: client,
       defaultJobOptions: {
-        // BullMQ retries are NOT used for the DLQ lifecycle — we manage it
-        // explicitly in the processor and re-enqueue with our own delays.
-        attempts: 1,
+        // BullMQ owns retry persistence. A failed attempt throws below, so a
+        // worker exit or Redis interruption cannot strand a database row
+        // between a committed failure and a separate enqueue operation.
+        attempts: MAX_DELIVERY_ATTEMPTS,
+        backoff: { type: 'exponential', delay: 30_000 },
         removeOnComplete: { count: 500, age: 7 * 24 * 60 * 60 },
         removeOnFail: { count: 500, age: 30 * 24 * 60 * 60 }
       }
@@ -94,20 +95,11 @@ export async function processWebhookDeliveryJob(
 
   // Delivery failed. Determine whether to re-queue or promote to dead.
   const nextAttempt = attemptsMade + 1 // attempts already made → next attempt number
-  const delayMs = retryDelayMs(nextAttempt)
-
-  if (delayMs === null) {
+  if (nextAttempt >= MAX_DELIVERY_ATTEMPTS) {
     // No more retries — record is already marked dead by OutboundWebhookService.deliver().
     await notifyDeadDelivery(deliveryId, event)
     return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'dead' }
   }
-
-  // Re-enqueue with the computed delay.
-  await getWebhookDeliveryQueue().add(
-    'deliver',
-    { deliveryId, event, attemptsMade: nextAttempt },
-    { delay: delayMs }
-  )
 
   return { deliveryId, success: false, responseStatus: result.responseStatus, newStatus: 'failed' }
 }
@@ -121,7 +113,16 @@ export function createWebhookDeliveryWorker() {
 
   const worker = new Worker<WebhookDeliveryJobData, WebhookDeliveryJobResult>(
     'webhook-delivery',
-    (job: Job<WebhookDeliveryJobData>) => processWebhookDeliveryJob(job.data),
+    async (job: Job<WebhookDeliveryJobData>) => {
+      const result = await processWebhookDeliveryJob({
+        ...job.data,
+        attemptsMade: job.attemptsMade
+      })
+      if (result.newStatus === 'failed') {
+        throw new Error(`Webhook delivery ${result.deliveryId} failed; BullMQ will retry`)
+      }
+      return result
+    },
     {
       connection: client,
       concurrency: 10,

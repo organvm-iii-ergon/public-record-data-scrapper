@@ -30,6 +30,8 @@ export interface LiveReceipt {
   recordsValidated: number
   validationErrors: string[]
   durationMs: number
+  /** Exact payload whose digest is recorded below. */
+  payload: unknown
   payloadSha256: string
   isMockData: boolean
   errorMessage?: string
@@ -126,6 +128,8 @@ export function evaluateRun(
   // 6. Cryptographic Integrity
   if (!receipt.payloadSha256 || !/^[a-f0-9]{64}$/i.test(receipt.payloadSha256)) {
     failureReasons.push('Invalid or missing payload SHA-256 digest')
+  } else if (computePayloadDigest(receipt.payload) !== receipt.payloadSha256.toLowerCase()) {
+    failureReasons.push('Payload SHA-256 digest does not match the captured payload')
   }
 
   return {
@@ -149,7 +153,12 @@ export function evaluateStreak(
   const history: GreenRunEvaluation[] = []
 
   // Sort receipts chronologically
-  const sorted = [...receipts].sort(
+  // Overlapping discovery paths can yield the same receipt more than once.
+  // Count each stable receipt identity once so duplicates cannot manufacture a streak.
+  const uniqueReceipts = [
+    ...new Map(receipts.map((receipt) => [receipt.receiptId, receipt])).values()
+  ]
+  const sorted = uniqueReceipts.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   )
 

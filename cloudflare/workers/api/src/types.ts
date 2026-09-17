@@ -165,6 +165,7 @@ export interface WebhookDeliveryRow {
   attempts: number
   max_attempts: number
   next_retry_at: string | null
+  claimed_at: string | null
   response_status: number | null
   response_body: string | null
   error_message: string | null

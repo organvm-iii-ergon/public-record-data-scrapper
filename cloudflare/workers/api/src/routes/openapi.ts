@@ -162,8 +162,8 @@ export const openApiSpec = {
           }
         },
         responses: {
-          '202': { description: 'Enrichment job enqueued' },
-          '404': { description: 'Prospect not found' }
+          '404': { description: 'Prospect not found' },
+          '503': { description: 'Enrichment worker unavailable' }
         }
       }
     },
@@ -190,8 +190,8 @@ export const openApiSpec = {
           }
         },
         responses: {
-          '202': { description: 'Batch job enqueued' },
-          '403': { description: 'Tier upgrade required' }
+          '403': { description: 'Tier upgrade required' },
+          '503': { description: 'Enrichment worker unavailable' }
         }
       }
     },

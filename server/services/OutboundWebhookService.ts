@@ -234,6 +234,10 @@ export async function deliverWebhook(
   try {
     const response = await fetch(url, {
       method: 'POST',
+      // Never forward signed tenant payloads or credentials to a redirect target.
+      // The destination was validated above; any redirect must be rejected and
+      // reconfigured explicitly by the subscriber.
+      redirect: 'manual',
       headers: {
         'Content-Type': 'application/json',
         'X-Webhook-Signature': signature,
