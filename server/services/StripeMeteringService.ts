@@ -8,6 +8,7 @@
  */
 
 import { database } from '../database/connection'
+import { createHash } from 'node:crypto'
 import { isStripeConfigured, recordStripeMeterEvent } from '../integrations/stripe'
 import {
   calculateUsageBilling,
@@ -164,7 +165,6 @@ export class StripeMeteringService {
    */
   async reportUsageToStripe(options: {
     orgId: string
-    quantity?: number
     timestamp?: Date
   }): Promise<ReportUsageResult> {
     const { orgId } = options
@@ -190,17 +190,20 @@ export class StripeMeteringService {
     const tier = normalizeBillingTier(orgRows[0].subscription_tier)
     const tierConfig = getBillingTierConfig(tier)
 
-    // Calculate unreported quantity if not explicitly supplied
-    let quantityToReport = options.quantity
-    if (quantityToReport === undefined) {
-      const unreportedRows = await database.query<{ count: string | number }>(
-        `SELECT COALESCE(SUM(request_count), 0) AS count
-           FROM api_usage_events
-          WHERE org_id = $1 AND reported_to_stripe = false`,
-        [orgId]
-      )
-      quantityToReport = Number(unreportedRows[0]?.count ?? 0)
-    }
+    // Snapshot the exact durable events represented by this meter event. Events
+    // arriving later remain pending, and callers cannot supply a billable amount.
+    const unreportedRows = await database.query<{
+      count: string | number
+      event_ids: string[] | null
+    }>(
+      `SELECT COALESCE(SUM(request_count), 0) AS count,
+              ARRAY_AGG(id::text ORDER BY created_at, id) AS event_ids
+         FROM api_usage_events
+        WHERE org_id = $1 AND reported_to_stripe = false`,
+      [orgId]
+    )
+    const quantityToReport = Number(unreportedRows[0]?.count ?? 0)
+    const eventIds = unreportedRows[0]?.event_ids ?? []
 
     if (quantityToReport <= 0) {
       return { orgId, quantity: 0, reportedToStripe: true }
@@ -227,7 +230,10 @@ export class StripeMeteringService {
         customerId,
         value: quantityToReport,
         timestamp,
-        identifier: `meter_${orgId}_${Date.now()}`
+        identifier: `meter_${createHash('sha256')
+          .update(`${orgId}:${eventIds.join(',')}`)
+          .digest('hex')
+          .slice(0, 32)}`
       })
       eventId = meterEvent.identifier
     } catch (err) {
@@ -250,8 +256,10 @@ export class StripeMeteringService {
          SET reported_to_stripe = true,
              stripe_event_id = $2,
              reported_at = $3
-       WHERE org_id = $1 AND reported_to_stripe = false`,
-      [orgId, eventId, timestamp.toISOString()]
+       WHERE org_id = $1
+         AND id = ANY($4::uuid[])
+         AND reported_to_stripe = false`,
+      [orgId, eventId, timestamp.toISOString(), eventIds]
     )
 
     // 4. Update aggregated meter records table
@@ -319,8 +327,7 @@ export class StripeMeteringService {
     for (const row of rows) {
       try {
         const result = await this.reportUsageToStripe({
-          orgId: row.org_id,
-          quantity: Number(row.pending_count)
+          orgId: row.org_id
         })
         if (result.reportedToStripe) {
           totalEventsReported += result.quantity

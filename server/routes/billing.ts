@@ -382,9 +382,9 @@ router.post(
   authMiddleware,
   requireRole('admin'),
   asyncHandler(async (req: Request, res: Response) => {
-    let parsedBody: { orgId?: string; quantity?: number } = {}
+    let parsedBody: { orgId?: string } = {}
     try {
-      parsedBody = (parseRawJsonBody(req) ?? {}) as { orgId?: string; quantity?: number }
+      parsedBody = (parseRawJsonBody(req) ?? {}) as { orgId?: string }
     } catch {
       // ignore
     }
@@ -400,10 +400,7 @@ router.post(
     const orgId = authenticatedOrgId
 
     if (orgId) {
-      const result = await stripeMeteringService.reportUsageToStripe({
-        orgId,
-        quantity: parsedBody.quantity
-      })
+      const result = await stripeMeteringService.reportUsageToStripe({ orgId })
       res.json(result)
       return
     }

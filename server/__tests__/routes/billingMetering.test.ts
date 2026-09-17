@@ -26,9 +26,9 @@ vi.mock('../../services/StripeMeteringService', () => ({
       reportedToStripeCount: 10000,
       unreportedCount: 2000
     })),
-    reportUsageToStripe: vi.fn(async ({ orgId, quantity }) => ({
+    reportUsageToStripe: vi.fn(async ({ orgId }) => ({
       orgId,
-      quantity: quantity ?? 2000,
+      quantity: 2000,
       reportedToStripe: true,
       eventId: 'meter_evt_test_123'
     })),
@@ -129,7 +129,7 @@ describe('Billing & Metering Routes', () => {
       expect(stripeMeteringService.syncUnreportedUsage).not.toHaveBeenCalled()
     })
 
-    it('triggers Stripe meter sync for a specific org', async () => {
+    it('reports only persisted usage for the authenticated org', async () => {
       const res = await request(app)
         .post('/api/billing/usage/report')
         .set('Authorization', `Bearer ${tokenFor({ role: 'admin', org_id: 'org-test-123' })}`)
@@ -138,8 +138,7 @@ describe('Billing & Metering Routes', () => {
       expect(res.status).toBe(200)
       expect(res.body.reportedToStripe).toBe(true)
       expect(stripeMeteringService.reportUsageToStripe).toHaveBeenCalledWith({
-        orgId: 'org-test-123',
-        quantity: 500
+        orgId: 'org-test-123'
       })
     })
 

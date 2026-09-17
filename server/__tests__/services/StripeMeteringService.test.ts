@@ -173,8 +173,8 @@ describe('StripeMeteringService', () => {
             subscription_tier: 'growth'
           }
         ])
-        // Pending count query
-        .mockResolvedValueOnce([{ count: '250' }])
+        // Exact pending event snapshot
+        .mockResolvedValueOnce([{ count: '250', event_ids: ['event-1', 'event-2'] }])
         // Update query
         .mockResolvedValueOnce([])
         // Upsert record query
@@ -189,8 +189,12 @@ describe('StripeMeteringService', () => {
         customerId: 'cus_xyz_999',
         value: 250,
         timestamp: expect.any(Date),
-        identifier: expect.stringContaining('meter_org-test-growth')
+        identifier: expect.stringMatching(/^meter_[0-9a-f]{32}$/)
       })
+      expect(database.query).toHaveBeenCalledWith(
+        expect.stringContaining('id = ANY($4::uuid[])'),
+        expect.arrayContaining(['org-test-growth', ['event-1', 'event-2']])
+      )
     })
 
     it('returns error when organization is not found', async () => {
@@ -210,7 +214,7 @@ describe('StripeMeteringService', () => {
             subscription_tier: 'starter'
           }
         ])
-        .mockResolvedValueOnce([{ count: '25' }])
+        .mockResolvedValueOnce([{ count: '25', event_ids: ['event-failed'] }])
       vi.mocked(stripeIntegration.recordStripeMeterEvent).mockRejectedValueOnce(
         new Error('Stripe unavailable')
       )

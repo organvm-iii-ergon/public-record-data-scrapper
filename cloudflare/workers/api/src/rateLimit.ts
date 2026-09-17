@@ -177,21 +177,27 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
   c.header('X-Usage-Limit-RPM', String(limit))
   c.header('X-Usage-Quota-Monthly', String(TIER_MONTHLY_QUOTAS[tier] ?? TIER_MONTHLY_QUOTAS.free))
 
-  // Asynchronously record metered usage event in D1 if available
-  if (c.env.DB && identity?.orgId && identity.orgId !== 'anonymous') {
+  await next()
+
+  // Asynchronously record the completed response. Billing introspection does
+  // not itself consume billable quota.
+  const shouldMeter =
+    !c.req.path.includes('/billing/usage') && !c.req.path.includes('/billing/tiers')
+  if (shouldMeter && c.env.DB && identity?.orgId && identity.orgId !== 'anonymous') {
     c.executionCtx?.waitUntil?.(
       (async () => {
         try {
           await c.env.DB.prepare(
             `INSERT INTO api_usage_events (id, org_id, key_id, endpoint, method, status_code, request_count, created_at)
-             VALUES (?, ?, ?, ?, ?, 200, 1, datetime('now'))`
+             VALUES (?, ?, ?, ?, ?, ?, 1, datetime('now'))`
           )
             .bind(
               crypto.randomUUID(),
               identity.orgId,
               identity.keyId ?? null,
               c.req.path,
-              c.req.method
+              c.req.method,
+              c.res.status
             )
             .run()
         } catch {
@@ -200,8 +206,6 @@ export const rateLimiter = createMiddleware<AppBindings>(async (c, next) => {
       })()
     )
   }
-
-  await next()
 })
 
 /**
