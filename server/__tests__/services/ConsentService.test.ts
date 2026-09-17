@@ -206,6 +206,18 @@ describe('ConsentService', () => {
 
       expect(result.hasConsent).toBe(false)
     })
+
+    it('should exclude a broad grant after a channel-specific revocation', async () => {
+      mockQuery.mockResolvedValueOnce([])
+
+      await service.hasConsentOfType('org-1', 'contact-1', 'express_written', 'sms')
+
+      const [query, params] = mockQuery.mock.calls[0]
+      expect(query).toContain('NOT EXISTS')
+      expect(query).toContain("rev.channel = $4 OR rev.channel = 'all'")
+      expect(query).toContain('rev.revoked_at >= cr.granted_at')
+      expect(params).toEqual(['org-1', 'contact-1', 'express_written', 'sms'])
+    })
   })
 
   describe('revokeConsent', () => {

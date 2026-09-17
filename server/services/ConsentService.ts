@@ -227,15 +227,23 @@ export class ConsentService {
   ): Promise<ConsentCheckResult> {
     try {
       const results = await database.query<ConsentRecordRow>(
-        `SELECT * FROM consent_records
-        WHERE org_id = $1
-          AND contact_id = $2
-          AND consent_type = $3
-          AND (channel = $4 OR channel = 'all')
-          AND is_granted = true
-          AND revoked_at IS NULL
-          AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-        ORDER BY granted_at DESC
+        `SELECT * FROM consent_records cr
+        WHERE cr.org_id = $1
+          AND cr.contact_id = $2
+          AND cr.consent_type = $3
+          AND (cr.channel = $4 OR cr.channel = 'all')
+          AND cr.is_granted = true
+          AND cr.revoked_at IS NULL
+          AND (cr.expires_at IS NULL OR cr.expires_at > CURRENT_TIMESTAMP)
+          AND NOT EXISTS (
+            SELECT 1 FROM consent_records rev
+            WHERE rev.org_id = cr.org_id
+              AND rev.contact_id = cr.contact_id
+              AND (rev.channel = $4 OR rev.channel = 'all')
+              AND rev.revoked_at IS NOT NULL
+              AND rev.revoked_at >= cr.granted_at
+          )
+        ORDER BY cr.granted_at DESC
         LIMIT 1`,
         [orgId, contactId, consentType, channel]
       )
