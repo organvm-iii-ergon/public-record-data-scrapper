@@ -1,7 +1,7 @@
 # Public Record Data Scraper — Deploy-Ready Build
 
-**Status:** ✅ DEPLOYMENT READY  
-**Build Date:** 2026-06-28  
+**Status:** ✅ DEPLOYMENT READY
+**Build Date:** 2026-06-28
 **Latest Commit:** 7a67e74 "Security: Zod input validation on competitive and outreach routes"
 
 ## Build Artifacts
