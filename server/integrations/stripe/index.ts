@@ -170,3 +170,30 @@ export async function constructWebhookEvent(
   }
   return stripe.webhooks.constructEvent(payload, signature, secret)
 }
+
+export interface MeterEventOptions {
+  eventName: string
+  customerId: string
+  value: number
+  timestamp?: Date
+  identifier?: string
+}
+
+/**
+ * Record a billing meter event via Stripe's Billing Meter Events API.
+ */
+export async function recordStripeMeterEvent(
+  options: MeterEventOptions
+): Promise<Stripe.Billing.MeterEvent> {
+  const stripe = getStripe()
+  const timestamp = options.timestamp ?? new Date()
+  return stripe.billing.meterEvents.create({
+    event_name: options.eventName,
+    payload: {
+      value: String(options.value),
+      stripe_customer_id: options.customerId
+    },
+    timestamp: Math.floor(timestamp.getTime() / 1000),
+    ...(options.identifier ? { identifier: options.identifier } : {})
+  })
+}

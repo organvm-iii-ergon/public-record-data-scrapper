@@ -7,6 +7,7 @@ import { StaleDataWarning } from '@/components/StaleDataWarning'
 import { QuickAccessBanner } from '@/components/QuickAccessBanner'
 import { DemoTour } from '@/components/DemoTour'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+import { SettingsMenu } from '@/components/SettingsMenu'
 
 // Layout components
 import { Header, LoadingAndErrorState, TabNavigation, MobileBottomNav } from '@/components/layout'
@@ -37,24 +38,22 @@ import { useSystemContext } from '@/hooks/useSystemContext'
 import { useDataTier } from '@/hooks/useDataTier'
 
 // Utils and types
-import { generateDashboardStats } from '@/lib/demoData'
+import { generateDashboardStats } from '@/lib/dashboardStats'
 import { Prospect } from '@public-records/core'
 import { ExportFormat } from '@/lib/exportUtils'
 import { UserAction } from '@/lib/agentic/types'
-import { logUserAction } from '@/lib/api/userActions'
+import { logDashboardAction } from '@/lib/api/dashboard'
 import { toast } from 'sonner'
-import { PublicDataDemo } from '@/components/PublicDataDemo'
 
 function DashboardApp() {
+  const tenantSurface = import.meta.env.VITE_DEPLOYMENT_SURFACE === 'tenant-dashboard'
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
   const [tourOpen, setTourOpen] = useState(false)
   const { dataTier } = useDataTier()
 
-  const useDemoData =
-    import.meta.env.DEV &&
-    ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
+  const useDemoData = false
 
   // Data fetching
   const data = useDataFetching({ useMockData: useDemoData, dataTier })
@@ -85,7 +84,7 @@ function DashboardApp() {
 
       if (!useDemoData) {
         try {
-          await logUserAction(newAction)
+          await logDashboardAction(newAction)
         } catch (error) {
           console.error('Failed to persist user action', error)
         }
@@ -174,9 +173,12 @@ function DashboardApp() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} />
-      <QuickAccessBanner />
-      <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
+      <Header
+        onRefresh={handleRefreshData}
+        settings={tenantSurface ? undefined : <SettingsMenu />}
+      />
+      {!tenantSurface && <QuickAccessBanner />}
+      {!tenantSurface && <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />}
 
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 pb-20 md:pb-8">
         <div className="space-y-4 sm:space-y-6 md:space-y-8">
@@ -201,23 +203,25 @@ function DashboardApp() {
             <StaleDataWarning lastUpdated={data.lastDataRefresh} onRefresh={handleRefreshData} />
           )}
 
-          <Tabs defaultValue="status" className="w-full">
-            <TabNavigation />
+          <Tabs defaultValue={tenantSurface ? 'prospects' : 'status'} className="w-full">
+            <TabNavigation tenantDashboard={tenantSurface} />
 
-            <TabsContent value="status" className="space-y-4 sm:space-y-6">
-              <StatusTab
-                prospects={data.prospects}
-                portfolio={data.portfolio}
-                competitors={data.competitors}
-                userActions={data.userActions}
-                isLoading={data.isLoading}
-                loadError={data.loadError}
-                lastDataRefresh={data.lastDataRefresh}
-                usePreviewData={useDemoData}
-                dataTier={dataTier}
-                onRefresh={handleRefreshData}
-              />
-            </TabsContent>
+            {!tenantSurface && (
+              <TabsContent value="status" className="space-y-4 sm:space-y-6">
+                <StatusTab
+                  prospects={data.prospects}
+                  portfolio={data.portfolio}
+                  competitors={data.competitors}
+                  userActions={data.userActions}
+                  isLoading={data.isLoading}
+                  loadError={data.loadError}
+                  lastDataRefresh={data.lastDataRefresh}
+                  usePreviewData={useDemoData}
+                  dataTier={dataTier}
+                  onRefresh={handleRefreshData}
+                />
+              </TabsContent>
+            )}
 
             <TabsContent value="prospects" className="space-y-4 sm:space-y-6">
               <ProspectsTab
@@ -274,46 +278,50 @@ function DashboardApp() {
 
             <TabsContent value="requalification" className="space-y-4 sm:space-y-6">
               <SubscriptionGate>
-                <RequalificationTab />
+                <RequalificationTab prospects={data.prospects} />
               </SubscriptionGate>
             </TabsContent>
 
-            <TabsContent value="coverage" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <CoverageTab />
-              </SubscriptionGate>
-            </TabsContent>
+            {!tenantSurface && (
+              <>
+                <TabsContent value="coverage" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <CoverageTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="deals" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <DealsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="deals" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <DealsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="contacts" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <ContactsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="contacts" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <ContactsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="communications" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <CommunicationsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="communications" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <CommunicationsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="compliance" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <ComplianceTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="compliance" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <ComplianceTab />
+                  </SubscriptionGate>
+                </TabsContent>
+              </>
+            )}
 
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
               <SubscriptionGate>
                 <AgenticTab agentic={agentic} competitors={data.competitors} />
               </SubscriptionGate>
             </TabsContent>
-            <MobileBottomNav />
+            <MobileBottomNav tenantDashboard={tenantSurface} />
           </Tabs>
         </div>
       </main>
@@ -339,8 +347,7 @@ function DashboardApp() {
 }
 
 function App() {
-  const publicDemoReceipt = String(import.meta.env.VITE_PUBLIC_DEMO_RECEIPT_URL ?? '').trim()
-  return publicDemoReceipt ? <PublicDataDemo receiptPath={publicDemoReceipt} /> : <DashboardApp />
+  return <DashboardApp />
 }
 
 export default App

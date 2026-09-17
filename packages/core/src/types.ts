@@ -1023,3 +1023,97 @@ export interface CrmPushLog {
   errorMessage?: string
   createdAt: string
 }
+
+// ============================================================================
+// Referral & Partner Portal (Issue #480)
+// ============================================================================
+
+export type PartnerTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+export type ReferralEventType = 'click' | 'signup' | 'conversion' | 'payout'
+
+export interface PartnerReferralProgram {
+  id: string
+  orgId: string
+  partnerCode: string
+  referralUrl: string
+  commissionRate: number
+  tier: PartnerTier
+  payoutEmail?: string | null
+  status: 'active' | 'suspended'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReferralEvent {
+  id: string
+  programId: string
+  eventType: ReferralEventType
+  referredEmail?: string | null
+  referredOrgId?: string | null
+  revenueAmount: number
+  commissionAmount: number
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+export interface PartnerMetrics {
+  program: PartnerReferralProgram
+  totalClicks: number
+  totalSignups: number
+  totalConversions: number
+  conversionRate: number
+  totalEarningsUsd: number
+  pendingEarningsUsd: number
+  paidEarningsUsd: number
+  partnerTier: PartnerTier
+  commissionRate: number
+  nextTierThreshold: number
+  conversionsToNextTier: number
+  recentEvents: ReferralEvent[]
+}
+// ============================================================================
+// Usage-Based Billing & Metering (Issue #481)
+// ============================================================================
+
+export type MeteredBillingTier =
+  'free' | 'starter' | 'growth' | 'pro' | 'professional' | 'enterprise'
+
+export interface BillingTierPlan {
+  tier: MeteredBillingTier
+  name: string
+  rateLimitRpm: number
+  monthlyIncludedRequests: number
+  basePriceUsd: number
+  overageUnitPriceUsd: number
+  features: string[]
+  stripeMeterEventName: string
+}
+
+export interface ApiUsageRecord {
+  id: string
+  orgId: string
+  keyId?: string | null
+  endpoint: string
+  method: string
+  statusCode: number
+  requestCount: number
+  reportedToStripe: boolean
+  stripeEventId?: string | null
+  createdAt: string
+}
+
+export interface OrgUsageSummary {
+  orgId: string
+  tier: MeteredBillingTier
+  periodStart: string
+  periodEnd: string
+  rateLimitRpm: number
+  monthlyIncludedRequests: number
+  totalRequests: number
+  billableOverageRequests: number
+  basePriceUsd: number
+  estimatedOverageCostUsd: number
+  totalEstimatedCostUsd: number
+  reportedToStripeCount: number
+  unreportedCount: number
+}

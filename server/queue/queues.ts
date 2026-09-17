@@ -6,6 +6,8 @@ import { TelemetryPersistenceService } from '../services/TelemetryPersistenceSer
 import type { PortalProbeJobData } from './workers/portalProbeWorker'
 import type { DigestJobData } from './workers/digestWorker'
 import type { OutreachJobData } from './workers/outreachWorker'
+import { stateIngestionRegistry } from './stateIngestionRegistry'
+import { stateCollectorFactory } from '../../apps/web/src/lib/collectors/StateCollectorFactory'
 
 export type IngestionStrategy = 'api' | 'bulk' | 'vendor' | 'scrape'
 export type IngestionCircuitState = 'closed' | 'open' | 'half-open'
@@ -254,13 +256,46 @@ function setCircuitOpen(
   telemetry.circuitTripCount += 1
 }
 
+export function registerStateStrategyProfile(state: string, strategies: IngestionStrategy[]): void {
+  const normalizedState = state.trim().toUpperCase()
+  STATE_STRATEGY_PROFILES[normalizedState] = dedupeStrategies(strategies)
+}
+
 export function resolveStateIngestionStrategyChain(state: string): IngestionStrategy[] {
   const normalizedState = state.trim().toUpperCase()
-  return [...(STATE_STRATEGY_PROFILES[normalizedState] ?? [])]
+
+  // 1. Check dynamic state ingestion registry
+  const fromRegistry = stateIngestionRegistry.getStrategiesForState(normalizedState)
+  if (fromRegistry.length > 0) {
+    return dedupeStrategies(fromRegistry)
+  }
+
+  // 2. Check dynamic/static strategy profiles
+  const fromProfiles = STATE_STRATEGY_PROFILES[normalizedState]
+  if (fromProfiles && fromProfiles.length > 0) {
+    return [...fromProfiles]
+  }
+
+  // 3. Fallback to StateCollectorFactory configured access methods
+  const config = stateCollectorFactory.getStateConfig(normalizedState)
+  if (config && config.accessMethods.length > 0) {
+    return dedupeStrategies(config.accessMethods as IngestionStrategy[])
+  }
+
+  return []
 }
 
 export function resolvePrimaryIngestionStrategy(state: string): IngestionStrategy | null {
   return resolveStateIngestionStrategyChain(state)[0] ?? null
+}
+
+export function getRegisteredIngestionStates(): string[] {
+  const states = new Set<string>([
+    ...Object.keys(STATE_STRATEGY_PROFILES),
+    ...stateIngestionRegistry.getRegisteredStates(),
+    ...stateCollectorFactory.getImplementedStates()
+  ])
+  return Array.from(states)
 }
 
 function getOrCreateIngestionTelemetry(state: string): IngestionCoverageTelemetry {

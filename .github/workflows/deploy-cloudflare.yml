@@ -14,8 +14,7 @@
 # Credential source/delivery is owned by Limen CLAVIS, issue #320.
 # Account-wide Access organization creation and paid-plan changes are never automatic.
 #                            Do NOT use a Global API Key.
-#   CLOUDFLARE_ACCOUNT_ID  — required only for manual production deployment.
-# Staging uses its API-verified account_id in cloudflare/wrangler.toml.
+# The API-verified account ID is non-secret and checked by both resolvers.
 # ============================================================================
 name: deploy-cloudflare
 
@@ -23,8 +22,19 @@ on:
   push:
     branches: [main]
     paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - 'functions/**'
       - 'cloudflare/**'
       - 'scripts/*cloudflare*'
+      - 'scripts/prepare-cloudflare-pages.mjs'
+      - 'scripts/__tests__/cloudflare-pages.test.mjs'
+      - 'scripts/no-mock-runtime.mjs'
+      - 'scripts/verify-tenant-dashboard-bundle.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy-pages.yml'
       - '.github/workflows/deploy-cloudflare.yml'
   pull_request:
     branches: [main, lane/verify, lane/heal, lane/expand-public-records, lane/evolve-platform]
@@ -46,6 +56,7 @@ on:
 # Least privilege: the deploy needs only repo read.
 permissions:
   contents: read
+  actions: read
 
 jobs:
   verify-staging:
@@ -72,6 +83,8 @@ jobs:
           python3 scripts/test_verify_cloudflare_staging.py
           python3 scripts/test_provision_cloudflare_staging.py
           python3 scripts/test_verify_cloudflare_live.py
+          python3 scripts/test_resolve_cloudflare_production.py
+          python3 scripts/test_verify_cloudflare_production.py
           npm --prefix cloudflare run typecheck
           git diff --exit-code -- cloudflare/package.json cloudflare/package-lock.json
 
@@ -106,6 +119,26 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+      - name: Reconcile the staging Pages project prerequisite
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
+        run: |
+          mkdir -p .quality
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/ucc-mca-dashboard-staging"
+          status="$(curl --silent --show-error --output .quality/staging-pages-project.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$endpoint")"
+          if [ "$status" = 404 ]; then
+            status="$(curl --silent --show-error --output .quality/staging-pages-project.json --write-out '%{http_code}' \
+              --request POST \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data '{"name":"ucc-mca-dashboard-staging","production_branch":"main"}' \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")"
+          fi
+          test "$status" = 200
+          jq -e '.success == true and .result.name == "ucc-mca-dashboard-staging" and .result.production_branch == "main"' \
+            .quality/staging-pages-project.json
       - name: Provision or reuse dedicated staging resources
         id: provision_staging
         env:
@@ -190,8 +223,14 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
     environment: production
+    concurrency:
+      group: ucc-cloudflare-production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -210,22 +249,113 @@ jobs:
       - name: Confirm frozen dependency declarations
         run: git diff --exit-code -- cloudflare/package.json cloudflare/package-lock.json
 
+      - name: Require the current accepted main revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+
+      - name: Require same-revision staging Pages acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          receipt="$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy-pages.yml/runs?branch=main&event=push&status=success&head_sha=$GITHUB_SHA&per_page=10")"
+          jq -e --arg sha "$GITHUB_SHA" \
+            '.workflow_runs | any(.head_sha == $sha and .event == "push" and .conclusion == "success")' \
+            <<< "$receipt"
+
+      - name: Reconcile the production Pages project prerequisite
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
+        run: |
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/ucc-mca-dashboard"
+          status="$(curl --silent --show-error --output .quality-production-pages.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$endpoint")"
+          if [ "$status" = 404 ]; then
+            status="$(curl --silent --show-error --output .quality-production-pages.json --write-out '%{http_code}' \
+              --request POST \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data '{"name":"ucc-mca-dashboard","production_branch":"main"}' \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")"
+          fi
+          test "$status" = 200
+          jq -e '.success == true and .result.name == "ucc-mca-dashboard" and .result.production_branch == "main"' \
+            .quality-production-pages.json
+
+      - name: Provision or reuse isolated production resources
+        id: resolution
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 scripts/resolve-cloudflare-production.py --apply
+          echo "CLOUDFLARE_ACCOUNT_ID=e0921b840fd656d8ea46426f1f114c30" >> "$GITHUB_ENV"
+
+      - name: Validate the resolved production configuration
+        id: configuration
+        run: |
+          python3 scripts/verify-cloudflare-production.py --configuration-only
+          cd cloudflare
+          ./node_modules/.bin/wrangler deploy --config .generated/production.wrangler.json --dry-run --outdir .generated/production-bundle
+
       - name: Apply D1 migrations (production)
+        id: migrations
         working-directory: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
         run: |
           : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is not configured}"
           : "${CLOUDFLARE_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID is not configured}"
-          ./node_modules/.bin/wrangler d1 migrations apply ucc-mca --env production --remote
+          ./node_modules/.bin/wrangler d1 migrations apply DB --config .generated/production.wrangler.json --remote
+          ./node_modules/.bin/wrangler d1 execute DB --config .generated/production.wrangler.json --remote --command "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name; SELECT name FROM d1_migrations ORDER BY name" --json > .generated/production-schema.json
+
+      - name: Require the complete production schema
+        id: schema
+        run: python3 scripts/verify-cloudflare-production.py --schema-only
 
       - name: Deploy Worker (production)
+        id: deploy
         working-directory: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
         run: |
           : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN is not configured}"
           : "${CLOUDFLARE_ACCOUNT_ID:?CLOUDFLARE_ACCOUNT_ID is not configured}"
-          ./node_modules/.bin/wrangler deploy --env production
+          ./node_modules/.bin/wrangler deploy --config .generated/production.wrangler.json
+
+      - name: Verify exact live production revision and authentication boundary
+        id: live
+        run: python3 scripts/verify-cloudflare-production.py
+
+      - name: Preserve production promotion evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: cloudflare-production-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            cloudflare/.generated/production-resolution.json
+            cloudflare/.generated/production-schema.json
+            cloudflare/.generated/production-deployment.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Require complete production promotion acceptance
+        if: ${{ always() }}
+        env:
+          RESOLUTION: ${{ steps.resolution.outcome }}
+          CONFIGURATION: ${{ steps.configuration.outcome }}
+          MIGRATIONS: ${{ steps.migrations.outcome }}
+          SCHEMA: ${{ steps.schema.outcome }}
+          DEPLOY: ${{ steps.deploy.outcome }}
+          LIVE: ${{ steps.live.outcome }}
+        run: |
+          for result in "$RESOLUTION" "$CONFIGURATION" "$MIGRATIONS" "$SCHEMA" "$DEPLOY" "$LIVE"; do
+            test "$result" = success || exit 1
+          done

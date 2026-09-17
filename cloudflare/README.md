@@ -90,13 +90,24 @@ organization.
 
 ### Cloudflare Access
 
-A new dedicated Access application protects only the staging hostname's `/api/*`
-path, with no allow policies. `/health` remains public and the Worker independently
-requires a valid, correctly scoped Access JWT. Existing owned enrollment policies
-are preserved on repeat runs. Application creation does not establish an
-authenticated tenant journey: receipts keep `access_enrollment_verified: false`.
-The existing identity owner must supply an authorized principal and verified
-`org_id` claim before that distinct acceptance predicate can pass.
+Dedicated Access applications protect the Worker API and the Pages hostname.
+`/health` remains public, while the Worker independently requires a valid,
+correctly scoped Access JWT and a D1-backed tenant membership. Access admission
+alone never creates a tenant or trusts role and `org_id` values supplied by the
+browser.
+
+An operator may pre-enroll a verified email without knowing Access's opaque JWT
+subject. Insert the organization and one normalized row in
+`access_enrollment_invites` only after migration `0008` is live. On the first
+signed Access request, the Worker atomically binds that invitation to the JWT's
+issuer and subject and creates the durable `access_memberships` row. An expired,
+revoked, ambiguous, already-claimed, wrong-issuer, or wrong-email invitation
+fails closed. Revoke an unclaimed invitation in `access_enrollment_invites`;
+revoke an established principal in `access_memberships`.
+
+No real email, organization, role, or business record is seeded by migrations.
+The enrollment and authenticated-browser receipts remain distinct deployment
+acceptance predicates and must come from the live tenant.
 
 ### Local development and production
 
@@ -107,9 +118,13 @@ npm run dev
 npm run typecheck
 ```
 
-Production remains the separate existing manual `confirm=DEPLOY` operation and
-uses production bindings plus its `CLOUDFLARE_ACCOUNT_ID` secret. Staging resource
-reconciliation does not provision or promote production.
+Production remains the separate manual `confirm=DEPLOY` operation. That explicit
+gate may create only the exact dedicated production Pages project, D1, KV, R2,
+Worker Access application, and Pages Access application when they are missing.
+Every create is followed by provider readback and a fresh staging/production
+isolation check before migrations or upload. Existing exact-name resources are
+reused; ambiguous resources stop promotion, and nothing is deleted. Staging
+resource reconciliation never provisions or promotes production.
 
 ## The strangler plan (how we cross)
 

@@ -12,7 +12,7 @@
  */
 import { createMiddleware } from 'hono/factory'
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
-import { first, run } from './db'
+import { all, first, run } from './db'
 import type { AppBindings, Env, Identity, SubscriptionTier } from './types'
 
 export const ACCESS_HEADER = 'Cf-Access-Jwt-Assertion'
@@ -77,6 +77,17 @@ interface ApiKeyVerifyRow {
   subscription_tier: string | null
 }
 
+interface AccessMembershipRow {
+  org_id: string
+  role: string
+  subscription_tier: SubscriptionTier
+}
+
+interface AccessEnrollmentRow extends AccessMembershipRow {
+  email: string
+  claimed_subject: string | null
+}
+
 /**
  * Verify a presented API key against D1.
  * Returns the resolved `Identity` or `null` if invalid, revoked, or expired.
@@ -88,28 +99,21 @@ export async function verifyApiKey(env: Env, presentedKey: string): Promise<Iden
 
   const keyHash = await hashApiKey(presentedKey)
 
-  // Fast path: optional KV caching for verified identity
-  try {
-    const cached = await env.KV?.get<Identity>(`apikey:${keyHash}`, 'json')
-    if (cached) {
-      return cached
-    }
-  } catch {
-    // KV read failure is non-fatal; fall through to D1
-  }
-
   const row = await first<ApiKeyVerifyRow>(
     env,
     `SELECT a.id, a.org_id, a.role, a.expires_at, a.revoked_at, o.subscription_tier
        FROM api_keys a
-       LEFT JOIN organizations o ON a.org_id = o.id
+       INNER JOIN organizations o ON a.org_id = o.id
       WHERE a.key_hash = ?`,
     keyHash
   )
 
   if (!row) return null
   if (row.revoked_at !== null) return null
-  if (row.expires_at !== null && new Date(row.expires_at).getTime() <= Date.now()) {
+  if (
+    row.expires_at !== null &&
+    (!Number.isFinite(Date.parse(row.expires_at)) || Date.parse(row.expires_at) <= Date.now())
+  ) {
     return null
   }
 
@@ -128,13 +132,6 @@ export async function verifyApiKey(env: Env, presentedKey: string): Promise<Iden
     keyId: row.id
   }
 
-  // Cache in KV for 60 seconds to relieve D1 under high concurrency
-  try {
-    await env.KV?.put(`apikey:${keyHash}`, JSON.stringify(identity), { expirationTtl: 60 })
-  } catch {
-    // ignore
-  }
-
   return identity
 }
 
@@ -151,17 +148,94 @@ function extractOrgId(payload: JWTPayload): string | undefined {
   return undefined
 }
 
-function extractRole(payload: JWTPayload): string | undefined {
-  for (const [key, value] of Object.entries(payload)) {
-    if (
-      (key === 'role' || key.endsWith('/role')) &&
-      typeof value === 'string' &&
-      value.length > 0
-    ) {
-      return value
+/** Called only after signature, issuer and audience verification. */
+export async function resolveAccessMembership(
+  env: Env,
+  payload: JWTPayload
+): Promise<Identity | null> {
+  if (!payload.sub || payload.iss !== `https://${env.ACCESS_TEAM_DOMAIN}`) return null
+  const requestedOrg = extractOrgId(payload)
+  let rows = await all<AccessMembershipRow>(
+    env,
+    `SELECT m.org_id, m.role, o.subscription_tier FROM access_memberships m
+      JOIN organizations o ON o.id = m.org_id
+      WHERE m.issuer = ? AND m.subject = ? AND m.revoked_at IS NULL
+        AND (? IS NULL OR m.org_id = ?) LIMIT 2`,
+    payload.iss,
+    payload.sub,
+    requestedOrg ?? null,
+    requestedOrg ?? null
+  )
+  if (rows.length === 0 && typeof payload.email === 'string') {
+    const email = payload.email.trim().toLowerCase()
+    if (email.length > 3) {
+      const enrollments = await all<AccessEnrollmentRow>(
+        env,
+        `SELECT i.email, i.org_id, i.role, i.claimed_subject, o.subscription_tier
+           FROM access_enrollment_invites i
+           JOIN organizations o ON o.id = i.org_id
+          WHERE i.issuer = ? AND i.email = ? AND i.revoked_at IS NULL
+            AND (i.expires_at IS NULL OR
+              (julianday(i.expires_at) IS NOT NULL AND julianday(i.expires_at) > julianday('now')))
+            AND (i.claimed_subject IS NULL OR i.claimed_subject = ?)
+            AND (? IS NULL OR i.org_id = ?) LIMIT 2`,
+        payload.iss,
+        email,
+        payload.sub,
+        requestedOrg ?? null,
+        requestedOrg ?? null
+      )
+      if (enrollments.length === 1 && enrollments[0]) {
+        const enrollment = enrollments[0]
+        const [claimed] = await env.DB.batch([
+          env.DB.prepare(
+            `UPDATE access_enrollment_invites
+                SET claimed_subject = COALESCE(claimed_subject, ?),
+                    claimed_at = COALESCE(claimed_at, datetime('now'))
+              WHERE issuer = ? AND email = ? AND org_id = ?
+                AND role = ? AND revoked_at IS NULL
+                AND (expires_at IS NULL OR
+                  (julianday(expires_at) IS NOT NULL AND julianday(expires_at) > julianday('now')))
+                AND (claimed_subject IS NULL OR claimed_subject = ?)`
+          ).bind(payload.sub, payload.iss, email, enrollment.org_id, enrollment.role, payload.sub),
+          env.DB.prepare(
+            `INSERT INTO access_memberships(issuer, subject, org_id, role)
+           SELECT issuer, ?, org_id, role
+             FROM access_enrollment_invites
+            WHERE issuer = ? AND email = ? AND org_id = ? AND role = ?
+              AND claimed_subject = ? AND revoked_at IS NULL
+              AND (expires_at IS NULL OR
+                (julianday(expires_at) IS NOT NULL AND julianday(expires_at) > julianday('now')))
+           ON CONFLICT(issuer, subject, org_id) DO NOTHING`
+          ).bind(payload.sub, payload.iss, email, enrollment.org_id, enrollment.role, payload.sub)
+        ])
+        if (!claimed || claimed.meta.changes !== 1) return null
+        rows = await all<AccessMembershipRow>(
+          env,
+          `SELECT m.org_id, m.role, o.subscription_tier FROM access_memberships m
+            JOIN organizations o ON o.id = m.org_id
+            WHERE m.issuer = ? AND m.subject = ? AND m.revoked_at IS NULL
+              AND (? IS NULL OR m.org_id = ?) LIMIT 2`,
+          payload.iss,
+          payload.sub,
+          requestedOrg ?? null,
+          requestedOrg ?? null
+        )
+      }
     }
   }
-  return undefined
+  // Ambiguous memberships require an explicit organization selection; claims
+  // can select a membership but can never create one or elevate its role.
+  if (rows.length !== 1) return null
+  const row = rows[0]
+  if (!row) return null
+  return {
+    orgId: row.org_id,
+    role: row.role,
+    tier: row.subscription_tier,
+    email: typeof payload.email === 'string' ? payload.email : undefined,
+    authMethod: 'cf_access'
+  }
 }
 
 /**
@@ -176,45 +250,32 @@ export async function verifyAccessJwt(
   if (!token || token.length === 0) return null
   if (!teamDomain || !audience) return null
 
+  const acceptedAudiences = audience
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => /^[a-fA-F0-9]{64}$/.test(value))
+  if (
+    acceptedAudiences.length === 0 ||
+    new Set(acceptedAudiences).size !== acceptedAudiences.length
+  )
+    return null
+
   let payload: JWTPayload
   try {
     const result = await jwtVerify(token, getJwks(teamDomain), {
       issuer: `https://${teamDomain}`,
-      audience
+      audience: acceptedAudiences
     })
     payload = result.payload
   } catch {
     return null
   }
 
-  const orgId = extractOrgId(payload)
-  if (!orgId) return null
-
-  const email = typeof payload.email === 'string' ? payload.email : undefined
-  const role = extractRole(payload)
-
-  let tier: SubscriptionTier = 'free'
-  if (env) {
-    try {
-      const orgRow = await first<{ subscription_tier: string }>(
-        env,
-        'SELECT subscription_tier FROM organizations WHERE id = ?',
-        orgId
-      )
-      if (orgRow?.subscription_tier) {
-        tier = orgRow.subscription_tier as SubscriptionTier
-      }
-    } catch {
-      // default to free
-    }
-  }
-
-  return {
-    orgId,
-    email,
-    role,
-    tier,
-    authMethod: 'cf_access'
+  if (!env) return null
+  try {
+    return await resolveAccessMembership(env, payload)
+  } catch {
+    return null
   }
 }
 

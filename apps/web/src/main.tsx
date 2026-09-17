@@ -9,19 +9,8 @@ import './main.css'
 import './styles/theme.css'
 import './index.css'
 
-// Guard: on a static production deploy (GitHub Pages, Cloudflare Pages, etc.)
-// the Spark runtime module fires a top-level POST to /_spark/loaded the moment
-// it is imported.  That endpoint does not exist on a static host and returns
-// 405, producing a console error.  Skip the import entirely when we are in a
-// production build AND no explicit API base URL was configured — those two facts
-// together mean there is no Spark backend, and the app already falls back to
-// local-storage state management via useSparkKV.
-const hasApiBase = Boolean(import.meta.env.VITE_API_BASE_URL)
-const publicDemoEnabled = Boolean(String(import.meta.env.VITE_PUBLIC_DEMO_RECEIPT_URL ?? '').trim())
-
-// Public demo mode is an explicit zero-write surface even outside production.
-// Normal production static builds also skip Spark unless an API base is present.
-if (typeof window !== 'undefined' && !publicDemoEnabled && !(import.meta.env.PROD && !hasApiBase)) {
+// Cloudflare API configuration does not imply that the optional Spark host exists.
+if (typeof window !== 'undefined' && import.meta.env.VITE_ENABLE_SPARK === 'true') {
   import('@github/spark/spark').catch((error) => {
     console.warn(
       '[main] Unable to load Spark runtime; falling back to local storage state management.',

@@ -71,6 +71,37 @@ test('staging acceptance rejects failed or skipped mandatory steps including cre
   assert.equal(job.steps[artifact].if, '${{ !cancelled() }}')
 })
 
+test('production promotion is current-main, explicitly provisioned and terminally accepted', () => {
+  const job = workflow('deploy-cloudflare.yml').jobs['deploy-production']
+  const names = job.steps.map((entry) => entry.name)
+  assert.ok(names.includes('Require the current accepted main revision'))
+  assert.ok(names.includes('Reconcile the production Pages project prerequisite'))
+  assert.ok(names.includes('Provision or reuse isolated production resources'))
+  assert.ok(names.includes('Verify exact live production revision and authentication boundary'))
+  const resolver = job.steps.find(
+    (entry) => entry.name === 'Provision or reuse isolated production resources'
+  )
+  assert.match(resolver.run, /resolve-cloudflare-production\.py --apply/)
+  const terminal = job.steps.find(
+    (entry) => entry.name === 'Require complete production promotion acceptance'
+  )
+  assert.equal(terminal.if, '${{ always() }}')
+  const valid = {
+    RESOLUTION: 'success',
+    CONFIGURATION: 'success',
+    MIGRATIONS: 'success',
+    SCHEMA: 'success',
+    DEPLOY: 'success',
+    LIVE: 'success'
+  }
+  const run = (values) =>
+    spawnSync('bash', ['-ec', terminal.run], { env: { ...process.env, ...values } }).status
+  assert.equal(run(valid), 0)
+  for (const key of Object.keys(valid)) {
+    assert.notEqual(run({ ...valid, [key]: 'skipped' }), 0, key)
+  }
+})
+
 test('backend migration and test failures are unsuppressed', () => {
   const steps = workflow('backend-tests.yml').jobs.test.steps
   assert.equal(

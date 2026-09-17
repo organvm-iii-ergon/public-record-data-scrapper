@@ -150,7 +150,7 @@ export const getDataPipelineConfig = () => {
 /**
  * Feature flags
  */
-const demoDataEnabled = import.meta.env.VITE_USE_MOCK_DATA === 'true'
+const demoDataEnabled = false
 
 export const featureFlags = {
   enableRealTimeIngestion: import.meta.env.VITE_ENABLE_REALTIME_INGESTION === 'true',

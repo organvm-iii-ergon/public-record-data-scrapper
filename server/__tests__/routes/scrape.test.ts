@@ -327,3 +327,70 @@ describe('GET /api/scrape/readiness/:stateCode', () => {
     expect(mockGetStateReadiness).not.toHaveBeenCalled()
   })
 })
+
+describe('POST /api/scrape/parse-document', () => {
+  let app: Express
+
+  const buildTestApp = (tier = 'professional') => {
+    const testApp = express()
+    testApp.use(express.json())
+
+    testApp.use((req, _res, next) => {
+      ;(req as { user: { id: string; orgId: string; role: string; tier: string } }).user = {
+        id: 'test-user',
+        orgId: 'test-org',
+        role: 'user',
+        tier
+      }
+      next()
+    })
+
+    testApp.use('/api/scrape', scrapeRouter)
+    return testApp
+  }
+
+  beforeEach(() => {
+    app = buildTestApp()
+  })
+
+  it('parses raw UCC document text and returns structured and canonical data', async () => {
+    const documentText = `
+      UCC FINANCING STATEMENT (FORM UCC-1)
+      INITIAL FINANCING STATEMENT FILE NO: 2024-991122
+      FILING DATE: 2024-04-12
+      1a. ORGANIZATION'S NAME: HORIZON LOGISTICS LLC
+      3a. ORGANIZATION'S NAME: VELOCITY CAPITAL CORP
+      4. All accounts, inventory, and future receivables.
+    `
+
+    const response = await request(app).post('/api/scrape/parse-document').send({
+      content: documentText,
+      state: 'TX'
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(response.body.data.document.filingNumber).toBe('2024-991122')
+    expect(response.body.data.document.debtor.name).toBe('HORIZON LOGISTICS LLC')
+    expect(response.body.data.document.securedParty.name).toBe('VELOCITY CAPITAL CORP')
+    expect(response.body.data.canonical.filingNumber).toBe('2024-991122')
+    expect(response.body.data.canonical.status).toBe('active')
+  })
+
+  it('rejects empty content payload with validation error', async () => {
+    const response = await request(app).post('/api/scrape/parse-document').send({})
+
+    expect(response.status).toBe(400)
+    expect(response.body.error.code).toBe('VALIDATION_ERROR')
+  })
+
+  it('returns 402 for free-tier users', async () => {
+    const freeApp = buildTestApp('free')
+    const response = await request(freeApp).post('/api/scrape/parse-document').send({
+      content: 'UCC FINANCING STATEMENT'
+    })
+
+    expect(response.status).toBe(402)
+    expect(response.body.error.code).toBe('TIER_UPGRADE_REQUIRED')
+  })
+})

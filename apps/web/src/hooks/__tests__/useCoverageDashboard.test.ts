@@ -124,7 +124,7 @@ describe('useCoverageDashboard', () => {
     expect(mockFetchCoverage).toHaveBeenCalledTimes(2)
   })
 
-  it('falls back to preview snapshot when fallbackToPreview=true and API fails', async () => {
+  it('never substitutes preview data after API failure even with the legacy flag', async () => {
     mockFetchCoverage.mockRejectedValueOnce(new Error('API unavailable'))
 
     const { result } = renderHook(() =>
@@ -136,8 +136,8 @@ describe('useCoverageDashboard', () => {
     })
 
     expect(result.current.error).toBe('API unavailable')
-    expect(result.current.snapshot).toEqual(mockPreviewSnapshot)
-    expect(mockCreatePreview).toHaveBeenCalledTimes(1)
+    expect(result.current.snapshot).toBeNull()
+    expect(mockCreatePreview).not.toHaveBeenCalled()
   })
 
   it('does not fetch when enabled=false', async () => {

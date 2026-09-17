@@ -25,6 +25,7 @@ import { requireRole, type AuthenticatedRequest } from '../middleware/authMiddle
 import { paidTierGate } from '../middleware/tierGate'
 import { UCCSearchService } from '../services/UCCSearchService'
 import { ScrapeJobService } from '../services/ScrapeJobService'
+import { documentParsingEngine } from '../services/DocumentParsingEngine'
 
 const router = Router()
 
@@ -49,6 +50,13 @@ const readinessSchema = z.object({
     .string()
     .length(2)
     .transform((s) => s.toUpperCase())
+})
+
+const parseDocumentSchema = z.object({
+  content: z.string().min(1),
+  mimeType: z.string().optional(),
+  filename: z.string().optional(),
+  state: z.string().length(2).optional()
 })
 
 // GET /api/scrape/readiness/:stateCode - Check if a state can be searched right now
@@ -243,6 +251,32 @@ router.get(
         queuedAt: job.queuedAt,
         startedAt: job.startedAt,
         completedAt: job.completedAt
+      }
+    })
+  })
+)
+
+// POST /api/scrape/parse-document - Parse raw UCC document (PDF/OCR/text)
+router.post(
+  '/parse-document',
+  requireRole('user', 'admin'),
+  paidTierGate,
+  validateRequest({ body: parseDocumentSchema }),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const body = req.body as z.infer<typeof parseDocumentSchema>
+    const parsed = await documentParsingEngine.parseDocument({
+      content: body.content,
+      mimeType: body.mimeType,
+      filename: body.filename,
+      state: body.state
+    })
+    const canonical = documentParsingEngine.toCollectedFiling(parsed)
+
+    res.json({
+      success: true,
+      data: {
+        document: parsed,
+        canonical
       }
     })
   })
