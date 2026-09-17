@@ -126,6 +126,10 @@ test('deployment workflow targets Cloudflare Pages with exact-revision receipts'
   assert.match(workflow, /deployment_trigger\.metadata\.commit_hash/)
   assert.match(workflow, /test "\$GITHUB_REF" = refs\/heads\/main/)
   assert.match(workflow, /max_by\(\.created_on\)/)
+  assert.equal(
+    (workflow.match(/CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30/g) || []).length,
+    2
+  )
   assert.match(workflow, /test "\$CONFIRM" = DEPLOY/)
   assert.doesNotMatch(workflow, /actions\/deploy-pages/)
   assert.doesNotMatch(workflow, /VITE_PUBLIC_DEMO/)

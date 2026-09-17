@@ -104,7 +104,7 @@ jobs:
         working-directory: ${{ steps.package.outputs.dir }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
           PROJECT: ${{ steps.target.outputs.project }}
         run: |
           ../../../cloudflare/node_modules/.bin/wrangler pages deploy dist \
@@ -114,7 +114,7 @@ jobs:
       - name: Verify the Cloudflare deployment receipt
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
           PROJECT: ${{ steps.target.outputs.project }}
         run: |
           curl --fail --silent --show-error \
