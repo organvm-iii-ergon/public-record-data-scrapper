@@ -65,78 +65,6 @@ const EVENT_BADGES: Record<ReferralEventType, { label: string; className: string
   payout: { label: 'Payout', className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' }
 }
 
-const DEMO_METRICS: PartnerMetrics = {
-  program: {
-    id: 'prog_demo_01',
-    orgId: 'org_demo_01',
-    partnerCode: 'GROWTH-PARTNER',
-    referralUrl: 'https://app.publicrecords.io/?ref=GROWTH-PARTNER',
-    commissionRate: 20,
-    tier: 'silver',
-    payoutEmail: 'partner@example.com',
-    status: 'active',
-    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  totalClicks: 342,
-  totalSignups: 48,
-  totalConversions: 14,
-  conversionRate: 4.1,
-  totalEarningsUsd: 1390.0,
-  pendingEarningsUsd: 390.0,
-  paidEarningsUsd: 1000.0,
-  partnerTier: 'silver',
-  commissionRate: 20,
-  nextTierThreshold: 20,
-  conversionsToNextTier: 6,
-  recentEvents: [
-    {
-      id: 'evt_demo_1',
-      programId: 'prog_demo_01',
-      eventType: 'conversion',
-      referredEmail: 'finance@apexcapital.org',
-      revenueAmount: 499.0,
-      commissionAmount: 99.8,
-      createdAt: new Date(Date.now() - 3600000 * 3).toISOString()
-    },
-    {
-      id: 'evt_demo_2',
-      programId: 'prog_demo_01',
-      eventType: 'signup',
-      referredEmail: 'team@summitfunding.io',
-      revenueAmount: 0,
-      commissionAmount: 0,
-      createdAt: new Date(Date.now() - 3600000 * 16).toISOString()
-    },
-    {
-      id: 'evt_demo_3',
-      programId: 'prog_demo_01',
-      eventType: 'conversion',
-      referredEmail: 'ops@beaconadvances.com',
-      revenueAmount: 299.0,
-      commissionAmount: 59.8,
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
-    },
-    {
-      id: 'evt_demo_4',
-      programId: 'prog_demo_01',
-      eventType: 'payout',
-      revenueAmount: 0,
-      commissionAmount: 500.0,
-      createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
-    },
-    {
-      id: 'evt_demo_5',
-      programId: 'prog_demo_01',
-      eventType: 'click',
-      revenueAmount: 0,
-      commissionAmount: 0,
-      metadata: { referrer: 'https://linkedin.com' },
-      createdAt: new Date(Date.now() - 86400000 * 8).toISOString()
-    }
-  ]
-}
-
 export interface PartnerPortalProps {
   initialMetrics?: PartnerMetrics
 }
@@ -158,10 +86,6 @@ export function PartnerPortal({ initialMetrics }: PartnerPortalProps) {
 
   const [copied, setCopied] = useState(false)
 
-  const isDemoMode =
-    import.meta.env.DEV ||
-    ['1', 'true', 'yes'].includes(String(import.meta.env.VITE_USE_MOCK_DATA ?? '').toLowerCase())
-
   const loadPortalData = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -171,17 +95,12 @@ export function PartnerPortal({ initialMetrics }: PartnerPortalProps) {
       setCustomCode(data.program.partnerCode)
       setPayoutEmail(data.program.payoutEmail || '')
     } catch (err) {
-      if (isDemoMode) {
-        setMetrics(DEMO_METRICS)
-        setCustomCode(DEMO_METRICS.program.partnerCode)
-        setPayoutEmail(DEMO_METRICS.program.payoutEmail || '')
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to load partner program data')
-      }
+      setMetrics(null)
+      setError(err instanceof Error ? err.message : 'Failed to load partner program data')
     } finally {
       setLoading(false)
     }
-  }, [isDemoMode])
+  }, [])
 
   useEffect(() => {
     if (!initialMetrics) {

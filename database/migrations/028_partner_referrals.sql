@@ -1,9 +1,4 @@
--- ============================================================================
--- Migration 027: Partner & Referral Program Persistence (Issue #480)
--- Enables tenants to generate referral links, customize partner codes,
--- and track clicks, signups, conversions, and tiered commissions.
--- ============================================================================
-
+-- Tenant partner programs and referral-event audit records.
 CREATE TABLE IF NOT EXISTS partner_referral_programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -41,3 +36,4 @@ CREATE INDEX IF NOT EXISTS idx_referral_events_type
 
 COMMENT ON TABLE partner_referral_programs IS 'Tenant affiliate partner accounts, codes, and commission tiers';
 COMMENT ON TABLE partner_referral_events IS 'Referral funnel telemetry: clicks, signups, paid conversions, and payouts';
+

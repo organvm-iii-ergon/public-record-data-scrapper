@@ -38,8 +38,8 @@ const updatePayoutEmailSchema = z.object({
 
 const trackClickSchema = z.object({
   partnerCode: z.string().trim().min(1, 'Partner code is required'),
-  referrer: z.string().optional(),
-  landingPage: z.string().optional()
+  referrer: z.string().max(2048).optional(),
+  landingPage: z.string().max(2048).optional()
 })
 
 /**
@@ -128,8 +128,6 @@ router.post(
       partnerCode,
       eventType: 'click',
       metadata: {
-        ip: req.ip,
-        userAgent: req.headers['user-agent'],
         referrer,
         landingPage
       }
