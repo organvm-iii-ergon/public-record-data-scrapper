@@ -128,7 +128,7 @@ describe('useDataPipeline', () => {
   })
 
   describe('async operations', () => {
-    it('should load mock data when useMockData is true', async () => {
+    it('should load database records despite legacy mock flags', async () => {
       const { useDataPipeline } = await import('../use-data-pipeline')
 
       const { result } = renderHook(() => useDataPipeline())
@@ -142,7 +142,8 @@ describe('useDataPipeline', () => {
       )
 
       // Mock data should have been generated
-      expect(mockGenerateProspects).toHaveBeenCalled()
+      expect(mockGenerateProspects).not.toHaveBeenCalled()
+      expect(mockFetchProspects).toHaveBeenCalled()
     })
 
     it('should have initial loading state', async () => {

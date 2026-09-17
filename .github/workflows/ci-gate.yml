@@ -115,6 +115,8 @@ jobs:
         run: node scripts/verify-cloudflare-toolchain.mjs
       - name: Check the Worker with the locked local runtime
         run: node scripts/test-cloudflare-runtime.mjs
+      - name: Verify authoritative D1 membership
+        run: node scripts/test-cloudflare-membership.mjs
       - name: Verify durable D1 job leases
         run: node scripts/test-cloudflare-jobs.mjs
       - name: Verify Cloudflare diagnostic boundaries without credentials

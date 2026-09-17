@@ -25,12 +25,12 @@ export interface NarrativeProspectData {
   industry: string
   state: string
   defaultDate?: string
-  daysSinceDefault: number
+  daysSinceDefault?: number
   status: string
 
   // Scoring
-  intentScore: number
-  healthScore: number
+  intentScore?: number
+  healthScore?: number
   positionScore: number
   compositeScore: number
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
@@ -41,17 +41,17 @@ export interface NarrativeProspectData {
   lapsedFilings: number
   terminatedFilings: number
   lastFilingDate?: string
-  daysSinceLastFiling: number
+  daysSinceLastFiling?: number
 
   // Growth Signals
   growthSignals: GrowthSignal[]
 
   // Health Metrics
-  reviewCount: number
-  avgRating: number
-  sentimentTrend: 'improving' | 'stable' | 'declining'
-  violationCount: number
-  yearsInBusiness: number
+  reviewCount?: number
+  avgRating?: number
+  sentimentTrend?: 'improving' | 'stable' | 'declining'
+  violationCount?: number
+  yearsInBusiness?: number
 
   // Stack Position
   estimatedStackPosition: number
@@ -304,7 +304,7 @@ export class NarrativeService {
     const parts: string[] = []
 
     // Company and default history
-    if (data.defaultDate && data.daysSinceDefault > 0) {
+    if (data.defaultDate && data.daysSinceDefault !== undefined && data.daysSinceDefault > 0) {
       const years = Math.round(data.daysSinceDefault / 365)
       if (years >= 1) {
         parts.push(
@@ -370,7 +370,7 @@ export class NarrativeService {
     const industryInsight = INDUSTRY_INSIGHTS[data.industry]
     let overview = `${data.companyName} is a ${data.industry} business operating in ${data.state}`
 
-    if (data.yearsInBusiness > 0) {
+    if (data.yearsInBusiness !== undefined && data.yearsInBusiness > 0) {
       overview += ` with ${data.yearsInBusiness} years in business`
     }
 
@@ -397,7 +397,7 @@ export class NarrativeService {
   private generateFinancialHistoryParagraph(data: NarrativeProspectData): string {
     let paragraph = ''
 
-    if (data.defaultDate) {
+    if (data.defaultDate && data.daysSinceDefault !== undefined) {
       const years = Math.round(data.daysSinceDefault / 365)
       const defaultDateStr = new Date(data.defaultDate).toLocaleDateString('en-US', {
         month: 'long',
@@ -434,10 +434,13 @@ export class NarrativeService {
    * Generate health paragraph
    */
   private generateHealthParagraph(data: NarrativeProspectData): string {
-    let paragraph = `Current health indicators: Grade ${data.grade} (score: ${data.healthScore}/100).`
+    let paragraph =
+      data.healthScore === undefined
+        ? 'No health assessment is recorded.'
+        : `Current health indicators: Grade ${this.getGrade(data.healthScore)} (score: ${data.healthScore}/100).`
 
-    if (data.reviewCount > 0) {
-      paragraph += ` Online reputation shows ${data.avgRating.toFixed(1)}/5 rating across ${data.reviewCount} reviews`
+    if (data.reviewCount !== undefined && data.reviewCount > 0) {
+      paragraph += ` Online reputation has ${data.reviewCount} recorded reviews`
       if (data.sentimentTrend === 'improving') {
         paragraph += ' with improving sentiment trend'
       } else if (data.sentimentTrend === 'declining') {
@@ -446,7 +449,7 @@ export class NarrativeService {
       paragraph += '.'
     }
 
-    if (data.violationCount > 0) {
+    if (data.violationCount !== undefined && data.violationCount > 0) {
       paragraph += ` Note: ${data.violationCount} regulatory violation${data.violationCount > 1 ? 's' : ''} on record.`
     }
 
@@ -519,7 +522,7 @@ export class NarrativeService {
     const points: TalkingPoint[] = []
 
     // Strengths
-    if (data.yearsInBusiness >= 5) {
+    if (data.yearsInBusiness !== undefined && data.yearsInBusiness >= 5) {
       points.push({
         category: 'strength',
         point: `${data.yearsInBusiness} years in business shows stability and resilience`,
@@ -527,7 +530,7 @@ export class NarrativeService {
       })
     }
 
-    if (data.healthScore >= 70) {
+    if (data.healthScore !== undefined && data.healthScore >= 70) {
       points.push({
         category: 'strength',
         point: 'Strong health score indicates solid business fundamentals',
@@ -569,7 +572,7 @@ export class NarrativeService {
     }
 
     // Cautions
-    if (data.daysSinceDefault < 730) {
+    if (data.daysSinceDefault !== undefined && data.daysSinceDefault < 730) {
       // Less than 2 years
       points.push({
         category: 'caution',
@@ -578,7 +581,7 @@ export class NarrativeService {
       })
     }
 
-    if (data.violationCount > 0) {
+    if (data.violationCount !== undefined && data.violationCount > 0) {
       points.push({
         category: 'caution',
         point: `${data.violationCount} regulatory violation(s) on record - discuss during due diligence`,
@@ -635,7 +638,10 @@ export class NarrativeService {
     let score = 0
 
     // Check criteria
-    if (data.daysSinceDefault >= this.whaleConfig.minDaysSinceDefault) {
+    if (
+      data.daysSinceDefault !== undefined &&
+      data.daysSinceDefault >= this.whaleConfig.minDaysSinceDefault
+    ) {
       score += 25
       reasons.push(`${Math.round(data.daysSinceDefault / 365)}+ years since default`)
     }
@@ -650,7 +656,7 @@ export class NarrativeService {
       reasons.push(`${data.growthSignals.length} active growth signals`)
     }
 
-    if (data.healthScore >= this.whaleConfig.minHealthScore) {
+    if (data.healthScore !== undefined && data.healthScore >= this.whaleConfig.minHealthScore) {
       score += 20
       reasons.push('Strong health indicators')
     }
@@ -679,13 +685,13 @@ export class NarrativeService {
     const factors: RiskFactor[] = []
 
     // Recent default
-    if (data.daysSinceDefault < 365) {
+    if (data.daysSinceDefault !== undefined && data.daysSinceDefault < 365) {
       factors.push({
         factor: 'Default less than 1 year ago',
         severity: 'high',
         mitigation: 'Require larger down payment or collateral'
       })
-    } else if (data.daysSinceDefault < 730) {
+    } else if (data.daysSinceDefault !== undefined && data.daysSinceDefault < 730) {
       factors.push({
         factor: 'Default less than 2 years ago',
         severity: 'medium',
@@ -709,13 +715,13 @@ export class NarrativeService {
     }
 
     // Violations
-    if (data.violationCount >= 3) {
+    if (data.violationCount !== undefined && data.violationCount >= 3) {
       factors.push({
         factor: `${data.violationCount} regulatory violations`,
         severity: 'high',
         mitigation: 'Investigate nature and resolution of violations'
       })
-    } else if (data.violationCount > 0) {
+    } else if (data.violationCount !== undefined && data.violationCount > 0) {
       factors.push({
         factor: `${data.violationCount} regulatory violation(s)`,
         severity: 'medium',
@@ -733,13 +739,13 @@ export class NarrativeService {
     }
 
     // Low health score
-    if (data.healthScore < 40) {
+    if (data.healthScore !== undefined && data.healthScore < 40) {
       factors.push({
         factor: `Low health score (${data.healthScore})`,
         severity: 'high',
         mitigation: 'Require additional documentation and due diligence'
       })
-    } else if (data.healthScore < 60) {
+    } else if (data.healthScore !== undefined && data.healthScore < 60) {
       factors.push({
         factor: `Below-average health score (${data.healthScore})`,
         severity: 'medium'
@@ -910,7 +916,7 @@ export class NarrativeService {
     }
 
     // Recovery/second chance opener (if applicable)
-    if (data.daysSinceDefault >= 1095) {
+    if (data.daysSinceDefault !== undefined && data.daysSinceDefault >= 1095) {
       // 3+ years
       openers.push(
         `Hi, I specialize in working with established businesses that have overcome challenges. ${data.companyName} has been around for a while, and I'd love to discuss how we might help with your current goals.`
@@ -932,7 +938,7 @@ export class NarrativeService {
     const handlers: ObjectionHandler[] = []
 
     // "We had issues in the past"
-    if (data.defaultDate) {
+    if (data.defaultDate && data.daysSinceDefault !== undefined) {
       handlers.push({
         objection: 'We had some financing issues in the past',
         response: `I understand, and actually that's one reason I reached out. We specialize in working with businesses that have navigated challenges and come out stronger. Your ${Math.round(data.daysSinceDefault / 365)} years of continued operation shows resilience.`,
@@ -1063,7 +1069,7 @@ export class NarrativeService {
     const lastFilingDate = filings[0]?.filing_date
     const daysSinceLastFiling = lastFilingDate
       ? Math.floor((Date.now() - new Date(lastFilingDate).getTime()) / (1000 * 60 * 60 * 24))
-      : 9999
+      : undefined
 
     // Extract known competitors from secured parties
     const knownCompetitorPositions = filings
@@ -1077,12 +1083,14 @@ export class NarrativeService {
       industry: prospect.industry,
       state: prospect.state,
       defaultDate: prospect.default_date,
-      daysSinceDefault: prospect.time_since_default || 0,
+      daysSinceDefault:
+        prospect.default_date && Number.isFinite(prospect.time_since_default)
+          ? prospect.time_since_default
+          : undefined,
       status: prospect.status,
 
-      // Scores (would come from ScoringService in practice)
-      intentScore: 0, // Would be calculated
-      healthScore: healthData?.score || 50,
+      // Keep unavailable measurements unknown; zero is a valid recorded score.
+      healthScore: healthData?.score ?? undefined,
       positionScore: 100 - activeFilings * 15,
       compositeScore: prospect.priority_score,
       grade: this.getGrade(prospect.priority_score),
@@ -1102,18 +1110,16 @@ export class NarrativeService {
         confidence: s.confidence
       })),
 
-      reviewCount: healthData?.review_count || 0,
-      avgRating: healthData?.avg_sentiment ? healthData.avg_sentiment * 5 : 3,
-      sentimentTrend:
-        (healthData?.sentiment_trend as 'improving' | 'stable' | 'declining') || 'stable',
-      violationCount: healthData?.violation_count || 0,
-      yearsInBusiness: 3, // Would need enrichment data
+      reviewCount: healthData?.review_count ?? undefined,
+      sentimentTrend: ['improving', 'stable', 'declining'].includes(healthData?.sentiment_trend)
+        ? (healthData.sentiment_trend as 'improving' | 'stable' | 'declining')
+        : undefined,
+      violationCount: healthData?.violation_count ?? undefined,
 
       estimatedStackPosition: activeFilings + 1,
       knownCompetitorPositions,
 
-      estimatedRevenue: prospect.estimated_revenue,
-      revenueConfidence: prospect.estimated_revenue ? 70 : undefined
+      estimatedRevenue: prospect.estimated_revenue
     }
   }
 

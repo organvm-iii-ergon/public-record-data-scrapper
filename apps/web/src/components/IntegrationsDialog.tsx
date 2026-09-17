@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,60 @@ import {
   PaperPlaneTilt
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { apiRequest } from '@/lib/api/client'
+import { z } from 'zod'
 import type { WebhookEndpoint, WebhookDelivery, CrmProvider } from '@public-records/core'
+
+const endpointSchema = z.object({
+  id: z.string(),
+  url: z.string().url(),
+  description: z.string().nullable().optional(),
+  events: z.array(z.string()),
+  status: z.enum(['active', 'paused', 'disabled']),
+  secret_preview: z.string().optional(),
+  secret: z.string().optional()
+})
+const deliverySchema = z.object({
+  id: z.string(),
+  event: z.string(),
+  status: z.enum(['pending', 'delivering', 'delivered', 'failed', 'dead_letter']),
+  attempts: z.number(),
+  max_attempts: z.number(),
+  response_status: z.number().nullable().optional(),
+  error_message: z.string().nullable().optional()
+})
+type EndpointView = Pick<
+  WebhookEndpoint,
+  'id' | 'url' | 'description' | 'events' | 'status' | 'secret' | 'secretPreview'
+>
+type DeliveryView = Pick<
+  WebhookDelivery,
+  'id' | 'event' | 'status' | 'attempts' | 'maxAttempts' | 'responseStatus' | 'errorMessage'
+>
+function endpointView(value: unknown, revealCreatedSecret = false): EndpointView {
+  const row = endpointSchema.parse(value)
+  return {
+    id: row.id,
+    url: row.url,
+    description: row.description ?? undefined,
+    events: row.events,
+    status: row.status,
+    secretPreview: row.secret_preview,
+    secret: revealCreatedSecret ? row.secret : undefined
+  }
+}
+function deliveryView(value: unknown): DeliveryView {
+  const row = deliverySchema.parse(value)
+  return {
+    id: row.id,
+    event: row.event,
+    status: row.status,
+    attempts: row.attempts,
+    maxAttempts: row.max_attempts,
+    responseStatus: row.response_status ?? undefined,
+    errorMessage: row.error_message ?? undefined
+  }
+}
 
 interface IntegrationsDialogProps {
   open: boolean
@@ -36,21 +89,8 @@ interface IntegrationsDialogProps {
 
 export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogProps) {
   // Webhook Endpoints State
-  const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([
-    {
-      id: 'whe_demo_01',
-      orgId: 'org_current',
-      url: 'https://api.customer-crm.com/v1/ucc-events',
-      secret: 'whsec_99e821bca98104889c0201d1',
-      secretPreview: 'whsec_99••••d1',
-      description: 'Production webhook listener',
-      events: ['prospect.created', 'prospect.updated', 'score.updated'],
-      status: 'active',
-      consecutiveFailures: 0,
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ])
+  const [endpoints, setEndpoints] = useState<EndpointView[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // New endpoint inputs
   const [newUrl, setNewUrl] = useState('')
@@ -62,137 +102,108 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
   ])
 
   // Deliveries / DLQ state
-  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([
-    {
-      id: 'del_001',
-      orgId: 'org_current',
-      webhookId: 'whe_demo_01',
-      event: 'prospect.created',
-      payload: '{"id":"evt_01","event":"prospect.created","data":{"companyName":"Apex Logistics"}}',
-      status: 'delivered',
-      attempts: 1,
-      maxAttempts: 5,
-      responseStatus: 200,
-      deliveredAt: new Date(Date.now() - 3600000).toISOString(),
-      createdAt: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: 'del_002',
-      orgId: 'org_current',
-      webhookId: 'whe_demo_01',
-      event: 'score.updated',
-      payload:
-        '{"id":"evt_02","event":"score.updated","data":{"companyName":"Metro Builders","score":88}}',
-      status: 'dead_letter',
-      attempts: 5,
-      maxAttempts: 5,
-      responseStatus: 503,
-      errorMessage: 'HTTP 503: Service Temporarily Unavailable after 5 attempts',
-      createdAt: new Date(Date.now() - 7200000).toISOString()
-    }
-  ])
+  const [deliveries, setDeliveries] = useState<DeliveryView[]>([])
+
+  useEffect(() => {
+    if (!open) return
+    const controller = new AbortController()
+    setEndpoints([])
+    setDeliveries([])
+    setLoadError(null)
+    Promise.all([
+      apiRequest<{ endpoints: WebhookEndpoint[] }>('/webhooks', { signal: controller.signal }),
+      apiRequest<{ deliveries: WebhookDelivery[] }>('/webhooks/deliveries', {
+        signal: controller.signal
+      })
+    ])
+      .then(([webhooks, history]) => {
+        if (controller.signal.aborted) return
+        if (!Array.isArray(webhooks.endpoints) || !Array.isArray(history.deliveries)) {
+          throw new Error('Invalid integrations response')
+        }
+        setEndpoints(webhooks.endpoints.map((row) => endpointView(row)))
+        setDeliveries(history.deliveries.map(deliveryView))
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setLoadError(error instanceof Error ? error.message : 'Unable to load integrations')
+      })
+    return () => controller.abort()
+  }, [open])
 
   // CRM Configuration state
-  const [hubspotKey, setHubspotKey] = useState('pat-na1-xxxx-xxxx-xxxx')
-  const [hubspotActive, setHubspotActive] = useState(true)
-  const [hubspotAutoSync, setHubspotAutoSync] = useState(true)
+  const [hubspotKey, setHubspotKey] = useState('')
+  const [hubspotActive, setHubspotActive] = useState(false)
+  const [hubspotAutoSync, setHubspotAutoSync] = useState(false)
   const [salesforceKey, setSalesforceKey] = useState('')
   const [salesforceActive, setSalesforceActive] = useState(false)
   const [testingCrm, setTestingCrm] = useState<string | null>(null)
 
-  const handleAddEndpoint = () => {
-    if (!newUrl.trim()) {
-      toast.error('Please enter a valid destination URL')
-      return
+  const handleAddEndpoint = async () => {
+    try {
+      const response = await apiRequest<{ endpoint: WebhookEndpoint }>('/webhooks', {
+        method: 'POST',
+        body: { url: newUrl, description: newDescription, events: selectedEvents }
+      })
+      if (!response.endpoint?.id)
+        throw new Error('Registration response did not include an endpoint')
+      setEndpoints((current) => [endpointView(response.endpoint, true), ...current])
+      setNewUrl('')
+      setNewDescription('')
+      toast.success('Webhook endpoint registered')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Registration failed')
     }
+  }
 
-    const generatedSecret = `whsec_${Math.random().toString(36).substring(2)}${Math.random().toString(36).substring(2)}`
-    const newEp: WebhookEndpoint = {
-      id: `whe_${Date.now()}`,
-      orgId: 'org_current',
-      url: newUrl,
-      description: newDescription || undefined,
-      secret: generatedSecret,
-      secretPreview: `${generatedSecret.slice(0, 8)}••••${generatedSecret.slice(-4)}`,
-      events: selectedEvents.length > 0 ? selectedEvents : ['*'],
-      status: 'active',
-      consecutiveFailures: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  const handleDeleteEndpoint = async (id: string) => {
+    try {
+      await apiRequest(`/webhooks/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      setEndpoints((current) => current.filter((endpoint) => endpoint.id !== id))
+      toast.success('Webhook endpoint removed')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Deletion failed')
     }
-
-    setEndpoints((prev) => [newEp, ...prev])
-    setNewUrl('')
-    setNewDescription('')
-    toast.success('Webhook endpoint registered. Secret generated.')
   }
 
-  const handleDeleteEndpoint = (id: string) => {
-    setEndpoints((prev) => prev.filter((ep) => ep.id !== id))
-    toast.success('Webhook endpoint removed')
-  }
-
-  const handleTestPing = (ep: WebhookEndpoint) => {
-    toast.promise(new Promise((resolve) => setTimeout(resolve, 800)), {
-      loading: `Sending HMAC-SHA256 signed test ping to ${ep.url}...`,
-      success: () => {
-        const testDelivery: WebhookDelivery = {
-          id: `del_${Date.now()}`,
-          orgId: ep.orgId,
-          webhookId: ep.id,
-          event: 'test.ping',
-          payload: JSON.stringify({
-            id: `evt_test_${Date.now()}`,
-            event: 'test.ping',
-            api_version: '2026-09-01',
-            data: { message: 'Ping from UCC-MCA Platform', timestamp: new Date().toISOString() }
-          }),
-          status: 'delivered',
-          attempts: 1,
-          maxAttempts: 1,
-          responseStatus: 200,
-          deliveredAt: new Date().toISOString(),
-          createdAt: new Date().toISOString()
-        }
-        setDeliveries((prev) => [testDelivery, ...prev])
-        return 'Test ping delivered successfully with valid signature!'
-      },
-      error: 'Failed to deliver test ping'
-    })
-  }
-
-  const handleReplayDelivery = (deliveryId: string) => {
-    toast.promise(new Promise((resolve) => setTimeout(resolve, 900)), {
-      loading: 'Replaying dead-letter delivery from queue...',
-      success: () => {
-        setDeliveries((prev) =>
-          prev.map((d) =>
-            d.id === deliveryId
-              ? {
-                  ...d,
-                  status: 'delivered',
-                  attempts: 1,
-                  errorMessage: undefined,
-                  responseStatus: 200,
-                  deliveredAt: new Date().toISOString()
-                }
-              : d
-          )
-        )
-        return 'Delivery redelivered successfully! DLQ cleared.'
-      },
-      error: 'Redelivery failed'
-    })
-  }
-
-  const handleTestCrm = (provider: CrmProvider) => {
-    setTestingCrm(provider)
-    setTimeout(() => {
-      setTestingCrm(null)
-      toast.success(
-        `${provider === 'hubspot' ? 'HubSpot REST API v3' : provider} connection verified! Ready to push prospects.`
+  const handleTestPing = async (endpoint: EndpointView) => {
+    try {
+      const result = await apiRequest<{ success: boolean }>(
+        `/webhooks/${encodeURIComponent(endpoint.id)}/test`,
+        { method: 'POST' }
       )
-    }, 1000)
+      if (result.success !== true) throw new Error('The API could not confirm delivery')
+      toast.success('The API confirmed test delivery')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Test failed')
+    }
+  }
+
+  const handleReplayDelivery = async (id: string) => {
+    try {
+      await apiRequest(`/webhooks/deliveries/${encodeURIComponent(id)}/retry`, { method: 'POST' })
+      toast.success('Replay requested; refresh delivery history for its result')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Replay failed')
+    }
+  }
+
+  const handleTestCrm = async (provider: CrmProvider) => {
+    setTestingCrm(provider)
+    try {
+      const result = await apiRequest<{ success: boolean }>('/crm/integrations', {
+        method: 'POST',
+        body: { provider, api_key: provider === 'hubspot' ? hubspotKey : salesforceKey }
+      })
+      if (result.success !== true) throw new Error('Integration settings were not accepted')
+      toast.success(
+        'Integration settings saved. Confirm provider connectivity before sending records.'
+      )
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Integration request failed')
+    } finally {
+      setTestingCrm(null)
+    }
   }
 
   return (
@@ -210,6 +221,12 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
             endpoints.
           </DialogDescription>
         </DialogHeader>
+
+        {loadError && (
+          <p role="alert" className="text-sm text-red-200">
+            {loadError}
+          </p>
+        )}
 
         <Tabs defaultValue="crm" className="w-full mt-2">
           <TabsList className="grid grid-cols-2 bg-white/5 border border-white/10 p-1 mb-4">
@@ -442,8 +459,16 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
                       <span>Secret: {ep.secretPreview || 'whsec_••••••••'}</span>
                       <button
                         onClick={() => {
-                          navigator.clipboard.writeText(ep.secret || '')
-                          toast.success('Webhook signing secret copied!')
+                          if (!ep.secret) {
+                            toast.error(
+                              'The signing secret is available only when the endpoint is created'
+                            )
+                            return
+                          }
+                          void navigator.clipboard
+                            .writeText(ep.secret)
+                            .then(() => toast.success('Signing secret copied'))
+                            .catch(() => toast.error('Unable to copy the signing secret'))
                         }}
                         className="text-primary hover:underline flex items-center gap-0.5"
                       >
