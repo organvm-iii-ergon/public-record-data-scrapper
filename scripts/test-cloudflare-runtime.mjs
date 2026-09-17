@@ -90,7 +90,6 @@ try {
       await db.prepare(stmt).run()
     }
   }
-
   const tables = await db
     .prepare(
       "SELECT name FROM sqlite_master WHERE name IN ('organizations', 'prospects', 'jobs', 'prospects_fts') ORDER BY name"
