@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
 
 const appRoot = dirname(fileURLToPath(import.meta.url))
+const sparkEnabled = process.env.VITE_ENABLE_SPARK === 'true'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,7 +20,7 @@ export default defineConfig({
     tailwindcss(),
     // DO NOT REMOVE
     createIconImportProxy() as PluginOption,
-    sparkPlugin({ port: 5173 }) as PluginOption
+    ...(sparkEnabled ? [sparkPlugin({ port: 5173 }) as PluginOption] : [])
   ],
   resolve: {
     alias: {
