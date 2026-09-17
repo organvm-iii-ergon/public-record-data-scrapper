@@ -68,7 +68,7 @@ describe('SendGrid transport contract', () => {
     expect(fetchRequest.mock.calls[0][1]?.body).toBeUndefined()
   })
   it.each([
-    [JSON.stringify({ errors: [{ message: 'Denied' }, {}] }), 'Denied'],
+    [JSON.stringify({ errors: [{ message: 'Denied', field: 'personalizations.0.to.0.email' }, {}] }), 'Denied'],
     ['upstream outage', 'upstream outage'],
     ['', 'SendGrid request failed with status 503']
   ])('reports provider failure for %s', async (payload, message) => {
@@ -77,7 +77,7 @@ describe('SendGrid transport contract', () => {
     expect(result).toMatchObject({ success: false, error: { code: 503, message } })
     if (payload.startsWith('{'))
       expect(result.error?.errors).toEqual([
-        { message: 'Denied' },
+        { message: 'Denied', field: 'personalizations.0.to.0.email' },
         { message: 'Provider returned an unspecified error' }
       ])
   })
