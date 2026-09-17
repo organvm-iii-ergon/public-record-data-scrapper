@@ -474,11 +474,12 @@ So: 2min, 4min, 8min, 16min, 30min cap.
 3. **Open Circuit**: If all strategies exhausted and consecutive failures > 1, open the circuit
 
 **Strategy Chains:**
-| State | Strategy Chain |
-|-------|---------------|
-| CA | `['api']` |
-| TX | `['bulk']` |
-| FL | `['vendor']` |
+
+| State      | Strategy Chain                           |
+| ---------- | ---------------------------------------- |
+| CA         | `['api']`                                |
+| TX         | `['bulk']`                               |
+| FL         | `['vendor']`                             |
 | All others | `[]` (no production strategy configured) |
 
 ### 4.4 Telemetry Persistence
@@ -672,17 +673,18 @@ The frontend (`apps/web/src/App.tsx`) organizes the dashboard into seven tabs vi
 **`useKV` (Spark KV):** Persistent key-value storage for user preferences (export format, tour state). Wraps the Spark SDK's `useKV` hook with safe fallbacks.
 
 **Custom Hooks:**
-| Hook | Purpose |
-|------|---------|
-| `useDataFetching` | Fetches prospects, competitors, portfolio data from API or generates mock data |
-| `useProspectFilters` | Search, industry/state/score filtering with derived `filteredProspects` |
-| `useProspectSorting` | Sort direction and field with derived `sortedProspects` |
-| `useProspectSelection` | Checkbox selection state for batch operations |
-| `useProspectActions` | Claim, unclaim, export, delete operations |
-| `useNotesAndReminders` | Per-prospect notes and reminder management |
-| `useAgenticEngine` | Connects to the agentic AI engine for autonomous suggestions |
-| `useSystemContext` | Aggregates data for agentic analysis |
-| `useDataTier` | Reads resolved data tier from API responses |
+
+| Hook                   | Purpose                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `useDataFetching`      | Fetches prospects, competitors, portfolio data from API or generates mock data |
+| `useProspectFilters`   | Search, industry/state/score filtering with derived `filteredProspects`        |
+| `useProspectSorting`   | Sort direction and field with derived `sortedProspects`                        |
+| `useProspectSelection` | Checkbox selection state for batch operations                                  |
+| `useProspectActions`   | Claim, unclaim, export, delete operations                                      |
+| `useNotesAndReminders` | Per-prospect notes and reminder management                                     |
+| `useAgenticEngine`     | Connects to the agentic AI engine for autonomous suggestions                   |
+| `useSystemContext`     | Aggregates data for agentic analysis                                           |
+| `useDataTier`          | Reads resolved data tier from API responses                                    |
 
 **Data Flow:**
 

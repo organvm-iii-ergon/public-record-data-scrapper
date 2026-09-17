@@ -5,6 +5,16 @@ import type { ReactNode } from 'react'
 import { ProspectDetailDialog } from '../ProspectDetailDialog'
 import type { Prospect, ProspectNote, FollowUpReminder } from '@public-records/core'
 
+const { apiRequest } = vi.hoisted(() => ({
+  apiRequest: vi.fn(async () => ({
+    success: true,
+    provider: 'hubspot',
+    externalId: 'hs-company-1'
+  }))
+}))
+
+vi.mock('@/lib/api/client', () => ({ apiRequest }))
+
 // Mock all nested components
 vi.mock('../HealthGradeBadge', () => ({
   HealthGradeBadge: ({ grade }: { grade: string }) => (
@@ -180,6 +190,9 @@ vi.mock('@phosphor-icons/react', () => ({
   ),
   Envelope: ({ className }: { className?: string }) => (
     <span data-testid="envelope-icon" className={className} />
+  ),
+  Lightning: ({ className }: { className?: string }) => (
+    <span data-testid="lightning-icon" className={className} />
   )
 }))
 
@@ -541,6 +554,17 @@ describe('ProspectDetailDialog', () => {
 
       await userEvent.click(screen.getByRole('button', { name: /export/i }))
       expect(onExport).toHaveBeenCalledWith(mockProspect)
+    })
+
+    it('pushes the selected prospect through the CRM API', async () => {
+      render(<ProspectDetailDialog {...defaultProps} />)
+
+      await userEvent.click(screen.getByRole('button', { name: /push to crm/i }))
+
+      expect(apiRequest).toHaveBeenCalledWith('/crm/push', {
+        method: 'POST',
+        body: { prospect_id: mockProspect.id }
+      })
     })
   })
 

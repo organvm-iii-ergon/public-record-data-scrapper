@@ -64,17 +64,20 @@ Successfully implemented a fully autonomous video production agent that transfor
 ## Pipeline Steps
 
 ### 1. Script Scanning
+
 - Scans configured directory
 - Matches files against pattern
 - Returns list of script paths
 
 ### 2. Script Parsing
+
 - Reads markdown content
 - Detects scene boundaries from headings
 - Calculates duration based on word count
 - Identifies visual types from context
 
 ### 3. Audio Generation
+
 - Extracts narration text from markdown
 - Removes formatting and visual notes
 - Generates TTS audio (say/espeak/festival)
@@ -82,17 +85,20 @@ Successfully implemented a fully autonomous video production agent that transfor
 - Falls back to silent audio if needed
 
 ### 4. Visual Generation
+
 - Creates title cards with FFmpeg
 - Generates diagrams (currently as title cards)
 - Creates metrics displays (currently as title cards)
 - Falls back gracefully on errors
 
 ### 5. Timeline Synchronization
+
 - Maps scenes to time offsets
 - Associates visuals with audio segments
 - Creates JSON timeline manifest
 
 ### 6. Video Rendering
+
 - Builds FFmpeg filter complex
 - Scales and pads visuals to resolution
 - Adds crossfade transitions between scenes
@@ -100,6 +106,7 @@ Successfully implemented a fully autonomous video production agent that transfor
 - Falls back to simple slideshow if complex rendering fails
 
 ### 7. Report Generation
+
 - Summarizes execution results
 - Lists fallbacks used
 - Reports errors encountered
@@ -109,6 +116,7 @@ Successfully implemented a fully autonomous video production agent that transfor
 ## Configuration
 
 ### Environment Variables
+
 - `REPO_ROOT` - Repository root path
 - `SCRIPT_DIR` - Directory containing scripts
 - `SCRIPT_PATTERN` - Glob pattern to match scripts
@@ -120,6 +128,7 @@ Successfully implemented a fully autonomous video production agent that transfor
 - `HEADLESS` - Browser headless mode
 
 ### CLI Options
+
 - `--script-dir <dir>` - Override script directory
 - `--pattern <pattern>` - Override file pattern
 - `--output-dir <dir>` - Override output directory
@@ -147,27 +156,32 @@ video-output/
 ## Platform Support
 
 ### macOS
+
 - ✅ FFmpeg via Homebrew
 - ✅ Built-in `say` TTS command
 - ✅ Fully supported
 
 ### Linux (Ubuntu/Debian)
+
 - ✅ FFmpeg via apt
 - ✅ eSpeak TTS (recommended)
 - ✅ Festival TTS (alternative)
 - ✅ Fully supported
 
 ### Linux (RHEL/CentOS/Fedora)
+
 - ✅ FFmpeg via EPEL
 - ✅ eSpeak TTS
 - ✅ Fully supported
 
 ### Windows
-- ⚠️  FFmpeg via Chocolatey or manual
-- ⚠️  TTS requires code modification
-- ⚠️  Partial support (needs adaptation)
+
+- ⚠️ FFmpeg via Chocolatey or manual
+- ⚠️ TTS requires code modification
+- ⚠️ Partial support (needs adaptation)
 
 ### Docker
+
 - ✅ Consistent environment
 - ✅ All dependencies included
 - ✅ Fully supported
@@ -175,6 +189,7 @@ video-output/
 ## Testing
 
 ### Validation Script
+
 - Tests configuration loading
 - Checks script directory access
 - Validates demo and executive scripts
@@ -183,11 +198,13 @@ video-output/
 - Checks TTS engine availability
 
 ### Demo Script
+
 - Simple 4-scene example
 - Tests basic pipeline functionality
 - Quick validation target
 
 ### Executive Script
+
 - Complex 9-section example
 - Real-world scenario
 - Comprehensive feature testing
@@ -195,17 +212,20 @@ video-output/
 ## Documentation
 
 ### User-Facing
+
 - **README.md** - Feature overview and usage
 - **INSTALL.md** - Platform-specific setup
 - Main repository README updated
 
 ### Developer-Facing
+
 - Inline code comments
 - JSDoc documentation
 - Type definitions
 - Architecture notes
 
 ### Operational
+
 - Validation script output
 - Render report JSON
 - Error messages with context
@@ -213,17 +233,20 @@ video-output/
 ## Fallback Mechanisms
 
 ### TTS Failures
+
 1. Try platform-specific TTS (say/espeak)
 2. Try alternative TTS (festival)
 3. Generate chunked audio
 4. Generate silent audio (duration preserved)
 
 ### Visual Generation Failures
+
 1. Try requested visual type
 2. Fall back to title card
 3. Fall back to solid color
 
 ### Video Rendering Failures
+
 1. Try complex multi-scene rendering
 2. Fall back to simple slideshow (single image + audio)
 3. Preserve partial artifacts for debugging
@@ -231,16 +254,19 @@ video-output/
 ## Performance Characteristics
 
 ### Processing Time
+
 - Demo script (~1 minute): ~5-10 seconds
 - Executive script (~5 minutes): ~30-60 seconds
 - Depends on: TTS speed, FFmpeg preset, resolution, FPS
 
 ### Resource Usage
+
 - CPU: High during FFmpeg rendering
 - Memory: 100MB buffer for video rendering
 - Disk: ~10-50MB per minute of video
 
 ### Scalability
+
 - Batch processing supported
 - Parallel execution not implemented (sequential)
 - Can process unlimited scripts (one at a time)
@@ -248,21 +274,25 @@ video-output/
 ## Future Enhancements (Deferred)
 
 ### Demo Capture
+
 - Puppeteer-based browser automation
 - Interactive demo recording
 - Click-through walkthroughs
 
 ### Advanced Visuals
+
 - Real diagram generation (Mermaid, D3)
 - Animated charts and metrics
 - Custom transitions and effects
 
 ### Enhanced TTS
+
 - Neural TTS (Piper, Coqui)
 - Cloud TTS options (Google, AWS, Azure)
 - Voice cloning support
 
 ### Video Editing
+
 - Post-processing effects
 - Color grading
 - Subtitle overlays
@@ -271,17 +301,20 @@ video-output/
 ## Integration Points
 
 ### Repository Integration
+
 - NPM scripts added:
   - `npm run video:generate`
   - `npm run video:validate`
   - `npm run video:help`
 
 ### Git Integration
+
 - `.gitignore` updated for `video-output/`
 - All source files tracked
 - Output artifacts excluded
 
 ### Documentation Integration
+
 - Main README updated
 - Table of contents expanded
 - Quick start commands added
@@ -289,6 +322,7 @@ video-output/
 ## Quality Metrics
 
 ### Code Quality
+
 - ✅ TypeScript with strict types
 - ✅ Proper error handling
 - ✅ Security: Command injection prevention
@@ -296,12 +330,14 @@ video-output/
 - ✅ Readability: Clear structure and comments
 
 ### Test Coverage
+
 - ✅ Validation script tests 7 critical components
 - ✅ Demo script validates parsing
 - ✅ Executive script validates full pipeline
-- ⚠️  No unit tests (test infrastructure unavailable)
+- ⚠️ No unit tests (test infrastructure unavailable)
 
 ### Documentation Quality
+
 - ✅ Comprehensive README (330 lines)
 - ✅ Installation guide (250 lines)
 - ✅ Inline code comments
@@ -337,6 +373,7 @@ video-output/
 ## Repository Impact
 
 ### Files Added
+
 - `scripts/video-production/video-generator.ts` (726 lines)
 - `scripts/video-production/generate-videos.sh` (90 lines)
 - `scripts/video-production/validate.ts` (120 lines)
@@ -346,16 +383,19 @@ video-output/
 - `docs/video-portfolio/DEMO_VIDEO_SCRIPT.md` (40 lines)
 
 ### Files Modified
+
 - `README.md` (added Video Production section)
 - `package.json` (added video scripts)
 - `.gitignore` (excluded video-output/)
 
 ### Total Lines Added
+
 ~1,700 lines of production code, documentation, and tests
 
 ## Next Steps
 
 ### For Users
+
 1. Run `npm run video:validate` to verify setup
 2. Install FFmpeg and TTS if not present
 3. Generate demo video: `npm run video:generate -- --pattern "DEMO_VIDEO_SCRIPT.md"`
@@ -363,6 +403,7 @@ video-output/
 5. Review output in `video-output/` directory
 
 ### For Developers
+
 1. Review code in `scripts/video-production/`
 2. Run validation to understand dependencies
 3. Test with custom scripts
@@ -370,6 +411,7 @@ video-output/
 5. Implement demo capture if needed
 
 ### For Maintainers
+
 1. Monitor render-report.json for issues
 2. Collect user feedback on quality
 3. Optimize rendering performance

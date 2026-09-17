@@ -15,6 +15,7 @@ The organvm system enforces a strict dependency flow: ORGAN-I (Theory) feeds int
 ## Decision
 
 This repository participates in the cross-organ dependency graph as follows:
+
 - **Upstream dependencies**: Defined in `registry-v2.json` under the `dependencies` field
 - **Downstream consumers**: Other repos that list this repo in their dependencies
 - **Integration pattern**: NPM package consumption or API integration

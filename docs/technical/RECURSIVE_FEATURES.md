@@ -17,6 +17,7 @@ This document outlines the comprehensive set of recursive, generative, and perso
 ## Overview
 
 This platform now includes advanced AI-powered features that leverage:
+
 - **Recursive algorithms** for deep relationship mapping, signal chaining, and iterative enrichment
 - **Generative AI** for narrative creation, insights, and report generation
 - **Personalization** through behavioral learning and recommendation engines
@@ -41,6 +42,7 @@ This platform now includes advanced AI-powered features that leverage:
 **Purpose**: Build multi-level company relationship graphs from UCC filings and corporate data.
 
 **Key Features**:
+
 - Discovers 9 types of relationships: parent, subsidiary, affiliate, guarantor, common secured party, cross collateral, same industry, supplier, customer
 - Configurable recursion depth (default: 3 levels)
 - Automatic cycle detection and visited node tracking
@@ -50,6 +52,7 @@ This platform now includes advanced AI-powered features that leverage:
 **Implementation**: `src/lib/services/RecursiveRelationshipMapper.ts`
 
 **Usage**:
+
 ```typescript
 import { RecursiveRelationshipMapper } from './services/RecursiveRelationshipMapper'
 
@@ -66,6 +69,7 @@ console.log(`Risk concentration: ${graph.metadata.riskConcentration}`)
 ```
 
 **Output**:
+
 - `CompanyGraph` with nodes, edges, and metadata
 - Network statistics (health grade, total exposure, risk concentration)
 - Relationship paths and cluster identification
@@ -77,6 +81,7 @@ console.log(`Risk concentration: ${graph.metadata.riskConcentration}`)
 **Purpose**: Detect correlated growth signals and build signal chains recursively.
 
 **Key Features**:
+
 - Identifies 5 signal types: hiring, permit, contract, expansion, equipment
 - Three relationship types: triggered_by, correlated_with, implies
 - Configurable trigger rules and correlation thresholds
@@ -86,6 +91,7 @@ console.log(`Risk concentration: ${graph.metadata.riskConcentration}`)
 **Implementation**: `src/lib/services/RecursiveSignalDetector.ts`
 
 **Usage**:
+
 ```typescript
 import { RecursiveSignalDetector } from './services/RecursiveSignalDetector'
 
@@ -108,6 +114,7 @@ console.log(`Chained signals: ${topChain.chainedSignals.length}`)
 ```
 
 **Output**:
+
 - `SignalChain[]` with root signals and chained signals
 - Chain strength and confidence metrics
 - Discovery paths showing recursion trace
@@ -119,6 +126,7 @@ console.log(`Chained signals: ${topChain.chainedSignals.length}`)
 **Purpose**: Adaptively enrich prospect data with recursive strategy planning.
 
 **Key Features**:
+
 - Analyzes data gaps and plans enrichment steps
 - Adaptive re-planning based on enrichment results
 - Dependency-aware step execution
@@ -128,6 +136,7 @@ console.log(`Chained signals: ${topChain.chainedSignals.length}`)
 **Implementation**: `src/lib/services/RecursiveEnrichmentEngine.ts`
 
 **Usage**:
+
 ```typescript
 import { RecursiveEnrichmentEngine } from './services/RecursiveEnrichmentEngine'
 
@@ -140,6 +149,7 @@ console.log(`Executed ${result.executedSteps.length} steps in ${result.duration}
 ```
 
 **Output**:
+
 - `RecursiveEnrichmentResult` with original and enriched prospect
 - Improvement metrics (data completeness, confidence increase)
 - List of executed enrichment steps
@@ -151,6 +161,7 @@ console.log(`Executed ${result.executedSteps.length} steps in ${result.duration}
 **Purpose**: Network-aware lead requalification with recursive relationship traversal.
 
 **Key Features**:
+
 - Requalifies dead leads based on new signals
 - Recursively checks related companies in network
 - Generates network-based recommendations (cross-sell, cluster approach)
@@ -160,6 +171,7 @@ console.log(`Executed ${result.executedSteps.length} steps in ${result.duration}
 **Implementation**: `src/lib/services/RecursiveLeadRequalifier.ts`
 
 **Usage**:
+
 ```typescript
 import { RecursiveLeadRequalifier } from './services/RecursiveLeadRequalifier'
 
@@ -171,11 +183,12 @@ console.log(`Requalified ${result.requalifiedLeads.length} leads`)
 console.log(`Recommendations: ${result.recommendations.length}`)
 
 // Check revival recommendations
-const revivals = result.requalifiedLeads.filter(l => l.recommendation === 'revive')
+const revivals = result.requalifiedLeads.filter((l) => l.recommendation === 'revive')
 console.log(`${revivals.length} leads recommended for revival`)
 ```
 
 **Output**:
+
 - `NetworkRequalification` with all requalified leads
 - Network graph showing relationships
 - Strategic recommendations (cross-sell, upsell, cluster approach)
@@ -189,6 +202,7 @@ console.log(`${revivals.length} leads recommended for revival`)
 **Purpose**: AI-powered prospect narratives using LLM (Claude 3.5 Sonnet).
 
 **Key Features**:
+
 - Comprehensive prospect analysis with 7 sections
 - Contextual insights using market data, relationships, signals, trends
 - Personalization based on user preferences
@@ -198,6 +212,7 @@ console.log(`${revivals.length} leads recommended for revival`)
 **Implementation**: `src/lib/services/GenerativeNarrativeEngine.ts`
 
 **Usage**:
+
 ```typescript
 import { GenerativeNarrativeEngine } from './services/GenerativeNarrativeEngine'
 
@@ -216,6 +231,7 @@ console.log(`Confidence: ${(narrative.confidence * 100).toFixed(0)}%`)
 ```
 
 **Narrative Sections**:
+
 1. **Summary**: 2-3 sentence executive summary
 2. **Key Findings**: 3-5 most important insights
 3. **Opportunity Analysis**: Detailed opportunity assessment
@@ -231,6 +247,7 @@ console.log(`Confidence: ${(narrative.confidence * 100).toFixed(0)}%`)
 **Purpose**: Automated insight generation across multiple prospects.
 
 **Key Features**:
+
 - 4 insight types: opportunity, risk, trend, recommendation
 - Pattern analysis (industry distribution, signal correlations, health trends)
 - Confidence and impact scoring
@@ -238,16 +255,17 @@ console.log(`Confidence: ${(narrative.confidence * 100).toFixed(0)}%`)
 - Automatic prioritization by impact and confidence
 
 **Usage**:
+
 ```typescript
 const insights = await engine.generateInsights(prospects, marketData, relationships)
 
 // Filter high-impact insights
-const highImpact = insights.filter(i => i.impact === 'high')
+const highImpact = insights.filter((i) => i.impact === 'high')
 console.log(`${highImpact.length} high-impact insights generated`)
 
 // Group by type
-const opportunities = insights.filter(i => i.type === 'opportunity')
-const risks = insights.filter(i => i.type === 'risk')
+const opportunities = insights.filter((i) => i.type === 'opportunity')
+const risks = insights.filter((i) => i.type === 'risk')
 ```
 
 ---
@@ -257,6 +275,7 @@ const risks = insights.filter(i => i.type === 'risk')
 **Purpose**: AI-powered custom report generation with insights and visualizations.
 
 **Key Features**:
+
 - 4 report types: Portfolio, Market, Prospect, Competitive
 - Automatic section generation with AI insights
 - Markdown, HTML, and PDF format support
@@ -266,6 +285,7 @@ const risks = insights.filter(i => i.type === 'risk')
 **Implementation**: `src/lib/services/GenerativeReportBuilder.ts`
 
 **Usage**:
+
 ```typescript
 import { GenerativeReportBuilder } from './services/GenerativeReportBuilder'
 
@@ -304,6 +324,7 @@ console.log(`Report content: ${report.content.length} characters`)
 **Purpose**: ML-powered prospect recommendations based on user behavior.
 
 **Key Features**:
+
 - 5 match factors: industry, score, signal, behavior, network (weighted scoring)
 - Learns from claim patterns and outcomes
 - Historical success tracking by industry
@@ -313,14 +334,11 @@ console.log(`Report content: ${report.content.length} characters`)
 **Implementation**: `src/lib/services/PersonalizedRecommendationEngine.ts`
 
 **Usage**:
+
 ```typescript
 import { PersonalizedRecommendationEngine } from './services/PersonalizedRecommendationEngine'
 
-const engine = new PersonalizedRecommendationEngine(
-  userProfile,
-  prospects,
-  relationshipGraphs
-)
+const engine = new PersonalizedRecommendationEngine(userProfile, prospects, relationshipGraphs)
 
 const recommendations = await engine.generateRecommendations(20, {
   excludeClaimed: true,
@@ -331,10 +349,11 @@ const recommendations = await engine.generateRecommendations(20, {
 // Top recommendation
 const top = recommendations[0]
 console.log(`${top.prospect.companyName}: ${top.score.toFixed(1)} score`)
-console.log(`Reasons: ${top.reasons.map(r => r.description).join('; ')}`)
+console.log(`Reasons: ${top.reasons.map((r) => r.description).join('; ')}`)
 ```
 
 **Match Factors**:
+
 - **Industry Match** (25%): Preferred industries, historical success
 - **Score Match** (20%): Proximity to user's typical claims
 - **Signal Match** (20%): Preferred signal types, signal count bonus
@@ -348,6 +367,7 @@ console.log(`Reasons: ${top.reasons.map(r => r.description).join('; ')}`)
 **Purpose**: Comprehensive user profile management with behavioral learning.
 
 **Key Features**:
+
 - Preference management (industries, states, score thresholds, signal types)
 - Automatic behavioral pattern learning
 - Custom filter saving and management
@@ -358,6 +378,7 @@ console.log(`Reasons: ${top.reasons.map(r => r.description).join('; ')}`)
 **Implementation**: `src/lib/services/UserProfileManager.ts`
 
 **Usage**:
+
 ```typescript
 import { UserProfileManager } from './services/UserProfileManager'
 
@@ -394,6 +415,7 @@ console.log(`Most frequent industry: ${analytics.mostFrequentIndustry}`)
 ```
 
 **Behavioral Learning**:
+
 - Tracks claim patterns by industry, score, signals
 - Calculates conversion rates and success metrics
 - Identifies successful industries automatically
@@ -407,6 +429,7 @@ console.log(`Most frequent industry: ${analytics.mostFrequentIndustry}`)
 **Purpose**: Personalized dashboard with drag-and-drop widgets.
 
 **Features**:
+
 - 7 widget types: prospects, stats, signals, portfolio, competitors, recommendations, insights
 - Grid-based layout (12 columns)
 - Custom widget positioning and sizing
@@ -414,6 +437,7 @@ console.log(`Most frequent industry: ${analytics.mostFrequentIndustry}`)
 - Layout persistence per user
 
 **Usage**:
+
 ```typescript
 manager.updateDashboardLayout('user-123', {
   widgets: [
@@ -494,15 +518,14 @@ function ProspectIntelligence() {
 
 ```typescript
 // Batch enrich all unclaimed prospects
-const unclaimedIds = prospects
-  .filter(p => !p.claimedBy)
-  .map(p => p.id)
+const unclaimedIds = prospects.filter((p) => !p.claimedBy).map((p) => p.id)
 
 const enrichmentEngine = new RecursiveEnrichmentEngine(prospects)
 const results = await enrichmentEngine.batchEnrich(unclaimedIds, 2, 5)
 
 console.log(`Enriched ${results.length} prospects`)
-const avgImprovement = results.reduce((sum, r) => sum + r.improvements.dataCompleteness, 0) / results.length
+const avgImprovement =
+  results.reduce((sum, r) => sum + r.improvements.dataCompleteness, 0) / results.length
 console.log(`Average improvement: ${avgImprovement.toFixed(1)}%`)
 ```
 
@@ -721,6 +744,7 @@ VITE_ENABLE_PERSONALIZATION=true
 ### Default Configurations
 
 **Relationship Mapping**:
+
 ```typescript
 {
   maxDepth: 3,
@@ -731,6 +755,7 @@ VITE_ENABLE_PERSONALIZATION=true
 ```
 
 **Signal Detection**:
+
 ```typescript
 {
   maxDepth: 3,
@@ -805,6 +830,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/ivi374forivi/public-record-data-scrapper/issues
 - Documentation: This file
 - Examples: See `Usage Examples` section above

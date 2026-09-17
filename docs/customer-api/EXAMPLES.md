@@ -7,6 +7,7 @@ These examples demonstrate common workflows using the UCC-MCA Intelligence API. 
 Retrieve the top 50 prospects in California with a priority score above 80.
 
 ### cURL
+
 ```bash
 curl -X GET "https://api.your-domain.com/api/prospects?state=CA&min_score=80&limit=50" \
      -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -14,33 +15,35 @@ curl -X GET "https://api.your-domain.com/api/prospects?state=CA&min_score=80&lim
 ```
 
 ### Node.js (JavaScript/TypeScript)
+
 ```javascript
-const fetch = require('node-fetch');
+const fetch = require('node-fetch')
 
 async function getHighPriorityProspects() {
-  const url = 'https://api.your-domain.com/api/prospects?state=CA&min_score=80&limit=50';
-  
+  const url = 'https://api.your-domain.com/api/prospects?state=CA&min_score=80&limit=50'
+
   const response = await fetch(url, {
     method: 'GET',
     headers: {
-      'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+      Authorization: 'Bearer YOUR_ACCESS_TOKEN',
       'Content-Type': 'application/json'
     }
-  });
+  })
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`HTTP error! status: ${response.status}`)
   }
 
-  const data = await response.json();
-  console.log(`Found ${data.pagination.total} prospects.`);
-  console.log(data.prospects);
+  const data = await response.json()
+  console.log(`Found ${data.pagination.total} prospects.`)
+  console.log(data.prospects)
 }
 
-getHighPriorityProspects();
+getHighPriorityProspects()
 ```
 
 ### Python
+
 ```python
 import requests
 
@@ -73,6 +76,7 @@ else:
 Enrich a batch of specific prospects using their UUIDs.
 
 ### cURL
+
 ```bash
 curl -X POST "https://api.your-domain.com/api/enrichment/batch" \
      -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
@@ -86,6 +90,7 @@ curl -X POST "https://api.your-domain.com/api/enrichment/batch" \
 ```
 
 ### Python
+
 ```python
 import requests
 

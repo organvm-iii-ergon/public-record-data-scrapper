@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express'
+import express, { Express, NextFunction, Request, Response } from 'express'
 import type { Server as HttpServer } from 'http'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -43,6 +43,8 @@ import metricsRouter from './routes/metrics'
 import agenticRouter from './routes/agentic'
 import scrapeRouter from './routes/scrape'
 import underwritingRouter from './routes/underwriting'
+import webhookSubscriptionsRouter from './routes/webhookSubscriptions'
+import v1Router from './routes/v1/index'
 
 // Import queue infrastructure
 import {
@@ -89,17 +91,22 @@ export class Server {
 
     // Raw body middleware for webhooks (must be before JSON parser)
     // This preserves the raw body for signature verification
-    this.app.use(
-      '/api/webhooks',
-      express.raw({
-        type: 'application/json',
-        limit: '1mb',
-        verify: (req: Request, res: Response, buf: Buffer) => {
-          // Store raw body for signature verification
-          ;(req as Request & { rawBody?: Buffer }).rawBody = buf
-        }
-      })
-    )
+    const webhookRawParser = express.raw({
+      type: 'application/json',
+      limit: '1mb',
+      verify: (req: Request, res: Response, buf: Buffer) => {
+        // Store raw body for signature verification
+        ;(req as Request & { rawBody?: Buffer }).rawBody = buf
+      }
+    })
+    this.app.use('/api/webhooks', (req: Request, res: Response, next: NextFunction) => {
+      // Subscription management uses ordinary JSON. Keeping it out of the raw
+      // parser lets the global express.json middleware populate req.body.
+      if (req.path === '/subscriptions' || req.path.startsWith('/subscriptions/')) {
+        return next()
+      }
+      return webhookRawParser(req, res, next)
+    })
 
     // Parsing for webhook form data (Twilio sends as x-www-form-urlencoded)
     this.app.use('/api/webhooks', express.urlencoded({ extended: true, limit: '1mb' }))
@@ -274,6 +281,22 @@ export class Server {
     // org/tier context by the time dataTierRouter resolves.
     this.app.use('/api/scrape', apiKeyOrJwtAuth, dataTierRouter, scrapeRouter)
 
+    // Outbound webhook subscription management (authenticated — requires org context)
+    this.app.use(
+      '/api/webhooks',
+      authMiddleware,
+      orgContextMiddleware,
+      dataTierRouter,
+      webhookSubscriptionsRouter
+    )
+
+    // Versioned public REST API (v1).
+    // Auth, rate-limiting, org-context, and data-tier are applied inside the
+    // v1Router itself — see server/routes/v1/index.ts.
+    // Mounted AFTER the /api routes so the same underlying route handlers can
+    // serve both /api/* (dashboard/JWT) and /v1/* (external API-key callers)
+    // without duplication.
+    this.app.use('/v1', v1Router)
     // Root endpoint
     this.app.get('/', dataTierRouter, (req, res) => {
       res.json({

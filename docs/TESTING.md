@@ -34,6 +34,7 @@ npm run test:coverage
 Tests are located alongside the source files they test, following the pattern `*.test.ts` or `*.test.tsx`.
 
 Example structure:
+
 ```
 src/lib/agentic/
 ├── BaseAgent.ts
@@ -57,14 +58,15 @@ We follow the **AAA (Arrange-Act-Assert)** pattern for all unit tests:
 3. **Assert**: Verify the results match expectations
 
 Example:
+
 ```typescript
 it('should create finding with correct structure', () => {
   // Arrange
   const agent = new TestAgent()
-  
+
   // Act
   const finding = agent.createFinding('data-quality', 'warning', 'Test finding', { test: 'data' })
-  
+
   // Assert
   expect(finding).toMatchObject({
     category: 'data-quality',
@@ -84,6 +86,7 @@ it('should create finding with correct structure', () => {
 ### What We Test
 
 #### Core Components
+
 - **BaseAgent**: Foundation for all agents
   - Agent initialization
   - Finding creation
@@ -103,6 +106,7 @@ it('should create finding with correct structure', () => {
   - Improvement aggregation
 
 #### Specialized Agents
+
 - **DataAnalyzerAgent**: Data quality and freshness
 - **OptimizerAgent**: Performance optimization
 - **SecurityAgent**: Security vulnerabilities
@@ -111,30 +115,39 @@ it('should create finding with correct structure', () => {
 ## Naming Conventions
 
 ### Test Files
+
 - Use `.test.ts` or `.test.tsx` suffix
 - Match the source file name exactly (e.g., `BaseAgent.ts` → `BaseAgent.test.ts`)
 
 ### Test Suites
+
 - Use `describe()` blocks to group related tests
 - Name suites after the component/feature being tested
 - Nest `describe()` blocks for sub-features
 
 Example:
+
 ```typescript
 describe('AgenticEngine', () => {
   describe('Configuration Management', () => {
-    it('should initialize with default configuration', () => { /* ... */ })
-    it('should accept custom configuration', () => { /* ... */ })
+    it('should initialize with default configuration', () => {
+      /* ... */
+    })
+    it('should accept custom configuration', () => {
+      /* ... */
+    })
   })
 })
 ```
 
 ### Test Cases
+
 - Start with "should" to describe expected behavior
 - Be specific and descriptive
 - Include context when needed
 
 Good examples:
+
 - ✅ `should detect stale health scores`
 - ✅ `should not flag fresh data`
 - ✅ `should set critical severity for very low completeness`
@@ -170,14 +183,16 @@ Use `beforeEach()` to reset state before each test:
 ```typescript
 beforeEach(() => {
   agent = new DataAnalyzerAgent()
-  mockContext = { /* fresh context */ }
+  mockContext = {/* fresh context */}
 })
 ```
 
 ## Test Categories
 
 ### 1. Happy Path Tests
+
 Test normal, expected behavior:
+
 ```typescript
 it('should detect missing revenue estimates', async () => {
   mockContext.prospects = [{ companyName: 'Test Co' }]
@@ -187,7 +202,9 @@ it('should detect missing revenue estimates', async () => {
 ```
 
 ### 2. Edge Case Tests
+
 Test boundary conditions and unusual inputs:
+
 ```typescript
 it('should handle empty prospect list', async () => {
   mockContext.prospects = []
@@ -197,7 +214,9 @@ it('should handle empty prospect list', async () => {
 ```
 
 ### 3. Error Handling Tests
+
 Verify graceful error handling:
+
 ```typescript
 it('should handle agent analysis errors gracefully', async () => {
   // Add failing agent and verify system continues
@@ -205,7 +224,9 @@ it('should handle agent analysis errors gracefully', async () => {
 ```
 
 ### 4. Scenario-based Tests
+
 Test realistic, complex scenarios:
+
 ```typescript
 it('should handle high-risk security scenario', async () => {
   // Set up complex security scenario with multiple issues
@@ -222,11 +243,13 @@ npm run test:coverage
 ```
 
 This generates:
+
 - Terminal output with summary
 - HTML report in `coverage/index.html`
 - JSON report in `coverage/coverage-final.json`
 
 Coverage is configured to exclude:
+
 - `node_modules/`
 - Test files themselves
 - Type definition files (`.d.ts`)
@@ -236,11 +259,13 @@ Coverage is configured to exclude:
 ## Continuous Integration
 
 Tests run automatically on:
+
 - Every pull request
 - Every commit to main branches
 - On-demand via GitHub Actions
 
 CI configuration checks:
+
 - All tests must pass
 - Coverage thresholds must be met
 - No linting errors
@@ -250,14 +275,17 @@ CI configuration checks:
 ### Common Issues
 
 **Issue**: "Cannot find module" errors
+
 - **Solution**: Check import paths - test files in subdirectories need relative imports
 - Example: `import { DataAnalyzerAgent } from './DataAnalyzerAgent'` (not `'./agents/DataAnalyzerAgent'`)
 
 **Issue**: Tests timeout
+
 - **Solution**: Increase timeout in test or async operations
 - Example: `it('long test', async () => { /* ... */ }, 10000)` // 10 second timeout
 
 **Issue**: Flaky tests (sometimes pass, sometimes fail)
+
 - **Solution**: Look for timing issues, shared state, or random data
 - Use `beforeEach()` to reset state
 - Avoid time-dependent assertions
@@ -265,16 +293,19 @@ CI configuration checks:
 ### Debugging Tests
 
 Run a single test file:
+
 ```bash
 npm test src/lib/agentic/BaseAgent.test.ts
 ```
 
 Run tests matching a pattern:
+
 ```bash
 npm test -- --grep "DataAnalyzerAgent"
 ```
 
 Enable verbose output:
+
 ```bash
 npm test -- --reporter=verbose
 ```
@@ -299,6 +330,7 @@ npm test -- --reporter=verbose
 ## Contributing
 
 When adding new features:
+
 1. Write tests first (TDD approach preferred)
 2. Ensure all tests pass before submitting PR
 3. Maintain or improve coverage percentages
@@ -308,6 +340,7 @@ When adding new features:
 ## Support
 
 For questions or issues with tests:
+
 - Check this guide first
 - Review existing test files for examples
 - Ask in the team's development channel

@@ -17,6 +17,7 @@ Accepted
 We chose TypeScript as the primary implementation language, leveraging its ecosystem for web application development, type safety, and modern frontend/backend patterns. The project follows the organvm repository standards (documented in `docs/standards/10-repository-standards.md` of the planning corpus) and integrates with the cross-organ dependency graph maintained in `registry-v2.json`.
 
 Key architectural choices:
+
 - **Language**: TypeScript — selected for ecosystem fit and team expertise
 - **CI/CD**: GitHub Actions with graceful degradation (tests, linting, type checking)
 - **Documentation**: Portfolio-quality README (4,500+ words) targeting grant reviewers and hiring managers

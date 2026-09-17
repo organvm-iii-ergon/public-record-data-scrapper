@@ -75,7 +75,7 @@ export const AUDIENCES: Audience[] = [
     target: 5000,
     platforms: [
       { name: 'Twitter/X', handle: '@ResearchAI_Lab', followers: 0, engagementRate: 0.05 },
-      { name: 'arXiv', url: 'arxiv.org/list/cs.AI', followers: 0, engagementRate: 0.10 },
+      { name: 'arXiv', url: 'arxiv.org/list/cs.AI', followers: 0, engagementRate: 0.1 },
       { name: 'Google Scholar', followers: 0, engagementRate: 0.02 },
       { name: 'ResearchGate', followers: 0, engagementRate: 0.04 },
       { name: 'Semantic Scholar', followers: 0, engagementRate: 0.03 }
@@ -104,11 +104,16 @@ export const AUDIENCES: Audience[] = [
     target: 20000,
     platforms: [
       { name: 'Twitter/X', handle: '@DataInsights_AI', followers: 0, engagementRate: 0.03 },
-      { name: 'Reddit', url: 'r/datascience, r/machinelearning', followers: 0, engagementRate: 0.08 },
+      {
+        name: 'Reddit',
+        url: 'r/datascience, r/machinelearning',
+        followers: 0,
+        engagementRate: 0.08
+      },
       { name: 'Hacker News', url: 'news.ycombinator.com', followers: 0, engagementRate: 0.12 },
       { name: 'Medium', followers: 0, engagementRate: 0.04 },
       { name: 'YouTube', followers: 0, engagementRate: 0.15 },
-      { name: 'TikTok', followers: 0, engagementRate: 0.20 }
+      { name: 'TikTok', followers: 0, engagementRate: 0.2 }
     ],
     contentStyle: {
       tone: 'casual',
@@ -136,7 +141,7 @@ export const AUDIENCES: Audience[] = [
       { name: 'Twitter/X', handle: '@IntelligencePlatform', followers: 0, engagementRate: 0.02 },
       { name: 'LinkedIn', followers: 0, engagementRate: 0.06 },
       { name: 'Substack', followers: 0, engagementRate: 0.25 },
-      { name: 'Product Hunt', followers: 0, engagementRate: 0.10 }
+      { name: 'Product Hunt', followers: 0, engagementRate: 0.1 }
     ],
     contentStyle: {
       tone: 'executive',
@@ -163,9 +168,9 @@ export const AUDIENCES: Audience[] = [
     platforms: [
       { name: 'GitHub', url: 'github.com/user/repo', followers: 0, engagementRate: 0.08 },
       { name: 'Twitter/X', handle: '@OpenSourceIntel', followers: 0, engagementRate: 0.04 },
-      { name: 'Dev.to', followers: 0, engagementRate: 0.10 },
+      { name: 'Dev.to', followers: 0, engagementRate: 0.1 },
       { name: 'Stack Overflow', followers: 0, engagementRate: 0.05 },
-      { name: 'Discord/Slack', followers: 0, engagementRate: 0.30 }
+      { name: 'Discord/Slack', followers: 0, engagementRate: 0.3 }
     ],
     contentStyle: {
       tone: 'technical',
@@ -275,7 +280,7 @@ export class MultiAudienceContentGenerator {
         1. **Primary Finding:** ${finding.mainResult} (p < 0.001, effect size = ${finding.effectSize})
 
         2. **Secondary Findings:**
-        ${finding.secondaryResults.map(r => `   - ${r}`).join('\n')}
+        ${finding.secondaryResults.map((r) => `   - ${r}`).join('\n')}
 
         3. **Robustness Checks:** Results hold across ${finding.robustnessTests}
 
@@ -289,7 +294,7 @@ export class MultiAudienceContentGenerator {
 
         ## References
 
-        ${finding.references.map((r, i) => `[${i+1}] ${r}`).join('\n')}
+        ${finding.references.map((r, i) => `[${i + 1}] ${r}`).join('\n')}
 
         ## Code & Data
 

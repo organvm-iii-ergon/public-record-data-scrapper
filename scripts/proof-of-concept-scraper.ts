@@ -65,7 +65,7 @@ async function collectRealNYFilings(): Promise<ProofOfConceptResult> {
       {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         },
         timeout: 30000
       }
@@ -101,7 +101,6 @@ async function collectRealNYFilings(): Promise<ProofOfConceptResult> {
     result.success = true
 
     console.log(`\n✅ Successfully collected ${result.totalCollected} proof-of-concept records`)
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error(`\n❌ Collection error: ${errorMessage}`)
@@ -231,7 +230,9 @@ function generateReport(result: ProofOfConceptResult): string {
 
 ## Sample Filings
 
-${result.filings.map((filing, i) => `
+${result.filings
+  .map(
+    (filing, i) => `
 ### Filing #${i + 1}
 
 - **Filing Number:** ${filing.filingNumber}
@@ -243,7 +244,9 @@ ${result.filings.map((filing, i) => `
 - **Source URL:** ${filing.sourceUrl}
 - **Collected At:** ${filing.collectedAt}
 
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## Technical Details
 
@@ -265,9 +268,10 @@ ${result.filings.map((filing, i) => `
 
 ### Errors Encountered
 
-${result.errors.length > 0
-  ? result.errors.map(err => `- ${err}`).join('\n')
-  : '✅ No errors - clean collection'
+${
+  result.errors.length > 0
+    ? result.errors.map((err) => `- ${err}`).join('\n')
+    : '✅ No errors - clean collection'
 }
 
 ## Production Readiness
@@ -313,7 +317,7 @@ This proof-of-concept demonstrates:
  */
 async function main() {
   console.log('🚀 UCC Filing Collection - Proof of Concept')
-  console.log('=' .repeat(60))
+  console.log('='.repeat(60))
   console.log('')
 
   // Try real portal first

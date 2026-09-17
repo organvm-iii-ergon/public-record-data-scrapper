@@ -13,12 +13,14 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 **Problem**: Transient network issues, temporary server unavailability, or timeouts could cause scraping to fail completely.
 
 **Solution**: Implemented automatic retry mechanism with exponential backoff:
+
 - Configurable retry attempts (default: 2 retries, total 3 attempts)
 - Exponential backoff: 2^attempt * 1000ms (e.g., 1s, 2s, 4s)
 - Maximum backoff capped at 30 seconds
 - Smart error detection distinguishes retryable vs. non-retryable errors
 
 **Retryable Errors**:
+
 - Network timeouts (ETIMEDOUT, ECONNRESET)
 - Connection refused (ECONNREFUSED)
 - DNS resolution failures (ENOTFOUND)
@@ -26,6 +28,7 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 - Generic network errors (net::ERR_*)
 
 **Non-Retryable Errors** (fail immediately):
+
 - Invalid input (empty company name)
 - CAPTCHA detected (requires manual intervention)
 - Authorization/authentication errors
@@ -46,11 +49,13 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 ```
 
 **Log Levels**:
+
 - **INFO**: Normal operation events (search started, page created, results found)
 - **WARN**: Non-fatal issues (missing selectors, parsing errors, validation warnings)
 - **ERROR**: Failures (invalid input, CAPTCHA, network errors, max retries exceeded)
 
 **Logged Information**:
+
 - Timestamps for all operations
 - Company name and state for context
 - Retry attempt numbers
@@ -65,12 +70,14 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 **Solution**: Added validation for all scraped filing records:
 
 **Required Fields**:
+
 - Filing number
 - Debtor name
 - Secured party
 - Filing date
 
 **Validation Process**:
+
 1. Parse data from HTML elements
 2. Validate each filing individually
 3. Collect validation errors
@@ -78,6 +85,7 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 5. Report all validation errors to user
 
 **Benefits**:
+
 - Ensures data quality and completeness
 - Prevents downstream errors from incomplete data
 - Provides clear feedback on data issues
@@ -89,16 +97,19 @@ The scraping system has been enhanced with comprehensive error handling, retry l
 **Solution**: Comprehensive error collection and reporting:
 
 **Error Types Collected**:
+
 - Element parsing errors (malformed HTML, missing fields)
 - Data validation errors (missing required fields)
 
 **Error Reporting**:
+
 - Collected in `parsingErrors` array in result
 - Displayed in CLI output with warning indicators
 - Limited to first 5 errors in console (full list in JSON export)
 - Each error includes context (element index, field names)
 
 **Example CLI Output**:
+
 ```
 ✔ Scraping completed
 
@@ -118,6 +129,7 @@ Filings found: 8
 **Problem**: Browser resources could leak if errors occurred during scraping.
 
 **Solution**: Proper resource management:
+
 - Browser pages always closed via `finally` blocks
 - Cleanup errors logged but don't throw
 - Prevents resource exhaustion on repeated failures
@@ -137,12 +149,14 @@ try {
 ## Usage Examples
 
 ### Basic Scraping with Error Handling
+
 ```bash
 # Scrape with automatic retries and error logging
 npm run scrape -- scrape-ucc -c "Acme Corporation" -s CA -o results.json
 ```
 
 **Expected Output** (Success):
+
 ```
 ✔ Scraping completed
 
@@ -160,6 +174,7 @@ Filings found: 5
 ```
 
 **Expected Output** (With Retries):
+
 ```
 [2025-11-06T06:00:00.123Z] [INFO] [CA] CA UCC search for Acme Corp - Attempt 1/3
 [2025-11-06T06:00:30.456Z] [WARN] [CA] CA UCC search for Acme Corp failed: Navigation timeout. Retrying in 1000ms...
@@ -168,6 +183,7 @@ Filings found: 5
 ```
 
 **Expected Output** (With Validation Warnings):
+
 ```
 ✔ Scraping completed
 
@@ -182,11 +198,13 @@ Filings found: 3
 ```
 
 ### Batch Processing with Error Resilience
+
 ```bash
 npm run scrape -- batch -i companies.csv -o ./results
 ```
 
 Each company is processed independently with:
+
 - Individual retry logic per company
 - Rate limiting between companies (15-second delay)
 - Continued processing even if one company fails
@@ -195,19 +213,23 @@ Each company is processed independently with:
 ## Configuration
 
 ### Retry Configuration
+
 Located in each state scraper's constructor:
+
 ```typescript
 super({
   state: 'CA',
   baseUrl: 'https://...',
-  rateLimit: 5,           // requests per minute
-  timeout: 30000,         // 30 seconds
-  retryAttempts: 2        // 2 retries = 3 total attempts
+  rateLimit: 5, // requests per minute
+  timeout: 30000, // 30 seconds
+  retryAttempts: 2 // 2 retries = 3 total attempts
 })
 ```
 
 ### Adjusting Retry Behavior
+
 To modify retry behavior:
+
 1. Change `retryAttempts` in scraper constructor
 2. Modify backoff calculation in `retryWithBackoff()` method
 3. Update retryable error patterns in `isRetryableError()` method
@@ -215,6 +237,7 @@ To modify retry behavior:
 ## Monitoring and Debugging
 
 ### Log Analysis
+
 All operations are logged with timestamps. To debug issues:
 
 1. **Check log timestamps** - Identify slow operations
@@ -225,18 +248,22 @@ All operations are logged with timestamps. To debug issues:
 ### Common Issues and Solutions
 
 **Issue**: High retry rates
+
 - **Cause**: Network instability or rate limiting
 - **Solution**: Increase delay between requests, check network connectivity
 
 **Issue**: Many validation errors
+
 - **Cause**: Website structure changed, selectors outdated
 - **Solution**: Update CSS selectors in scraper code
 
 **Issue**: CAPTCHA errors
+
 - **Cause**: Too many requests or bot detection
 - **Solution**: Reduce scraping frequency, use different IP, manual completion
 
 **Issue**: Parsing errors for all filings
+
 - **Cause**: Website structure completely changed
 - **Solution**: Review website and update scraper selectors
 
@@ -256,6 +283,7 @@ Potential improvements for even greater reliability:
 ### Code Structure
 
 **Base Scraper** (`base-scraper.ts`):
+
 - Abstract base class with common functionality
 - Retry logic implementation
 - Logging infrastructure
@@ -263,17 +291,20 @@ Potential improvements for even greater reliability:
 - Error classification
 
 **State Scrapers** (`states/*.ts`):
+
 - State-specific implementations
 - URL construction
 - CSS selectors for data extraction
 - Browser automation
 
 **Scraper Agent** (`ScraperAgent.ts`):
+
 - Orchestrates state scrapers
 - Task routing
 - Result aggregation
 
 **CLI** (`cli-scraper.ts`):
+
 - Command-line interface
 - User-friendly output formatting
 - Error display
@@ -308,12 +339,14 @@ CLI Display with Warnings
 To verify the improvements are working:
 
 1. **Test Basic Functionality**:
+
    ```bash
    npm run scrape -- list-states
    npm run scrape -- normalize -n "Test Corp, LLC"
    ```
 
 2. **Test Error Handling** (simulate by disconnecting network):
+
    ```bash
    # Disconnect network, run scrape, observe retries
    npm run scrape -- scrape-ucc -c "Acme" -s CA
@@ -326,6 +359,7 @@ To verify the improvements are working:
 ## Conclusion
 
 These reliability improvements significantly enhance the robustness of the scraping system by:
+
 - **Reducing failure rates** through automatic retries
 - **Improving debuggability** with comprehensive logging
 - **Ensuring data quality** through validation

@@ -11,15 +11,17 @@ import type { Frame } from 'puppeteer'
 import { PaginationHandler } from '../pagination-handler'
 
 export class CaliforniaScraper extends BasePuppeteerScraper {
-
   constructor(options: { headless?: boolean; keepPageOpenOnFailure?: boolean } = {}) {
-    super({
-      state: 'CA',
-      baseUrl: 'https://bizfileonline.sos.ca.gov/search/ucc',
-      rateLimit: 4, // 4 requests per minute (conservative for state portal)
-      timeout: 45000, // Increased timeout for CA SOS portal
-      retryAttempts: 2
-    }, options)
+    super(
+      {
+        state: 'CA',
+        baseUrl: 'https://bizfileonline.sos.ca.gov/search/ucc',
+        rateLimit: 4, // 4 requests per minute (conservative for state portal)
+        timeout: 45000, // Increased timeout for CA SOS portal
+        retryAttempts: 2
+      },
+      options
+    )
   }
 
   /**

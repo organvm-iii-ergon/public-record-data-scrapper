@@ -9,8 +9,8 @@ assignees: ''
 ## PR Reference
 
 **PR Number**: #
-**PR Title**: 
-**PR Link**: 
+**PR Title**:
+**PR Link**:
 
 ## Comment Details
 
@@ -22,10 +22,10 @@ assignees: ''
 
 <!-- Provide a brief summary of the comment -->
 
-
 ### Full Comment Text
 
 <!-- Paste the full comment text here -->
+
 ```
 
 ```
@@ -34,14 +34,13 @@ assignees: ''
 
 <!-- List the key questions or decisions that need to be made -->
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Proposed Resolution
 
 <!-- Describe potential solutions or approaches -->
-
 
 ## Impact
 
@@ -70,12 +69,11 @@ assignees: ''
 ## Timeline
 
 **Target Resolution Date**: YYYY-MM-DD
-**Actual Resolution Date**: 
+**Actual Resolution Date**:
 
 ## Notes
 
 <!-- Add any additional context, links to related discussions, or other relevant information -->
-
 
 ---
 
@@ -85,10 +83,11 @@ assignees: ''
 
 **Resolved By**: @username
 **Resolution Date**: YYYY-MM-DD
-**Decision Made**: 
+**Decision Made**:
 
-**Implementation**: 
-- Commit: 
-- PR: 
+**Implementation**:
+
+- Commit:
+- PR:
 
 **Updated Tracking**: [ ] PR_COMMENTS_TRACKING.md updated

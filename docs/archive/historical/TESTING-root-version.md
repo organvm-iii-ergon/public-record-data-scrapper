@@ -5,6 +5,7 @@ This document describes the testing strategy and how to run tests for the UCC-MC
 ## Testing Framework
 
 The project uses [Vitest](https://vitest.dev/) as the testing framework, chosen for its:
+
 - Native TypeScript support
 - Seamless integration with Vite
 - Fast execution
@@ -33,26 +34,31 @@ src/
 ## Running Tests
 
 ### Run all tests
+
 ```bash
 npm test
 ```
 
 ### Run tests in watch mode (for development)
+
 ```bash
 npm test -- --watch
 ```
 
 ### Run tests with UI
+
 ```bash
 npm run test:ui
 ```
 
 ### Run tests with coverage
+
 ```bash
 npm run test:coverage
 ```
 
 ### Run specific test file
+
 ```bash
 npm test -- --run BaseAgent.test.ts
 ```
@@ -62,6 +68,7 @@ npm test -- --run BaseAgent.test.ts
 Current test coverage for the agentic system:
 
 ### Core Components
+
 - **BaseAgent** (11 tests): Foundation class for all agents
   - Constructor validation
   - Finding creation
@@ -84,6 +91,7 @@ Current test coverage for the agentic system:
   - Status management
 
 ### Specialized Agents
+
 - **DataAnalyzerAgent** (13 tests): Data quality assessment
   - Freshness detection
   - Quality assessment
@@ -113,10 +121,12 @@ Current test coverage for the agentic system:
 ## Writing Tests
 
 ### Test File Naming
+
 - Test files should be named `[ComponentName].test.ts`
 - Place test files next to the code they test
 
 ### Test Structure
+
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ComponentToTest } from './ComponentToTest'
@@ -132,10 +142,10 @@ describe('ComponentToTest', () => {
     it('should do something specific', () => {
       // Arrange
       const input = 'test'
-      
+
       // Act
       const result = component.doSomething(input)
-      
+
       // Assert
       expect(result).toBe('expected')
     })
@@ -155,18 +165,21 @@ describe('ComponentToTest', () => {
 ## Testing Guidelines
 
 ### Unit Tests
+
 - Test individual functions and methods in isolation
 - Mock external dependencies
 - Focus on a single unit of functionality
 - Fast execution (< 100ms per test typically)
 
 ### Integration Tests
+
 - Test interaction between multiple components
 - Use real implementations where possible
 - Test complete workflows
 - May be slower than unit tests
 
 ### What to Test
+
 - ✅ Public API methods
 - ✅ Edge cases and boundary conditions
 - ✅ Error handling
@@ -174,6 +187,7 @@ describe('ComponentToTest', () => {
 - ✅ Data transformations
 
 ### What Not to Test
+
 - ❌ Third-party libraries (trust they work)
 - ❌ Trivial getters/setters without logic
 - ❌ Framework code
@@ -182,6 +196,7 @@ describe('ComponentToTest', () => {
 ## Continuous Integration
 
 Tests are run automatically on:
+
 - Pull request creation
 - Push to main branch
 - Before merging
@@ -197,19 +212,23 @@ All tests must pass before code can be merged.
 ## Troubleshooting
 
 ### Tests are slow
+
 - Tests run in parallel by default with Vitest.
 - To explicitly specify the pool type: `npm test -- --pool=threads`
 - Run only changed tests: `npm test -- --changed`
 
 ### Tests fail locally but pass in CI
+
 - Check for timezone issues
 - Verify node version matches CI
 - Check for file system case sensitivity
 
 ### Coverage not generating
+
 ```bash
 npm run test:coverage
 ```
+
 Coverage reports are generated in `coverage/` directory.
 
 ## Future Improvements

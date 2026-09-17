@@ -30,14 +30,17 @@ import {
   TrendUp,
   TrendDown,
   Brain,
-  Envelope
+  Envelope,
+  Lightning
 } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@public-records/ui/tabs'
 import { Card } from '@public-records/ui/card'
 import { Progress } from '@public-records/ui/progress'
 import type { ProspectNote, FollowUpReminder, OutreachEmail } from '@public-records/core'
 import { useState } from 'react'
 import { useIsMobile } from '@public-records/ui/use-mobile'
+import { apiRequest } from '@/lib/api/client'
 
 // Normalize a possibly-undefined/out-of-range score into a valid 0-100 Progress value.
 function clampPercent(value: number | undefined | null): number {
@@ -93,7 +96,34 @@ export function ProspectDetailDialog({
   onSendEmail = () => {}
 }: ProspectDetailDialogProps) {
   const [emailComposerOpen, setEmailComposerOpen] = useState(false)
+  const [pushingCrm, setPushingCrm] = useState(false)
   const isMobile = useIsMobile()
+
+  const handlePushToCrm = async () => {
+    if (!prospect) return
+    setPushingCrm(true)
+    try {
+      const result = await apiRequest<{
+        success: boolean
+        provider?: string
+        externalId?: string
+        error?: string
+      }>('/crm/push', {
+        method: 'POST',
+        body: { prospect_id: prospect.id }
+      })
+      if (!result.success) throw new Error(result.error ?? 'CRM push failed')
+      toast.success(
+        `Pushed "${prospect.companyName}" to ${result.provider ?? 'the configured CRM'}${result.externalId ? ` (${result.externalId})` : ''}.`
+      )
+    } catch (error) {
+      toast.error(
+        `Failed to push prospect to CRM: ${error instanceof Error ? error.message : 'Request failed'}`
+      )
+    } finally {
+      setPushingCrm(false)
+    }
+  }
 
   if (!prospect) return null
 
@@ -415,6 +445,10 @@ export function ProspectDetailDialog({
             <Button size="lg" variant="outline" onClick={() => setEmailComposerOpen(true)}>
               <Envelope size={20} weight="bold" className="mr-2" />
               Send Email
+            </Button>
+            <Button size="lg" variant="outline" disabled={pushingCrm} onClick={handlePushToCrm}>
+              <Lightning size={20} weight="fill" className="mr-2 text-primary" />
+              {pushingCrm ? 'Pushing...' : 'Push to CRM'}
             </Button>
             <Button size="lg" variant="outline" onClick={() => onExport(prospect)}>
               <Export size={20} weight="bold" className="mr-2" />

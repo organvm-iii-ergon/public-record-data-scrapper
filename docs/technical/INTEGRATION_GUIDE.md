@@ -69,8 +69,8 @@ function ProspectEnrichmentButton({ prospect }) {
 
   return (
     <div>
-      <button 
-        onClick={handleEnrich} 
+      <button
+        onClick={handleEnrich}
         disabled={loading}
       >
         {loading ? 'Enriching...' : 'Enrich Data'}
@@ -123,7 +123,7 @@ function ProspectDetailDialog({ prospect, onClose }) {
   return (
     <Dialog>
       {/* Existing prospect details */}
-      
+
       <div className="enrichment-section">
         <h3>Data Enrichment</h3>
         <button onClick={handleEnrich} disabled={loading}>
@@ -210,8 +210,8 @@ function UsageDashboard({ userId }) {
           <h3>Quota Used</h3>
           <p>{stats.quotaUsed} / {stats.quotaLimit}</p>
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${stats.percentUsed}%` }}
             />
           </div>
@@ -250,7 +250,7 @@ function UsageDashboard({ userId }) {
 Update `src/lib/agentic/AgenticEngine.ts` to include enrichment agents:
 
 ```typescript
-import { 
+import {
   DataAnalyzerAgent,
   OptimizerAgent,
   SecurityAgent,
@@ -272,7 +272,7 @@ export class AgenticEngine {
       new OptimizerAgent(),
       new SecurityAgent(),
       new UXEnhancerAgent(),
-      
+
       // New enrichment agents
       new DataAcquisitionAgent(),
       new MonitoringAgent(),
@@ -342,12 +342,13 @@ console.log(result)
 ## Best Practices
 
 1. **Always check quota before enriching**
+
    ```typescript
    const quotaCheck = await monitoringAgent.executeTask({
      type: 'check-quota',
      payload: { userId }
    })
-   
+
    if (!quotaCheck.data.hasQuota) {
      // Show upgrade prompt
      return
@@ -355,6 +356,7 @@ console.log(result)
    ```
 
 2. **Handle errors gracefully**
+
    ```typescript
    try {
      const result = await orchestrator.executeTask({ ... })
@@ -370,13 +372,15 @@ console.log(result)
    ```
 
 3. **Show progress to users**
+
    ```typescript
-   result.data.progress.forEach(stage => {
+   result.data.progress.forEach((stage) => {
      updateProgressUI(stage.stage, stage.status)
    })
    ```
 
 4. **Cache results**
+
    ```typescript
    // Store enrichment results in local state or database
    // to avoid redundant API calls
@@ -391,21 +395,25 @@ console.log(result)
 ## Troubleshooting
 
 ### "Rate limit exceeded" error
+
 - Wait a few seconds and retry
 - Check rate limiter configuration
 - Consider upgrading tier for higher limits
 
 ### "Quota exceeded" error
+
 - User has hit monthly limit
 - Show upgrade prompt
 - Reset occurs automatically each month
 
 ### "Source unavailable" error
+
 - Check API key configuration
 - Verify external API is accessible
 - Check internet connectivity
 
 ### Data quality issues
+
 - Use DataNormalizationAgent to clean data
 - Review canonicalization rules
 - Report issues for improvement
@@ -426,6 +434,7 @@ console.log(result)
 ## Support
 
 For questions or issues:
+
 - Check `ENRICHMENT_PIPELINE.md` for detailed documentation
 - Review `API_SPEC.md` for backend API details
 - See `demo-enrichment.ts` for working examples

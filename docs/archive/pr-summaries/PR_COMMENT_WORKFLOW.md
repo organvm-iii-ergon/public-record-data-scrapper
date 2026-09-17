@@ -7,6 +7,7 @@ This document describes the workflow for managing and resolving open-ended PR co
 ## Overview
 
 The goal of this workflow is to ensure that:
+
 - No PR comments are left unaddressed
 - Complex discussions have clear ownership and timelines
 - Decisions are documented and tracked
@@ -47,12 +48,14 @@ Close issue (if created)
 ## Roles and Responsibilities
 
 ### Comment Author (Reviewer)
+
 - Write clear, actionable comments
 - Use appropriate labels/tags
 - Respond to follow-up questions
 - Approve resolution once complete
 
 ### PR Author (Contributor)
+
 - Acknowledge all comments within 48 hours
 - Address straightforward comments immediately
 - Escalate complex comments to tracking system
@@ -60,6 +63,7 @@ Close issue (if created)
 - Mark resolved comments
 
 ### Comment Owner (Assigned)
+
 - Drive discussion to resolution
 - Coordinate with stakeholders
 - Document decisions
@@ -67,6 +71,7 @@ Close issue (if created)
 - Ensure timely closure
 
 ### Maintainers
+
 - Review tracking document weekly
 - Assign owners to unassigned comments
 - Escalate blocked items
@@ -89,7 +94,7 @@ When leaving a PR comment that requires discussion:
    - `[Discussion]` - Requires team discussion
    - `[Decision]` - Needs architectural decision
 
-2. **Be specific**: 
+2. **Be specific**:
    - State the concern clearly
    - Provide examples if helpful
    - Suggest alternatives if possible
@@ -99,11 +104,12 @@ When leaving a PR comment that requires discussion:
    - Mention relevant stakeholders
 
 **Example**:
+
 ```
-[Security][Blocker] Database credentials are hardcoded on line 194. 
+[Security][Blocker] Database credentials are hardcoded on line 194.
 This is a security risk.
 
-Recommendation: Use environment variables via process.env or a secrets 
+Recommendation: Use environment variables via process.env or a secrets
 management tool like HashiCorp Vault.
 
 @security-team for review
@@ -126,11 +132,12 @@ management tool like HashiCorp Vault.
    - Indicate it will be added to tracking
 
 **Example Response**:
+
 ```
 Thanks for catching this! You're right, we shouldn't hardcode credentials.
 
-For this documentation PR, I'll update the guide to show environment 
-variable usage instead. 
+For this documentation PR, I'll update the guide to show environment
+variable usage instead.
 
 Adding to PR_COMMENTS_TRACKING.md for proper resolution workflow.
 ```
@@ -162,6 +169,7 @@ For comments that require significant discussion or implementation:
 6. Reference in PR_COMMENTS_TRACKING.md
 
 **When to create an issue**:
+
 - Discussion will take >3 days
 - Multiple stakeholders need input
 - Requires implementation work
@@ -264,7 +272,7 @@ For comments that require significant discussion or implementation:
 ### Target Metrics
 
 - **Response time**: <48 hours for initial acknowledgment
-- **Resolution time**: 
+- **Resolution time**:
   - High priority: <7 days
   - Medium priority: <14 days
   - Low priority: <30 days
@@ -273,6 +281,7 @@ For comments that require significant discussion or implementation:
 ### Tracking
 
 Review these metrics in weekly meetings:
+
 - Number of open comments
 - Average resolution time
 - Comments by priority
@@ -293,6 +302,7 @@ Review these metrics in weekly meetings:
 ### Potential Automation
 
 Consider implementing:
+
 - Bot to flag unresolved comments
 - Auto-add to tracking document
 - Reminder notifications for overdue items
@@ -319,6 +329,7 @@ If a comment cannot be resolved:
 **Comment**: "[Security][Blocker] Hardcoded password on line 42"
 
 **Workflow**:
+
 1. PR author acknowledges within 24 hours
 2. Adds to tracking document as HIGH priority
 3. Implements fix using environment variables
@@ -332,6 +343,7 @@ If a comment cannot be resolved:
 **Comment**: "[Decision] Should we use implementation guide or ADRs?"
 
 **Workflow**:
+
 1. PR author acknowledges, notes need for team discussion
 2. Creates issue using template
 3. Adds to tracking document
@@ -348,6 +360,7 @@ If a comment cannot be resolved:
 **Comment**: "[Suggestion] Consider using const instead of let here"
 
 **Workflow**:
+
 1. PR author makes change immediately
 2. Comments "Done, thanks!"
 3. Mark as resolved

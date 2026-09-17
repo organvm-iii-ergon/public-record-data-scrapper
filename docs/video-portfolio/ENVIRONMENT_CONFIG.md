@@ -1,4 +1,5 @@
 # Environment Configuration Template
+
 ## Portfolio Video Production Settings
 
 **Purpose:** Standardize input variables for consistent, customizable video production across different candidates and use cases.
@@ -354,12 +355,14 @@ MEASURABLE_IMPACT="Reduced sales cycle by 60%, increased lead quality by 40%"
 ## Usage Instructions
 
 ### Step 1: Customize Variables
+
 1. Copy this file to `.env.portfolio` in your repository
 2. Fill in all `[Your ...]` placeholders
 3. Adjust colors, fonts, and preferences to match your brand
 4. Set target audience and CTA appropriately
 
 ### Step 2: Validate Configuration
+
 ```bash
 # Check that all required variables are set
 source .env.portfolio
@@ -369,7 +372,9 @@ echo "CTA: $CTA_URL"
 ```
 
 ### Step 3: Use in Production
+
 Reference these variables throughout:
+
 - **Script writing:** Personalize narration with `$CANDIDATE_NAME`
 - **Visual design:** Use `$BRAND_COLOR_*` in all graphics
 - **Call-to-action:** Display `$CTA_URL` in final frame
@@ -380,6 +385,7 @@ Reference these variables throughout:
 ## Configuration Presets
 
 ### Preset: Technical Leadership Role
+
 ```bash
 TARGET_AUDIENCE="technical hiring manager"
 CANDIDATE_ROLE_TARGET="Technical Lead & Systems Architect"
@@ -390,6 +396,7 @@ VOICE_STYLE="calm professional"
 ```
 
 ### Preset: Product Management Role
+
 ```bash
 TARGET_AUDIENCE="non-technical executive"
 CANDIDATE_ROLE_TARGET="Product Strategist & Systems Designer"
@@ -400,6 +407,7 @@ VOICE_STYLE="warm authoritative"
 ```
 
 ### Preset: Consultant/Freelancer
+
 ```bash
 TARGET_AUDIENCE="client / buyer"
 CANDIDATE_ROLE_TARGET="Digital Systems Consultant"
@@ -410,6 +418,7 @@ VOICE_STYLE="thoughtful explainer"
 ```
 
 ### Preset: Startup Founder Pitch
+
 ```bash
 TARGET_AUDIENCE="venture capital investor"
 CANDIDATE_ROLE_TARGET="Founder & Technical Lead"
@@ -443,13 +452,13 @@ If using automated video generation tools, you can use these variables programma
 
 ```javascript
 // Example: Load config and generate personalized script
-const config = require('./.env.portfolio');
+const config = require('./.env.portfolio')
 
 const hook = `Every day, thousands of businesses in ${config.BUSINESS_DOMAIN} 
-face a critical problem: ${config.KEY_PROBLEM}`;
+face a critical problem: ${config.KEY_PROBLEM}`
 
 const cta = `If you're looking for ${config.CANDIDATE_ROLE_TARGET}, 
-let's ${config.CTA_OUTCOME}. Visit ${config.CTA_URL}`;
+let's ${config.CTA_OUTCOME}. Visit ${config.CTA_URL}`
 ```
 
 ---
@@ -457,12 +466,14 @@ let's ${config.CTA_OUTCOME}. Visit ${config.CTA_URL}`;
 ## Updating Configuration
 
 ### When to Update:
+
 - **Targeting different role:** Change `CANDIDATE_ROLE_TARGET`, `TARGET_AUDIENCE`, `NARRATIVE_EMPHASIS`
 - **Different project:** Change `PROJECT_NAME`, `KEY_PROBLEM`, `KEY_INNOVATION`
 - **Brand refresh:** Update `BRAND_COLOR_*` and `BRAND_FONT_*`
 - **New CTA:** Update `CTA_URL`, `CTA_OUTCOME`
 
 ### Version Control:
+
 - Keep `.env.portfolio.template` in repository (with placeholders)
 - Add `.env.portfolio` to `.gitignore` (personal information)
 - Document changes in `CHANGELOG.md` if updating template structure

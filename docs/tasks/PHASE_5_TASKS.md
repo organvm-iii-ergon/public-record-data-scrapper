@@ -10,15 +10,18 @@
 ## Week 17-18: Monitoring & Observability
 
 ### Task 5.1: Prometheus + Grafana Setup
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: HIGH
 
 #### Subtask 5.1.1: Prometheus Configuration
+
 **Time**: 1 day
 
 **Prometheus Config:**
 `monitoring/prometheus/prometheus.yml`
+
 ```yaml
 global:
   scrape_interval: 15s
@@ -33,7 +36,7 @@ alerting:
 
 # Load rules (already exists in monitoring/prometheus/alerts.yml)
 rule_files:
-  - "alerts.yml"
+  - 'alerts.yml'
 
 # Scrape configurations
 scrape_configs:
@@ -66,6 +69,7 @@ scrape_configs:
 
 **Application Metrics:**
 `server/middleware/metrics.ts`
+
 ```typescript
 import promClient from 'prom-client'
 import { Request, Response, NextFunction } from 'express'
@@ -152,6 +156,7 @@ export const metricsEndpoint = async (req: Request, res: Response) => {
 
 **Docker Compose for Local Monitoring:**
 `docker-compose.monitoring.yml`
+
 ```yaml
 version: '3.8'
 
@@ -221,6 +226,7 @@ volumes:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Prometheus scraping metrics
 - [ ] Custom application metrics
 - [ ] Database metrics (postgres_exporter)
@@ -230,10 +236,12 @@ volumes:
 ---
 
 #### Subtask 5.1.2: Grafana Dashboards
+
 **Time**: 2 days
 
 **Dashboard 1: Application Overview**
 `monitoring/grafana-dashboards/application-overview.json`
+
 ```json
 {
   "title": "UCC Intelligence - Application Overview",
@@ -279,6 +287,7 @@ volumes:
 ```
 
 **Dashboard 2: Data Pipeline**
+
 ```json
 {
   "title": "UCC Intelligence - Data Pipeline",
@@ -304,6 +313,7 @@ volumes:
 ```
 
 **Dashboard 3: Business Metrics**
+
 ```json
 {
   "title": "UCC Intelligence - Business Metrics",
@@ -337,6 +347,7 @@ volumes:
 ```
 
 **Dashboard 4: System Health**
+
 ```json
 {
   "title": "UCC Intelligence - System Health",
@@ -370,6 +381,7 @@ volumes:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] 4 Grafana dashboards created
 - [ ] Real-time metrics displayed
 - [ ] Alerts configured
@@ -378,12 +390,14 @@ volumes:
 ---
 
 ### Task 5.2: Centralized Logging
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
 
 **Winston Logger Setup:**
 `server/logging/logger.ts`
+
 ```typescript
 import winston from 'winston'
 
@@ -404,10 +418,7 @@ export const logger = winston.createLogger({
   transports: [
     // Console transport
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple())
     }),
 
     // File transport - errors
@@ -431,16 +442,19 @@ export const logger = winston.createLogger({
 if (process.env.NODE_ENV === 'production') {
   const CloudWatchTransport = require('winston-cloudwatch')
 
-  logger.add(new CloudWatchTransport({
-    logGroupName: `/ucc-intelligence/${process.env.NODE_ENV}`,
-    logStreamName: `api-${new Date().toISOString().split('T')[0]}`,
-    awsRegion: process.env.AWS_REGION
-  }))
+  logger.add(
+    new CloudWatchTransport({
+      logGroupName: `/ucc-intelligence/${process.env.NODE_ENV}`,
+      logStreamName: `api-${new Date().toISOString().split('T')[0]}`,
+      awsRegion: process.env.AWS_REGION
+    })
+  )
 }
 ```
 
 **Usage with Correlation IDs:**
 `server/middleware/requestLogger.ts`
+
 ```typescript
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '../logging/logger'
@@ -477,6 +491,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Winston logger configured
 - [ ] Correlation IDs on all requests
 - [ ] CloudWatch integration (production)
@@ -486,16 +501,19 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 ---
 
 ### Task 5.3: Error Tracking (Sentry)
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Priority**: HIGH
 
 **Sentry Setup:**
+
 ```bash
 npm install @sentry/node @sentry/profiling-node
 ```
 
 `server/sentry.ts`
+
 ```typescript
 import * as Sentry from '@sentry/node'
 import { ProfilingIntegration } from '@sentry/profiling-node'
@@ -505,14 +523,12 @@ Sentry.init({
   environment: process.env.NODE_ENV,
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new ProfilingIntegration()
-  ]
+  integrations: [new Sentry.Integrations.Http({ tracing: true }), new ProfilingIntegration()]
 })
 ```
 
 **Error Boundary Middleware:**
+
 ```typescript
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   // Log to Sentry
@@ -548,6 +564,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Sentry configured
 - [ ] Error grouping working
 - [ ] User context attached
@@ -558,11 +575,13 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 ## Week 19-20: Deployment & Launch
 
 ### Task 5.4: Infrastructure Provisioning
+
 **Assignee**: TBD
 **Effort**: 3 days
 **Priority**: CRITICAL
 
 **Option A: AWS Deployment**
+
 ```bash
 # Using Terraform
 terraform init
@@ -571,6 +590,7 @@ terraform apply plan.tfplan
 ```
 
 `infrastructure/terraform/main.tf`
+
 ```hcl
 provider "aws" {
   region = "us-east-1"
@@ -747,6 +767,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Infrastructure provisioned
 - [ ] Database accessible from ECS
 - [ ] Redis cluster running
@@ -757,11 +778,13 @@ resource "aws_cloudfront_distribution" "frontend" {
 ---
 
 ### Task 5.5: CI/CD Pipeline
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
 
 **.github/workflows/deploy.yml**
+
 ```yaml
 name: Deploy to Production
 
@@ -837,6 +860,7 @@ jobs:
 ```
 
 **Acceptance Criteria:**
+
 - [ ] CI/CD pipeline working
 - [ ] Tests run before deployment
 - [ ] Docker images built and pushed
@@ -847,28 +871,30 @@ jobs:
 ---
 
 ### Task 5.6: Load Testing
+
 **Assignee**: TBD
 **Effort**: 2 days
 **Priority**: HIGH
 
 **k6 Load Test Script:**
 `tests/load/api-load-test.js`
+
 ```javascript
 import http from 'k6/http'
 import { check, sleep } from 'k6'
 
 export const options = {
   stages: [
-    { duration: '2m', target: 100 },  // Ramp up to 100 users
-    { duration: '5m', target: 100 },  // Stay at 100 users
-    { duration: '2m', target: 200 },  // Ramp up to 200 users
-    { duration: '5m', target: 200 },  // Stay at 200 users
-    { duration: '2m', target: 0 },    // Ramp down to 0
+    { duration: '2m', target: 100 }, // Ramp up to 100 users
+    { duration: '5m', target: 100 }, // Stay at 100 users
+    { duration: '2m', target: 200 }, // Ramp up to 200 users
+    { duration: '5m', target: 200 }, // Stay at 200 users
+    { duration: '2m', target: 0 } // Ramp down to 0
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'],  // 95% of requests must complete below 500ms
-    http_req_failed: ['rate<0.01'],    // Error rate must be below 1%
-  },
+    http_req_duration: ['p(95)<500'], // 95% of requests must complete below 500ms
+    http_req_failed: ['rate<0.01'] // Error rate must be below 1%
+  }
 }
 
 const BASE_URL = 'https://api.ucc-intelligence.com'
@@ -878,7 +904,7 @@ export default function () {
   const prospectsRes = http.get(`${BASE_URL}/api/prospects?page=1&limit=20`)
   check(prospectsRes, {
     'prospects status is 200': (r) => r.status === 200,
-    'prospects response time < 500ms': (r) => r.timings.duration < 500,
+    'prospects response time < 500ms': (r) => r.timings.duration < 500
   })
 
   sleep(1)
@@ -886,7 +912,7 @@ export default function () {
   // Test GET /prospects/:id
   const prospectRes = http.get(`${BASE_URL}/api/prospects/test-uuid-123`)
   check(prospectRes, {
-    'prospect status is 200 or 404': (r) => [200, 404].includes(r.status),
+    'prospect status is 200 or 404': (r) => [200, 404].includes(r.status)
   })
 
   sleep(1)
@@ -894,11 +920,13 @@ export default function () {
 ```
 
 **Run Load Test:**
+
 ```bash
 k6 run tests/load/api-load-test.js
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Load test script written
 - [ ] P95 latency < 500ms
 - [ ] Error rate < 1%
@@ -908,18 +936,21 @@ k6 run tests/load/api-load-test.js
 ---
 
 ### Task 5.7: Launch Runbook
+
 **Assignee**: TBD
 **Effort**: 1 day
 **Priority**: CRITICAL
 
 **Create Launch Checklist:**
 `docs/LAUNCH_RUNBOOK.md`
-```markdown
+
+````markdown
 # Production Launch Runbook
 
 ## Pre-Launch Checklist (T-7 days)
 
 ### Infrastructure
+
 - [ ] Database backups tested and verified
 - [ ] Redis cluster healthy
 - [ ] Load balancer health checks passing
@@ -928,6 +959,7 @@ k6 run tests/load/api-load-test.js
 - [ ] Auto-scaling policies tested
 
 ### Security
+
 - [ ] Security scan passed (0 critical, 0 high vulnerabilities)
 - [ ] Secrets in AWS Secrets Manager
 - [ ] CORS configured correctly
@@ -935,6 +967,7 @@ k6 run tests/load/api-load-test.js
 - [ ] Authentication working
 
 ### Monitoring
+
 - [ ] Prometheus scraping all targets
 - [ ] Grafana dashboards created
 - [ ] Alertmanager rules configured
@@ -942,6 +975,7 @@ k6 run tests/load/api-load-test.js
 - [ ] Sentry error tracking active
 
 ### Testing
+
 - [ ] All unit tests passing (80%+ coverage)
 - [ ] Integration tests passing
 - [ ] E2E tests passing
@@ -949,6 +983,7 @@ k6 run tests/load/api-load-test.js
 - [ ] Smoke tests on staging
 
 ### Documentation
+
 - [ ] API documentation (OpenAPI) complete
 - [ ] Deployment guide updated
 - [ ] Runbooks for common issues
@@ -957,29 +992,34 @@ k6 run tests/load/api-load-test.js
 ## Launch Day (T-0)
 
 ### 08:00 - Pre-Launch
+
 - [ ] Final smoke tests on staging
 - [ ] Backup current database
 - [ ] Notify team of launch window
 - [ ] Enable maintenance page
 
 ### 09:00 - Database Migration
+
 - [ ] Run database migrations
 - [ ] Verify schema changes
 - [ ] Seed production data (if any)
 
 ### 10:00 - Deployment
+
 - [ ] Deploy backend (ECS)
 - [ ] Deploy frontend (S3 + CloudFront)
 - [ ] Verify health checks passing
 - [ ] Disable maintenance page
 
 ### 10:30 - Verification
+
 - [ ] Test critical user flows
 - [ ] Verify metrics in Grafana
 - [ ] Check error rates in Sentry
 - [ ] Monitor database connections
 
 ### 11:00 - Go Live
+
 - [ ] Announce launch
 - [ ] Monitor for 2 hours
 - [ ] Be ready for rollback
@@ -995,19 +1035,23 @@ If error rate > 5% or P95 latency > 1s:
      --service ucc-intelligence-api-service \
      --task-definition previous-task-definition-arn
    ```
+````
 
 2. Rollback database migration:
+
    ```bash
    npm run migrate:down
    ```
 
 3. Rollback frontend:
+
    ```bash
    aws s3 sync s3://ucc-intelligence-frontend-backup/ s3://ucc-intelligence-frontend/
    ```
 
 4. Notify team and stakeholders
 5. Post-mortem within 24 hours
+
 ```
 
 **Acceptance Criteria:**
@@ -1078,3 +1122,4 @@ If error rate > 5% or P95 latency > 1s:
 **Total Project Cost**: ~$120,000 (20 weeks)
 
 🚀 **PRODUCTION READY**
+```

@@ -951,3 +951,77 @@ export interface ComplianceAlert {
   createdAt: string
   updatedAt: string
 }
+
+// ============================================================================
+// Webhooks & CRM Integration (Issue #485)
+// ============================================================================
+
+export type WebhookStatus = 'active' | 'paused' | 'disabled'
+export type WebhookDeliveryStatus =
+  'pending' | 'delivering' | 'delivered' | 'failed' | 'dead_letter'
+
+export interface WebhookEndpoint {
+  id: string
+  orgId: string
+  url: string
+  secret?: string
+  secretPreview?: string
+  description?: string
+  events: string[]
+  status: WebhookStatus
+  consecutiveFailures: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WebhookDelivery {
+  id: string
+  orgId: string
+  webhookId: string
+  event: string
+  payload: string
+  status: WebhookDeliveryStatus
+  attempts: number
+  maxAttempts: number
+  nextRetryAt?: string
+  responseStatus?: number
+  responseBody?: string
+  errorMessage?: string
+  deliveredAt?: string
+  createdAt: string
+}
+
+export interface StandardWebhookPayload<T = unknown> {
+  id: string
+  event: string
+  createdAt: string
+  apiVersion: string
+  data: T
+}
+
+export type CrmProvider = 'hubspot' | 'salesforce' | 'gohighlevel'
+export type CrmStatus = 'active' | 'disabled' | 'error'
+
+export interface CrmIntegration {
+  id: string
+  orgId: string
+  provider: CrmProvider
+  status: CrmStatus
+  apiKey?: string
+  apiKeyPreview?: string
+  config?: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CrmPushLog {
+  id: string
+  orgId: string
+  crmId: string
+  prospectId: string
+  provider: CrmProvider
+  externalId?: string
+  status: 'success' | 'failed'
+  errorMessage?: string
+  createdAt: string
+}

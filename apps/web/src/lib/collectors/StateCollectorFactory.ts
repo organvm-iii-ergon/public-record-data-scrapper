@@ -624,6 +624,42 @@ export class StateCollectorFactory {
   }
 
   /**
+   * Register a state configuration dynamically at runtime.
+   */
+  registerStateConfig(config: StateConfig): void {
+    STATE_CONFIGS[config.code.toUpperCase()] = config
+  }
+
+  /**
+   * Register a collector builder dynamically at runtime.
+   */
+  registerCollectorBuilder(
+    stateCode: string,
+    method: AccessMethod,
+    build: () => StateCollector | undefined
+  ): void {
+    const normalized = stateCode.toUpperCase()
+    COLLECTOR_BUILDERS[normalized] = { method, build }
+    this.registry.delete(normalized)
+    for (const registry of Object.values(this.methodRegistries)) {
+      registry.delete(normalized)
+    }
+  }
+
+  /**
+   * Register a dynamic state with both config and collector builder.
+   */
+  registerDynamicState(config: StateConfig, build: () => StateCollector | undefined): void {
+    const primaryMethod = config.accessMethods[0] || 'scrape'
+    this.registerStateConfig({
+      ...config,
+      accessMethods: [primaryMethod],
+      activeMethod: primaryMethod
+    })
+    this.registerCollectorBuilder(config.code, primaryMethod, build)
+  }
+
+  /**
    * Get collector statistics
    */
   getStats() {
@@ -752,4 +788,14 @@ export function getStateConfig(stateCode: string): StateConfig | undefined {
  */
 export function getCostTracking(stateCode?: string): CostTracking[] {
   return stateCollectorFactory.getCostTracking(stateCode)
+}
+
+/**
+ * Helper function to register a dynamic state configuration and collector
+ */
+export function registerDynamicState(
+  config: StateConfig,
+  build: () => StateCollector | undefined
+): void {
+  stateCollectorFactory.registerDynamicState(config, build)
 }

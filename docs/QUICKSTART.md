@@ -13,12 +13,14 @@ This guide will get you from zero to a fully functional UCC data scraping and an
 ### Install PostgreSQL
 
 **macOS:**
+
 ```bash
 brew install postgresql@16
 brew services start postgresql@16
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
@@ -78,6 +80,7 @@ npm run db:seed
 ```
 
 You should see:
+
 ```
 ✅ Connected successfully
 ✅ Database is healthy
@@ -104,12 +107,14 @@ npm run scrape:ca
 ```
 
 This will:
+
 1. Connect to database
 2. Scrape 5 California companies for UCC filings
 3. Store prospects, filings, and signals in database
 4. Show summary statistics
 
 Expected output:
+
 ```
 🔍 UCC Filing Scraper - California
 
@@ -246,6 +251,7 @@ npm run lint         # Lint code
 **Error**: `ECONNREFUSED 127.0.0.1:5432`
 
 **Fix**: Ensure PostgreSQL is running
+
 ```bash
 # Check status
 pg_isready
@@ -262,12 +268,15 @@ sudo systemctl start postgresql
 **Check 1**: Verify `.env` has `VITE_USE_MOCK_DATA=false`
 
 **Check 2**: Verify database has data
+
 ```bash
 npm run db:init
 ```
+
 Should show: `Total Prospects: 5` (or more)
 
 **Check 3**: Restart dev server to pick up env changes
+
 ```bash
 # Stop server (Ctrl+C)
 npm run dev
@@ -285,6 +294,7 @@ psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ucc_intelligence TO ucc_us
 The system supports **three different scraper implementations**:
 
 ### 1. MOCK (Default - What You Just Used)
+
 - ✅ **Free**: No costs
 - ✅ **Fast**: Instant data generation
 - ✅ **Reliable**: 100% success rate
@@ -293,6 +303,7 @@ The system supports **three different scraper implementations**:
 **Use for:** Development, demos, testing
 
 ### 2. PUPPETEER (Real Web Scraping)
+
 - ✅ **Free**: No API costs
 - ✅ **Real Data**: Scrapes actual government websites
 - ⚠️ **Complex**: Requires anti-bot measures
@@ -301,12 +312,14 @@ The system supports **three different scraper implementations**:
 **Use for:** Budget-conscious real data collection
 
 **Setup:**
+
 ```bash
 npm install puppeteer-extra puppeteer-extra-plugin-stealth
 SCRAPER_IMPLEMENTATION=puppeteer npm run scrape:ca
 ```
 
 ### 3. API (Commercial Service - Recommended for Production)
+
 - ✅ **Reliable**: 99.9% uptime
 - ✅ **Legal**: Licensed data access
 - ✅ **Fast**: < 1 second per search
@@ -316,6 +329,7 @@ SCRAPER_IMPLEMENTATION=puppeteer npm run scrape:ca
 **Use for:** Production systems, compliance-critical applications
 
 **Setup:**
+
 ```bash
 # Sign up for API (e.g., UCC Plus, SOS Direct)
 # Add to .env:
@@ -333,6 +347,7 @@ npm run scrape:ca
 ### Switch Scraper Implementation
 
 Choose the right implementation for your needs:
+
 - **Development**: Use MOCK (already set up)
 - **Testing with real data**: Try PUPPETEER
 - **Production**: Use commercial API
@@ -342,6 +357,7 @@ See [`docs/SCRAPING_GUIDE.md`](docs/SCRAPING_GUIDE.md) for complete guide.
 ### Add More States
 
 Create scrapers for other states:
+
 - `scripts/scrapers/tx-ucc-scraper.ts` - Texas
 - `scripts/scrapers/fl-ucc-scraper.ts` - Florida
 - `scripts/scrapers/ny-ucc-scraper.ts` - New York
@@ -349,6 +365,7 @@ Create scrapers for other states:
 ### Add Data Sources
 
 Integrate additional enrichment sources:
+
 - Job boards (Indeed, LinkedIn) for hiring signals
 - Building permits for expansion signals
 - Government contracts for contract signals
@@ -357,6 +374,7 @@ Integrate additional enrichment sources:
 ### Automate Collection
 
 Set up scheduled scraping:
+
 ```typescript
 // Run scraper daily
 cron.schedule('0 2 * * *', async () => {

@@ -117,7 +117,7 @@ async function main() {
   }
 
   await ensureOutputDir()
-  
+
   const todayDateStr = new Date().toISOString().split('T')[0]
   const existingLeads = await getExistingBatch(todayDateStr)
   const existingLeadKeys = new Set(existingLeads.map((l) => `${l.state}-${l.companyName}`))

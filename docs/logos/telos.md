@@ -18,18 +18,18 @@ one mental model, one CLI (`wrangler`), one identity plane.
 
 ## The ideal stack (every concern → its ideal primitive)
 
-| Concern | Ideal primitive | Why it is the ideal, not merely adequate |
-|---|---|---|
-| SPA delivery | **Pages** | global edge, immutable deploys, per-branch previews — free |
-| API | **Workers + Hono** | runs in every datacenter; cold-start ≈ 0; Express-shaped |
-| System of record | **D1** (SQLite + FTS5) | colocated with compute; FTS5 replaces `pg_trgm`; `json1` replaces JSONB; zero connection pool to manage |
-| Async pipeline | **Queues** (Cron + a D1 drain at the $0 floor) | durable, at-least-once; Cron Triggers own the scheduled scrapes |
-| Stateful coordination | **Durable Objects** | the agentic council's loop state, per-tenant rate limits, and real-time progress become *single-threaded objects at the edge* — no Redis, no races |
-| MCA-likelihood scoring | **Workers AI + Vectorize** | the "AI-powered" promise made literal: inference + embedding similarity at the edge, per request |
-| Cache / config / flags | **KV** | feature-flag the fail-closed switches; edge-read config |
-| Artifacts / exports / raw scrapes | **R2** | zero egress; already in use (`cronus-assets`) |
-| Identity | **Cloudflare Access (Zero Trust)** | the `org_id` the IDOR fix needs arrives *in the Access JWT* — auth stops being our code |
-| IaC + CD | **`wrangler.toml` + GitHub Actions** | environments and rollback are declared, not operated |
+| Concern                           | Ideal primitive                                | Why it is the ideal, not merely adequate                                                                                                           |
+| --------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SPA delivery                      | **Pages**                                      | global edge, immutable deploys, per-branch previews — free                                                                                         |
+| API                               | **Workers + Hono**                             | runs in every datacenter; cold-start ≈ 0; Express-shaped                                                                                           |
+| System of record                  | **D1** (SQLite + FTS5)                         | colocated with compute; FTS5 replaces `pg_trgm`; `json1` replaces JSONB; zero connection pool to manage                                            |
+| Async pipeline                    | **Queues** (Cron + a D1 drain at the $0 floor) | durable, at-least-once; Cron Triggers own the scheduled scrapes                                                                                    |
+| Stateful coordination             | **Durable Objects**                            | the agentic council's loop state, per-tenant rate limits, and real-time progress become _single-threaded objects at the edge_ — no Redis, no races |
+| MCA-likelihood scoring            | **Workers AI + Vectorize**                     | the "AI-powered" promise made literal: inference + embedding similarity at the edge, per request                                                   |
+| Cache / config / flags            | **KV**                                         | feature-flag the fail-closed switches; edge-read config                                                                                            |
+| Artifacts / exports / raw scrapes | **R2**                                         | zero egress; already in use (`cronus-assets`)                                                                                                      |
+| Identity                          | **Cloudflare Access (Zero Trust)**             | the `org_id` the IDOR fix needs arrives _in the Access JWT_ — auth stops being our code                                                            |
+| IaC + CD                          | **`wrangler.toml` + GitHub Actions**           | environments and rollback are declared, not operated                                                                                               |
 
 ## How the domain lands on it
 
@@ -64,7 +64,7 @@ one mental model, one CLI (`wrangler`), one identity plane.
 - **D1 over Postgres**: we surrender `pg_trgm`/JSONB-GIN/btree_gin and accept a
   data-layer rewrite (→ FTS5 + `json1`) and a one-time data migration. This is
   the deliberate cost of single-vendor purity. Pragma/Praxis track the bridge.
-- **Express → Hono**: a framework rewrite; the *logic* (esp. #234) is preserved,
+- **Express → Hono**: a framework rewrite; the _logic_ (esp. #234) is preserved,
   the glue is replaced.
 - **No always-on process**: the BullMQ mental model is abandoned for
   Cron + Queues + Durable Objects — a more correct edge model, but a re-think.

@@ -6,8 +6,8 @@ This API allows you to programmatically access Merchant Cash Advance (MCA) lead 
 
 ## Base URLs
 
-* **Development:** `http://localhost:3000/api`
-* **Production:** `https://api.your-domain.com/api`
+- **Development:** `http://localhost:3000/api`
+- **Production:** `https://api.your-domain.com/api`
 
 ## Getting Started
 
@@ -17,10 +17,12 @@ This API allows you to programmatically access Merchant Cash Advance (MCA) lead 
 4. **Limits and Errors:** Understand [Rate Limits and Error Handling](ERRORS_AND_LIMITS.md) to build robust integrations.
 
 ## Table of Contents
-* [Authentication](AUTHENTICATION.md)
-* [Endpoints Reference](ENDPOINTS.md)
-* [Code Examples](EXAMPLES.md)
-* [Errors and Rate Limits](ERRORS_AND_LIMITS.md)
+
+- [Authentication](AUTHENTICATION.md)
+- [Endpoints Reference](ENDPOINTS.md)
+- [Code Examples](EXAMPLES.md)
+- [Errors and Rate Limits](ERRORS_AND_LIMITS.md)
 
 ## Support
+
 For technical support, contact `support@example.com` or consult your account manager.

@@ -11,6 +11,7 @@ This directory contains custom agent configurations for GitHub Copilot. Custom a
 **Purpose:** Master Dynatrace specialist with complete DQL (Dynatrace Query Language) knowledge and comprehensive observability/security capabilities.
 
 **Capabilities:**
+
 - **Incident Response & Root Cause Analysis** - Investigate production issues and service failures
 - **Deployment Impact Analysis** - Validate deployments and compare pre/post-deployment metrics
 - **Production Error Triage** - Monitor and categorize production errors
@@ -19,6 +20,7 @@ This directory contains custom agent configurations for GitHub Copilot. Custom a
 - **Security Vulnerability Response** - Analyze security findings and compliance violations
 
 **When to Use:**
+
 - Investigating production incidents or service failures
 - Analyzing deployment health and performance
 - Monitoring error rates and patterns
@@ -27,6 +29,7 @@ This directory contains custom agent configurations for GitHub Copilot. Custom a
 - Learning or writing DQL queries
 
 **Key Features:**
+
 - Complete DQL reference with all commands and patterns
 - Context-aware workflow routing
 - Multi-source data validation (logs, spans, metrics, events)
@@ -40,24 +43,28 @@ Custom agents can be invoked through GitHub Copilot when working on issues or PR
 ### Example Interactions
 
 **Incident Investigation:**
+
 ```
 "Check what's causing the production errors in the payment service"
 → Agent analyzes Davis AI problems, exceptions, logs, and provides RCA
 ```
 
 **Deployment Validation:**
+
 ```
 "Validate if the deployment at 2024-01-15 14:30 UTC was successful"
 → Agent compares before/after metrics and provides health verdict
 ```
 
 **Security Audit:**
+
 ```
 "What security vulnerabilities do we have in our services?"
 → Agent queries latest security scans and prioritizes findings
 ```
 
 **DQL Query Help:**
+
 ```
 "How do I write a DQL query to find the top 10 slowest endpoints?"
 → Agent provides the query with explanation
