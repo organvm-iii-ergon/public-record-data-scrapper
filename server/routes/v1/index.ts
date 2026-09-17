@@ -20,12 +20,14 @@ import { apiKeyOrJwtAuth } from '../../middleware/apiKeyAuth'
 import { createApiKeyRateLimiter } from '../../middleware/rateLimiter'
 import { orgContextMiddleware } from '../../middleware/orgContext'
 import { dataTierRouter } from '../../middleware/dataTier'
+import { usageMeteringMiddleware } from '../../middleware/usageMetering'
 import { versionHeader } from './middleware/versionHeader'
 
 // Existing route handlers re-used under the versioned namespace
 import prospectsRouter from '../prospects'
 import jobsRouter from '../jobs'
 import enrichmentRouter from '../enrichment'
+import billingRouter from './billing'
 
 const v1Router = Router()
 
@@ -45,6 +47,9 @@ v1Router.use(createApiKeyRateLimiter())
 // 4. Bind tenant org-context and resolve data-tier entitlements.
 v1Router.use(orgContextMiddleware)
 v1Router.use(dataTierRouter)
+
+// 5. Usage-based billing & metering tracking
+v1Router.use(usageMeteringMiddleware)
 
 // ---------------------------------------------------------------------------
 // Health — unauthenticated liveness probe for the v1 namespace.
@@ -76,5 +81,8 @@ v1Router.use('/jobs', jobsRouter)
 
 /** POST /v1/enrichment/prospect, POST /v1/enrichment/batch, … */
 v1Router.use('/enrichment', enrichmentRouter)
+
+/** GET /v1/billing/usage, GET /v1/billing/tiers */
+v1Router.use('/billing', billingRouter)
 
 export default v1Router

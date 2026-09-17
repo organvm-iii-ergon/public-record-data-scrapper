@@ -1023,3 +1023,50 @@ export interface CrmPushLog {
   errorMessage?: string
   createdAt: string
 }
+
+// ============================================================================
+// Usage-Based Billing & Metering (Issue #481)
+// ============================================================================
+
+export type MeteredBillingTier =
+  'free' | 'starter' | 'growth' | 'pro' | 'professional' | 'enterprise'
+
+export interface BillingTierPlan {
+  tier: MeteredBillingTier
+  name: string
+  rateLimitRpm: number
+  monthlyIncludedRequests: number
+  basePriceUsd: number
+  overageUnitPriceUsd: number
+  features: string[]
+  stripeMeterEventName: string
+}
+
+export interface ApiUsageRecord {
+  id: string
+  orgId: string
+  keyId?: string | null
+  endpoint: string
+  method: string
+  statusCode: number
+  requestCount: number
+  reportedToStripe: boolean
+  stripeEventId?: string | null
+  createdAt: string
+}
+
+export interface OrgUsageSummary {
+  orgId: string
+  tier: MeteredBillingTier
+  periodStart: string
+  periodEnd: string
+  rateLimitRpm: number
+  monthlyIncludedRequests: number
+  totalRequests: number
+  billableOverageRequests: number
+  basePriceUsd: number
+  estimatedOverageCostUsd: number
+  totalEstimatedCostUsd: number
+  reportedToStripeCount: number
+  unreportedCount: number
+}

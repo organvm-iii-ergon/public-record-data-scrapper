@@ -13,6 +13,11 @@
 import { Router, Request, Response } from 'express'
 import type Stripe from 'stripe'
 import { asyncHandler } from '../middleware/errorHandler'
+import {
+  authMiddleware,
+  requireRole,
+  type AuthenticatedRequest
+} from '../middleware/authMiddleware'
 import { validateRequest } from '../middleware/validateRequest'
 import { config } from '../config'
 import { z } from 'zod'
@@ -33,6 +38,8 @@ import {
   markBillingSignupSubscribed,
   type BillingSignupPlan
 } from '../services/BillingSignupService'
+import { stripeMeteringService } from '../services/StripeMeteringService'
+import { USAGE_BILLING_TIERS } from '../config/billingTiers'
 
 const router = Router()
 
@@ -347,6 +354,60 @@ router.get('/status', (_req: Request, res: Response) => {
     provider: 'stripe'
   })
 })
+
+router.get('/tiers', (_req: Request, res: Response) => {
+  res.json({
+    tiers: Object.values(USAGE_BILLING_TIERS)
+  })
+})
+
+router.get(
+  '/usage',
+  authMiddleware,
+  asyncHandler(async (req: Request, res: Response) => {
+    const orgId = (req as AuthenticatedRequest).user?.orgId
+
+    if (!orgId) {
+      res.status(403).json({ error: 'Authenticated organization context is required' })
+      return
+    }
+
+    const summary = await stripeMeteringService.getOrgUsageSummary(orgId)
+    res.json(summary)
+  })
+)
+
+router.post(
+  '/usage/report',
+  authMiddleware,
+  requireRole('admin'),
+  asyncHandler(async (req: Request, res: Response) => {
+    let parsedBody: { orgId?: string } = {}
+    try {
+      parsedBody = (parseRawJsonBody(req) ?? {}) as { orgId?: string }
+    } catch {
+      // ignore
+    }
+
+    const authenticatedOrgId = (req as AuthenticatedRequest).user?.orgId
+    const requestedOrgId = parsedBody.orgId || (req.query.orgId as string | undefined)
+
+    if (requestedOrgId && requestedOrgId !== authenticatedOrgId) {
+      res.status(403).json({ error: 'Cannot report usage for another organization' })
+      return
+    }
+
+    const orgId = authenticatedOrgId
+
+    if (orgId) {
+      const result = await stripeMeteringService.reportUsageToStripe({ orgId })
+      res.json(result)
+      return
+    }
+
+    res.status(403).json({ error: 'Authenticated organization context is required' })
+  })
+)
 
 router.post(
   '/signup',
