@@ -100,6 +100,28 @@ jobs:
           test "$GITHUB_REF" = refs/heads/main
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$GITHUB_SHA"
+      - name: Resolve or create the exact Pages project
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: e0921b840fd656d8ea46426f1f114c30
+          PROJECT: ${{ steps.target.outputs.project }}
+        run: |
+          mkdir -p .quality
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT"
+          status="$(curl --silent --show-error --output .quality/pages-project.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$endpoint")"
+          if [ "$status" = 404 ]; then
+            status="$(curl --silent --show-error --output .quality/pages-project.json --write-out '%{http_code}' \
+              --request POST \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data "$(jq -nc --arg name "$PROJECT" '{name:$name,production_branch:"main"}')" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects")"
+          fi
+          test "$status" = 200
+          jq --arg project "$PROJECT" -e \
+            '.success == true and .result.name == $project and .result.production_branch == "main"' \
+            .quality/pages-project.json
       - name: Deploy the exact Pages revision
         working-directory: ${{ steps.package.outputs.dir }}
         env:
