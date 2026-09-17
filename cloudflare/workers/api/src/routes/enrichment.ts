@@ -4,12 +4,25 @@
  * Enrichment delivery endpoints for data-as-a-service consumers.
  * Enforces tier entitlements at the edge before dispatching jobs.
  */
-import { Hono } from 'hono'
-import { all, first, run } from '../db'
+import { Hono, type Context } from 'hono'
+import { all, first } from '../db'
 import { requireTier } from '../rateLimit'
 import type { AppBindings, ProspectRow } from '../types'
 
 export const enrichmentRoute = new Hono<AppBindings>()
+
+function unavailableResponse(c: Context<AppBindings>) {
+  return c.json(
+    {
+      error: {
+        message: 'Edge enrichment execution is not available',
+        code: 'SERVICE_UNAVAILABLE',
+        statusCode: 503
+      }
+    },
+    503
+  )
+}
 
 interface SingleEnrichmentBody {
   prospect_id: string
@@ -54,32 +67,7 @@ enrichmentRoute.post('/prospect', async (c) => {
     )
   }
 
-  const jobId = crypto.randomUUID()
-  const payload = JSON.stringify({
-    prospect_id: body.prospect_id,
-    company_name: prospect.company_name
-  })
-
-  await run(
-    c.env,
-    `INSERT INTO jobs (id, type, payload, status, org_id, attempts)
-     VALUES (?, 'data-enrichment', ?, 'pending', ?, 0)`,
-    jobId,
-    payload,
-    orgId
-  )
-
-  return c.json(
-    {
-      data: {
-        job_id: jobId,
-        prospect_id: body.prospect_id,
-        status: 'pending',
-        enqueued_at: new Date().toISOString()
-      }
-    },
-    202
-  )
+  return unavailableResponse(c)
 })
 
 interface BatchEnrichmentBody {
@@ -91,8 +79,6 @@ interface BatchEnrichmentBody {
  * Gated at the edge: requires Growth or Enterprise tier entitlement.
  */
 enrichmentRoute.post('/batch', requireTier('growth'), async (c) => {
-  const { orgId } = c.get('identity')
-
   let body: BatchEnrichmentBody
   try {
     body = await c.req.json<BatchEnrichmentBody>()
@@ -129,32 +115,7 @@ enrichmentRoute.post('/batch', requireTier('growth'), async (c) => {
     )
   }
 
-  const jobId = crypto.randomUUID()
-  const payload = JSON.stringify({
-    prospect_ids: body.prospect_ids,
-    total: body.prospect_ids.length
-  })
-
-  await run(
-    c.env,
-    `INSERT INTO jobs (id, type, payload, status, org_id, attempts)
-     VALUES (?, 'batch-enrichment', ?, 'pending', ?, 0)`,
-    jobId,
-    payload,
-    orgId
-  )
-
-  return c.json(
-    {
-      data: {
-        job_id: jobId,
-        total: body.prospect_ids.length,
-        status: 'pending',
-        enqueued_at: new Date().toISOString()
-      }
-    },
-    202
-  )
+  return unavailableResponse(c)
 })
 
 /**
@@ -189,7 +150,8 @@ enrichmentRoute.get('/status', async (c) => {
     data: {
       pipeline: 'enrichment',
       queue: statusMap,
-      healthy: true
+      healthy: false,
+      available: false
     }
   })
 })
