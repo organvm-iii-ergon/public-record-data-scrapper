@@ -76,7 +76,7 @@ export const dashboardRoute = new Hono<AppBindings>()
 dashboardRoute.use('*', unifiedAuth, rateLimiter, orgScope)
 
 dashboardRoute.get('/', async (c) => {
-  const { orgId } = c.get('identity')
+  const { orgId, tier } = c.get('identity')
   const records = await all<RecordRow>(
     c.env,
     `SELECT id, collection, payload FROM dashboard_records
@@ -129,7 +129,11 @@ dashboardRoute.get('/', async (c) => {
     }
     userActions.push({ type: row.action_type, timestamp: row.occurred_at, details })
   }
-  return c.json({ ...result, userActions }, 200, jsonHeaders)
+  return c.json(
+    { ...result, userActions, dataTier: tier === 'free' ? 'oss' : 'paid' },
+    200,
+    jsonHeaders
+  )
 })
 
 dashboardRoute.post('/actions', async (c) => {

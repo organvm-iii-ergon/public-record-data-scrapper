@@ -17,20 +17,23 @@ describe('dashboard tenant snapshot', () => {
         prospects: [{ id: 'p1' }],
         competitors: [],
         portfolio: [],
-        userActions: []
+        userActions: [],
+        dataTier: 'paid'
       })
     )
     vi.stubGlobal('fetch', fetch)
     const snapshot = await fetchDashboard()
     expect(snapshot.prospects).toEqual([{ id: 'p1' }])
+    expect(snapshot.dataTier).toBe('paid')
     expect(fetch).toHaveBeenCalledOnce()
     expect(fetch.mock.calls[0][0]).toBe('/api/dashboard')
   })
 
   it.each([
     null,
-    { prospects: {}, competitors: [], portfolio: [], userActions: [] },
-    { prospects: [], competitors: [], portfolio: [], userActions: ['invalid'] }
+    { prospects: {}, competitors: [], portfolio: [], userActions: [], dataTier: 'oss' },
+    { prospects: [], competitors: [], portfolio: [], userActions: ['invalid'], dataTier: 'oss' },
+    { prospects: [], competitors: [], portfolio: [], userActions: [], dataTier: 'enterprise' }
   ])('rejects malformed successful snapshots: %j', async (body) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(body)))
     await expect(fetchDashboard()).rejects.toThrow(/invalid/i)

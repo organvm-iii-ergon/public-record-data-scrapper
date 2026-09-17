@@ -14,6 +14,7 @@ export interface UseDataFetchingResult {
   competitors: CompetitorData[]
   portfolio: PortfolioCompany[]
   userActions: UserAction[]
+  dataTier: DataTier
   isLoading: boolean
   loadError: string | null
   /** Retained for consumer compatibility; always false. */
@@ -39,6 +40,7 @@ export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchi
   const [competitors, setCompetitors] = useState<CompetitorData[]>([])
   const [portfolio, setPortfolio] = useState<PortfolioCompany[]>([])
   const [userActions, setUserActions] = useState<UserAction[]>([])
+  const [dataTier, setDataTier] = useState<DataTier>('oss')
   const [lastDataRefresh, setLastDataRefresh] = useState('')
 
   const [isLoading, setIsLoading] = useState(true)
@@ -60,7 +62,8 @@ export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchi
           prospects: liveProspects,
           competitors: liveCompetitors,
           portfolio: livePortfolio,
-          userActions: liveUserActions
+          userActions: liveUserActions,
+          dataTier: liveDataTier
         } = snapshot
 
         if (signal?.aborted) {
@@ -77,6 +80,7 @@ export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchi
         setCompetitors(liveCompetitors)
         setPortfolio(livePortfolio)
         setUserActions(liveUserActions)
+        setDataTier(liveDataTier)
         setLastDataRefresh(new Date().toISOString())
         return true
       } catch (error) {
@@ -88,6 +92,7 @@ export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchi
         setCompetitors([])
         setPortfolio([])
         setUserActions([])
+        setDataTier('oss')
         setLastDataRefresh('')
         setLoadError(
           error instanceof Error ? error.message : 'Unable to load records from the API.'
@@ -113,6 +118,7 @@ export function useDataFetching(_options: UseDataFetchingOptions): UseDataFetchi
     competitors: competitors || [],
     portfolio: portfolio || [],
     userActions: userActions || [],
+    dataTier,
     isLoading,
     loadError,
     isDemoFallback: false,

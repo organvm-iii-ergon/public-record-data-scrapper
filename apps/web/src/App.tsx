@@ -46,6 +46,7 @@ import { logDashboardAction } from '@/lib/api/dashboard'
 import { toast } from 'sonner'
 
 function DashboardApp() {
+  const tenantSurface = import.meta.env.VITE_DEPLOYMENT_SURFACE === 'tenant-dashboard'
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [exportFormat, setExportFormat] = useKV<ExportFormat>('export-format', 'json')
@@ -172,9 +173,12 @@ function DashboardApp() {
 
   return (
     <div className="min-h-screen">
-      <Header onRefresh={handleRefreshData} settings={<SettingsMenu />} />
-      <QuickAccessBanner />
-      <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />
+      <Header
+        onRefresh={handleRefreshData}
+        settings={tenantSurface ? undefined : <SettingsMenu />}
+      />
+      {!tenantSurface && <QuickAccessBanner />}
+      {!tenantSurface && <DemoTour isOpen={tourOpen} onClose={() => setTourOpen(false)} />}
 
       <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 pb-20 md:pb-8">
         <div className="space-y-4 sm:space-y-6 md:space-y-8">
@@ -199,23 +203,25 @@ function DashboardApp() {
             <StaleDataWarning lastUpdated={data.lastDataRefresh} onRefresh={handleRefreshData} />
           )}
 
-          <Tabs defaultValue="status" className="w-full">
-            <TabNavigation />
+          <Tabs defaultValue={tenantSurface ? 'prospects' : 'status'} className="w-full">
+            <TabNavigation tenantDashboard={tenantSurface} />
 
-            <TabsContent value="status" className="space-y-4 sm:space-y-6">
-              <StatusTab
-                prospects={data.prospects}
-                portfolio={data.portfolio}
-                competitors={data.competitors}
-                userActions={data.userActions}
-                isLoading={data.isLoading}
-                loadError={data.loadError}
-                lastDataRefresh={data.lastDataRefresh}
-                usePreviewData={useDemoData}
-                dataTier={dataTier}
-                onRefresh={handleRefreshData}
-              />
-            </TabsContent>
+            {!tenantSurface && (
+              <TabsContent value="status" className="space-y-4 sm:space-y-6">
+                <StatusTab
+                  prospects={data.prospects}
+                  portfolio={data.portfolio}
+                  competitors={data.competitors}
+                  userActions={data.userActions}
+                  isLoading={data.isLoading}
+                  loadError={data.loadError}
+                  lastDataRefresh={data.lastDataRefresh}
+                  usePreviewData={useDemoData}
+                  dataTier={dataTier}
+                  onRefresh={handleRefreshData}
+                />
+              </TabsContent>
+            )}
 
             <TabsContent value="prospects" className="space-y-4 sm:space-y-6">
               <ProspectsTab
@@ -276,42 +282,46 @@ function DashboardApp() {
               </SubscriptionGate>
             </TabsContent>
 
-            <TabsContent value="coverage" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <CoverageTab />
-              </SubscriptionGate>
-            </TabsContent>
+            {!tenantSurface && (
+              <>
+                <TabsContent value="coverage" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <CoverageTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="deals" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <DealsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="deals" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <DealsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="contacts" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <ContactsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="contacts" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <ContactsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="communications" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <CommunicationsTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="communications" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <CommunicationsTab />
+                  </SubscriptionGate>
+                </TabsContent>
 
-            <TabsContent value="compliance" className="space-y-4 sm:space-y-6">
-              <SubscriptionGate>
-                <ComplianceTab />
-              </SubscriptionGate>
-            </TabsContent>
+                <TabsContent value="compliance" className="space-y-4 sm:space-y-6">
+                  <SubscriptionGate>
+                    <ComplianceTab />
+                  </SubscriptionGate>
+                </TabsContent>
+              </>
+            )}
 
             <TabsContent value="agentic" className="space-y-4 sm:space-y-6">
               <SubscriptionGate>
                 <AgenticTab agentic={agentic} competitors={data.competitors} />
               </SubscriptionGate>
             </TabsContent>
-            <MobileBottomNav />
+            <MobileBottomNav tenantDashboard={tenantSurface} />
           </Tabs>
         </div>
       </main>
@@ -336,72 +346,8 @@ function DashboardApp() {
   )
 }
 
-function TenantDashboardApp() {
-  const { dataTier } = useDataTier()
-  const data = useDataFetching({ useMockData: false, dataTier })
-  const { fetchData, loadError } = data
-  const stats = useMemo(() => {
-    if (data.prospects.length === 0 || data.portfolio.length === 0) return null
-    try {
-      return generateDashboardStats(data.prospects, data.portfolio)
-    } catch {
-      return null
-    }
-  }, [data.prospects, data.portfolio])
-  const refresh = useCallback(async () => {
-    const success = await fetchData()
-    if (success) toast.success('Tenant data refreshed')
-    else toast.error('Refresh failed', { description: loadError ?? 'Unable to load tenant data.' })
-  }, [fetchData, loadError])
-
-  return (
-    <div className="min-h-screen">
-      <Header onRefresh={refresh} />
-      <main className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-        <div className="space-y-4 sm:space-y-6 md:space-y-8">
-          <LoadingAndErrorState
-            isLoading={data.isLoading}
-            loadError={data.loadError}
-            isDemoFallback={false}
-            onRetry={() => void data.fetchData()}
-          />
-          {stats ? (
-            <StatsOverview stats={stats} />
-          ) : (
-            !data.isLoading &&
-            !data.loadError && (
-              <div className="glass-effect border border-white/10 rounded-lg p-4 text-sm text-white/70">
-                No tenant metrics are available yet.
-              </div>
-            )
-          )}
-          {data.lastDataRefresh && (
-            <StaleDataWarning lastUpdated={data.lastDataRefresh} onRefresh={refresh} />
-          )}
-          <StatusTab
-            prospects={data.prospects}
-            portfolio={data.portfolio}
-            competitors={data.competitors}
-            userActions={data.userActions}
-            isLoading={data.isLoading}
-            loadError={data.loadError}
-            lastDataRefresh={data.lastDataRefresh}
-            usePreviewData={false}
-            dataTier={dataTier}
-            onRefresh={refresh}
-          />
-        </div>
-      </main>
-    </div>
-  )
-}
-
 function App() {
-  return import.meta.env.VITE_DEPLOYMENT_SURFACE === 'tenant-dashboard' ? (
-    <TenantDashboardApp />
-  ) : (
-    <DashboardApp />
-  )
+  return <DashboardApp />
 }
 
 export default App
