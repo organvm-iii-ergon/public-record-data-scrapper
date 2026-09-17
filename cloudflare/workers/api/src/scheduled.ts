@@ -15,6 +15,7 @@
  */
 import { first } from './db'
 import { claimJob, finishJob, type ClaimedJob } from './job-queue'
+import { scheduledTasks } from './cron-plan'
 import type { Env } from './types'
 import { drainWebhookDeliveries, sendWebhookDelivery } from './webhooks'
 import { pushProspectToCrm } from './crm'
@@ -58,8 +59,15 @@ async function processJob(env: Env, job: ClaimedJob): Promise<void> {
     case 'webhook_delivery': {
       const deliveryId = parsedPayload.deliveryId as string
       if (!deliveryId) throw new Error(`Missing deliveryId in webhook_delivery job ${job.id}`)
-      if (!job.org_id || !await first(env,
-        'SELECT id FROM webhook_deliveries WHERE id = ? AND org_id = ?', deliveryId, job.org_id)) {
+      if (
+        !job.org_id ||
+        !(await first(
+          env,
+          'SELECT id FROM webhook_deliveries WHERE id = ? AND org_id = ?',
+          deliveryId,
+          job.org_id
+        ))
+      ) {
         throw new Error('Webhook job does not own the referenced delivery')
       }
       const res = await sendWebhookDelivery(env, deliveryId)
@@ -95,19 +103,26 @@ async function processJob(env: Env, job: ClaimedJob): Promise<void> {
 export async function drainJobs(env: Env): Promise<void> {
   for (let index = 0; index < DRAIN_BATCH; index++) {
     let job: ClaimedJob | null
-    try { job = await claimJob(env) }
-    catch { console.error('[drain] job claim failed'); return }
+    try {
+      job = await claimJob(env)
+    } catch {
+      console.error('[drain] job claim failed')
+      return
+    }
     if (!job) return
     try {
       await processJob(env, job)
-      if (!await finishJob(env, job, true)) {
+      if (!(await finishJob(env, job, true))) {
         console.error(`[drain] job ${job.id} completion rejected: lease no longer owned`)
       }
     } catch (err) {
       console.error(`[drain] job ${job.id} failed`, err)
       // An expired/stolen lease cannot change the newer attempt's state.
-      try { await finishJob(env, job, false) }
-      catch { console.error(`[drain] job ${job.id} retry state could not be persisted`) }
+      try {
+        await finishJob(env, job, false)
+      } catch {
+        console.error(`[drain] job ${job.id} retry state could not be persisted`)
+      }
     }
   }
 }
@@ -123,18 +138,25 @@ export async function scheduled(
 ): Promise<void> {
   const task = (async () => {
     try {
-      switch (event.cron) {
-        case '0 2 * * *':
-          await runIngestion(env)
-          break
-        case '0 */6 * * *':
-          await runEnrichment(env)
-          break
-        case '0 */12 * * *':
-          await runHealthScores(env)
-          break
-        default:
-          console.warn(`[cron] unrecognized schedule: ${event.cron}`)
+      const tasks = scheduledTasks(event.cron, event.scheduledTime)
+      if (!tasks.length) console.warn(`[cron] no task scheduled: ${event.cron}`)
+      for (const task of tasks) {
+        try {
+          switch (task) {
+            case 'ingestion':
+              await runIngestion(env)
+              break
+            case 'enrichment':
+              await runEnrichment(env)
+              break
+            case 'health':
+              await runHealthScores(env)
+              break
+          }
+        } catch (err) {
+          // A failed coincident task must not suppress another schedule.
+          console.error(`[cron] ${task} failed`, err)
+        }
       }
     } catch (err) {
       // Fail-safe: a broken scheduled task never aborts the drain below.
