@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import sys
 import sqlite3
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -175,12 +176,20 @@ def denied(response, team_domain):
     )
 
 
-def verify_live(origin, config, expected_sha, requester=fetch):
-    health = requester(origin, "/health?revision=" + expected_sha)
-    if health[0] != 200 or health[3] != "application/json" or health[1] != {
-        "ok": True, "env": "staging", "revision": expected_sha
-    }:
-        raise VerificationError("live_revision_or_health_mismatch")
+def require_exact_health(origin, expected_sha, environment, requester=fetch,
+                         sleeper=time.sleep, attempts=6, delay=5):
+    expected = {"ok": True, "env": environment, "revision": expected_sha}
+    for attempt in range(attempts):
+        health = requester(origin, "/health?revision=" + expected_sha)
+        if health[0] == 200 and health[3] == "application/json" and health[1] == expected:
+            return health
+        if attempt + 1 < attempts:
+            sleeper(delay)
+    raise VerificationError("live_revision_or_health_mismatch")
+
+
+def verify_live(origin, config, expected_sha, requester=fetch, sleeper=time.sleep):
+    require_exact_health(origin, expected_sha, "staging", requester, sleeper)
     domain = config["vars"]["ACCESS_TEAM_DOMAIN"]
     unauthenticated = requester(origin, "/api/prospects")
     forged = requester(origin, "/api/prospects", forged=True)

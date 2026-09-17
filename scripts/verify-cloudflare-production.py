@@ -16,7 +16,8 @@ SPEC.loader.exec_module(V)
 GENERATED = ROOT / "cloudflare/.generated"
 
 
-def verify(requester=V.fetch, configuration_only=False, schema_only=False):
+def verify(requester=V.fetch, configuration_only=False, schema_only=False,
+           sleeper=V.time.sleep):
     config = V.read_json(GENERATED / "production.wrangler.json")
     resolution = V.read_json(GENERATED / "production-resolution.json")
     revision = os.environ.get("GITHUB_SHA", "")
@@ -36,11 +37,7 @@ def verify(requester=V.fetch, configuration_only=False, schema_only=False):
     origin = resolution.get("worker_url", "")
     if not re.fullmatch(r"https://ucc-mca-edge-production\.[a-z0-9-]+\.workers\.dev", origin):
         raise V.VerificationError("invalid_production_origin")
-    health = requester(origin, "/health?revision=" + revision)
-    if health[0] != 200 or health[3] != "application/json" or health[1] != {
-        "ok": True, "env": "production", "revision": revision
-    }:
-        raise V.VerificationError("live_revision_or_health_mismatch")
+    V.require_exact_health(origin, revision, "production", requester, sleeper)
     domain = config["vars"]["ACCESS_TEAM_DOMAIN"]
     unauthenticated = requester(origin, "/api/prospects")
     forged = requester(origin, "/api/prospects", forged=True)
