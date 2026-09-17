@@ -455,13 +455,17 @@ try {
   assert.ok(rateLimited, 'Expected rate limiter to trigger HTTP 429 on free tier quota exhaustion')
 
   // Missing counter storage must never fall back to permissive isolate/KV counts.
-  await db.prepare('ALTER TABLE rate_limit_counters RENAME TO rate_limit_counters_unavailable').run()
+  await db
+    .prepare('ALTER TABLE rate_limit_counters RENAME TO rate_limit_counters_unavailable')
+    .run()
   const unavailableQuota = await worker.dispatchFetch('http://localhost/v1/prospects', {
     headers: { 'X-API-Key': growthKey }
   })
   assert.equal(unavailableQuota.status, 503)
   assert.equal((await unavailableQuota.json()).error.code, 'RATE_LIMIT_UNAVAILABLE')
-  await db.prepare('ALTER TABLE rate_limit_counters_unavailable RENAME TO rate_limit_counters').run()
+  await db
+    .prepare('ALTER TABLE rate_limit_counters_unavailable RENAME TO rate_limit_counters')
+    .run()
 
   // Verify scheduled cron triggers and D1 queue drainage
   const runtimeWorker = await worker.getWorker()

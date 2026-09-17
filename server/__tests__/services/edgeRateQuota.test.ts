@@ -9,17 +9,15 @@ let db: QuotaDatabase
 
 beforeEach(() => {
   sqlite = new DatabaseSync(':memory:')
-  sqlite.exec(
-    readFileSync(
-      resolve(process.cwd(), 'cloudflare/migrations/0006_rate_limit_counters.sql'),
-      'utf8'
-    )
-  )
+  const migrationPath = resolve(process.cwd(), 'cloudflare/migrations/0006_rate_limit_counters.sql')
+  sqlite.exec(readFileSync(migrationPath, 'utf8'))
   db = {
     prepare: (sql) => ({
       bind: (...values) => ({
-        first: async <T>() =>
-          (sqlite.prepare(sql).get(...(values as Array<string | number>)) ?? null) as T | null
+        first: async <T>() => {
+          const row = sqlite.prepare(sql).get(...(values as Array<string | number>))
+          return (row ?? null) as T | null
+        }
       })
     })
   }
@@ -33,9 +31,8 @@ describe('atomic edge quota admission', () => {
       Array.from({ length: 100 }, () => admitQuota(db, 'key:a', 100, 10))
     )
     expect(results.filter((result) => result.allowed)).toHaveLength(10)
-    expect(sqlite.prepare('SELECT request_count FROM rate_limit_counters').get()?.request_count).toBe(
-      10
-    )
+    const counter = sqlite.prepare('SELECT request_count FROM rate_limit_counters').get()
+    expect(counter?.request_count).toBe(10)
   })
 
   it('isolates credentials and resets only when the window advances', async () => {
@@ -50,9 +47,8 @@ describe('atomic edge quota admission', () => {
     await admitQuota(db, 'key:a', 100, 10)
     await admitQuota(db, 'key:a', 100, 10)
     expect(await admitQuota(db, 'key:a', 100, 1)).toEqual({ allowed: false, remaining: 0 })
-    expect(sqlite.prepare('SELECT request_count FROM rate_limit_counters').get()?.request_count).toBe(
-      2
-    )
+    const counter = sqlite.prepare('SELECT request_count FROM rate_limit_counters').get()
+    expect(counter?.request_count).toBe(2)
   })
 
   it('rejects unavailable or malformed counter evidence rather than granting access', async () => {

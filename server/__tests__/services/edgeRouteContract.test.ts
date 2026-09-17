@@ -2,10 +2,8 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const source = readFileSync(
-  resolve(process.cwd(), 'cloudflare/workers/api/src/index.ts'),
-  'utf8'
-)
+const routePath = resolve(process.cwd(), 'cloudflare/workers/api/src/index.ts')
+const source = readFileSync(routePath, 'utf8')
 
 describe('edge route registration regression guards', () => {
   it('registers delivery listing before the generic endpoint lookup', () => {
