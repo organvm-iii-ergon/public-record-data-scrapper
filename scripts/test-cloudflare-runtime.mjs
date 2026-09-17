@@ -51,7 +51,7 @@ const worker = new Miniflare(
   })
 )
 try {
-  // Apply D1 schema migrations (0001_init.sql and 0002_api_keys.sql)
+  // Apply the complete migration set, including membership and future upgrades.
   const db = await worker.getD1Database('DB')
 
   function splitSqlStatements(sql) {
@@ -80,19 +80,15 @@ try {
     return statements
   }
 
-  const rawMigration1 = fs.readFileSync(new URL('migrations/0001_init.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration1)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration2 = fs.readFileSync(new URL('migrations/0002_api_keys.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration2)) {
-    await db.prepare(stmt).run()
-  }
-
-  const rawMigration3 = fs.readFileSync(new URL('migrations/0003_webhooks_crm.sql', edge), 'utf8')
-  for (const stmt of splitSqlStatements(rawMigration3)) {
-    await db.prepare(stmt).run()
+  for (const name of fs
+    .readdirSync(new URL('migrations/', edge))
+    .filter((name) => name.endsWith('.sql'))
+    .sort()) {
+    for (const stmt of splitSqlStatements(
+      fs.readFileSync(new URL('migrations/' + name, edge), 'utf8')
+    )) {
+      await db.prepare(stmt).run()
+    }
   }
 
   const tables = await db
