@@ -1,1 +1,0 @@
-export { IntelligenceTab } from './IntelligenceTab'

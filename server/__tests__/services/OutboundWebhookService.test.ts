@@ -12,6 +12,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import crypto from 'crypto'
 import {
   signPayload,
+  deriveSigningSecret,
   retryDelayMs,
   nextRetryAt,
   buildWebhookPayload,
@@ -25,6 +26,14 @@ import {
 // ---------------------------------------------------------------------------
 
 describe('signPayload', () => {
+  it('signs with the same derived key disclosed to subscribers', () => {
+    const derived = deriveSigningSecret('one-time-random-seed')
+    expect(derived).toMatch(/^[0-9a-f]{64}$/)
+    expect(signPayload('payload', derived)).toBe(
+      'sha256=' + crypto.createHmac('sha256', derived).update('payload', 'utf8').digest('hex')
+    )
+  })
+
   it('produces sha256=<hex> format', () => {
     const sig = signPayload('{"hello":"world"}', 'mysecret')
     expect(sig).toMatch(/^sha256=[0-9a-f]{64}$/)

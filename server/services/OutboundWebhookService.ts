@@ -122,6 +122,11 @@ export function signPayload(rawBody: string, secret: string): string {
   return `sha256=${hmac}`
 }
 
+/** Derive the actual HMAC key disclosed once to a new subscriber. */
+export function deriveSigningSecret(seed: string): string {
+  return crypto.createHash('sha256').update(seed).digest('hex')
+}
+
 // ---------------------------------------------------------------------------
 // URL safety guard (mirrors DeliveryService pattern)
 // ---------------------------------------------------------------------------
@@ -378,11 +383,12 @@ export class OutboundWebhookService {
     events: string[],
     secret: string
   ): Promise<string> {
+    const signingSecret = deriveSigningSecret(secret)
     const [row] = await this.db.query<{ id: string }>(
       `INSERT INTO webhook_subscriptions (org_id, url, secret, events)
        VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [orgId, url, secret, events]
+      [orgId, url, signingSecret, events]
     )
     if (!row) throw new Error('Failed to create webhook subscription')
     return row.id

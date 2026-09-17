@@ -141,3 +141,39 @@ test('edge API key management requires the admin role guard', () => {
   assert.match(source, /keysRoute\.use\('\*', requireRole\('admin'\)\)/)
   assert.match(source, /Number\.isFinite\(parsedExpiry\.getTime\(\)\)/)
 })
+
+test('edge job APIs preserve tenant boundaries and reserve internal producers', () => {
+  const source = readFileSync(
+    new URL('../../cloudflare/workers/api/src/routes/jobs.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(source, /const conditions: string\[\] = \['org_id = \?'\]/)
+  assert.match(source, /WHERE id = \? AND org_id = \?/)
+  assert.match(source, /INTERNAL_JOB_TYPES\.has\(jobType\)/)
+})
+
+test('job drain uses recoverable leases and tenant-scoped webhook lookup', () => {
+  const source = readFileSync(
+    new URL('../../cloudflare/workers/api/src/scheduled.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(source, /status = 'processing'[\s\S]*claimed_at IS NOT NULL/)
+  assert.match(source, /claimed_at = datetime\('now'\)/)
+  assert.match(source, /sendWebhookDelivery\(env, deliveryId, orgId\)/)
+
+  const webhookSource = readFileSync(
+    new URL('../../cloudflare/workers/api/src/webhooks.ts', import.meta.url),
+    'utf8'
+  )
+  assert.match(webhookSource, /\(\? IS NULL OR org_id = \?\)/)
+  assert.match(webhookSource, /status IN \('pending', 'delivering'\)/)
+})
+
+test('subscription management avoids raw JSON parsing and duplicate prefixes', () => {
+  const source = readFileSync(new URL('../../server/index.ts', import.meta.url), 'utf8')
+  assert.match(source, /req\.path === '\/subscriptions'/)
+  assert.match(
+    source,
+    /this\.app\.use\(\s*'\/api\/webhooks',\s*authMiddleware,[\s\S]*webhookSubscriptionsRouter/
+  )
+})

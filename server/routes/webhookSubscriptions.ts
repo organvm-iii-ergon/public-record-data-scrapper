@@ -17,7 +17,11 @@ import crypto from 'crypto'
 import { validateRequest } from '../middleware/validateRequest'
 import { asyncHandler } from '../middleware/errorHandler'
 import { NotFoundError } from '../errors'
-import { OutboundWebhookService, buildWebhookPayload } from '../services/OutboundWebhookService'
+import {
+  OutboundWebhookService,
+  buildWebhookPayload,
+  deriveSigningSecret
+} from '../services/OutboundWebhookService'
 import { getWebhookDeliveryQueue } from '../queue/workers/webhookDeliveryWorker'
 import { database } from '../database/connection'
 import type { AuthenticatedRequest } from '../middleware/authMiddleware'
@@ -71,18 +75,19 @@ router.post(
 
     const { url, events } = req.body as z.infer<typeof createSubscriptionSchema>
 
-    // Generate a random 32-byte signing secret (returned once to the caller).
+    // Generate a random seed; only its derived signing key is returned/stored.
     const rawSecret = crypto.randomBytes(32).toString('hex')
 
     const service = new OutboundWebhookService(database)
     const id = await service.createSubscription(orgId, url, events, rawSecret)
+    const signingSecret = deriveSigningSecret(rawSecret)
 
     res.status(201).json({
       id,
       url,
       events,
-      // The raw secret is only surfaced on creation — store it safely.
-      secret: rawSecret,
+      // The signing key is only surfaced on creation — store it safely.
+      secret: signingSecret,
       message: 'Store the secret securely — it will not be shown again.'
     })
   })

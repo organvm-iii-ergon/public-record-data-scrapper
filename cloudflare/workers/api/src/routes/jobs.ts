@@ -9,6 +9,7 @@ import { all, first, run } from '../db'
 import type { AppBindings, JobRow } from '../types'
 
 export const jobsRoute = new Hono<AppBindings>()
+const INTERNAL_JOB_TYPES = new Set(['webhook_delivery', 'crm_push'])
 
 /**
  * GET /v1/jobs — List background jobs for the tenant.
@@ -24,13 +25,8 @@ jobsRoute.get('/', async (c) => {
 
   const status = c.req.query('status')
 
-  const conditions: string[] = []
-  const params: unknown[] = []
-
-  // API-key roles are tenant-scoped. Even an org admin must never cross the
-  // organization boundary; platform-wide operators use a separate surface.
-  conditions.push('org_id = ?')
-  params.push(orgId)
+  const conditions: string[] = ['org_id = ?']
+  const params: unknown[] = [orgId]
 
   if (status) {
     conditions.push('status = ?')
