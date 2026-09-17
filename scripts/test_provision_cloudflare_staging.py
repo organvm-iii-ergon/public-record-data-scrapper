@@ -294,6 +294,17 @@ class ProvisionTests(unittest.TestCase):
         self.assertTrue(report["access_policy_verified"])
         self.assertEqual([call[0] for call in self.api.writes], ["create_pages_access_policy"])
 
+    def test_plan_rejects_existing_pages_app_without_an_allow_policy(self):
+        self.api.rows = {kind: [row] for kind, row in self.api.created.items()}
+        self.api.rows["access"].append(self.api.created_pages_access)
+        status, report = self.run_case(apply=False)
+        self.assertEqual(status, 1)
+        self.assertEqual(
+            report["blocker"]["code"],
+            "pages_access_enrollment_policy_required",
+        )
+        self.assertEqual(self.api.writes, [])
+
     def test_existing_pages_bypass_policy_fails_before_any_mutation(self):
         self.api.rows["access"] = [self.api.created_pages_access]
         self.api.policies = [{"id": APP, "decision": "bypass", "include": [{"everyone": {}}]}]

@@ -474,7 +474,7 @@ def reconcile(api, root, config, staging, production, report, apply):
         pages_access_application_identity(pages_access, pages_domain)
         validate_pages_access_policies(
             inventory_policies(api, identifier("access", pages_access)),
-            require_allow=False,
+            require_allow=not apply,
         )
         production_audiences = {
             value.strip() for value in production.get("vars", {}).get("ACCESS_AUD", "").split(",")
