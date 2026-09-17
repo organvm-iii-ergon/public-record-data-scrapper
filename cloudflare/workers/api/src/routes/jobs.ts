@@ -10,6 +10,7 @@ import type { AppBindings, JobRow } from '../types'
 
 export const jobsRoute = new Hono<AppBindings>()
 const INTERNAL_JOB_TYPES = new Set(['webhook_delivery', 'crm_push'])
+const PUBLIC_JOB_TYPES = new Set<string>()
 
 /**
  * GET /v1/jobs — List background jobs for the tenant.
@@ -147,7 +148,7 @@ jobsRoute.post('/', async (c) => {
     )
   }
 
-  if (!body.type || typeof body.type !== 'string' || body.type.trim().length === 0) {
+  if (!body || typeof body !== 'object' || typeof body.type !== 'string' || !body.type.trim()) {
     return c.json(
       { error: { message: 'Job type is required', code: 'VALIDATION_ERROR', statusCode: 400 } },
       400
@@ -165,6 +166,19 @@ jobsRoute.post('/', async (c) => {
         }
       },
       403
+    )
+  }
+
+  if (!PUBLIC_JOB_TYPES.has(jobType)) {
+    return c.json(
+      {
+        error: {
+          message: 'Unsupported job type',
+          code: 'UNSUPPORTED_JOB_TYPE',
+          statusCode: 400
+        }
+      },
+      400
     )
   }
 
