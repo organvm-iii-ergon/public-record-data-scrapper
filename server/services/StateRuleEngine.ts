@@ -203,7 +203,7 @@ export class StateRuleEngine {
     this.registerRule({
       state: 'GA',
       name: 'Georgia',
-      filingNumberPattern: /^(?:\d{8,12}|\d{3}-\d{4}-\d{6})$/i,
+      filingNumberPattern: /^(?:\d{8,12}|\d{4}-\d{6,8}|\d{3}-\d{4}-\d{6})$/i,
       filingNumberExample: '2024-123456',
       standardLapseYears: 5,
       hasTransmittingUtilityExemption: true,
@@ -280,7 +280,7 @@ export class StateRuleEngine {
       /^(.*?)\s+(?:D\/?B\/?A|DOING\s+BUSINESS\s+AS|T\/?A|TRADING\s+AS)\s+(.*?)$/i
     )
     if (dbaMatch) {
-      clean = dbaMatch[1].trim()
+      clean = dbaMatch[1].trim().replace(/[,;:\s]+$/, '')
       dba = dbaMatch[2].trim()
     }
 
@@ -288,7 +288,7 @@ export class StateRuleEngine {
       /^(.*?)\s+(?:F\/?K\/?A|FORMERLY\s+KNOWN\s+AS|A\/?K\/?A|ALSO\s+KNOWN\s+AS)\s+(.*?)$/i
     )
     if (fkaMatch) {
-      clean = fkaMatch[1].trim()
+      clean = fkaMatch[1].trim().replace(/[,;:\s]+$/, '')
       fka = fkaMatch[2].trim()
     }
 
@@ -296,10 +296,7 @@ export class StateRuleEngine {
     let entityType: EntityNameDetails['entityType'] = 'OTHER'
     let isOrganization = true
 
-    if (/(?:\bL\.?L\.?C\.?|\bLIMITED\s+LIABILITY\s+CO(?:MPANY)?\b)/i.test(clean)) {
-      clean = clean.replace(/(?:\bL\.?L\.?C\.?|\bLIMITED\s+LIABILITY\s+CO(?:MPANY)?\b)/i, 'LLC')
-      entityType = 'LLC'
-    } else if (
+    if (
       /(?:\bP\.?L\.?L\.?C\.?|\bPROFESSIONAL\s+LIMITED\s+LIABILITY\s+CO(?:MPANY)?\b)/i.test(clean)
     ) {
       clean = clean.replace(
@@ -307,6 +304,9 @@ export class StateRuleEngine {
         'PLLC'
       )
       entityType = 'PLLC'
+    } else if (/(?:\bL\.?L\.?C\.?|\bLIMITED\s+LIABILITY\s+CO(?:MPANY)?\b)/i.test(clean)) {
+      clean = clean.replace(/(?:\bL\.?L\.?C\.?|\bLIMITED\s+LIABILITY\s+CO(?:MPANY)?\b)/i, 'LLC')
+      entityType = 'LLC'
     } else if (/(?:\bINCORPORATED\b|\bINC(?:\.|\b))/i.test(clean)) {
       clean = clean.replace(/(?:\bINCORPORATED\b|\bINC(?:\.|\b))/i, 'INC')
       entityType = 'INC'
@@ -437,25 +437,40 @@ export class StateRuleEngine {
       years = 30
     }
 
-    const match = filingDate.trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
-    if (match) {
-      const targetYear = parseInt(match[1], 10) + years
-      const month = match[2]
-      let day = match[3]
-      if (month === '02' && day === '29') {
-        const isLeap = (targetYear % 4 === 0 && targetYear % 100 !== 0) || targetYear % 400 === 0
-        if (!isLeap) {
-          day = '28'
-        }
-      }
-      return `${targetYear}-${month}-${day}`
+    const d = this.parseValidDate(filingDate)
+    if (!d) return undefined
+
+    const targetYear = d.getUTCFullYear() + years
+    const month = d.getUTCMonth()
+    let day = d.getUTCDate()
+    if (month === 1 && day === 29) {
+      const isLeap = (targetYear % 4 === 0 && targetYear % 100 !== 0) || targetYear % 400 === 0
+      if (!isLeap) day = 28
     }
 
-    const d = new Date(filingDate)
-    if (Number.isNaN(d.getTime())) return undefined
+    return `${targetYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  }
 
-    d.setUTCFullYear(d.getUTCFullYear() + years)
-    return d.toISOString().slice(0, 10)
+  private parseValidDate(value: string): Date | undefined {
+    const trimmed = value.trim()
+    const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/)
+    if (iso) {
+      const year = Number(iso[1])
+      const month = Number(iso[2])
+      const day = Number(iso[3])
+      const parsed = new Date(Date.UTC(year, month - 1, day))
+      if (
+        parsed.getUTCFullYear() !== year ||
+        parsed.getUTCMonth() !== month - 1 ||
+        parsed.getUTCDate() !== day
+      ) {
+        return undefined
+      }
+      return parsed
+    }
+
+    const parsed = new Date(trimmed)
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed
   }
 
   /**
@@ -472,7 +487,7 @@ export class StateRuleEngine {
       /future\s+receivables|future\s+sales|sales\s+proceeds|merchant\s+cash\s+advance|card\s+receivables|electronic\s+payment\s+rights|factoring/i.test(
         text
       )
-    const hasEquipment = /equipment|machinery|vehicles|chattel/i.test(text)
+    const hasEquipment = /equipment|machinery|vehicles/i.test(text)
     const hasInventory = /inventory|goods|raw\s+materials/i.test(text)
     const hasAccounts = /accounts|accounts\s+receivable|general\s+intangibles/i.test(text)
     const hasChattelPaper = /chattel\s+paper|instruments|investment\s+property/i.test(text)
@@ -547,8 +562,8 @@ export class StateRuleEngine {
         severity: 'error'
       })
     } else {
-      const filingDate = new Date(filing.filingDate)
-      if (Number.isNaN(filingDate.getTime())) {
+      const filingDate = this.parseValidDate(filing.filingDate)
+      if (!filingDate) {
         errors.push({
           field: 'filingDate',
           code: 'INVALID_DATE',
@@ -645,11 +660,18 @@ export class StateRuleEngine {
     const collateralAnalysis = this.analyzeCollateral(filing.collateral, state)
 
     // Calculate/verify expiration date
+    const shouldCalculateExpiration =
+      filing.filingType === 'UCC-1' && filing.status !== 'terminated'
     const expirationDate =
       filing.expirationDate ||
-      this.calculateExpirationDate(filing.filingDate, state, {
-        isTransmittingUtility: /transmitting\s+utility/i.test(filing.collateral || '')
-      })
+      (shouldCalculateExpiration
+        ? this.calculateExpirationDate(filing.filingDate, state, {
+            isTransmittingUtility: /transmitting\s+utility/i.test(filing.collateral || ''),
+            isPublicFinance: /public[\s-]+finance/i.test(
+              `${filing.collateralType || ''} ${filing.collateral || ''}`
+            )
+          })
+        : undefined)
 
     const normalizedDebtor: CollectedParty = {
       ...filing.debtor,
@@ -699,7 +721,10 @@ export class StateRuleEngine {
         entityDetails: {
           debtorType: debtorDetails.entityType,
           debtorDba: debtorDetails.dba,
-          securedPartyType: securedDetails.entityType
+          debtorFka: debtorDetails.fka,
+          securedPartyType: securedDetails.entityType,
+          securedPartyDba: securedDetails.dba,
+          securedPartyFka: securedDetails.fka
         },
         collateralCategories: collateralAnalysis.categories,
         disclosureRequiredStates: collateralAnalysis.disclosureRequiredStates
