@@ -9,7 +9,7 @@ import {
   sendWebhookDelivery
 } from '../../cloudflare/workers/api/src/webhooks.ts'
 import { normalizeSubscriptionTier } from '../../cloudflare/workers/api/src/tier.ts'
-import { pushProspectToCrm } from '../../cloudflare/workers/api/src/crm.ts'
+import { HubSpotAdapter, pushProspectToCrm } from '../../cloudflare/workers/api/src/crm.ts'
 import {
   decryptCredential,
   encryptCredential,
@@ -205,6 +205,29 @@ test('CRM credentials round-trip only through an encrypted envelope', async () =
   assert.equal(encrypted.includes('provider-secret'), false)
   assert.equal(await decryptCredential(encrypted, key), 'provider-secret')
   await assert.rejects(decryptCredential('provider-secret', key), /reconnect/)
+})
+
+test('HubSpot pushes include the advertised UCC qualification fields', async () => {
+  const originalFetch = globalThis.fetch
+  let properties
+  globalThis.fetch = async (_url, init) => {
+    properties = JSON.parse(init.body).properties
+    return new Response(JSON.stringify({ id: 'company-1' }), { status: 200 })
+  }
+  try {
+    const result = await new HubSpotAdapter().pushProspect('provider-secret', {
+      id: 'prospect-1',
+      company_name: 'Acme',
+      priority_score: 88,
+      status: 'qualified'
+    })
+
+    assert.equal(result.success, true)
+    assert.equal(properties.ucc_priority_score, '88')
+    assert.equal(properties.ucc_status, 'qualified')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
 
 test('CRM pushes claim one idempotency key before the remote create', async () => {
