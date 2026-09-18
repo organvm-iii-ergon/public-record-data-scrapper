@@ -416,8 +416,31 @@ app.post('/api/webhooks/:id/test', accessAuth, orgScope, rateLimiter, async (c) 
     JSON.stringify(payload)
   )
 
-  const sendResult = await sendWebhookDelivery(c.env, deliveryId)
-  return c.json({ delivery_id: deliveryId, ...sendResult })
+  const claimResult = await run(
+    c.env,
+    `UPDATE webhook_deliveries
+     SET status = 'delivering', claimed_at = datetime('now')
+     WHERE id = ? AND org_id = ? AND status = 'pending'`,
+    deliveryId,
+    orgId
+  )
+  if (claimResult.meta.changes === 0) {
+    return c.json({ delivery_id: deliveryId, status: 'processing' }, 202)
+  }
+
+  try {
+    const sendResult = await sendWebhookDelivery(c.env, deliveryId, orgId)
+    return c.json({ delivery_id: deliveryId, ...sendResult })
+  } finally {
+    await run(
+      c.env,
+      `UPDATE webhook_deliveries
+       SET status = 'pending', claimed_at = NULL
+       WHERE id = ? AND org_id = ? AND status = 'delivering'`,
+      deliveryId,
+      orgId
+    )
+  }
 })
 
 /**

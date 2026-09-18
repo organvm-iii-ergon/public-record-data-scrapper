@@ -114,6 +114,25 @@ test('manual replay atomically claims only failed or dead-letter deliveries', as
   assert.deepEqual(calls[0].params, ['delivery-1', 'org-1'])
 })
 
+test('test webhook delivery is claimed before the direct send', () => {
+  const source = readFileSync(
+    new URL('../../cloudflare/workers/api/src/index.ts', import.meta.url),
+    'utf8'
+  )
+  const route = source.slice(
+    source.indexOf("app.post('/api/webhooks/:id/test'"),
+    source.indexOf("app.get('/api/webhooks/deliveries/:id'")
+  )
+
+  assert.match(route, /SET status = 'delivering', claimed_at = datetime\('now'\)/)
+  assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'pending'/)
+  assert.match(route, /claimResult\.meta\.changes === 0/)
+  assert.match(route, /sendWebhookDelivery\(c\.env, deliveryId, orgId\)/)
+  assert.match(route, /finally \{/)
+  assert.match(route, /SET status = 'pending', claimed_at = NULL/)
+  assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'delivering'/)
+})
+
 test('webhook delivery refuses redirects and increments failure state atomically', async () => {
   const delivery = {
     id: 'delivery-1',
