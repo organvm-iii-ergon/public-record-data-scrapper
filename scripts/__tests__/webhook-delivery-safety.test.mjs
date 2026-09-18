@@ -128,6 +128,9 @@ test('test webhook delivery is claimed before the direct send', () => {
   assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'pending'/)
   assert.match(route, /claimResult\.meta\.changes === 0/)
   assert.match(route, /sendWebhookDelivery\(c\.env, deliveryId, orgId\)/)
+  assert.match(route, /finally \{/)
+  assert.match(route, /SET status = 'pending', claimed_at = NULL/)
+  assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'delivering'/)
 })
 
 test('webhook delivery refuses redirects and increments failure state atomically', async () => {

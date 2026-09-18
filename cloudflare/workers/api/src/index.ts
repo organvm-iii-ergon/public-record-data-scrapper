@@ -428,8 +428,19 @@ app.post('/api/webhooks/:id/test', accessAuth, orgScope, rateLimiter, async (c) 
     return c.json({ delivery_id: deliveryId, status: 'processing' }, 202)
   }
 
-  const sendResult = await sendWebhookDelivery(c.env, deliveryId, orgId)
-  return c.json({ delivery_id: deliveryId, ...sendResult })
+  try {
+    const sendResult = await sendWebhookDelivery(c.env, deliveryId, orgId)
+    return c.json({ delivery_id: deliveryId, ...sendResult })
+  } finally {
+    await run(
+      c.env,
+      `UPDATE webhook_deliveries
+       SET status = 'pending', claimed_at = NULL
+       WHERE id = ? AND org_id = ? AND status = 'delivering'`,
+      deliveryId,
+      orgId
+    )
+  }
 })
 
 /**
