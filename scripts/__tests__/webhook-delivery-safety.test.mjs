@@ -130,6 +130,14 @@ test('test webhook delivery is claimed before the direct send', () => {
   assert.match(route, /sendWebhookDelivery\(c\.env, deliveryId, orgId\)/)
   assert.match(route, /SET status = 'pending', claimed_at = NULL/)
   assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'delivering'/)
+  assert.ok(route.indexOf("SET status = 'delivering'") < route.indexOf('sendWebhookDelivery('))
+
+  const dialog = readFileSync(
+    new URL('../../apps/web/src/components/IntegrationsDialog.tsx', import.meta.url),
+    'utf8'
+  )
+  assert.match(dialog, /result\.status === 'processing'/)
+  assert.match(dialog, /Test ping is processing/)
 })
 
 test('webhook delivery refuses redirects and increments failure state atomically', async () => {
