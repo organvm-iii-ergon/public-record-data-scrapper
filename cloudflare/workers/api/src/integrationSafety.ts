@@ -1,7 +1,8 @@
 type DnsAnswer = { type?: number; data?: string }
 
 function isPrivateIp(value: string): boolean {
-  const ip = value.toLowerCase().split('%')[0] ?? ''
+  const normalized = value.startsWith('[') && value.endsWith(']') ? value.slice(1, -1) : value
+  const ip = normalized.toLowerCase().split('%')[0] ?? ''
   if (ip.includes(':')) {
     return (
       ip === '::' ||
