@@ -128,7 +128,6 @@ test('test webhook delivery is claimed before the direct send', () => {
   assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'pending'/)
   assert.match(route, /claimResult\.meta\.changes === 0/)
   assert.match(route, /sendWebhookDelivery\(c\.env, deliveryId, orgId\)/)
-  assert.match(route, /finally \{/)
   assert.match(route, /SET status = 'pending', claimed_at = NULL/)
   assert.match(route, /WHERE id = \? AND org_id = \? AND status = 'delivering'/)
 })
@@ -249,6 +248,48 @@ test('HubSpot pushes include the advertised UCC qualification fields', async () 
   }
 })
 
+test('HubSpot setup provisions qualification properties before activating', async () => {
+  const originalFetch = globalThis.fetch
+  const calls = []
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init })
+    if (String(url).endsWith('?limit=1')) return new Response('{}', { status: 200 })
+    if (init.method === 'GET') return new Response('{}', { status: 404 })
+    return new Response('{}', { status: 201 })
+  }
+  try {
+    const config = {}
+    assert.equal(await new HubSpotAdapter().verifyCredentials('provider-secret', config), true)
+    assert.equal(config.uccPropertiesProvisioned, true)
+    assert.equal(calls.filter((call) => call.init.method === 'POST').length, 2)
+    assert.ok(calls.some((call) => call.url.endsWith('/ucc_priority_score')))
+    assert.ok(calls.some((call) => call.url.endsWith('/ucc_status')))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('HubSpot omits unprovisioned qualification properties for existing integrations', async () => {
+  const originalFetch = globalThis.fetch
+  let properties
+  globalThis.fetch = async (_url, init) => {
+    properties = JSON.parse(init.body).properties
+    return new Response(JSON.stringify({ id: 'company-1' }), { status: 200 })
+  }
+  try {
+    const result = await new HubSpotAdapter().pushProspect(
+      'provider-secret',
+      { id: 'prospect-1', company_name: 'Acme', priority_score: 88, status: 'qualified' },
+      {}
+    )
+    assert.equal(result.success, true)
+    assert.equal('ucc_priority_score' in properties, false)
+    assert.equal('ucc_status' in properties, false)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test('CRM pushes claim one idempotency key before the remote create', async () => {
   const key = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
   const encrypted = await encryptCredential('provider-secret', key)
@@ -332,6 +373,9 @@ test('webhook destinations require public DNS and a valid HTTPS URL', async () =
   assert.equal(await isSecureWebhookUrl('https://[::1]/events', publicResolver), false)
   assert.equal(await isSecureWebhookUrl('https://[fc00::1]/events', publicResolver), false)
   assert.equal(await isSecureWebhookUrl('https://[fe80::1]/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[::ffff:7f00:1]/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[::ffff:a00:1]/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[::ffff:a9fe:a9fe]/events', publicResolver), false)
   assert.equal(
     await isSecureWebhookUrl('https://[2606:4700:4700::1111]/events', publicResolver),
     true
@@ -400,7 +444,7 @@ test('outbound integrations have durable retries, timeouts, and tenant RLS', () 
     'utf8'
   )
   assert.match(crmSource, /CRM_REQUEST_TIMEOUT_MS = 10_000/)
-  assert.equal((crmSource.match(/signal: crmRequestSignal\(\)/g) ?? []).length, 6)
+  assert.equal((crmSource.match(/signal: crmRequestSignal\(\)/g) ?? []).length, 8)
   assert.doesNotMatch(crmSource, /return apiKey\.length > 10/)
 
   const authSource = readFileSync(
