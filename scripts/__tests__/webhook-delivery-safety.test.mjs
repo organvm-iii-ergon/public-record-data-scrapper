@@ -287,6 +287,13 @@ test('webhook destinations require public DNS and a valid HTTPS URL', async () =
     false
   )
   assert.equal(await isSecureWebhookUrl('https://127.0.0.1/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[::1]/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[fc00::1]/events', publicResolver), false)
+  assert.equal(await isSecureWebhookUrl('https://[fe80::1]/events', publicResolver), false)
+  assert.equal(
+    await isSecureWebhookUrl('https://[2606:4700:4700::1111]/events', publicResolver),
+    true
+  )
   assert.equal(await isSecureWebhookUrl('http://hooks.example.test/events', publicResolver), false)
   assert.equal(await isSecureWebhookUrl('not a URL', publicResolver), false)
 })
