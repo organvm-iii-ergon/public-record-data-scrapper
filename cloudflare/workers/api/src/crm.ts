@@ -99,6 +99,10 @@ export class HubSpotAdapter implements CrmAdapter {
       ...(phone ? { phone } : {}),
       ...(city ? { city } : {}),
       ...(state ? { state } : {}),
+      ...(prospect.priority_score !== null
+        ? { ucc_priority_score: String(prospect.priority_score) }
+        : {}),
+      ...(prospect.status ? { ucc_status: prospect.status } : {}),
       description:
         prospect.description ??
         `UCC Filing Prospect | Priority Score: ${prospect.priority_score ?? 'N/A'} | Status: ${prospect.status ?? 'new'} (Imported via UCC-MCA Platform)`
