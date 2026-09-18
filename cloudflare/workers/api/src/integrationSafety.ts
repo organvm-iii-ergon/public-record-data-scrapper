@@ -4,6 +4,12 @@ function isPrivateIp(value: string): boolean {
   const normalized = value.startsWith('[') && value.endsWith(']') ? value.slice(1, -1) : value
   const ip = normalized.toLowerCase().split('%')[0] ?? ''
   if (ip.includes(':')) {
+    const mapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(ip)
+    if (mapped) {
+      const high = Number.parseInt(mapped[1], 16)
+      const low = Number.parseInt(mapped[2], 16)
+      return isPrivateIp(`${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`)
+    }
     return (
       ip === '::' ||
       ip === '::1' ||
