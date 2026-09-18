@@ -52,7 +52,43 @@ export class HubSpotAdapter implements CrmAdapter {
   readonly provider: CrmProvider = 'hubspot'
   private readonly baseUrl = 'https://api.hubapi.com'
 
-  async verifyCredentials(apiKey: string): Promise<boolean> {
+  private async ensureUccProperties(apiKey: string): Promise<boolean> {
+    const definitions = [
+      {
+        name: 'ucc_priority_score',
+        label: 'UCC Priority Score',
+        type: 'number',
+        fieldType: 'number',
+        groupName: 'companyinformation'
+      },
+      {
+        name: 'ucc_status',
+        label: 'UCC Status',
+        type: 'string',
+        fieldType: 'text',
+        groupName: 'companyinformation'
+      }
+    ]
+    for (const definition of definitions) {
+      const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+      const existing = await fetch(
+        `${this.baseUrl}/crm/v3/properties/companies/${definition.name}`,
+        { method: 'GET', signal: crmRequestSignal(), headers }
+      )
+      if (existing.ok) continue
+      if (existing.status !== 404) return false
+      const created = await fetch(`${this.baseUrl}/crm/v3/properties/companies`, {
+        method: 'POST',
+        signal: crmRequestSignal(),
+        headers,
+        body: JSON.stringify(definition)
+      })
+      if (!created.ok && created.status !== 409) return false
+    }
+    return true
+  }
+
+  async verifyCredentials(apiKey: string, config: Record<string, unknown> = {}): Promise<boolean> {
     try {
       const res = await fetch(`${this.baseUrl}/crm/v3/objects/companies?limit=1`, {
         method: 'GET',
@@ -62,7 +98,9 @@ export class HubSpotAdapter implements CrmAdapter {
           'Content-Type': 'application/json'
         }
       })
-      return res.ok
+      if (!res.ok || !(await this.ensureUccProperties(apiKey))) return false
+      config.uccPropertiesProvisioned = true
+      return true
     } catch {
       return false
     }
@@ -71,8 +109,9 @@ export class HubSpotAdapter implements CrmAdapter {
   async pushProspect(
     apiKey: string,
     prospect: ProspectPayload,
-    config: Record<string, unknown> = {}
+    config?: Record<string, unknown>
   ): Promise<CrmPushResult> {
+    const resolvedConfig = config ?? { uccPropertiesProvisioned: true }
     const companyName = prospect.company_name ?? 'Unnamed Prospect'
 
     // Extract any extra fields from raw_data if available
@@ -99,18 +138,20 @@ export class HubSpotAdapter implements CrmAdapter {
       ...(phone ? { phone } : {}),
       ...(city ? { city } : {}),
       ...(state ? { state } : {}),
-      ...(prospect.priority_score !== null
+      ...(resolvedConfig.uccPropertiesProvisioned === true && prospect.priority_score !== null
         ? { ucc_priority_score: String(prospect.priority_score) }
         : {}),
-      ...(prospect.status ? { ucc_status: prospect.status } : {}),
+      ...(resolvedConfig.uccPropertiesProvisioned === true && prospect.status
+        ? { ucc_status: prospect.status }
+        : {}),
       description:
         prospect.description ??
         `UCC Filing Prospect | Priority Score: ${prospect.priority_score ?? 'N/A'} | Status: ${prospect.status ?? 'new'} (Imported via UCC-MCA Platform)`
     }
 
     // Custom properties mapped if configured
-    if (config.customProperties && typeof config.customProperties === 'object') {
-      Object.assign(properties, config.customProperties)
+    if (resolvedConfig.customProperties && typeof resolvedConfig.customProperties === 'object') {
+      Object.assign(properties, resolvedConfig.customProperties)
     }
 
     try {
