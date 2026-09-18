@@ -203,14 +203,20 @@ export function IntegrationsDialog({ open, onOpenChange }: IntegrationsDialogPro
 
   const handleTestPing = async (ep: WebhookEndpoint) => {
     try {
-      const result = await apiRequest<{ delivery_id: string; success: boolean; error?: string }>(
-        `/webhooks/${encodeURIComponent(ep.id)}/test`,
-        { method: 'POST' }
-      )
+      const result = await apiRequest<{
+        delivery_id: string
+        success?: boolean
+        status?: 'processing'
+        error?: string
+      }>(`/webhooks/${encodeURIComponent(ep.id)}/test`, { method: 'POST' })
       const refreshed = await apiRequest<{ deliveries: WebhookDeliveryApi[] }>(
         '/webhooks/deliveries'
       )
       setDeliveries(refreshed.deliveries.map(mapDelivery))
+      if (result.status === 'processing') {
+        toast.info('Test ping is processing. Refresh deliveries for the final status.')
+        return
+      }
       if (!result.success) throw new Error(result.error ?? 'Destination rejected the test ping')
       toast.success('Test ping delivered successfully with a valid signature.')
     } catch (error) {
