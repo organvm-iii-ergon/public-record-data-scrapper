@@ -5,7 +5,7 @@
 
 import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 
 // jsdom 27 + vitest 4 no longer expose window.localStorage / sessionStorage
 // when the document runs under an opaque origin (the default). Code under test
